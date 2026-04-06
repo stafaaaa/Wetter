@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#000000">
 <title>AnnaLove</title>
 <style>
-:root{--accent:#c8a96e;--bg:rgba(0,0,0,.55)}
+:root{--accent:#c8a96e;--bg:rgba(20,20,20,.7)}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,sans-serif;background:#111;touch-action:none}
 .ss{position:fixed;inset:0;z-index:0}
@@ -413,6 +413,9 @@ tick();
 setInterval(tick, 1000);
 loadWeather();
 setInterval(loadWeather, 600000);
+
+// Show default photos immediately, then check IndexedDB
+buildSlideshow(DEFAULT_PHOTOS);
 openDB(function() { loadSlideshow(); });
 </script>
 </body>
