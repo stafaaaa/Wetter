@@ -114,7 +114,7 @@ body{min-height:100vh;display:flex;justify-content:center;align-items:flex-start
   <div class="div"></div>
   <div class="lbl" style="display:flex;justify-content:space-between;align-items:center">
     <span>Termine</span>
-    <button onclick="openAddEvent()" style="background:var(--accent);border:none;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;color:#000">+ Neu</button>
+    <button onclick="window.open('https://calendar.google.com','_blank')" style="background:var(--accent);border:none;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;color:#000">+ Neu</button>
   </div>
   <div id="cal"><div class="ne">Keine Termine</div></div>
 
@@ -369,71 +369,58 @@ function loadWeather(){
 }
 loadWeather();setInterval(loadWeather,600000);
 
-// KALENDER - Manuell mit localStorage
+// KALENDER - Google Calendar
 var MON=['Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+var ICS='https://calendar.google.com/calendar/ical/bee6bd50fed6997d7a4b9ad5a26e274fafe8499c2685da0f8dd13abfb18bf159%40group.calendar.google.com/public/basic.ics';
+var PROXY='https://api.allorigins.win/raw?url=';
 
-function getEvents(){
-  try{return JSON.parse(localStorage.getItem('events')||'[]');}catch(e){return [];}
-}
-
-function saveEvents(evts){
-  localStorage.setItem('events',JSON.stringify(evts));
+function parseICS(txt){
+  var evts=[];var e=null;
+  var lines=txt.split(/\r?\n/);
+  for(var i=0;i<lines.length;i++){
+    var line=lines[i].trim();
+    if(line==='BEGIN:VEVENT'){e={};}
+    else if(line==='END:VEVENT'&&e){evts.push(e);e=null;}
+    else if(e){
+      if(line.indexOf('SUMMARY:')===0){e.title=line.slice(8);}
+      else if(line.match(/^DTSTART/)){
+        var v=line.split(':')[1]||'';
+        var yr=v.slice(0,4),mo=v.slice(4,6),dy=v.slice(6,8),hr=v.slice(9,11)||'00',mn=v.slice(11,13)||'00';
+        e.start=new Date(yr+'-'+mo+'-'+dy+'T'+hr+':'+mn+':00');
+        e.allDay=v.indexOf('T')<0;
+      }
+    }
+  }
+  return evts;
 }
 
 function renderCalendar(){
-  var evts=getEvents();
-  var now=new Date();now.setHours(0,0,0,0);
-  evts=evts.filter(function(e){return new Date(e.date)>=now;});
-  evts.sort(function(a,b){return new Date(a.date+' '+(a.time||'00:00'))-new Date(b.date+' '+(b.time||'00:00'));});
-  var el=document.getElementById('cal');
-  if(!evts.length){el.innerHTML='<div class="ne">Keine Termine &mdash; tippe + Neu</div>';return;}
-  var h='';
-  evts.forEach(function(ev,i){
-    var d=new Date(ev.date);
-    var t=ev.time?ev.time+' Uhr':'Ganztaegig';
-    h+='<div class="ce"><div class="ed"><div class="eday">'+d.getDate()+'</div><div class="emo">'+MON[d.getMonth()]+'</div></div><div class="ei"><div class="et">'+ev.title+'</div><div class="etm">'+t+'</div></div><button onclick="deleteEvent('+i+')" style="background:none;border:none;color:rgba(255,255,255,.3);font-size:16px;cursor:pointer;padding:0 4px">&#10005;</button></div>';
-  });
-  el.innerHTML=h;
-}
-
-function deleteEvent(idx){
-  var evts=getEvents();
-  var now=new Date();now.setHours(0,0,0,0);
-  var upcoming=evts.filter(function(e){return new Date(e.date)>=now;});
-  upcoming.sort(function(a,b){return new Date(a.date+' '+(a.time||'00:00'))-new Date(b.date+' '+(b.time||'00:00'));});
-  var toDelete=upcoming[idx];
-  var all=evts.filter(function(e){return !(e.date===toDelete.date&&e.title===toDelete.title&&e.time===toDelete.time);});
-  saveEvents(all);
-  renderCalendar();
+  fetch(PROXY+encodeURIComponent(ICS))
+  .then(function(r){return r.text();})
+  .then(function(txt){
+    var evts=parseICS(txt).filter(function(e){return e.start&&e.start>=new Date();});
+    evts.sort(function(a,b){return a.start-b.start;});
+    evts=evts.slice(0,5);
+    var el=document.getElementById('cal');
+    if(!evts.length){el.innerHTML='<div class="ne">Keine Termine</div>';return;}
+    var h='';
+    evts.forEach(function(ev){
+      var t=ev.allDay?'Ganztaegig':String(ev.start.getHours()).padStart(2,'0')+':'+String(ev.start.getMinutes()).padStart(2,'0')+' Uhr';
+      h+='<div class="ce"><div class="ed"><div class="eday">'+ev.start.getDate()+'</div><div class="emo">'+MON[ev.start.getMonth()]+'</div></div><div class="ei"><div class="et">'+(ev.title||'Termin')+'</div><div class="etm">'+t+'</div></div></div>';
+    });
+    el.innerHTML=h;
+  })
+  .catch(function(){document.getElementById('cal').innerHTML='<div class="ne">Termine nicht verfuegbar</div>';});
 }
 
 function openAddEvent(){
-  var today=new Date();
-  var dd=String(today.getDate()).padStart(2,'0');
-  var mm=String(today.getMonth()+1).padStart(2,'0');
-  document.getElementById('ev-date').value=today.getFullYear()+'-'+mm+'-'+dd;
-  document.getElementById('ev-time').value='';
-  document.getElementById('ev-title').value='';
-  document.getElementById('event-modal').style.display='block';
+  window.open('https://calendar.google.com','_blank');
 }
 
-function closeAddEvent(){
-  document.getElementById('event-modal').style.display='none';
-}
-
-function saveEvent(){
-  var date=document.getElementById('ev-date').value;
-  var time=document.getElementById('ev-time').value;
-  var title=document.getElementById('ev-title').value.trim();
-  if(!date||!title){alert('Bitte Datum und Titel eingeben!');return;}
-  var evts=getEvents();
-  evts.push({date:date,time:time,title:title});
-  saveEvents(evts);
-  renderCalendar();
-  closeAddEvent();
-}
+function closeAddEvent(){}
 
 renderCalendar();
+setInterval(renderCalendar,300000);
 
 // SETTINGS
 function openSettings(){document.getElementById('sp').classList.add('open');loadSettingsUI();}
