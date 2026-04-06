@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>AnnaLove Dashboard</title>
+<style>
+:root{
+  --accent:#d8c7a1;
+  --tile-rgb:255,255,255;
+  --tile-alpha:.18;
+  --tile-bg:rgba(var(--tile-rgb),var(--tile-alpha));
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  width:100vw;height:100vh;overflow:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:#24242a;color:#fff;touch-action:none;
+}
+.ss{position:fixed;inset:0;z-index:0}
+.sl{
+  position:absolute;inset:0;
+  background-size:cover;background-position:center;
+  opacity:0;transition:opacity 1.5s ease;
+  transform:scale(1.03);
+}
+.sl.on{opacity:1}
+.ov{position:fixed;inset:0;z-index:1;background:rgba(0,0,0,.22)}
+.grid{
+  position:fixed;inset:0;z-index:2;
+  padding:8px 8px 56px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:1fr 1fr 1fr;
+  gap:8px;
+}
+.tile{
+  position:relative;overflow:hidden;
+  background:var(--tile-bg);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:18px;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  padding:14px;color:#fff;
+}
+.t-lbl{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.58);margin-bottom:7px}
+.t-time{font-size:54px;font-weight:700;line-height:1;font-family:Georgia,serif}
+.t-date{font-size:12px;color:rgba(255,255,255,.78);margin-top:6px;text-transform:uppercase}
+.t-kw{font-size:11px;color:var(--accent);margin-top:5px}
+.t-city{font-size:18px;font-weight:700;margin-bottom:6px}
+.t-mw{display:flex;align-items:center;gap:10px}
+.t-temp{font-size:42px;font-weight:700}
+.t-temp sup{font-size:16px;vertical-align:top}
+.t-icon{font-size:28px}
+.t-desc{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.75);margin-top:4px}
+.cal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cal-nav{background:none;border:none;color:#fff;font-size:22px;cursor:pointer}
+.cal-title{font-size:14px;font-weight:700}
+.cal-wds,.cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-wd{font-size:8px;text-align:center;color:rgba(255,255,255,.45);padding:4px 0}
+.cal-grid{gap:2px}
+.cal-day{
+  min-height:22px;border-radius:6px;text-align:center;
+  padding:4px 0;font-size:12px;cursor:pointer;position:relative
+}
+.cal-day.today{background:#f0e7d7;color:#161616;font-weight:700}
+.cal-day.selected{background:rgba(255,255,255,.18)}
+.cal-day.has-event::after{
+  content:'';width:4px;height:4px;border-radius:50%;
+  background:var(--accent);position:absolute;left:50%;bottom:2px;transform:translateX(-50%);
+}
+.ev-item{display:flex;gap:8px;align-items:center;padding:7px 0;border-top:1px solid rgba(255,255,255,.08)}
+.ev-day{font-size:18px;font-weight:700;color:var(--accent);min-width:24px}
+.ev-title{font-size:12px;font-weight:600}
+.ev-time{font-size:10px;color:rgba(255,255,255,.65)}
+.ne{font-size:12px;color:rgba(255,255,255,.56);padding-top:8px}
+.t-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.t-gi{padding:7px 0;border-top:1px solid rgba(255,255,255,.08)}
+.t-gl{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:3px}
+.t-gv{font-size:13px;font-weight:600}
+.t-fc-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(255,255,255,.08)}
+.t-fc-day{width:58px;font-size:10px;color:rgba(255,255,255,.7)}
+.t-fc-icon{width:18px;text-align:center}
+.rb{flex:1;height:3px;background:rgba(255,255,255,.13);border-radius:2px;overflow:hidden}
+.rbf{height:100%;background:#fff}
+.t-fc-tmp{width:46px;text-align:right;font-size:11px}
+.t-fc-tmp .lo{color:rgba(255,255,255,.55);margin-left:3px}
+.fab{
+  position:fixed;bottom:10px;z-index:10;width:42px;height:42px;border-radius:50%;
+  background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.2);color:#fff;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px
+}
+.modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.92);padding:28px 18px;overflow:auto}
+.modal.open{display:block}
+.modal-ttl{font-size:18px;font-weight:700;margin-bottom:18px}
+.lbl-s{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:8px}
+.inp{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;margin-bottom:12px}
+.btn{width:100%;padding:12px;border:none;border-radius:11px;font-weight:700;cursor:pointer;margin-bottom:8px}
+.btn-g{background:#f0e7d7;color:#111}
+.btn-w{background:rgba(255,255,255,.1);color:#fff}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.pthumb{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:rgba(255,255,255,.08)}
+.pthumb img{width:100%;height:100%;object-fit:cover}
+.pdel{position:absolute;top:4px;right:4px;width:20px;height:20px;border:none;border-radius:50%;background:rgba(0,0,0,.75);color:#fff;cursor:pointer}
+.padd{aspect-ratio:1;border-radius:10px;border:2px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:26px;color:rgba(255,255,255,.4);cursor:pointer}
+.status{font-size:12px;color:var(--accent);min-height:18px;margin-bottom:8px}
+.dia-wrap{position:absolute;inset:0;background:#111}
+.dia-slide{
+  position:absolute;inset:0;background-size:cover;background-position:center;
+  opacity:0;transition:opacity 1.2s ease;
+}
+.dia-slide.on{opacity:1}
+.dia-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.45),rgba(0,0,0,.08))}
+.dia-meta{position:absolute;left:12px;right:12px;bottom:12px;z-index:2}
+.dia-title{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.75);margin-bottom:5px}
+.dia-sub{font-size:14px;font-weight:700}
+.dia-dots{position:absolute;right:12px;bottom:14px;z-index:2;display:flex;gap:4px}
+.dia-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.35)}
+.dia-dot.on{background:#fff}
+.small-btn{
+  background:rgba(240,231,215,.95);color:#111;border:none;border-radius:14px;
+  padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer
+}
+</style>
+</head>
+<body>
+<div class="ss" id="ss"></div>
+<div class="ov"></div>
+
+<div class="grid">
+  <div class="tile">
+    <div class="t-lbl">Uhrzeit</div>
+    <div class="t-time" id="clk">--:--</div>
+    <div class="t-date" id="dts"></div>
+    <div class="t-kw" id="kws"></div>
+  </div>
+
+  <div class="tile">
+    <div class="t-lbl">Wetter</div>
+    <div class="t-city">Düsseldorf</div>
+    <div class="t-mw">
+      <div class="t-temp" id="w-temp">--<sup>°</sup></div>
+      <div class="t-icon" id="w-icon">☁️</div>
+    </div>
+    <div class="t-desc" id="w-desc">Wird geladen...</div>
+  </div>
+
+  <div class="tile">
+    <div class="cal-hdr">
+      <button class="cal-nav" onclick="prevMonth()">‹</button>
+      <div class="cal-title" id="cal-title"></div>
+      <button class="cal-nav" onclick="nextMonth()">›</button>
+    </div>
+    <div class="cal-wds">
+      <div class="cal-wd">M</div><div class="cal-wd">D</div><div class="cal-wd">M</div><div class="cal-wd">D</div><div class="cal-wd">F</div><div class="cal-wd">S</div><div class="cal-wd">S</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+
+  <div class="tile">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="t-lbl" style="margin:0" id="day-label">Heute</div>
+      <button class="small-btn" onclick="openEvModal()">+ Neu</button>
+    </div>
+    <div id="day-ev"><div class="ne">Tippe auf einen Tag</div></div>
+  </div>
+
+  <div class="tile">
+    <div class="t-lbl">Diashow</div>
+    <div class="dia-wrap" id="dia-wrap">
+      <div class="dia-grad"></div>
+      <div class="dia-meta">
+        <div class="dia-title">Bilder</div>
+        <div class="dia-sub" id="dia-sub">Fest integriert</div>
+      </div>
+      <div class="dia-dots" id="dia-dots"></div>
+    </div>
+  </div>
+
+  <div class="tile">
+    <div class="t-lbl">Details</div>
+    <div class="t-grid">
+      <div class="t-gi"><div class="t-gl">Gefühlt</div><div class="t-gv" id="w-feel">--</div></div>
+      <div class="t-gi"><div class="t-gl">Feuchte</div><div class="t-gv" id="w-hum">--</div></div>
+      <div class="t-gi"><div class="t-gl">Wind</div><div class="t-gv" id="w-wind">--</div></div>
+      <div class="t-gi"><div class="t-gl">Böen</div><div class="t-gv" id="w-gust">--</div></div>
+      <div class="t-gi"><div class="t-gl">Regen</div><div class="t-gv" id="w-rain">--</div></div>
+      <div class="t-gi"><div class="t-gl">UV</div><div class="t-gv" id="w-uv">--</div></div>
+    </div>
+    <div style="margin-top:10px" id="w-fc"></div>
+  </div>
+</div>
+
+<button class="fab" style="left:10px" onclick="openFotoModal()">📷</button>
+
+<div class="modal" id="foto-modal">
+  <div class="modal-ttl">Fotos für Hintergrund und Diashow</div>
+  <div class="lbl-s">Aktuelle Bilder</div>
+  <div class="pgrid" id="pgrid"></div>
+  <input type="file" id="file-in" accept="image/*" multiple style="display:none" onchange="addPhotos(this.files)">
+  <div class="status" id="upload-status"></div>
+  <button class="btn btn-g" onclick="document.getElementById('file-in').click()">+ Bilder hinzufügen</button>
+  <button class="btn btn-w" onclick="resetToDemo()">Demo-Bilder wiederherstellen</button>
+  <button class="btn btn-w" onclick="document.getElementById('foto-modal').classList.remove('open')">Schließen</button>
+</div>
+
+<div class="modal" id="ev-modal">
+  <div class="modal-ttl">Termin hinzufügen</div>
+  <div class="lbl-s">Datum</div>
+  <input type="date" class="inp" id="ev-date">
+  <div class="lbl-s">Uhrzeit</div>
+  <input type="time" class="inp" id="ev-time">
+  <div class="lbl-s">Titel</div>
+  <input type="text" class="inp" id="ev-title" placeholder="z. B. Zahnarzt">
+  <button class="btn btn-g" onclick="saveEvent()">Speichern</button>
+  <button class="btn btn-w" onclick="document.getElementById('ev-modal').classList.remove('open')">Abbrechen</button>
+</div>
+
+<script>
+const DEMO_PHOTOS = [
+  'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"><defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#8854d0"/><stop offset="1" stop-color="#5f27cd"/></linearGradient></defs><rect fill="url(#g)" width="1600" height="900"/><circle cx="300" cy="240" r="180" fill="rgba(255,255,255,.18)"/><circle cx="1320" cy="180" r="120" fill="rgba(255,255,255,.14)"/><text x="120" y="500" fill="white" font-size="110" font-family="Arial" font-weight="700">AnnaLove</text><text x="120" y="610" fill="rgba(255,255,255,.82)" font-size="48" font-family="Arial">Dashboard mit integrierter Diashow</text></svg>`),
+  'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"><defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#e17055"/><stop offset="1" stop-color="#fdcb6e"/></linearGradient></defs><rect fill="url(#g)" width="1600" height="900"/><rect x="110" y="110" width="1380" height="680" rx="46" fill="rgba(255,255,255,.12)"/><text x="150" y="420" fill="white" font-size="96" font-family="Arial" font-weight="700">Bilder sind direkt sichtbar</text><text x="150" y="520" fill="rgba(255,255,255,.88)" font-size="50" font-family="Arial">ohne Cloud und ohne schwarzen Bildschirm</text></svg>`),
+  'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"><defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#0f766e"/><stop offset="1" stop-color="#38bdf8"/></linearGradient></defs><rect fill="url(#g)" width="1600" height="900"/><circle cx="220" cy="730" r="280" fill="rgba(255,255,255,.12)"/><circle cx="1460" cy="760" r="240" fill="rgba(255,255,255,.12)"/><text x="140" y="280" fill="white" font-size="104" font-family="Arial" font-weight="700">Foto-Kachel</text><text x="140" y="380" fill="rgba(255,255,255,.88)" font-size="48" font-family="Arial">läuft als fester Bestandteil im Layout</text></svg>`)
+];
+
+function getPhotos(){
+  try{
+    const arr = JSON.parse(localStorage.getItem('annalove-dashboard-photos') || 'null');
+    return Array.isArray(arr) && arr.length ? arr : DEMO_PHOTOS.slice();
+  }catch(e){
+    return DEMO_PHOTOS.slice();
+  }
+}
+function savePhotos(arr){
+  localStorage.setItem('annalove-dashboard-photos', JSON.stringify(arr));
+}
+let bgIndex=0,bgTimer=null,tileIndex=0,tileTimer=null;
+
+function buildBackground(){
+  const ss = document.getElementById('ss');
+  const photos = getPhotos();
+  ss.innerHTML = '';
+  photos.forEach((src,i)=>{
+    const d = document.createElement('div');
+    d.className = 'sl'+(i===0?' on':'');
+    d.style.backgroundImage = `url("${src}")`;
+    ss.appendChild(d);
+  });
+  bgIndex = 0;
+  if(bgTimer) clearInterval(bgTimer);
+  if(photos.length>1){
+    bgTimer = setInterval(()=>{
+      const slides = ss.querySelectorAll('.sl');
+      slides[bgIndex].classList.remove('on');
+      bgIndex = (bgIndex+1)%slides.length;
+      slides[bgIndex].classList.add('on');
+    }, 5000);
+  }
+}
+
+function buildTileSlideshow(){
+  const wrap = document.getElementById('dia-wrap');
+  const dots = document.getElementById('dia-dots');
+  const photos = getPhotos();
+  wrap.querySelectorAll('.dia-slide').forEach(el=>el.remove());
+  dots.innerHTML = '';
+  photos.forEach((src,i)=>{
+    const d = document.createElement('div');
+    d.className = 'dia-slide'+(i===0?' on':'');
+    d.style.backgroundImage = `url("${src}")`;
+    wrap.prepend(d);
+    const dot = document.createElement('div');
+    dot.className = 'dia-dot'+(i===0?' on':'');
+    dots.appendChild(dot);
+  });
+  document.getElementById('dia-sub').textContent = photos.length + ' Bild' + (photos.length===1?'':'er');
+  tileIndex = 0;
+  if(tileTimer) clearInterval(tileTimer);
+  if(photos.length>1){
+    tileTimer = setInterval(()=>{
+      const slides = wrap.querySelectorAll('.dia-slide');
+      const ds = dots.querySelectorAll('.dia-dot');
+      slides[tileIndex].classList.remove('on');
+      ds[tileIndex].classList.remove('on');
+      tileIndex = (tileIndex+1)%slides.length;
+      slides[tileIndex].classList.add('on');
+      ds[tileIndex].classList.add('on');
+    }, 4000);
+  }
+}
+
+function renderPhotoGrid(){
+  const grid = document.getElementById('pgrid');
+  const photos = getPhotos();
+  grid.innerHTML = '';
+  photos.forEach((src,idx)=>{
+    const d = document.createElement('div');
+    d.className = 'pthumb';
+    d.innerHTML = `<img src="${src}"><button class="pdel" onclick="deletePhoto(${idx})">×</button>`;
+    grid.appendChild(d);
+  });
+  const add = document.createElement('div');
+  add.className = 'padd';
+  add.textContent = '+';
+  add.onclick = ()=>document.getElementById('file-in').click();
+  grid.appendChild(add);
+}
+
+function addPhotos(fileList){
+  const files = Array.from(fileList || []);
+  if(!files.length) return;
+  const status = document.getElementById('upload-status');
+  status.textContent = 'Bilder werden gespeichert...';
+  const current = getPhotos().filter(p=>!DEMO_PHOTOS.includes(p));
+  let done = 0;
+  files.forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      current.push(e.target.result);
+      done++;
+      if(done===files.length){
+        savePhotos(current.length ? current : DEMO_PHOTOS.slice());
+        refreshSlideshows();
+        status.textContent = done+' Bild(er) gespeichert';
+      }
+    };
+    reader.onerror = ()=>{
+      done++;
+      if(done===files.length) status.textContent = 'Ein Teil der Bilder konnte nicht geladen werden';
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('file-in').value = '';
+}
+
+function deletePhoto(idx){
+  const arr = getPhotos().slice();
+  arr.splice(idx,1);
+  savePhotos(arr.length ? arr : DEMO_PHOTOS.slice());
+  refreshSlideshows();
+}
+function resetToDemo(){
+  savePhotos(DEMO_PHOTOS.slice());
+  refreshSlideshows();
+  document.getElementById('upload-status').textContent = 'Demo-Bilder aktiv';
+}
+function refreshSlideshows(){
+  buildBackground();
+  buildTileSlideshow();
+  renderPhotoGrid();
+}
+function openFotoModal(){
+  renderPhotoGrid();
+  document.getElementById('upload-status').textContent = '';
+  document.getElementById('foto-modal').classList.add('open');
+}
+
+// Uhr
+function getKW(d){
+  var date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  var dayNum=date.getUTCDay()||7;
+  date.setUTCDate(date.getUTCDate()+4-dayNum);
+  var yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  return Math.ceil((((date-yearStart)/86400000)+1)/7);
+}
+function tick(){
+  const now = new Date();
+  const h=String(now.getHours()).padStart(2,'0');
+  const m=String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('clk').textContent = `${h}:${m}`;
+  const days=['SONNTAG','MONTAG','DIENSTAG','MITTWOCH','DONNERSTAG','FREITAG','SAMSTAG'];
+  const months=['JANUAR','FEBRUAR','MÄRZ','APRIL','MAI','JUNI','JULI','AUGUST','SEPTEMBER','OKTOBER','NOVEMBER','DEZEMBER'];
+  document.getElementById('dts').textContent = `${days[now.getDay()]}, ${now.getDate()}. ${months[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById('kws').textContent = `KW ${getKW(now)}`;
+}
+
+// Wetter
+const WMO={0:'Klar',1:'Überwiegend klar',2:'Teilweise bewölkt',3:'Bewölkt',45:'Nebel',51:'Nieselregen',53:'Nieselregen',55:'Nieselregen',61:'Regen',63:'Regen',65:'Starkregen',71:'Schnee',73:'Schnee',75:'Starker Schnee',80:'Regenschauer',81:'Regenschauer',82:'Starke Schauer',95:'Gewitter',99:'Gewitter'};
+const WIC={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'❄️',73:'❄️',75:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️',99:'⛈️'};
+const FDAYS=['So','Mo','Di','Mi','Do','Fr','Sa'];
+function setTxt(id,val,html=false){const el=document.getElementById(id); if(el) html ? el.innerHTML=val : el.textContent=val;}
+function loadWeather(){
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=51.2217&longitude=6.7762&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_gusts_10m,relative_humidity_2m,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max&wind_speed_unit=kmh&timezone=Europe%2FBerlin&forecast_days=5')
+  .then(r=>r.json())
+  .then(d=>{
+    const c=d.current;
+    setTxt('w-temp',`${Math.round(c.temperature_2m)}<sup>°</sup>`,true);
+    setTxt('w-icon',WIC[c.weather_code]||'☁️');
+    setTxt('w-desc',WMO[c.weather_code]||'');
+    setTxt('w-feel',Math.round(c.apparent_temperature)+'°C');
+    setTxt('w-hum',c.relative_humidity_2m+'%');
+    setTxt('w-wind',Math.round(c.wind_speed_10m)+' km/h');
+    setTxt('w-gust','bis '+Math.round(c.wind_gusts_10m)+' km/h');
+    setTxt('w-rain',(c.precipitation_probability||0)+'%');
+    setTxt('w-uv',String(Math.round((d.daily&&d.daily.uv_index_max&&d.daily.uv_index_max[0])||0)));
+    let fc='';
+    for(let i=1;i<Math.min(5,d.daily.time.length);i++){
+      const date=new Date(d.daily.time[i]);
+      const dn=i===1?'Morgen':FDAYS[date.getDay()]+' '+date.getDate()+'.';
+      const pct=d.daily.precipitation_probability_max[i]||0;
+      fc += `<div class="t-fc-row"><div class="t-fc-day">${dn}</div><div class="t-fc-icon">${WIC[d.daily.weather_code[i]]||'☁️'}</div><div class="rb"><div class="rbf" style="width:${pct}%"></div></div><div class="t-fc-tmp">${Math.round(d.daily.temperature_2m_max[i])}°<span class="lo">${Math.round(d.daily.temperature_2m_min[i])}°</span></div></div>`;
+    }
+    setTxt('w-fc',fc,true);
+  })
+  .catch(()=>setTxt('w-desc','Nicht verfügbar'));
+}
+
+// Kalender
+let calY=new Date().getFullYear(), calM=new Date().getMonth(), selDate=null;
+const MON_NAMES=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const MON_SHORT=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+function getEvs(){try{return JSON.parse(localStorage.getItem('al-events')||'[]')}catch(e){return[]}}
+function saveEvs(evts){localStorage.setItem('al-events',JSON.stringify(evts))}
+function dKey(y,m,d){return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
+function renderCal(){
+  document.getElementById('cal-title').textContent = MON_NAMES[calM]+' '+calY;
+  const grid=document.getElementById('cal-grid');
+  grid.innerHTML='';
+  const evts=getEvs(), today=new Date();
+  const firstDay=(new Date(calY,calM,1).getDay()+6)%7;
+  const daysInMonth=new Date(calY,calM+1,0).getDate();
+  for(let i=0;i<firstDay;i++) grid.appendChild(document.createElement('div'));
+  for(let d=1;d<=daysInMonth;d++){
+    const key=dKey(calY,calM,d);
+    const hasEv=evts.some(e=>e.date===key);
+    const isToday=today.getFullYear()===calY&&today.getMonth()===calM&&today.getDate()===d;
+    const isSel=selDate===key;
+    const div=document.createElement('div');
+    div.className='cal-day'+(isToday?' today':'')+(isSel&&!isToday?' selected':'')+(hasEv?' has-event':'');
+    div.textContent=d;
+    div.onclick=()=>{selDate=key;renderCal();showDayEvs(key,d);}
+    grid.appendChild(div);
+  }
+}
+function showDayEvs(key,dayNum){
+  const evts=getEvs().filter(e=>e.date===key);
+  const parts=key.split('-');
+  document.getElementById('day-label').textContent = `${dayNum}. ${MON_SHORT[parseInt(parts[1])-1]}`;
+  const el=document.getElementById('day-ev');
+  if(!evts.length){el.innerHTML='<div class="ne">Kein Termin</div>'; return;}
+  let h='';
+  evts.forEach((ev,i)=>{
+    const t=ev.time?ev.time+' Uhr':'Ganztag';
+    h += `<div class="ev-item"><div class="ev-day">${dayNum}</div><div><div class="ev-title">${ev.title}</div><div class="ev-time">${t}</div></div></div>`;
+  });
+  el.innerHTML=h;
+}
+function prevMonth(){calM--; if(calM<0){calM=11; calY--;} selDate=null; renderCal();}
+function nextMonth(){calM++; if(calM>11){calM=0; calY++;} selDate=null; renderCal();}
+function openEvModal(){
+  const now=new Date();
+  document.getElementById('ev-date').value = selDate || dKey(now.getFullYear(), now.getMonth(), now.getDate());
+  document.getElementById('ev-time').value='';
+  document.getElementById('ev-title').value='';
+  document.getElementById('ev-modal').classList.add('open');
+}
+function saveEvent(){
+  const date=document.getElementById('ev-date').value;
+  const time=document.getElementById('ev-time').value;
+  const title=document.getElementById('ev-title').value.trim();
+  if(!date || !title){alert('Datum und Titel werden benötigt.'); return;}
+  const evts=getEvs();
+  evts.push({date,time,title});
+  saveEvs(evts);
+  document.getElementById('ev-modal').classList.remove('open');
+  const parts=date.split('-'); calY=parseInt(parts[0]); calM=parseInt(parts[1])-1; selDate=date;
+  renderCal(); showDayEvs(date, parseInt(parts[2]));
+}
+
+// Start
+refreshSlideshows();
+tick(); setInterval(tick,1000);
+loadWeather(); setInterval(loadWeather,600000);
+const todayKey = dKey(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
+selDate=todayKey; renderCal(); showDayEvs(todayKey, new Date().getDate());
+</script>
+</body>
+</html>
