@@ -218,16 +218,14 @@ var CLOUD='dlnrpiemx', PRESET='annalove_upload';
 var photos=[], diaIdx=0, diaTimer=null, bgIdx=0, bgTimer=null;
 
 function loadCloudPhotos(){
-  fetch('https://res.cloudinary.com/'+CLOUD+'/image/list/annalove.json')
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(d.resources&&d.resources.length){
-      photos=d.resources.map(function(r){
-        return 'https://res.cloudinary.com/'+CLOUD+'/image/upload/w_800,q_70/'+r.public_id;
-      });
-    }
-    refreshDia();refreshBg();renderGrid();
-  }).catch(function(){refreshDia();refreshBg();renderGrid();});
+  // Load saved URLs from localStorage
+  var saved = JSON.parse(localStorage.getItem('cloud-urls')||'[]');
+  photos = saved;
+  refreshDia();refreshBg();renderGrid();
+}
+
+function saveCloudUrls(){
+  localStorage.setItem('cloud-urls', JSON.stringify(photos));
 }
 
 function uploadPhotos(input){
@@ -249,6 +247,7 @@ function uploadPhotos(input){
       if(data.secure_url)photos.push(data.secure_url);
       if(done===files.length){
         st.textContent=done+' Foto(s) hochgeladen!';
+        saveCloudUrls();
         refreshDia();refreshBg();renderGrid();
       }
     })
