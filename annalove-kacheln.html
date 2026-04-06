@@ -180,6 +180,7 @@ body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,sans-ser
     <div class="tp-o" onclick="addTile('vorhersage')"><div class="ico">&#127780;</div><div class="nm">Vorhersage</div></div>
     <div class="tp-o" onclick="addTile('kalender')"><div class="ico">&#128197;</div><div class="nm">Kalender</div></div>
     <div class="tp-o" onclick="addTile('termine')"><div class="ico">&#128203;</div><div class="nm">Termine</div></div>
+    <div class="tp-o" onclick="addTile('diashow')"><div class="ico">&#128247;</div><div class="nm">Diashow</div></div>
   </div>
   <button class="btn btn-w" style="margin-top:14px" onclick="document.getElementById('add-modal').classList.remove('open')">Abbrechen</button>
 </div>
@@ -198,6 +199,8 @@ body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,sans-ser
   <div class="lbl-s">Kachel-Transparenz</div>
   <input type="range" id="s-trans" min="0" max="90" value="75" style="width:100%;accent-color:var(--accent);margin-bottom:4px" oninput="document.getElementById('s-trans-v').textContent=this.value+'%';setTileBg(this.value);localStorage.setItem('trans',this.value)">
   <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:16px" id="s-trans-v">75%</div>
+  <div class="lbl-s">Hintergrundfarbe (wenn kein Foto)</div>
+  <input type="color" id="s-bg" value="#1a1a2e" onchange="document.body.style.background=this.value;localStorage.setItem('bg',this.value)" style="width:60px;height:36px;border:none;border-radius:8px;cursor:pointer;margin-bottom:12px;display:block">
   <div class="lbl-s">Foto-Wechsel (Sekunden)</div>
   <input type="range" id="s-iv" min="3" max="30" value="5" style="width:100%;accent-color:var(--accent);margin-bottom:4px" oninput="document.getElementById('s-iv-v').textContent=this.value+'s';localStorage.setItem('iv',this.value);restartSlideshow()">
   <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:16px" id="s-iv-v">5s</div>
@@ -210,7 +213,16 @@ var CLOUD = 'dlnrpiemx';
 var PRESET = 'annalove_upload';
 var curSlide = 0, slideTimer = null;
 
+function loadSavedPhotos() {
+  var saved = JSON.parse(localStorage.getItem('photo-urls')||'[]');
+  if (saved.length) {
+    buildSlideshow(saved);
+    renderPhotoGrid(saved);
+  }
+}
+
 function loadCloudPhotos() {
+  loadSavedPhotos();
   fetch('https://res.cloudinary.com/'+CLOUD+'/image/list/annalove.json')
   .then(function(r){return r.json();})
   .then(function(d){
@@ -288,20 +300,15 @@ function addPhotos(input){
     .then(function(r){return r.json();})
     .then(function(data){
       done++;
-      // Add photo immediately to slideshow
       if(data.secure_url){
-        var ss=document.getElementById('ss');
-        var d=document.createElement('div');
-        d.className='sl on';
-        d.style.backgroundImage='url('+data.secure_url+')';
-        // Remove previous slides
-        ss.innerHTML='';
-        ss.appendChild(d);
-        document.getElementById('dots').innerHTML='';
+        // Save URL to localStorage
+        var saved=JSON.parse(localStorage.getItem('photo-urls')||'[]');
+        saved.push(data.secure_url);
+        localStorage.setItem('photo-urls',JSON.stringify(saved));
       }
       if(done===files.length){
         if(st)st.textContent=done+' Foto(s) hochgeladen!';
-        setTimeout(loadCloudPhotos,2000);
+        loadSavedPhotos();
       }
     })
     .catch(function(){if(st)st.textContent='Fehler - Upload Preset pruefen';});
@@ -311,13 +318,15 @@ function addPhotos(input){
 
 function clearPhotos(){
   if(confirm('Alle Fotos loeschen?')){
+    localStorage.removeItem('photo-urls');
     document.getElementById('pgrid').innerHTML='';
     document.getElementById('ss').innerHTML='';
+    document.getElementById('dots').innerHTML='';
   }
 }
 
 function openFotoModal(){
-  loadCloudPhotos();
+  loadSavedPhotos();
   document.getElementById('foto-modal').classList.add('open');
   var iv=localStorage.getItem('iv')||'5';
   document.getElementById('s-iv').value=iv;
@@ -327,6 +336,7 @@ function openFotoModal(){
   var tr=localStorage.getItem('trans')||'75';
   document.getElementById('s-trans').value=tr;
   document.getElementById('s-trans-v').textContent=tr+'%';
+  var bg=localStorage.getItem('bg')||'#1a1a2e';document.getElementById('s-bg').value=bg;
 }
 
 // ===== UHR =====
@@ -495,7 +505,7 @@ function addTile(type){
     'details':'<div class="t-lbl">Details</div><div class="t-grid"><div class="t-gi"><div class="t-gl">Gef&uuml;hlt</div><div class="t-gv" id="w-feel">--</div></div><div class="t-gi"><div class="t-gl">Feuchte</div><div class="t-gv" id="w-hum">--</div></div><div class="t-gi"><div class="t-gl">Wind</div><div class="t-gv" id="w-wind">--</div></div><div class="t-gi"><div class="t-gl">B&ouml;en</div><div class="t-gv" id="w-gust">--</div></div><div class="t-gi"><div class="t-gl">Regen</div><div class="t-gv" id="w-rain">--</div></div><div class="t-gi"><div class="t-gl">UV</div><div class="t-gv" id="w-uv">--</div></div></div>',
     'vorhersage':'<div class="t-lbl">N&auml;chste Tage</div><div id="w-fc"><div class="ne">...</div></div>',
     'kalender':'<div class="cal-hdr"><button class="cal-nav" onclick="prevMonth()">&#8249;</button><div class="cal-title" id="cal-title"></div><button class="cal-nav" onclick="nextMonth()">&#8250;</button></div><div class="cal-wds"><div class="cal-wd">M</div><div class="cal-wd">D</div><div class="cal-wd">M</div><div class="cal-wd">D</div><div class="cal-wd">F</div><div class="cal-wd">S</div><div class="cal-wd">S</div></div><div class="cal-grid" id="cal-grid"></div>',
-    'termine':'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="t-lbl" style="margin:0" id="day-label">Heute</div><button onclick="openEvModal()" style="background:var(--accent);border:none;border-radius:14px;padding:3px 10px;font-size:10px;font-weight:700;cursor:pointer;color:#000">+ Neu</button></div><div id="day-ev"><div class="ne">Tippe auf Tag</div></div>'
+    'diashow':'<div id="tile-diashow" style="position:relative;width:100%;height:100%;min-height:120px;border-radius:10px;overflow:hidden;background:#000"><div id="dia-ss" style="position:absolute;inset:0"></div><div style="position:absolute;bottom:4px;left:50%;transform:translateX(-50%);display:flex;gap:3px" id="dia-dots"></div></div>','termine':'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="t-lbl" style="margin:0" id="day-label">Heute</div><button onclick="openEvModal()" style="background:var(--accent);border:none;border-radius:14px;padding:3px 10px;font-size:10px;font-weight:700;cursor:pointer;color:#000">+ Neu</button></div><div id="day-ev"><div class="ne">Tippe auf Tag</div></div>'
   };
   var tile=document.createElement('div');
   tile.className='tile'+(editMode?' edit-mode':'');
@@ -511,6 +521,7 @@ function addTile(type){
   setupDrag(tile);
   document.getElementById('add-modal').classList.remove('open');
   loadWeather();renderCal();
+  if(type==='diashow')initDiashow();
 }
 function openAddModal(){document.getElementById('add-modal').classList.add('open');}
 
@@ -523,9 +534,10 @@ function saveSettings(){
   localStorage.setItem('accent', document.getElementById('s-accent').value);
   localStorage.setItem('iv', document.getElementById('s-iv').value);
   localStorage.setItem('trans', document.getElementById('s-trans').value);
+  localStorage.setItem('bg', document.getElementById('s-bg').value);
   applySettings();
   restartSlideshow();
-  alert('Gespeichert!');
+  document.getElementById('foto-modal').classList.remove('open');
 }
 function applySettings(){
   document.documentElement.style.setProperty('--accent', document.getElementById('s-accent').value);
@@ -536,6 +548,35 @@ function loadSettings(){
   if(ac)document.documentElement.style.setProperty('--accent',ac);
   var tr=localStorage.getItem('trans');
   if(tr)setTileBg(tr);
+  var bg=localStorage.getItem('bg');
+  if(bg)document.body.style.background=bg;
+}
+
+// ===== DIASHOW KACHEL =====
+var diaIdx=0,diaTimer=null;
+function initDiashow(){
+  var photos=JSON.parse(localStorage.getItem('photo-urls')||'[]');
+  var ss=document.getElementById('dia-ss');
+  var dots=document.getElementById('dia-dots');
+  if(!ss||!photos.length)return;
+  ss.innerHTML='';if(dots)dots.innerHTML='';
+  photos.forEach(function(src,i){
+    var d=document.createElement('div');
+    d.style.cssText='position:absolute;inset:0;background:url('+src+') center/cover;opacity:'+(i===0?'1':'0')+';transition:opacity 1.5s';
+    ss.appendChild(d);
+    if(dots){var dot=document.createElement('div');dot.style.cssText='width:4px;height:4px;border-radius:50%;background:'+(i===0?'#c8a96e':'rgba(255,255,255,.3)');dots.appendChild(dot);}
+  });
+  if(diaTimer)clearInterval(diaTimer);
+  diaTimer=setInterval(function(){
+    var slides=ss.querySelectorAll('div');
+    var ddots=dots?dots.querySelectorAll('div'):[];
+    if(!slides.length)return;
+    slides[diaIdx].style.opacity='0';
+    if(ddots[diaIdx])ddots[diaIdx].style.background='rgba(255,255,255,.3)';
+    diaIdx=(diaIdx+1)%slides.length;
+    slides[diaIdx].style.opacity='1';
+    if(ddots[diaIdx])ddots[diaIdx].style.background='#c8a96e';
+  },4000);
 }
 
 // ===== START =====
@@ -549,7 +590,7 @@ var todayKey=dKey(new Date().getFullYear(),new Date().getMonth(),new Date().getD
 selDate=todayKey;
 renderCal();
 showDayEvs(todayKey,new Date().getDate());
-loadCloudPhotos();
+loadSavedPhotos();
 </script>
 </body>
 </html>
