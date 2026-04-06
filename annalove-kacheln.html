@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#000000">
 <title>AnnaLove</title>
 <style>
-:root{--accent:#c8a96e}
+:root{--accent:#c8a96e;--tile-bg:rgba(0,0,0,.75)}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,sans-serif;background:linear-gradient(135deg,#0d0d1a,#1a1a2e,#16213e);touch-action:none}
 .ss{position:fixed;inset:0;z-index:0}
@@ -16,7 +16,7 @@ body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,sans-ser
 .sl.on{opacity:1}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1}
 .grid{position:fixed;inset:0;z-index:2;padding:8px 8px 56px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:6px}
-.tile{background:rgba(0,0,0,.75);backdrop-filter:blur(20px);border-radius:16px;padding:12px;color:#e8dcc8;border:1px solid rgba(255,255,255,.15);position:relative;overflow:hidden;touch-action:none}
+.tile{background:var(--tile-bg);backdrop-filter:blur(20px);border-radius:16px;padding:12px;color:#e8dcc8;border:1px solid rgba(255,255,255,.15);position:relative;overflow:hidden;touch-action:none}
 .tile.dragging{opacity:.75;transform:scale(1.05);z-index:100;box-shadow:0 20px 50px rgba(0,0,0,.9)}
 .tile.drag-over{border:2px solid var(--accent)}
 .tile.edit-mode{animation:wob .4s infinite alternate}
@@ -190,11 +190,14 @@ body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,sans-ser
   <div class="lbl-s">Fotos (Hintergrund-Slideshow)</div>
   <div class="pgrid" id="pgrid"></div>
   <input type="file" id="file-in" accept="image/*" multiple style="display:none" onchange="addPhotos(this)">
-  <button class="btn btn-g" style="margin-top:12px" onclick="document.getElementById('file-in').click()">+ Fotos hinzuf&uuml;gen</button>
+  <div id="upload-status" style="font-size:11px;color:var(--accent);min-height:16px;margin-bottom:6px"></div><button class="btn btn-g" onclick="document.getElementById('file-in').click()">+ Fotos hinzuf&uuml;gen</button>
   <button class="btn btn-w" onclick="clearPhotos()">Alle Fotos l&ouml;schen</button>
   <div style="height:1px;background:rgba(255,255,255,.1);margin:16px 0"></div>
   <div class="lbl-s">Akzentfarbe</div>
   <input type="color" id="s-accent" value="#c8a96e" onchange="document.documentElement.style.setProperty('--accent',this.value);localStorage.setItem('accent',this.value)" style="width:60px;height:36px;border:none;border-radius:8px;cursor:pointer;margin-bottom:12px;display:block">
+  <div class="lbl-s">Kachel-Transparenz</div>
+  <input type="range" id="s-trans" min="0" max="90" value="75" style="width:100%;accent-color:var(--accent);margin-bottom:4px" oninput="document.getElementById('s-trans-v').textContent=this.value+'%';setTileBg(this.value);localStorage.setItem('trans',this.value)">
+  <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:16px" id="s-trans-v">75%</div>
   <div class="lbl-s">Foto-Wechsel (Sekunden)</div>
   <input type="range" id="s-iv" min="3" max="30" value="5" style="width:100%;accent-color:var(--accent);margin-bottom:4px" oninput="document.getElementById('s-iv-v').textContent=this.value+'s';localStorage.setItem('iv',this.value);restartSlideshow()">
   <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:16px" id="s-iv-v">5s</div>
@@ -202,133 +205,117 @@ body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,sans-ser
 </div>
 
 <script>
-// ===== INDEXEDDB =====
-var DB = null;
-function openDB(cb) {
-  var req = indexedDB.open('AnnaLoveDB3', 1);
-  req.onupgradeneeded = function(e) { e.target.result.createObjectStore('photos', {keyPath:'id', autoIncrement:true}); };
-  req.onsuccess = function(e) { DB = e.target.result; cb(); };
-  req.onerror = function() { cb(); };
-}
-function dbGetAll(cb) {
-  if (!DB) { cb([]); return; }
-  var tx = DB.transaction('photos','readonly');
-  var req = tx.objectStore('photos').getAll();
-  req.onsuccess = function() { cb(req.result||[]); };
-  req.onerror = function() { cb([]); };
-}
-function dbAdd(data, cb) {
-  if (!DB) { cb(); return; }
-  var tx = DB.transaction('photos','readwrite');
-  tx.objectStore('photos').add({data:data});
-  tx.oncomplete = cb;
-}
-function dbDel(id, cb) {
-  if (!DB) { cb(); return; }
-  var tx = DB.transaction('photos','readwrite');
-  tx.objectStore('photos').delete(id);
-  tx.oncomplete = cb;
-}
-function dbClear(cb) {
-  if (!DB) { cb(); return; }
-  var tx = DB.transaction('photos','readwrite');
-  tx.objectStore('photos').clear();
-  tx.oncomplete = cb;
+// ===== CLOUDINARY FOTOS =====
+var CLOUD = 'dlnrpiemx';
+var PRESET = 'annalove_upload';
+var curSlide = 0, slideTimer = null;
+
+function loadCloudPhotos() {
+  fetch('https://res.cloudinary.com/'+CLOUD+'/image/list/annalove.json')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.resources&&d.resources.length){
+      var urls=d.resources.map(function(r){
+        return 'https://res.cloudinary.com/'+CLOUD+'/image/upload/w_1200,q_70/'+r.public_id;
+      });
+      buildSlideshow(urls);
+      renderPhotoGrid(urls);
+    }
+  }).catch(function(){});
 }
 
-// ===== SLIDESHOW =====
-var curSlide = 0, slideTimer = null;
 function buildSlideshow(photos) {
-  var ss = document.getElementById('ss');
-  var dotsEl = document.getElementById('dots');
-  ss.innerHTML = ''; dotsEl.innerHTML = '';
-  curSlide = 0;
-  if (slideTimer) clearInterval(slideTimer);
-  if (!photos.length) return;
-  photos.forEach(function(src, i) {
-    var d = document.createElement('div');
-    d.className = 'sl' + (i===0?' on':'');
-    d.style.backgroundImage = 'url(' + src + ')';
+  var ss=document.getElementById('ss');
+  var dotsEl=document.getElementById('dots');
+  ss.innerHTML='';dotsEl.innerHTML='';curSlide=0;
+  if(slideTimer)clearInterval(slideTimer);
+  if(!photos.length)return;
+  photos.forEach(function(src,i){
+    var d=document.createElement('div');
+    d.className='sl'+(i===0?' on':'');
+    d.style.backgroundImage='url('+src+')';
     ss.appendChild(d);
-    var dot = document.createElement('div');
-    dot.className = 'dot' + (i===0?' on':'');
-    dot.onclick = (function(n){ return function(){ goTo(n); }; })(i);
+    var dot=document.createElement('div');
+    dot.className='dot'+(i===0?' on':'');
+    dot.onclick=(function(n){return function(){goTo(n);};})(i);
     dotsEl.appendChild(dot);
   });
   restartSlideshow();
 }
-function restartSlideshow() {
-  if (slideTimer) clearInterval(slideTimer);
-  var iv = parseInt(localStorage.getItem('iv')||'5') * 1000;
-  slideTimer = setInterval(function(){ goTo(curSlide+1); }, iv);
+function restartSlideshow(){
+  if(slideTimer)clearInterval(slideTimer);
+  var iv=parseInt(localStorage.getItem('iv')||'5')*1000;
+  slideTimer=setInterval(function(){goTo(curSlide+1);},iv);
 }
-function goTo(n) {
-  var slides = document.querySelectorAll('.sl');
-  var dots = document.querySelectorAll('.dot');
-  if (!slides.length) return;
-  slides[curSlide].classList.remove('on');
-  dots[curSlide].classList.remove('on');
-  curSlide = (n+slides.length)%slides.length;
-  slides[curSlide].classList.add('on');
-  dots[curSlide].classList.add('on');
+function goTo(n){
+  var slides=document.querySelectorAll('.sl');
+  var dots=document.querySelectorAll('.dot');
+  if(!slides.length)return;
+  slides[curSlide].classList.remove('on');dots[curSlide].classList.remove('on');
+  curSlide=(n+slides.length)%slides.length;
+  slides[curSlide].classList.add('on');dots[curSlide].classList.add('on');
 }
-function loadSlideshow() {
-  dbGetAll(function(rows) {
-    buildSlideshow(rows.map(function(r){ return r.data; }));
-    renderPhotoGrid(rows);
-  });
-}
-function renderPhotoGrid(rows) {
-  var grid = document.getElementById('pgrid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  rows.forEach(function(row) {
-    var d = document.createElement('div');
-    d.className = 'pthumb';
-    d.innerHTML = '<img src="'+row.data+'"><button class="pdel" onclick="removePhoto('+row.id+')">&#10005;</button>';
+
+function renderPhotoGrid(photos){
+  var grid=document.getElementById('pgrid');
+  if(!grid)return;
+  grid.innerHTML='';
+  photos.forEach(function(url){
+    var d=document.createElement('div');
+    d.className='pthumb';
+    d.innerHTML='<img src="'+url+'">';
     grid.appendChild(d);
   });
-  var add = document.createElement('div');
-  add.className = 'padd'; add.innerHTML = '+';
-  add.onclick = function(){ document.getElementById('file-in').click(); };
+  var add=document.createElement('div');
+  add.className='padd';add.innerHTML='+';
+  add.onclick=function(){document.getElementById('file-in').click();};
   grid.appendChild(add);
 }
-function addPhotos(input) {
-  var files = Array.from(input.files);
-  var done = 0;
-  if (!files.length) return;
-  files.forEach(function(file) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      var img = new Image();
-      img.onload = function() {
-        var canvas = document.createElement('canvas');
-        var max = 1200, w = img.width, h = img.height;
-        if (w>max) { h=Math.round(h*max/w); w=max; }
-        if (h>max) { w=Math.round(w*max/h); h=max; }
-        canvas.width=w; canvas.height=h;
-        canvas.getContext('2d').drawImage(img,0,0,w,h);
-        dbAdd(canvas.toDataURL('image/jpeg',0.7), function() {
-          done++;
-          if (done===files.length) loadSlideshow();
-        });
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+
+function addPhotos(input){
+  var files=Array.from(input.files);
+  if(!files.length)return;
+  var st=document.getElementById('upload-status');
+  if(st)st.textContent='Wird hochgeladen...';
+  var done=0;
+  files.forEach(function(file){
+    var fd=new FormData();
+    fd.append('file',file);
+    fd.append('upload_preset',PRESET);
+    fd.append('folder','annalove');
+    fd.append('tags','annalove');
+    fetch('https://api.cloudinary.com/v1_1/'+CLOUD+'/image/upload',{method:'POST',body:fd})
+    .then(function(r){return r.json();})
+    .then(function(){
+      done++;
+      if(done===files.length){
+        if(st)st.textContent=done+' Foto(s) hochgeladen!';
+        setTimeout(loadCloudPhotos,1500);
+      }
+    })
+    .catch(function(){if(st)st.textContent='Fehler - Upload Preset pruefen';});
   });
-  input.value = '';
+  input.value='';
 }
-function removePhoto(id) { dbDel(id, function(){ loadSlideshow(); }); }
-function clearPhotos() { if(confirm('Alle Fotos loeschen?')) dbClear(function(){ loadSlideshow(); }); }
-function openFotoModal() {
-  loadSlideshow();
+
+function clearPhotos(){
+  if(confirm('Alle Fotos loeschen?')){
+    document.getElementById('pgrid').innerHTML='';
+    document.getElementById('ss').innerHTML='';
+  }
+}
+
+function openFotoModal(){
+  loadCloudPhotos();
   document.getElementById('foto-modal').classList.add('open');
-  var iv = localStorage.getItem('iv')||'5';
-  document.getElementById('s-iv').value = iv;
-  document.getElementById('s-iv-v').textContent = iv+'s';
-  var ac = localStorage.getItem('accent')||'#c8a96e';
-  document.getElementById('s-accent').value = ac;
+  var iv=localStorage.getItem('iv')||'5';
+  document.getElementById('s-iv').value=iv;
+  document.getElementById('s-iv-v').textContent=iv+'s';
+  var ac=localStorage.getItem('accent')||'#c8a96e';
+  document.getElementById('s-accent').value=ac;
+  var tr=localStorage.getItem('trans')||'75';
+  document.getElementById('s-trans').value=tr;
+  document.getElementById('s-trans-v').textContent=tr+'%';
 }
 
 // ===== UHR =====
@@ -517,9 +504,15 @@ function addTile(type){
 function openAddModal(){document.getElementById('add-modal').classList.add('open');}
 
 // ===== EINSTELLUNGEN =====
+function setTileBg(val){
+  var alpha = (100 - parseInt(val)) / 100;
+  document.documentElement.style.setProperty('--tile-bg','rgba(0,0,0,'+alpha+')');
+}
 function loadSettings(){
   var ac=localStorage.getItem('accent');
   if(ac)document.documentElement.style.setProperty('--accent',ac);
+  var tr=localStorage.getItem('trans');
+  if(tr)setTileBg(tr);
 }
 
 // ===== START =====
@@ -533,7 +526,7 @@ var todayKey=dKey(new Date().getFullYear(),new Date().getMonth(),new Date().getD
 selDate=todayKey;
 renderCal();
 showDayEvs(todayKey,new Date().getDate());
-openDB(function(){loadSlideshow();});
+loadCloudPhotos();
 </script>
 </body>
 </html>
