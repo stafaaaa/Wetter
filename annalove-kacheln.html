@@ -197,7 +197,7 @@ body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,sans-ser
   <div class="lbl-s">Akzentfarbe</div>
   <input type="color" id="s-accent" value="#c8a96e" onchange="document.documentElement.style.setProperty('--accent',this.value);localStorage.setItem('accent',this.value)" style="width:60px;height:36px;border:none;border-radius:8px;cursor:pointer;margin-bottom:12px;display:block">
   <div class="lbl-s">Kachel-Transparenz</div>
-  <input type="range" id="s-trans" min="0" max="90" value="75" style="width:100%;accent-color:var(--accent);margin-bottom:4px" oninput="document.getElementById('s-trans-v').textContent=this.value+'%';setTileBg(this.value);localStorage.setItem('trans',this.value)">
+  <input type="range" id="s-trans" min="0" max="100" value="75" style="width:100%;accent-color:var(--accent);margin-bottom:4px" oninput="document.getElementById('s-trans-v').textContent=this.value+'%';setTileBg(this.value);localStorage.setItem('trans',this.value)">
   <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:16px" id="s-trans-v">75%</div>
   <div class="lbl-s">Hintergrundfarbe (wenn kein Foto)</div>
   <input type="color" id="s-bg" value="#1a1a2e" onchange="document.body.style.background=this.value;localStorage.setItem('bg',this.value)" style="width:60px;height:36px;border:none;border-radius:8px;cursor:pointer;margin-bottom:12px;display:block">
@@ -530,7 +530,7 @@ function openAddModal(){document.getElementById('add-modal').classList.add('open
 
 // ===== EINSTELLUNGEN =====
 function setTileBg(val){
-  var alpha = (100 - parseInt(val)) / 100;
+  var alpha = parseInt(val) / 100;
   document.documentElement.style.setProperty('--tile-bg','rgba(0,0,0,'+alpha+')');
 }
 function saveSettings(){
@@ -547,10 +547,10 @@ function applySettings(){
   setTileBg(document.getElementById('s-trans').value);
 }
 function loadSettings(){
-  var ac=localStorage.getItem('accent');
-  if(ac)document.documentElement.style.setProperty('--accent',ac);
-  var tr=localStorage.getItem('trans');
-  if(tr)setTileBg(tr);
+  var ac=localStorage.getItem('accent')||'#c8a96e';
+  document.documentElement.style.setProperty('--accent',ac);
+  var tr=localStorage.getItem('trans')||'75';
+  setTileBg(tr);
   var bg=localStorage.getItem('bg');
   if(bg)document.body.style.background=bg;
 }
