@@ -188,7 +188,7 @@ body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,sans-ser
 
 <div class="modal" id="foto-modal">
   <div class="mttl">&#128247; Fotos &amp; Einstellungen</div>
-  <div class="lbl-s">Fotos (alle Geraete sehen dieselben Fotos)</div>
+  <div class="lbl-s">Fotos (auf diesem Geraet gespeichert)</div>
   <div id="upload-status" style="font-size:11px;color:var(--ac);min-height:16px;margin-bottom:6px"></div>
   <div class="pgrid" id="pgrid"></div>
   <button class="btn btng" style="margin-top:12px" onclick="document.getElementById('file-in').click()">+ Fotos hinzuf&uuml;gen</button>
@@ -213,56 +213,51 @@ body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,sans-ser
 </div>
 
 <script>
-// ===== CLOUDINARY =====
-var CLOUD='dlnrpiemx', PRESET='annalove_upload';
-var photos=[], diaIdx=0, diaTimer=null, bgIdx=0, bgTimer=null;
+// ===== FOTOS LOKAL =====
+var photos=JSON.parse(localStorage.getItem('photos')||'[]');
+var diaIdx=0, diaTimer=null, bgIdx=0, bgTimer=null;
 
 function loadCloudPhotos(){
-  // Load saved URLs from localStorage
-  var saved = JSON.parse(localStorage.getItem('cloud-urls')||'[]');
-  photos = saved;
+  photos=JSON.parse(localStorage.getItem('photos')||'[]');
   refreshDia();refreshBg();renderGrid();
 }
 
-function saveCloudUrls(){
-  localStorage.setItem('cloud-urls', JSON.stringify(photos));
+function savePhotos(){
+  localStorage.setItem('photos',JSON.stringify(photos));
 }
 
 function uploadPhotos(input){
   var files=Array.from(input.files);
   if(!files.length)return;
   var st=document.getElementById('upload-status');
-  st.textContent='Wird hochgeladen...';
+  st.textContent='Wird geladen...';
   var done=0;
   files.forEach(function(file){
-    var fd=new FormData();
-    fd.append('file',file);
-    fd.append('upload_preset',PRESET);
-    fd.append('folder','annalove');
-    fd.append('tags','annalove');
-    fetch('https://api.cloudinary.com/v1_1/'+CLOUD+'/image/upload',{method:'POST',body:fd})
-    .then(function(r){return r.json();})
-    .then(function(data){
-      done++;
-      if(data.secure_url)photos.push(data.secure_url);
-      if(done===files.length){
-        st.textContent=done+' Foto(s) hochgeladen!';
-        saveCloudUrls();
-        refreshDia();refreshBg();renderGrid();
-      }
-    })
-    .catch(function(){
-      done++;
-      st.textContent='Fehler! Preset pruefen.';
-    });
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        var canvas=document.createElement('canvas');
+        var max=800,w=img.width,h=img.height;
+        if(w>max){h=Math.round(h*max/w);w=max;}
+        if(h>max){w=Math.round(w*max/h);h=max;}
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        photos.push(canvas.toDataURL('image/jpeg',0.6));
+        savePhotos();done++;
+        if(done===files.length){
+          st.textContent=done+' Foto(s) gespeichert!';
+          refreshDia();refreshBg();renderGrid();
+        }
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
   });
   input.value='';
 }
 
-function clearAllPhotos(){
-  if(!confirm('Alle Fotos loeschen?'))return;
-  photos=[];refreshDia();refreshBg();renderGrid();
-}
+function clearAllPhotos(){if(!confirm('Alle Fotos loeschen?'))return;photos=[];savePhotos();refreshDia();refreshBg();renderGrid();}
 
 function renderGrid(){
   var grid=document.getElementById('pgrid');
