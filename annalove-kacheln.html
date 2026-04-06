@@ -218,11 +218,13 @@ function loadSavedPhotos() {
   if (saved.length) {
     buildSlideshow(saved);
     renderPhotoGrid(saved);
+    initDiashow();
   }
 }
 
 function loadCloudPhotos() {
   loadSavedPhotos();
+initDiashow();
   fetch('https://res.cloudinary.com/'+CLOUD+'/image/list/annalove.json')
   .then(function(r){return r.json();})
   .then(function(d){
@@ -309,6 +311,7 @@ function addPhotos(input){
       if(done===files.length){
         if(st)st.textContent=done+' Foto(s) hochgeladen!';
         loadSavedPhotos();
+        initDiashow();
       }
     })
     .catch(function(){if(st)st.textContent='Fehler - Upload Preset pruefen';});
