@@ -112,16 +112,34 @@ body{min-height:100vh;display:flex;justify-content:center;align-items:flex-start
     <div id="w-forecast"><div class="ne">...</div></div>
   </div>
   <div class="div"></div>
-  <div class="lbl" style="display:flex;justify-content:space-between;align-items:center">
-    <span>Termine</span>
-    <button onclick="window.open('https://calendar.google.com','_blank')" style="background:var(--accent);border:none;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;color:#000">+ Neu</button>
+  <div class="lbl">Kalender</div>
+
+  <!-- Monatskalender -->
+  <div id="month-cal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <button onclick="prevMonth()" style="background:none;border:none;color:var(--accent);font-size:20px;cursor:pointer">&#8249;</button>
+      <div id="month-title" style="font-size:15px;font-weight:700;color:#fff;letter-spacing:1px"></div>
+      <button onclick="nextMonth()" style="background:none;border:none;color:var(--accent);font-size:20px;cursor:pointer">&#8250;</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:8px">
+      <div style="text-align:center;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.4);padding:4px">MO</div>
+      <div style="text-align:center;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.4);padding:4px">DI</div>
+      <div style="text-align:center;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.4);padding:4px">MI</div>
+      <div style="text-align:center;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.4);padding:4px">DO</div>
+      <div style="text-align:center;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.4);padding:4px">FR</div>
+      <div style="text-align:center;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.4);padding:4px;color:rgba(200,169,110,.6)">SA</div>
+      <div style="text-align:center;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.4);padding:4px;color:rgba(200,169,110,.6)">SO</div>
+    </div>
+    <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px"></div>
   </div>
-  <div id="cal"><div class="ne">Keine Termine</div></div>
+
+  <!-- Termine des gewaehlten Tages -->
+  <div id="day-events" style="margin-top:16px"></div>
 
   <!-- Add Event Modal -->
-  <div id="event-modal" style="display:none;position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);padding:40px 24px">
+  <div id="event-modal" style="display:none;position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.9);backdrop-filter:blur(10px);padding:40px 24px;overflow-y:auto">
     <div style="max-width:360px;margin:0 auto">
-      <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:24px;font-family:Georgia,serif">Termin hinzuf&uuml;gen</div>
+      <div id="ev-modal-title" style="font-size:18px;font-weight:700;color:#fff;margin-bottom:24px;font-family:Georgia,serif">Termin</div>
       <div style="margin-bottom:16px">
         <div class="gl" style="margin-bottom:8px">Datum</div>
         <input type="date" id="ev-date" style="width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;padding:10px 14px;font-size:14px">
@@ -369,58 +387,133 @@ function loadWeather(){
 }
 loadWeather();setInterval(loadWeather,600000);
 
-// KALENDER - Google Calendar
-var MON=['Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
-var ICS='https://calendar.google.com/calendar/ical/bee6bd50fed6997d7a4b9ad5a26e274fafe8499c2685da0f8dd13abfb18bf159%40group.calendar.google.com/public/basic.ics';
-var PROXY='https://api.allorigins.win/raw?url=';
+// KALENDER - Vollstaendiger Monatskalender
+var MON_NAMES=['Januar','Februar','Maerz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+var MON_SHORT=['Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+var calYear=new Date().getFullYear();
+var calMonth=new Date().getMonth();
+var selectedDate=null;
 
-function parseICS(txt){
-  var evts=[];var e=null;
-  var lines=txt.split(/\r?\n/);
-  for(var i=0;i<lines.length;i++){
-    var line=lines[i].trim();
-    if(line==='BEGIN:VEVENT'){e={};}
-    else if(line==='END:VEVENT'&&e){evts.push(e);e=null;}
-    else if(e){
-      if(line.indexOf('SUMMARY:')===0){e.title=line.slice(8);}
-      else if(line.match(/^DTSTART/)){
-        var v=line.split(':')[1]||'';
-        var yr=v.slice(0,4),mo=v.slice(4,6),dy=v.slice(6,8),hr=v.slice(9,11)||'00',mn=v.slice(11,13)||'00';
-        e.start=new Date(yr+'-'+mo+'-'+dy+'T'+hr+':'+mn+':00');
-        e.allDay=v.indexOf('T')<0;
-      }
-    }
+function getEvents(){
+  try{return JSON.parse(localStorage.getItem('cal-events')||'[]');}
+  catch(e){return [];}
+}
+function saveAllEvents(evts){localStorage.setItem('cal-events',JSON.stringify(evts));}
+
+function dateKey(y,m,d){return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');}
+
+function renderMonth(){
+  document.getElementById('month-title').textContent=MON_NAMES[calMonth]+' '+calYear;
+  var grid=document.getElementById('cal-grid');
+  grid.innerHTML='';
+  var evts=getEvents();
+  var today=new Date();
+  var firstDay=new Date(calYear,calMonth,1).getDay();
+  firstDay=(firstDay+6)%7; // Monday=0
+  var daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+
+  // Empty cells before first day
+  for(var i=0;i<firstDay;i++){
+    var empty=document.createElement('div');
+    grid.appendChild(empty);
   }
-  return evts;
+
+  for(var d=1;d<=daysInMonth;d++){
+    var key=dateKey(calYear,calMonth,d);
+    var hasEvent=evts.some(function(e){return e.date===key;});
+    var isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
+    var isSelected=selectedDate===key;
+    var dayDiv=document.createElement('div');
+    dayDiv.style.cssText='text-align:center;padding:6px 2px;border-radius:8px;cursor:pointer;position:relative;font-size:13px;color:'+(isToday?'#000':(isSelected?'#000':'#fff'))+';background:'+(isToday?'var(--accent)':(isSelected?'rgba(200,169,110,.4)':'transparent'))+';font-weight:'+(isToday?'700':'400');
+    dayDiv.textContent=d;
+    if(hasEvent){
+      var dot=document.createElement('div');
+      dot.style.cssText='width:4px;height:4px;border-radius:50%;background:var(--accent);margin:2px auto 0;'+(isToday?'background:#000':'');
+      dayDiv.appendChild(dot);
+    }
+    dayDiv.onclick=(function(dk,dv){return function(){selectedDate=dk;renderMonth();showDayEvents(dk,dv);};})(key,d);
+    grid.appendChild(dayDiv);
+  }
 }
 
-function renderCalendar(){
-  fetch(PROXY+encodeURIComponent(ICS))
-  .then(function(r){return r.text();})
-  .then(function(txt){
-    var evts=parseICS(txt).filter(function(e){return e.start&&e.start>=new Date();});
-    evts.sort(function(a,b){return a.start-b.start;});
-    evts=evts.slice(0,5);
-    var el=document.getElementById('cal');
-    if(!evts.length){el.innerHTML='<div class="ne">Keine Termine</div>';return;}
-    var h='';
-    evts.forEach(function(ev){
-      var t=ev.allDay?'Ganztaegig':String(ev.start.getHours()).padStart(2,'0')+':'+String(ev.start.getMinutes()).padStart(2,'0')+' Uhr';
-      h+='<div class="ce"><div class="ed"><div class="eday">'+ev.start.getDate()+'</div><div class="emo">'+MON[ev.start.getMonth()]+'</div></div><div class="ei"><div class="et">'+(ev.title||'Termin')+'</div><div class="etm">'+t+'</div></div></div>';
+function showDayEvents(key,dayNum){
+  var evts=getEvents().filter(function(e){return e.date===key;});
+  var el=document.getElementById('day-events');
+  var parts=key.split('-');
+  var dateLabel=dayNum+'. '+MON_SHORT[parseInt(parts[1])-1]+' '+parts[0];
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+  h+='<div style="font-size:12px;color:var(--accent);font-weight:700">'+dateLabel+'</div>';
+  h+='<button onclick="openAddEvent(''+key+'')" style="background:var(--accent);border:none;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;color:#000">+ Neu</button>';
+  h+='</div>';
+  if(!evts.length){h+='<div class="ne">Kein Termin &mdash; tippe + Neu</div>';}
+  else{
+    evts.forEach(function(ev,i){
+      var t=ev.time?ev.time+' Uhr':'Ganztaegig';
+      h+='<div class="ce"><div class="ed"><div class="eday">'+dayNum+'</div><div class="emo">'+MON_SHORT[parseInt(parts[1])-1]+'</div></div><div class="ei"><div class="et">'+ev.title+'</div><div class="etm">'+t+'</div></div><button onclick="deleteCalEvent(''+key+'','+i+')" style="background:none;border:none;color:rgba(255,255,255,.3);font-size:16px;cursor:pointer">&#10005;</button></div>';
     });
-    el.innerHTML=h;
-  })
-  .catch(function(){document.getElementById('cal').innerHTML='<div class="ne">Termine nicht verfuegbar</div>';});
+  }
+  el.innerHTML=h;
 }
 
-function openAddEvent(){
-  window.open('https://calendar.google.com','_blank');
+function deleteCalEvent(key,idx){
+  var all=getEvents();
+  var dayEvts=all.filter(function(e){return e.date===key;});
+  var others=all.filter(function(e){return e.date!==key;});
+  dayEvts.splice(idx,1);
+  saveAllEvents(others.concat(dayEvts));
+  renderMonth();
+  var parts=key.split('-');
+  showDayEvents(key,parseInt(parts[2]));
 }
 
-function closeAddEvent(){}
+function prevMonth(){
+  calMonth--;if(calMonth<0){calMonth=11;calYear--;}
+  renderMonth();
+  document.getElementById('day-events').innerHTML='';
+}
 
-renderCalendar();
-setInterval(renderCalendar,300000);
+function nextMonth(){
+  calMonth++;if(calMonth>11){calMonth=0;calYear++;}
+  renderMonth();
+  document.getElementById('day-events').innerHTML='';
+}
+
+function openAddEvent(key){
+  var date=key||dateKey(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
+  document.getElementById('ev-date').value=date;
+  document.getElementById('ev-time').value='';
+  document.getElementById('ev-title').value='';
+  document.getElementById('ev-modal-title').textContent='Termin hinzufuegen';
+  document.getElementById('event-modal').style.display='block';
+}
+
+function closeAddEvent(){
+  document.getElementById('event-modal').style.display='none';
+}
+
+function saveEvent(){
+  var date=document.getElementById('ev-date').value;
+  var time=document.getElementById('ev-time').value;
+  var title=document.getElementById('ev-title').value.trim();
+  if(!date||!title){alert('Bitte Datum und Titel eingeben!');return;}
+  var evts=getEvents();
+  evts.push({date:date,time:time,title:title});
+  saveAllEvents(evts);
+  closeAddEvent();
+  selectedDate=date;
+  var parts=date.split('-');
+  calYear=parseInt(parts[0]);calMonth=parseInt(parts[1])-1;
+  renderMonth();
+  showDayEvents(date,parseInt(parts[2]));
+}
+
+// Init
+renderMonth();
+// Show today events on load
+var todayKey=dateKey(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
+selectedDate=todayKey;
+renderMonth();
+showDayEvents(todayKey,new Date().getDate());
 
 // SETTINGS
 function openSettings(){document.getElementById('sp').classList.add('open');loadSettingsUI();}
