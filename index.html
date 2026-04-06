@@ -21,6 +21,9 @@ body{color:var(--text)}
 .sl.on{opacity:1}
 .ov{position:fixed;inset:0;z-index:1;background:linear-gradient(rgba(0,0,0,.25),rgba(0,0,0,.45))}
 .grid{position:fixed;inset:0;z-index:2;padding:8px 8px 56px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:6px}
+.tile{touch-action:none;user-select:none;-webkit-user-select:none}
+.tile.dragging{opacity:.72;transform:scale(1.03);z-index:100;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.tile.drag-over{outline:2px solid var(--accent);outline-offset:-2px}
 .tile{background:var(--tile-bg);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:12px;overflow:hidden;position:relative}
 .t-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.52);margin-bottom:6px}
 .t-time{font-size:42px;font-weight:700;line-height:1;color:#fff;font-family:Georgia,serif}
@@ -90,7 +93,7 @@ body{color:var(--text)}
 <div class="ss" id="ss"></div>
 <div class="ov"></div>
 
-<div class="grid">
+<div class="grid" id="grid">
   <div class="tile">
     <div class="t-lbl">Uhrzeit</div>
     <div class="t-time" id="clk">--:--</div>
@@ -465,7 +468,93 @@ function loadSettings(){
   document.getElementById('s-iv-v').textContent=iv+'s';
 }
 
+
+
+// tile moving
+function setupTileDrag(){
+  const tiles=document.querySelectorAll('#grid .tile');
+  tiles.forEach(tile=>{
+    if(tile.dataset.dragReady==='1') return;
+    tile.dataset.dragReady='1';
+    tile.draggable=true;
+
+    tile.addEventListener('dragstart',e=>{
+      window.__dragTile=tile;
+      tile.classList.add('dragging');
+      if(e.dataTransfer){e.dataTransfer.effectAllowed='move'; try{e.dataTransfer.setData('text/plain','tile');}catch(_){}}
+    });
+
+    tile.addEventListener('dragend',()=>{
+      tile.classList.remove('dragging');
+      clearTileMarkers();
+      window.__dragTile=null;
+    });
+
+    tile.addEventListener('dragover',e=>{
+      e.preventDefault();
+      const dragged=window.__dragTile;
+      if(dragged && dragged!==tile){
+        clearTileMarkers();
+        tile.classList.add('drag-over');
+      }
+    });
+
+    tile.addEventListener('drop',e=>{
+      e.preventDefault();
+      const dragged=window.__dragTile;
+      if(dragged && dragged!==tile) moveTileBeforeAfter(dragged,tile,e.clientY);
+      clearTileMarkers();
+    });
+
+    tile.addEventListener('touchstart',onTileTouchStart,{passive:true});
+    tile.addEventListener('touchmove',onTileTouchMove,{passive:false});
+    tile.addEventListener('touchend',onTileTouchEnd,{passive:true});
+    tile.addEventListener('touchcancel',onTileTouchEnd,{passive:true});
+  });
+}
+
+function clearTileMarkers(){
+  document.querySelectorAll('#grid .tile').forEach(t=>t.classList.remove('drag-over'));
+}
+
+function moveTileBeforeAfter(dragged,target,pointerY){
+  const grid=document.getElementById('grid');
+  if(!grid||dragged===target) return;
+  const rect=target.getBoundingClientRect();
+  const after=pointerY > rect.top + rect.height/2;
+  if(after) grid.insertBefore(dragged,target.nextSibling);
+  else grid.insertBefore(dragged,target);
+}
+
+let touchDragTile=null;
+function onTileTouchStart(e){
+  touchDragTile=e.currentTarget;
+  touchDragTile.classList.add('dragging');
+}
+function onTileTouchMove(e){
+  if(!touchDragTile) return;
+  e.preventDefault();
+  const t=e.touches[0];
+  clearTileMarkers();
+  const el=document.elementFromPoint(t.clientX,t.clientY);
+  const target=el && el.closest ? el.closest('#grid .tile') : null;
+  if(target && target!==touchDragTile) target.classList.add('drag-over');
+}
+function onTileTouchEnd(e){
+  if(!touchDragTile) return;
+  const changed=e.changedTouches && e.changedTouches[0];
+  if(changed){
+    const el=document.elementFromPoint(changed.clientX,changed.clientY);
+    const target=el && el.closest ? el.closest('#grid .tile') : null;
+    if(target && target!==touchDragTile) moveTileBeforeAfter(touchDragTile,target,changed.clientY);
+  }
+  touchDragTile.classList.remove('dragging');
+  touchDragTile=null;
+  clearTileMarkers();
+}
+
 // init
+setupTileDrag();
 loadSettings();
 tick(); setInterval(tick,1000);
 loadWeather(); setInterval(loadWeather,600000);
