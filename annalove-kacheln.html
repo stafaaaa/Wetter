@@ -201,7 +201,7 @@ body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,sans-ser
   <div class="lbl-s">Foto-Wechsel (Sekunden)</div>
   <input type="range" id="s-iv" min="3" max="30" value="5" style="width:100%;accent-color:var(--accent);margin-bottom:4px" oninput="document.getElementById('s-iv-v').textContent=this.value+'s';localStorage.setItem('iv',this.value);restartSlideshow()">
   <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:16px" id="s-iv-v">5s</div>
-  <button class="btn btn-w" onclick="document.getElementById('foto-modal').classList.remove('open')">Schlie&szlig;en</button>
+  <button class="btn btn-g" onclick="saveSettings()">&#10003; Einstellungen speichern</button><div style="height:8px"></div><button class="btn btn-w" onclick="document.getElementById('foto-modal').classList.remove('open')">Schlie&szlig;en</button>
 </div>
 
 <script>
@@ -286,11 +286,22 @@ function addPhotos(input){
     fd.append('tags','annalove');
     fetch('https://api.cloudinary.com/v1_1/'+CLOUD+'/image/upload',{method:'POST',body:fd})
     .then(function(r){return r.json();})
-    .then(function(){
+    .then(function(data){
       done++;
+      // Add photo immediately to slideshow
+      if(data.secure_url){
+        var ss=document.getElementById('ss');
+        var d=document.createElement('div');
+        d.className='sl on';
+        d.style.backgroundImage='url('+data.secure_url+')';
+        // Remove previous slides
+        ss.innerHTML='';
+        ss.appendChild(d);
+        document.getElementById('dots').innerHTML='';
+      }
       if(done===files.length){
         if(st)st.textContent=done+' Foto(s) hochgeladen!';
-        setTimeout(loadCloudPhotos,1500);
+        setTimeout(loadCloudPhotos,2000);
       }
     })
     .catch(function(){if(st)st.textContent='Fehler - Upload Preset pruefen';});
@@ -507,6 +518,18 @@ function openAddModal(){document.getElementById('add-modal').classList.add('open
 function setTileBg(val){
   var alpha = (100 - parseInt(val)) / 100;
   document.documentElement.style.setProperty('--tile-bg','rgba(0,0,0,'+alpha+')');
+}
+function saveSettings(){
+  localStorage.setItem('accent', document.getElementById('s-accent').value);
+  localStorage.setItem('iv', document.getElementById('s-iv').value);
+  localStorage.setItem('trans', document.getElementById('s-trans').value);
+  applySettings();
+  restartSlideshow();
+  alert('Gespeichert!');
+}
+function applySettings(){
+  document.documentElement.style.setProperty('--accent', document.getElementById('s-accent').value);
+  setTileBg(document.getElementById('s-trans').value);
 }
 function loadSettings(){
   var ac=localStorage.getItem('accent');
