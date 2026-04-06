@@ -136,16 +136,16 @@ body{width:100vw;height:100vh;overflow:hidden;font-family:-apple-system,sans-ser
     </div>
     <div id="day-ev"><div class="ne">Tippe auf einen Tag</div></div>
   </div>
-  <div class="tile" data-tile="details">
+  <div class="tile" data-tile="diashow" style="padding:0;overflow:hidden">
     <button class="tile-del" onclick="this.closest('.tile').remove()">&#10005;</button>
-    <div class="t-lbl">Details</div>
-    <div class="t-grid">
-      <div class="t-gi"><div class="t-gl">Gef&uuml;hlt</div><div class="t-gv" id="w-feel">--</div></div>
-      <div class="t-gi"><div class="t-gl">Feuchte</div><div class="t-gv" id="w-hum">--</div></div>
-      <div class="t-gi"><div class="t-gl">Wind</div><div class="t-gv" id="w-wind">--</div></div>
-      <div class="t-gi"><div class="t-gl">B&ouml;en</div><div class="t-gv" id="w-gust">--</div></div>
-      <div class="t-gi"><div class="t-gl">Regen</div><div class="t-gv" id="w-rain">--</div></div>
-      <div class="t-gi"><div class="t-gl">UV</div><div class="t-gv" id="w-uv">--</div></div>
+    <div class="dia-wrap" style="position:relative;width:100%;height:100%;background:#111;border-radius:16px;overflow:hidden;display:flex;align-items:center;justify-content:center">
+      <div class="dia-ss" id="dia-ss" style="position:absolute;inset:0"></div>
+      <div id="dia-empty" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer" onclick="document.getElementById('file-in').click()">
+        <div style="font-size:36px;margin-bottom:8px">&#128247;</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.5)">+ Fotos hinzuf&uuml;gen</div>
+      </div>
+      <button onclick="document.getElementById('file-in').click()" id="dia-add-btn" style="display:none;position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer;z-index:3">+ Foto</button>
+      <div class="dia-dots" id="dia-dots" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:3px;z-index:3"></div>
     </div>
   </div>
   <div class="tile" data-tile="vorhersage">
@@ -287,6 +287,7 @@ function renderPhotoGrid(photos){
   add.className='padd';add.innerHTML='+';
   add.onclick=function(){document.getElementById('file-in').click();};
   grid.appendChild(add);
+  initDiashow();
 }
 
 function addPhotos(input){
@@ -560,33 +561,45 @@ function loadSettings(){
 
 // ===== DIASHOW KACHEL =====
 var diaIdx=0,diaTimer=null;
+var diaIdx=0,diaTimer=null;
 function initDiashow(){
   var photos=JSON.parse(localStorage.getItem('photo-urls')||'[]');
-  if(!photos.length)return;
-  document.querySelectorAll('.dia-wrap').forEach(function(wrap){
-    var ss=wrap.querySelector('.dia-ss');
-    var dots=wrap.querySelector('.dia-dots');
-    if(!ss)return;
-    ss.innerHTML='';if(dots)dots.innerHTML='';
-    var idx=0,timer=null;
-    photos.forEach(function(src,i){
-      var d=document.createElement('div');
-      d.style.cssText='position:absolute;inset:0;background:url('+src+') center/cover no-repeat;opacity:'+(i===0?'1':'0')+';transition:opacity 1.5s';
-      ss.appendChild(d);
-      if(dots){var dot=document.createElement('div');dot.style.cssText='width:4px;height:4px;border-radius:50%;background:'+(i===0?'#c8a96e':'rgba(255,255,255,.3)');dots.appendChild(dot);}
-    });
-    if(timer)clearInterval(timer);
-    timer=setInterval(function(){
-      var slides=ss.querySelectorAll('div');
-      var ddots=dots?dots.querySelectorAll('div'):[];
-      if(!slides.length)return;
-      slides[idx].style.opacity='0';
-      if(ddots[idx])ddots[idx].style.background='rgba(255,255,255,.3)';
-      idx=(idx+1)%slides.length;
-      slides[idx].style.opacity='1';
-      if(ddots[idx])ddots[idx].style.background='#c8a96e';
-    },4000);
+  var ss=document.getElementById('dia-ss');
+  var dots=document.getElementById('dia-dots');
+  var empty=document.getElementById('dia-empty');
+  var addBtn=document.getElementById('dia-add-btn');
+  if(!ss)return;
+  ss.innerHTML='';
+  if(dots)dots.innerHTML='';
+  diaIdx=0;
+  if(diaTimer)clearInterval(diaTimer);
+  if(!photos.length){
+    if(empty)empty.style.display='flex';
+    if(addBtn)addBtn.style.display='none';
+    return;
+  }
+  if(empty)empty.style.display='none';
+  if(addBtn)addBtn.style.display='block';
+  photos.forEach(function(src,i){
+    var d=document.createElement('div');
+    d.style.cssText='position:absolute;inset:0;background:url('+src+') center/cover no-repeat;opacity:'+(i===0?'1':'0')+';transition:opacity 1.5s';
+    ss.appendChild(d);
+    if(dots){
+      var dot=document.createElement('div');
+      dot.style.cssText='width:4px;height:4px;border-radius:50%;background:'+(i===0?'#c8a96e':'rgba(255,255,255,.3)');
+      dots.appendChild(dot);
+    }
   });
+  diaTimer=setInterval(function(){
+    var slides=ss.querySelectorAll('div');
+    var ddots=dots?dots.querySelectorAll('div'):[];
+    if(!slides.length)return;
+    slides[diaIdx].style.opacity='0';
+    if(ddots[diaIdx])ddots[diaIdx].style.background='rgba(255,255,255,.3)';
+    diaIdx=(diaIdx+1)%slides.length;
+    slides[diaIdx].style.opacity='1';
+    if(ddots[diaIdx])ddots[diaIdx].style.background='#c8a96e';
+  },4000);
 }
 
 // ===== START =====
