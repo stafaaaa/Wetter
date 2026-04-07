@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>AnnaLove</title>
+<title>MyAnnaLove</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -76,7 +76,7 @@ html, body {
   font-family:'Playfair Display',serif;
   font-size: clamp(50px, 6vw, 88px);
   font-weight:300; letter-spacing:-2px; line-height:1;
-  text-shadow:0 2px 20px rgba(0,0,0,0.4);
+  text-shadow:0 2px 8px rgba(0,0,0,0.9), 0 0 30px rgba(0,0,0,0.7);
 }
 #time-display .colon { color:var(--accent); animation:blink 1s step-end infinite; }
 #time-display .secs { font-size:0.34em; vertical-align:super; color:var(--muted); margin-left:4px; }
@@ -438,7 +438,7 @@ html, body {
 
 </div>
 
-<div id="logo">AnnaLove</div>
+<div id="logo">MyAnnaLove</div>
 
 <!-- ADD EVENT -->
 <div class="modal-overlay" id="modal-add">
@@ -811,7 +811,7 @@ function setupModals(){
 //  SPOTIFY
 // ═══════════════════════════════════════════════════
 const SP_CLIENT_ID = 'c2d20533a6aa4d3a844836eb77bb5345';
-const SP_REDIRECT   = 'https://stafaaaa.github.io/Wetter';
+const SP_REDIRECT   = 'https://stafaaaa.github.io/Dasboarder/annalove.html';
 const SP_SCOPES     = 'user-read-playback-state user-modify-playback-state';
 
 let spToken = null, spRefreshTimer = null, spPollTimer = null, spIsPlaying = false;
@@ -892,31 +892,53 @@ async function spRefreshToken() {
 
 function spConnected() {
   document.getElementById('sp-login').style.display = 'none';
-  document.getElementById('sp-idle').style.display = 'none';
+  document.getElementById('sp-idle').textContent = '⏳ Verbinde…';
   document.getElementById('sp-now').style.display = 'flex';
+  document.getElementById('sp-title').textContent = 'Verbunden ✓';
+  document.getElementById('sp-artist').textContent = 'Warte auf Wiedergabe…';
   spPoll();
-  spPollTimer = setInterval(spPoll, 5000);
+  if (spPollTimer) clearInterval(spPollTimer);
+  spPollTimer = setInterval(spPoll, 3000);
 }
 
 async function spPoll() {
   if (!spToken) return;
-  // Refresh token if expiring soon
   const exp = parseInt(localStorage.getItem('sp_expires') || '0');
   if (Date.now() > exp - 60000) await spRefreshToken();
 
   try {
-    const r = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+    // Try currently-playing first, fallback to player state
+    let r = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
       headers: { 'Authorization': 'Bearer ' + spToken }
     });
-    if (r.status === 204 || r.status === 404) {
+
+    // Fallback to full player endpoint
+    if (r.status === 204 || r.status === 404 || r.status === 403) {
+      r = await fetch('https://api.spotify.com/v1/me/player', {
+        headers: { 'Authorization': 'Bearer ' + spToken }
+      });
+    }
+
+    if (r.status === 204 || r.status === 404 || r.status === 403) {
       document.getElementById('sp-title').textContent = 'Nichts läuft gerade';
-      document.getElementById('sp-artist').textContent = '—';
+      document.getElementById('sp-artist').textContent = 'Spotify Free: eingeschränkt';
       document.getElementById('sp-cover').innerHTML = '🎵';
       document.getElementById('sp-prog').style.width = '0%';
       return;
     }
+
+    if (!r.ok) {
+      document.getElementById('sp-title').textContent = 'Fehler ' + r.status;
+      document.getElementById('sp-artist').textContent = 'Token abgelaufen?';
+      return;
+    }
+
     const data = await r.json();
-    if (!data || !data.item) return;
+    if (!data || !data.item) {
+      document.getElementById('sp-title').textContent = 'Nichts läuft gerade';
+      document.getElementById('sp-artist').textContent = '—';
+      return;
+    }
 
     const track = data.item;
     spIsPlaying = data.is_playing;
@@ -924,17 +946,17 @@ async function spPoll() {
     document.getElementById('sp-title').textContent = track.name;
     document.getElementById('sp-artist').textContent = track.artists.map(a=>a.name).join(', ');
 
-    // Cover
     const img = track.album?.images?.[2]?.url || track.album?.images?.[0]?.url;
     if (img) document.getElementById('sp-cover').innerHTML = `<img src="${img}">`;
     else document.getElementById('sp-cover').innerHTML = '🎵';
 
-    // Progress
     if (track.duration_ms) {
       const pct = (data.progress_ms / track.duration_ms * 100).toFixed(1);
       document.getElementById('sp-prog').style.width = pct + '%';
     }
-  } catch(e) {}
+  } catch(e) {
+    document.getElementById('sp-artist').textContent = 'Verbindungsfehler';
+  }
 }
 
 async function spPlayPause() {
@@ -974,8 +996,55 @@ function spInit() {
   }
 }
 
+
+// ═══════════════════════════════════════════════════
+//  ADAPTIVE TEXT COLOR
+// ═══════════════════════════════════════════════════
+function analyzeImageBrightness(imgEl, callback) {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 50; canvas.height = 50;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(imgEl, 0, 0, 50, 50);
+    const data = ctx.getImageData(0, 0, 50, 50).data;
+    let total = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      // Perceived brightness formula
+      total += (data[i] * 0.299 + data[i+1] * 0.587 + data[i+2] * 0.114);
+    }
+    const avg = total / (data.length / 4);
+    callback(avg); // 0=dark, 255=bright
+  } catch(e) { callback(100); } // default dark
+}
+
+function applyAdaptiveColors(brightness) {
+  const isDark = brightness < 140;
+  const textColor = isDark ? '#f4f1ec' : '#1a1a1a';
+  const mutedColor = isDark ? 'rgba(244,241,236,0.55)' : 'rgba(20,20,20,0.65)';
+  const accentColor = isDark ? '#c8a96e' : '#8a6030';
+
+  document.documentElement.style.setProperty('--text', textColor);
+  document.documentElement.style.setProperty('--muted', mutedColor);
+  document.documentElement.style.setProperty('--accent', accentColor);
+}
+
+function checkAdaptiveColor() {
+  // Check active bg image
+  const activeImg = document.querySelector('#bg-slideshow img.active');
+  if (!activeImg || !activeImg.complete) return;
+  analyzeImageBrightness(activeImg, applyAdaptiveColors);
+}
+
+// Run after each slide change
+const _origAdvance = advance;
+advance = function() {
+  _origAdvance();
+  setTimeout(checkAdaptiveColor, 2600); // after transition
+};
+
 spInit();
 init();
+setTimeout(checkAdaptiveColor, 1000);
 </script>
 </body>
 </html>
