@@ -18,6 +18,7 @@ body {
   grid-template-rows: auto auto auto auto;
   gap: 7px;
   color: #fff;
+  background: linear-gradient(to bottom right, #0a1628, #0d2040);
 }
 
 /* ── Cards ── */
@@ -31,6 +32,7 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.1);
+  color: #fff;
 }
 .label {
   font-size: 8px; font-weight: 600;
@@ -666,13 +668,23 @@ function addPhotosFromSettings(input){
 function renderSettingsPhotoGrid(){
   var grid = document.getElementById('settings-photo-grid');
   if(!grid) return;
-  document.getElementById('photo-count-settings').textContent = photos.length;
-  grid.innerHTML = photos.map(function(src, i){
-    return '<div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid '+(i===currentSlide?'var(--accent,#4a9eff)':'transparent')+'">'
-      + '<img src="'+src+'" style="width:100%;height:100%;object-fit:cover" onerror="this.src='data:image/svg+xml,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'50\' height=\'50\'><rect fill=\'%23333\'/><text x=\'50%25\' y=\'50%25\' fill=\'white\' text-anchor=\'middle\' dy=\'.3em\'>?</text></svg>'">'
-      + '<button onclick="deletePhotoFromSettings('+i+')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);border:none;color:#ff6464;width:18px;height:18px;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>'
-      + '</div>';
-  }).join('');
+  var countEl = document.getElementById('photo-count-settings');
+  if(countEl) countEl.textContent = photos.length;
+  grid.innerHTML = '';
+  photos.forEach(function(src, i){
+    var div = document.createElement('div');
+    div.style.cssText = 'position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:2px solid '+(i===currentSlide?'var(--accent,#4a9eff)':'transparent');
+    var img = document.createElement('img');
+    img.src = src;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+    var btn = document.createElement('button');
+    btn.textContent = '×';
+    btn.style.cssText = 'position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);border:none;color:#ff6464;width:18px;height:18px;border-radius:50%;font-size:11px;cursor:pointer';
+    (function(idx){ btn.onclick = function(){ deletePhotoFromSettings(idx); }; })(i);
+    div.appendChild(img);
+    div.appendChild(btn);
+    grid.appendChild(div);
+  });
 }
 
 function deletePhotoFromSettings(idx){
