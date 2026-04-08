@@ -12,61 +12,73 @@
 body {
   font-family:'Outfit',sans-serif;
   background: var(--bg);
-  min-height:100vh;
-  padding:12px 12px 20px;
-  display:flex; flex-direction:column; gap:10px;
+  height: 100vh;
+  overflow: hidden;
+  padding:8px 8px 8px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto auto 1fr;
+  gap:7px;
   color:#fff;
 }
+
+/* Layout grid */
+.card-clock { grid-column: 1; grid-row: 1; }
+.card-weather { grid-column: 2; grid-row: 1; }
+.card-calendar { grid-column: 1 / -1; grid-row: 2; }
+.card-spotify { grid-column: 1 / -1; grid-row: 3; }
+.photo-widget { grid-column: 1 / -1; grid-row: 4; }
+.settings-btn { grid-column: 1 / -1; }
 
 /* Cards */
 .card {
   background:var(--glass);
   border:1px solid var(--border);
-  border-radius:20px;
-  padding:14px 16px;
+  border-radius:16px;
+  padding:10px 12px;
   backdrop-filter:blur(12px);
 }
 .label {
-  font-size:9px; font-weight:600;
-  letter-spacing:0.16em; color:rgba(255,255,255,0.28);
-  text-transform:uppercase; margin-bottom:8px;
+  font-size:8px; font-weight:600;
+  letter-spacing:0.14em; color:rgba(255,255,255,0.28);
+  text-transform:uppercase; margin-bottom:5px;
 }
 
 /* Clock */
 .clock-row { display:flex; align-items:center; justify-content:space-between; }
 .clock-time {
-  font-family:'DM Mono',monospace; font-size:60px;
-  font-weight:200; color:#fff; letter-spacing:-3px; line-height:1;
+  font-family:'DM Mono',monospace; font-size:34px;
+  font-weight:200; color:#fff; letter-spacing:-2px; line-height:1;
   display:flex; align-items:flex-start;
 }
-.clock-sec { font-size:22px; color:var(--accent); margin-top:8px; }
-.clock-date { font-size:11px; letter-spacing:0.08em; color:rgba(255,255,255,0.38); text-transform:uppercase; text-align:right; line-height:1.6; }
+.clock-sec { font-size:13px; color:var(--accent); margin-top:4px; }
+.clock-date { font-size:9px; letter-spacing:0.06em; color:rgba(255,255,255,0.38); text-transform:uppercase; text-align:right; line-height:1.6; }
 
 /* Weather */
 .weather-row { display:flex; align-items:center; justify-content:space-between; }
 .weather-left { display:flex; align-items:center; gap:10px; }
-.weather-icon { font-size:40px; line-height:1; }
-.weather-temp { font-family:'DM Mono',monospace; font-size:42px; font-weight:200; color:#fff; letter-spacing:-2px; line-height:1; }
+.weather-icon { font-size:26px; line-height:1; }
+.weather-temp { font-family:'DM Mono',monospace; font-size:28px; font-weight:200; color:#fff; letter-spacing:-1px; line-height:1; }
 .weather-desc { font-size:10px; letter-spacing:0.1em; color:rgba(255,255,255,0.38); text-transform:uppercase; margin-top:2px; }
 .weather-loc { font-size:10px; font-weight:600; color:var(--accent); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:4px; }
-.weather-stats { text-align:right; font-size:11px; color:rgba(255,255,255,0.42); line-height:2; }
+.weather-stats { text-align:right; font-size:9px; color:rgba(255,255,255,0.42); line-height:2; }
 .weather-stats span { color:#fff; font-weight:500; }
 
 /* Calendar */
-.cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
-.cal-month { font-size:13px; font-weight:600; color:#fff; text-transform:uppercase; letter-spacing:0.05em; }
+.cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+.cal-month { font-size:11px; font-weight:600; color:#fff; text-transform:uppercase; letter-spacing:0.05em; }
 .cal-nav {
   background:rgba(255,255,255,0.08); border:1px solid var(--border);
-  border-radius:7px; color:#fff; width:26px; height:26px;
-  display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px;
+  border-radius:6px; color:#fff; width:20px; height:20px;
+  display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px;
 }
 .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; text-align:center; }
-.cal-dow { font-size:8px; font-weight:600; letter-spacing:0.08em; color:rgba(255,255,255,0.26); text-transform:uppercase; padding:2px 0 6px; }
+.cal-dow { font-size:7px; font-weight:600; letter-spacing:0.06em; color:rgba(255,255,255,0.26); text-transform:uppercase; padding:1px 0 4px; }
 .cal-day {
-  font-size:11px; color:rgba(255,255,255,0.65); padding:3px 1px;
+  font-size:10px; color:rgba(255,255,255,0.65); padding:2px 1px;
   border-radius:50%; cursor:pointer; aspect-ratio:1;
   display:flex; align-items:center; justify-content:center;
-  margin:0 auto; width:26px; position:relative;
+  margin:0 auto; width:20px; position:relative;
 }
 .cal-day:hover { background:rgba(255,255,255,0.08); }
 .cal-day.other-month { color:rgba(255,255,255,0.14); }
@@ -97,18 +109,18 @@ body {
 .ev-del:hover { background:rgba(255,80,80,0.1); color:#ff6464; }
 
 .add-btn {
-  margin-top:8px; width:100%; padding:10px;
+  margin-top:5px; width:100%; padding:6px;
   background:rgba(74,158,255,0.12); border:1px solid rgba(74,158,255,0.22);
-  border-radius:11px; color:var(--accent);
-  font-family:'Outfit',sans-serif; font-size:12px; font-weight:600; cursor:pointer;
+  border-radius:9px; color:var(--accent);
+  font-family:'Outfit',sans-serif; font-size:11px; font-weight:600; cursor:pointer;
 }
 .add-btn:hover { background:rgba(74,158,255,0.20); }
 
 /* Photo Widget */
 .photo-widget {
-  flex:1; min-height:240px;
-  border-radius:20px; overflow:hidden;
+  border-radius:16px; overflow:hidden;
   position:relative; border:1px solid var(--border);
+  min-height: 0;
 }
 .photo-slide {
   position:absolute; inset:0;
@@ -213,7 +225,7 @@ body {
 /* ── Settings Button ── */
 .settings-btn {
   position: fixed;
-  top: 14px; right: 14px;
+  top: 10px; right: 10px;
   z-index: 20;
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.12);
@@ -302,20 +314,20 @@ body {
   gap: 12px;
 }
 .spotify-logo {
-  width: 44px; height: 44px;
+  width: 34px; height: 34px;
   background: #1DB954;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 24px;
+  font-size: 18px;
   flex-shrink: 0;
-  box-shadow: 0 0 14px rgba(29,185,84,0.4);
+  box-shadow: 0 0 10px rgba(29,185,84,0.4);
 }
 .spotify-text .spotify-title {
-  font-size: 15px; font-weight: 600; color: #fff;
+  font-size: 13px; font-weight: 600; color: #fff;
 }
 .spotify-text .spotify-sub {
-  font-size: 11px; color: rgba(255,255,255,0.4);
-  margin-top: 2px;
+  font-size: 10px; color: rgba(255,255,255,0.4);
+  margin-top: 1px;
 }
 .spotify-arrow {
   font-size: 20px; color: #1DB954; opacity: 0.8;
@@ -327,7 +339,7 @@ body {
 <body>
 
 <!-- Clock -->
-<div class="card">
+<div class="card card-clock">
   <div class="label">Clock</div>
   <div class="clock-row">
     <div class="clock-time"><span id="hhmm">--:--</span><span class="clock-sec" id="secs">00</span></div>
@@ -356,7 +368,7 @@ body {
 </div>
 
 <!-- Calendar -->
-<div class="card">
+<div class="card card-calendar">
   <div class="label">Calendar</div>
   <div class="cal-header">
     <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
