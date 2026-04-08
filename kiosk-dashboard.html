@@ -278,6 +278,17 @@
   .loader { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  .photo-tab {
+    flex: 1; padding: 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05); color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .photo-tab.active {
+    background: var(--accent); color: #000; border-color: var(--accent);
+  }
+  .photo-tab:not(.active):hover { background: rgba(255,255,255,0.1); }
+
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
@@ -390,41 +401,108 @@
 
 <!-- PHOTO MODAL -->
 <div class="modal-backdrop" id="photo-modal">
-  <div class="modal" style="max-width:560px">
+  <div class="modal" style="max-width:580px;max-height:90vh;overflow-y:auto">
     <h2>🖼️ Fotos verwalten</h2>
 
-    <div class="section-title">📁 Vom Gerät hochladen (PC / Browser)</div>
-    <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
-      <button class="btn btn-ghost" onclick="document.getElementById('slide-file-input').click()" style="flex:1">
-        📂 Dateien auswählen
+    <!-- TAB BAR -->
+    <div id="photo-tabs" style="display:flex;gap:6px;margin-bottom:14px;margin-top:4px">
+      <button class="photo-tab active" onclick="switchPhotoTab('tablet')" id="tab-tablet">📱 Tablet</button>
+      <button class="photo-tab" onclick="switchPhotoTab('url')" id="tab-url">🔗 URL</button>
+      <button class="photo-tab" onclick="switchPhotoTab('gphoto')" id="tab-gphoto">📷 Google Fotos</button>
+    </div>
+
+    <!-- TAB: TABLET (Fully Kiosk PLUS browseFiles API) -->
+    <div id="tab-content-tablet" class="photo-tab-content">
+      <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;line-height:1.5">
+        Nutzt die <strong style="color:var(--accent)">Fully Kiosk PLUS API</strong> — öffnet den nativen Datei-Browser des Tablets.<br>
+        Fotos aus internem Speicher, SD-Karte oder Downloads wählbar.
+      </p>
+      <button class="btn btn-primary" onclick="browseFilesFullyKiosk()" style="width:100%;padding:14px;font-size:1rem">
+        📂 Dateien vom Tablet wählen
       </button>
-      <span id="upload-count" style="font-size:0.75rem;color:var(--text-muted)"></span>
+      <div id="fully-status" style="font-size:0.72rem;color:var(--text-muted);margin-top:8px;text-align:center"></div>
+
+      <div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.04);border-radius:10px">
+        <div style="font-size:0.68rem;color:var(--text-muted);line-height:1.6">
+          <strong style="color:var(--text)">Falls der Button nicht reagiert:</strong><br>
+          Fully Kiosk → Einstellungen → <em>Web Content Settings</em> →<br>
+          ✅ <em>Enable File Access</em> aktivieren<br>
+          ✅ <em>Allow File Upload</em> aktivieren
+        </div>
+      </div>
+
+      <div style="margin-top:10px;padding:10px;background:rgba(79,195,247,0.06);border-radius:10px;border:1px solid rgba(79,195,247,0.15)">
+        <div style="font-size:0.68rem;color:var(--text-muted);line-height:1.6">
+          <strong style="color:var(--accent)">Alternative — Fallback (Standard-Browser):</strong><br>
+          Falls Fully API nicht verfügbar:
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="btn btn-ghost" onclick="document.getElementById('slide-file-input').click()" style="flex:1;font-size:0.8rem">
+            📁 Standard Dateiauswahl
+          </button>
+          <span id="upload-count" style="font-size:0.72rem;color:var(--accent);align-self:center"></span>
+        </div>
+      </div>
     </div>
 
-    <div class="section-title" style="margin-top:16px">🔗 Bild-URL direkt eingeben (funktioniert im Kiosk!)</div>
-    <p style="font-size:0.7rem;color:var(--text-muted);margin-bottom:6px">
-      GitHub, Cloudinary, Dropbox (dl=1), imgbb.com, oder jede direkte Bild-URL
-    </p>
-    <div style="display:flex;gap:8px">
-      <input type="url" id="photo-url-input" placeholder="https://beispiel.de/foto.jpg" style="flex:1">
-      <button class="btn btn-primary" onclick="addPhotoByUrl()">+</button>
+    <!-- TAB: URL -->
+    <div id="tab-content-url" class="photo-tab-content" style="display:none">
+      <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;line-height:1.5">
+        Direkte Bild-URLs — funktionieren <strong style="color:var(--accent2)">immer</strong> im Fully Kiosk Browser.<br>
+        Bilder werden per URL geladen, kein Speicherplatz-Problem.
+      </p>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="url" id="photo-url-input" placeholder="https://beispiel.de/foto.jpg" style="flex:1">
+        <button class="btn btn-primary" onclick="addPhotoByUrl()">Hinzufügen</button>
+      </div>
+      <div id="url-status" style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px"></div>
+
+      <div style="padding:10px;background:rgba(255,255,255,0.04);border-radius:10px">
+        <div style="font-size:0.68rem;color:var(--text-muted);line-height:1.7">
+          <strong style="color:var(--text)">Empfohlene kostenlose Dienste:</strong><br>
+          🔷 <strong>imgbb.com</strong> — Foto hochladen → „Direct link" kopieren<br>
+          🔷 <strong>GitHub</strong> — Foto ins Repo laden → Raw-URL verwenden<br>
+          🔷 <strong>Cloudinary</strong> — kostenlos bis 25GB<br>
+          🔷 <strong>Dropbox</strong> — Link mit <code style="color:var(--accent)">?dl=1</code> am Ende
+        </div>
+      </div>
     </div>
 
-    <div class="section-title" style="margin-top:16px">📷 Google Fotos (öffentliches Album)</div>
-    <p style="font-size:0.7rem;color:var(--text-muted);margin-bottom:6px">
-      Album auf „Öffentlich" stellen → Link teilen → hier einfügen
-    </p>
-    <div style="display:flex;gap:8px">
-      <input type="url" id="gphoto-url-input" placeholder="https://photos.google.com/share/...">
-      <button class="btn btn-primary" onclick="loadGooglePhotos()">Laden</button>
+    <!-- TAB: GOOGLE FOTOS -->
+    <div id="tab-content-gphoto" class="photo-tab-content" style="display:none">
+      <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;line-height:1.5">
+        Google Fotos Album automatisch laden.<br>
+        <strong style="color:var(--accent3)">Wichtig:</strong> Album muss auf <strong>„Öffentlich"</strong> gestellt sein.
+      </p>
+      <div style="display:flex;gap:8px;margin-bottom:6px">
+        <input type="url" id="gphoto-url-input" placeholder="https://photos.google.com/share/..." style="flex:1">
+        <button class="btn btn-primary" onclick="loadGooglePhotos()">Laden</button>
+      </div>
+      <div id="gphoto-status" style="font-size:0.72rem;margin-bottom:10px"></div>
+
+      <div style="padding:10px;background:rgba(255,255,255,0.04);border-radius:10px">
+        <div style="font-size:0.68rem;color:var(--text-muted);line-height:1.7">
+          <strong style="color:var(--text)">So geht's:</strong><br>
+          1. Google Fotos App → Album öffnen<br>
+          2. ⋮ Menü → <em>Teilen</em> → <em>Link erstellen</em><br>
+          3. Dann: Album → ⋮ → <em>Optionen</em> → <strong>„Öffentlich"</strong> wählen<br>
+          4. Den Link hier einfügen → Laden tippen
+        </div>
+      </div>
     </div>
-    <div id="gphoto-status" style="font-size:0.72rem;color:var(--text-muted);margin-top:4px"></div>
 
-    <div class="section-title" style="margin-top:16px">📋 Aktuelle Fotos (<span id="photo-count-label">0</span>)</div>
-    <div id="photo-thumbs" style="display:flex;flex-wrap:wrap;gap:6px;max-height:110px;overflow-y:auto;margin-top:4px"></div>
+    <!-- CURRENT PHOTOS -->
+    <div style="margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted)">
+          Aktuelle Fotos (<span id="photo-count-label">0</span>)
+        </div>
+        <button class="btn btn-danger" onclick="clearAllPhotos()" style="font-size:0.7rem;padding:4px 10px">Alle löschen</button>
+      </div>
+      <div id="photo-thumbs" style="display:flex;flex-wrap:wrap;gap:6px;max-height:100px;overflow-y:auto"></div>
+    </div>
 
-    <div class="modal-btns" style="margin-top:16px">
-      <button class="btn btn-danger" onclick="clearAllPhotos()">Alle löschen</button>
+    <div class="modal-btns" style="margin-top:14px">
       <button class="btn btn-primary" onclick="closeModal('photo-modal')">Schließen</button>
     </div>
   </div>
@@ -798,11 +876,17 @@ function addSlideImages(event) {
 // ── FROM URL (works in Fully Kiosk!) ──
 function addPhotoByUrl() {
   const input = document.getElementById('photo-url-input');
+  const status = document.getElementById('url-status');
   const url = input.value.trim();
   if (!url) return;
-  // Basic URL validation
   if (!url.startsWith('http')) {
-    alert('Bitte eine gültige URL eingeben (beginnt mit http...)');
+    status.style.color = '#ef5350';
+    status.textContent = '⚠️ Bitte eine gültige URL eingeben (beginnt mit http...)';
+    return;
+  }
+  if (slides.find(s => s.src === url)) {
+    status.style.color = 'var(--text-muted)';
+    status.textContent = 'ℹ️ Dieses Bild ist bereits vorhanden.';
     return;
   }
   slides.push({ src: url, type: 'url' });
@@ -810,6 +894,9 @@ function addPhotoByUrl() {
   renderSlides();
   refreshPhotoModal();
   input.value = '';
+  status.style.color = 'var(--accent2)';
+  status.textContent = '✅ Bild hinzugefügt!';
+  setTimeout(() => { status.textContent = ''; }, 3000);
 }
 
 // ── FROM GOOGLE PHOTOS public album ──
@@ -858,7 +945,76 @@ async function loadGooglePhotos() {
   }
 }
 
-// ── PHOTO MODAL ──
+// ── FULLY KIOSK PLUS — Native file browser ──
+function browseFilesFullyKiosk() {
+  const status = document.getElementById('fully-status');
+
+  // Check if Fully Kiosk API is available
+  if (typeof fully !== 'undefined' && typeof fully.browseFiles === 'function') {
+    status.textContent = '⏳ Datei-Browser öffnet…';
+    try {
+      // fully.browseFiles(mimeType, callback)
+      fully.browseFiles('image/*', function(fileUri) {
+        if (!fileUri) { status.textContent = ''; return; }
+        // fileUri is like: file:///sdcard/DCIM/photo.jpg
+        // or multiple separated by |
+        const uris = fileUri.split('|').filter(Boolean);
+        uris.forEach(uri => {
+          const src = uri.trim();
+          if (src && !slides.find(s => s.src === src)) {
+            slides.push({ src, type: 'url' });
+          }
+        });
+        persistSlides();
+        renderSlides();
+        refreshPhotoModal();
+        status.textContent = `✅ ${uris.length} Foto(s) hinzugefügt!`;
+        setTimeout(() => { status.textContent = ''; }, 4000);
+      });
+    } catch(e) {
+      status.textContent = '⚠️ Fehler: ' + e.message;
+    }
+  } else if (typeof fully !== 'undefined' && typeof fully.openFilePicker === 'function') {
+    // Alternative API name in some versions
+    status.textContent = '⏳ Datei-Browser öffnet…';
+    try {
+      fully.openFilePicker('image/*', function(result) {
+        if (!result) return;
+        const uris = result.split('|').filter(Boolean);
+        uris.forEach(uri => {
+          const src = uri.trim();
+          if (src && !slides.find(s => s.src === src)) {
+            slides.push({ src, type: 'url' });
+          }
+        });
+        persistSlides();
+        renderSlides();
+        refreshPhotoModal();
+        status.textContent = `✅ ${uris.length} Foto(s) hinzugefügt!`;
+      });
+    } catch(e) {
+      status.textContent = '⚠️ Fehler: ' + e.message;
+    }
+  } else if (typeof fully !== 'undefined') {
+    // Fully is present but file API not available — try intent
+    status.innerHTML = '⚠️ Datei-API nicht gefunden.<br>Bitte in Fully Kiosk: <em>Web Content Settings → Enable File Access</em> aktivieren.';
+    // Fallback to standard input
+    document.getElementById('slide-file-input').click();
+  } else {
+    // Not running in Fully Kiosk — use standard file input
+    status.textContent = '💡 Standard-Dateiauswahl wird geöffnet (kein Fully Kiosk erkannt)';
+    document.getElementById('slide-file-input').click();
+  }
+}
+
+// ── TAB SWITCHER ──
+function switchPhotoTab(tab) {
+  ['tablet','url','gphoto'].forEach(t => {
+    document.getElementById('tab-content-' + t).style.display = t === tab ? 'block' : 'none';
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+}
+
 function openPhotoModal() {
   refreshPhotoModal();
   openModal('photo-modal');
