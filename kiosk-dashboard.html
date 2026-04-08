@@ -355,11 +355,11 @@
   <div class="tile" id="tile-slideshow">
     <div id="slideshow-inner">
       <div id="slideshow-label">Fotos</div>
-      <button id="slideshow-upload" onclick="document.getElementById('slide-file-input').click()">📁 Bilder hinzufügen</button>
+      <button id="slideshow-upload" onclick="openPhotoModal()">🖼️ Fotos verwalten</button>
       <input type="file" id="slide-file-input" multiple accept="image/*" onchange="addSlideImages(event)">
       <div id="slideshow-empty">
         <div class="empty-icon">🖼️</div>
-        <p>Tippe auf „Bilder hinzufügen"</p>
+        <p>Tippe auf „Fotos verwalten"</p>
       </div>
       <div id="slides-container"></div>
       <div id="slideshow-controls"></div>
@@ -384,6 +384,48 @@
       <button class="btn btn-danger" id="ev-del-btn" onclick="deleteCurrentEvent()" style="display:none">Löschen</button>
       <button class="btn btn-ghost" onclick="closeModal('event-modal')">Abbrechen</button>
       <button class="btn btn-primary" onclick="saveEvent()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHOTO MODAL -->
+<div class="modal-backdrop" id="photo-modal">
+  <div class="modal" style="max-width:560px">
+    <h2>🖼️ Fotos verwalten</h2>
+
+    <div class="section-title">📁 Vom Gerät hochladen (PC / Browser)</div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
+      <button class="btn btn-ghost" onclick="document.getElementById('slide-file-input').click()" style="flex:1">
+        📂 Dateien auswählen
+      </button>
+      <span id="upload-count" style="font-size:0.75rem;color:var(--text-muted)"></span>
+    </div>
+
+    <div class="section-title" style="margin-top:16px">🔗 Bild-URL direkt eingeben (funktioniert im Kiosk!)</div>
+    <p style="font-size:0.7rem;color:var(--text-muted);margin-bottom:6px">
+      GitHub, Cloudinary, Dropbox (dl=1), imgbb.com, oder jede direkte Bild-URL
+    </p>
+    <div style="display:flex;gap:8px">
+      <input type="url" id="photo-url-input" placeholder="https://beispiel.de/foto.jpg" style="flex:1">
+      <button class="btn btn-primary" onclick="addPhotoByUrl()">+</button>
+    </div>
+
+    <div class="section-title" style="margin-top:16px">📷 Google Fotos (öffentliches Album)</div>
+    <p style="font-size:0.7rem;color:var(--text-muted);margin-bottom:6px">
+      Album auf „Öffentlich" stellen → Link teilen → hier einfügen
+    </p>
+    <div style="display:flex;gap:8px">
+      <input type="url" id="gphoto-url-input" placeholder="https://photos.google.com/share/...">
+      <button class="btn btn-primary" onclick="loadGooglePhotos()">Laden</button>
+    </div>
+    <div id="gphoto-status" style="font-size:0.72rem;color:var(--text-muted);margin-top:4px"></div>
+
+    <div class="section-title" style="margin-top:16px">📋 Aktuelle Fotos (<span id="photo-count-label">0</span>)</div>
+    <div id="photo-thumbs" style="display:flex;flex-wrap:wrap;gap:6px;max-height:110px;overflow-y:auto;margin-top:4px"></div>
+
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-danger" onclick="clearAllPhotos()">Alle löschen</button>
+      <button class="btn btn-primary" onclick="closeModal('photo-modal')">Schließen</button>
     </div>
   </div>
 </div>
@@ -701,6 +743,7 @@ renderCalendar();
 // ══════════════════════════════════════════
 //  SLIDESHOW
 // ══════════════════════════════════════════
+// slides[] stores objects: { src: '...', type: 'base64'|'url' }
 let slides = [];
 let currentSlide = 0;
 let slideshowTimer = null;
@@ -708,25 +751,43 @@ let slideshowInterval = 30000;
 
 function loadStoredImages() {
   try {
-    const stored = JSON.parse(localStorage.getItem('kiosk_slides') || '[]');
-    slides = stored;
+    const stored = JSON.parse(localStorage.getItem('kiosk_slides_v2') || '[]');
+    // Legacy migration: plain strings → objects
+    slides = stored.map(s => typeof s === 'string' ? { src: s, type: 'base64' } : s);
     renderSlides();
-  } catch(e) {}
+  } catch(e) { slides = []; }
 }
 
+function persistSlides() {
+  // Only persist URL-type slides + base64 up to storage limit
+  const toSave = slides.filter(s => s.type === 'url');
+  const b64 = slides.filter(s => s.type === 'base64');
+  // Try to save base64 too, but catch quota errors
+  const all = [...b64, ...toSave];
+  try {
+    localStorage.setItem('kiosk_slides_v2', JSON.stringify(all));
+  } catch(e) {
+    // Quota hit — save only URLs
+    try { localStorage.setItem('kiosk_slides_v2', JSON.stringify(toSave)); } catch(e2) {}
+  }
+}
+
+// ── FROM FILE (PC / Browser with file access) ──
 function addSlideImages(event) {
   const files = Array.from(event.target.files);
   let loaded = 0;
   files.forEach(file => {
     const reader = new FileReader();
     reader.onload = e => {
-      slides.push(e.target.result);
+      slides.push({ src: e.target.result, type: 'base64' });
       loaded++;
       if (loaded === files.length) {
-        // Save only last 30 to avoid quota
-        if (slides.length > 30) slides = slides.slice(-30);
-        try { localStorage.setItem('kiosk_slides', JSON.stringify(slides)); } catch(e) {}
+        if (slides.length > 40) slides = slides.slice(-40);
+        persistSlides();
         renderSlides();
+        refreshPhotoModal();
+        document.getElementById('upload-count').textContent = files.length + ' Foto(s) hinzugefügt ✓';
+        setTimeout(() => { document.getElementById('upload-count').textContent = ''; }, 3000);
       }
     };
     reader.readAsDataURL(file);
@@ -734,6 +795,110 @@ function addSlideImages(event) {
   event.target.value = '';
 }
 
+// ── FROM URL (works in Fully Kiosk!) ──
+function addPhotoByUrl() {
+  const input = document.getElementById('photo-url-input');
+  const url = input.value.trim();
+  if (!url) return;
+  // Basic URL validation
+  if (!url.startsWith('http')) {
+    alert('Bitte eine gültige URL eingeben (beginnt mit http...)');
+    return;
+  }
+  slides.push({ src: url, type: 'url' });
+  persistSlides();
+  renderSlides();
+  refreshPhotoModal();
+  input.value = '';
+}
+
+// ── FROM GOOGLE PHOTOS public album ──
+// Strategy: fetch the public album page, extract image URLs from JSON-LD / AF_initDataCallback
+async function loadGooglePhotos() {
+  const input = document.getElementById('gphoto-url-input');
+  const url = input.value.trim();
+  const status = document.getElementById('gphoto-status');
+  if (!url || !url.includes('photos.google.com')) {
+    status.textContent = '⚠️ Bitte einen gültigen Google Fotos Album-Link eingeben.';
+    return;
+  }
+  status.textContent = '⏳ Lade Album…';
+
+  try {
+    // Use a CORS proxy — allorigins works for public pages
+    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+    const res = await fetch(proxy);
+    const data = await res.json();
+    const html = data.contents;
+
+    // Google Photos embeds image data in a large JS array — extract https://lh3.googleusercontent.com URLs
+    const regex = /https:\/\/lh3\.googleusercontent\.com\/[A-Za-z0-9_\-]+/g;
+    const matches = [...new Set(html.match(regex) || [])];
+
+    if (matches.length === 0) {
+      status.textContent = '⚠️ Keine Fotos gefunden. Album muss öffentlich (nicht nur „mit Link teilbar") sein.';
+      return;
+    }
+
+    // Append =w1920-h1080 for full res
+    const imgUrls = matches.slice(0, 50).map(u => u + '=w1920-h1080');
+    imgUrls.forEach(src => {
+      if (!slides.find(s => s.src === src)) {
+        slides.push({ src, type: 'url' });
+      }
+    });
+
+    persistSlides();
+    renderSlides();
+    refreshPhotoModal();
+    status.textContent = `✅ ${imgUrls.length} Fotos geladen!`;
+    input.value = '';
+  } catch(e) {
+    status.textContent = '⚠️ Fehler beim Laden. Prüfe ob das Album wirklich öffentlich ist.';
+  }
+}
+
+// ── PHOTO MODAL ──
+function openPhotoModal() {
+  refreshPhotoModal();
+  openModal('photo-modal');
+}
+
+function refreshPhotoModal() {
+  const thumbs = document.getElementById('photo-thumbs');
+  const countLabel = document.getElementById('photo-count-label');
+  thumbs.innerHTML = '';
+  countLabel.textContent = slides.length;
+
+  slides.forEach((s, i) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;width:60px;height:60px;flex-shrink:0';
+
+    const img = document.createElement('img');
+    img.src = s.src;
+    img.style.cssText = 'width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.15)';
+    img.onerror = () => { img.style.background='rgba(255,0,0,0.2)'; img.src=''; };
+
+    const del = document.createElement('div');
+    del.textContent = '✕';
+    del.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#ef5350;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;font-weight:700';
+    del.onclick = () => { slides.splice(i, 1); persistSlides(); renderSlides(); refreshPhotoModal(); };
+
+    wrap.appendChild(img);
+    wrap.appendChild(del);
+    thumbs.appendChild(wrap);
+  });
+}
+
+function clearAllPhotos() {
+  if (!confirm('Alle Fotos löschen?')) return;
+  slides = [];
+  persistSlides();
+  renderSlides();
+  refreshPhotoModal();
+}
+
+// ── RENDER ──
 function renderSlides() {
   const container = document.getElementById('slides-container');
   const empty = document.getElementById('slideshow-empty');
@@ -748,10 +913,10 @@ function renderSlides() {
   }
   empty.style.display = 'none';
 
-  slides.forEach((src, i) => {
+  slides.forEach((s, i) => {
     const slide = document.createElement('div');
     slide.className = 'slide' + (i === currentSlide ? ' active' : '');
-    slide.style.backgroundImage = `url(${src})`;
+    slide.style.backgroundImage = `url(${s.src})`;
     container.appendChild(slide);
 
     const dot = document.createElement('div');
