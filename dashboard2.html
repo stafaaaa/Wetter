@@ -585,10 +585,7 @@ function parseIcal(text){
 
 // ── Spotify ──
 function openSpotify(){
-  // Try to open Spotify app on Android
-  var appUrl = 'intent://open.spotify.com#Intent;package=com.spotify.music;scheme=https;end;';
-  window.location = appUrl;
-  // Fallback to web after 2 seconds if app not opened
+  window.location.href = 'spotify:';
   setTimeout(function(){ 
     window.open('https://open.spotify.com','_blank'); 
   }, 2000);
