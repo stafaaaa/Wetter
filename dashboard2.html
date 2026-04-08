@@ -24,11 +24,25 @@ body {
 
 /* ── Cards ── */
 .card {
-  background: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,0.10) 0%,
+    rgba(255,255,255,0.04) 50%,
+    rgba(0,0,0,0.15) 100%
+  );
+  border: 1px solid rgba(255,255,255,0.15);
+  border-bottom: 1px solid rgba(0,0,0,0.3);
+  border-right: 1px solid rgba(0,0,0,0.2);
+  border-radius: 18px;
   padding: 10px 12px;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.35),
+    0 2px 8px rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    inset 0 -1px 0 rgba(0,0,0,0.1);
+  transform: translateZ(0);
 }
 .label {
   font-size: 8px; font-weight: 600;
@@ -56,8 +70,13 @@ body {
 
 .card-photo {
   grid-column: 2; grid-row: 1;
-  border-radius: 16px; overflow: hidden;
+  border-radius: 18px; overflow: hidden;
   position: relative; min-height: 100px;
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.35),
+    0 2px 8px rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.10);
 }
 .photo-slide {
   position: absolute; inset: 0;
