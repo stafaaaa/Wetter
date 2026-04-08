@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1117;
+    --tile-bg: rgba(255,255,255,0.07);
+    --tile-border: rgba(255,255,255,0.10);
+    --tile-hover: rgba(255,255,255,0.11);
+    --accent: #4fc3f7;
+    --accent2: #81c784;
+    --accent3: #ffb74d;
+    --text: #f0f4f8;
+    --text-muted: rgba(240,244,248,0.55);
+    --radius: 20px;
+    --gap: 14px;
+    --font-scale: 1;
+    --tile-alpha: 0.07;
+  }
+
+  html, body {
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(79,195,247,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 80% 90%, rgba(129,199,132,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255,183,77,0.04) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  #grid {
+    position: fixed; inset: 0;
+    display: grid;
+    grid-template-columns: 2fr 2fr 1.4fr 1.6fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    gap: var(--gap);
+    padding: var(--gap);
+    z-index: 1;
+  }
+
+  .tile {
+    background: rgba(255,255,255,var(--tile-alpha));
+    border: 1px solid var(--tile-border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    overflow: hidden;
+    position: relative;
+    transition: background 0.2s, transform 0.15s;
+    display: flex; flex-direction: column;
+    padding: 16px;
+  }
+  .tile:active { transform: scale(0.985); }
+
+  /* Grid placement */
+  #tile-clock     { grid-column: 1; grid-row: 1; }
+  #tile-weather   { grid-column: 2; grid-row: 1; }
+  #tile-spotify   { grid-column: 3; grid-row: 1; }
+  #tile-settings  { grid-column: 4; grid-row: 1; }
+  #tile-calendar  { grid-column: 1 / 3; grid-row: 2 / 4; }
+  #tile-forecast  { grid-column: 2 / 3; grid-row: 1; display:none; }
+  #tile-slideshow { grid-column: 3 / 5; grid-row: 2 / 4; }
+
+  /* ── TILE LABELS ── */
+  .tile-label {
+    font-size: calc(0.65rem * var(--font-scale));
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    flex-shrink: 0;
+  }
+
+  /* ── CLOCK ── */
+  #tile-clock { justify-content: center; align-items: flex-start; }
+  #clock-time {
+    font-family: 'DM Mono', monospace;
+    font-size: calc(3.8rem * var(--font-scale));
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--text);
+  }
+  #clock-date {
+    font-size: calc(0.85rem * var(--font-scale));
+    color: var(--text-muted);
+    margin-top: 6px;
+    font-weight: 400;
+  }
+
+  /* ── WEATHER ── */
+  #tile-weather { justify-content: space-between; }
+  #weather-main { display: flex; align-items: center; gap: 10px; }
+  #weather-icon { font-size: calc(2.8rem * var(--font-scale)); line-height: 1; }
+  #weather-temp { font-size: calc(2.4rem * var(--font-scale)); font-weight: 300; font-family: 'DM Mono', monospace; }
+  #weather-desc { font-size: calc(0.78rem * var(--font-scale)); color: var(--text-muted); margin-top: 2px; }
+  #weather-meta { display: flex; gap: 12px; font-size: calc(0.72rem * var(--font-scale)); color: var(--text-muted); flex-wrap: wrap; }
+  #weather-forecast { display: flex; gap: 6px; flex: 1; align-items: flex-end; }
+  .fc-day {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    background: rgba(255,255,255,0.05); border-radius: 10px; padding: 6px 4px;
+    font-size: calc(0.65rem * var(--font-scale));
+  }
+  .fc-day .fc-icon { font-size: calc(1.1rem * var(--font-scale)); }
+  .fc-day .fc-name { color: var(--text-muted); margin-bottom: 2px; }
+  .fc-day .fc-hi { font-weight: 600; color: var(--accent3); }
+  .fc-day .fc-lo { color: var(--text-muted); }
+
+  /* ── SPOTIFY ── */
+  #tile-spotify {
+    justify-content: center; align-items: center; cursor: pointer;
+    background: rgba(29,185,84,0.12);
+    border-color: rgba(29,185,84,0.25);
+  }
+  #tile-spotify:hover { background: rgba(29,185,84,0.18); }
+  .spotify-logo { font-size: calc(2.6rem * var(--font-scale)); }
+  .spotify-label { font-size: calc(0.8rem * var(--font-scale)); color: #1db954; font-weight: 600; margin-top: 6px; }
+  .spotify-sub { font-size: calc(0.65rem * var(--font-scale)); color: var(--text-muted); margin-top: 2px; text-align: center; }
+
+  /* ── SETTINGS BUTTON ── */
+  #tile-settings {
+    justify-content: center; align-items: center; cursor: pointer;
+    background: rgba(255,255,255,0.04);
+  }
+  #tile-settings:hover { background: rgba(255,255,255,0.09); }
+  .settings-icon { font-size: calc(2rem * var(--font-scale)); opacity: 0.6; }
+  .settings-label { font-size: calc(0.7rem * var(--font-scale)); color: var(--text-muted); margin-top: 6px; }
+
+  /* ── CALENDAR ── */
+  #tile-calendar { padding: 16px; }
+  #cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-shrink: 0; }
+  #cal-title { font-size: calc(1rem * var(--font-scale)); font-weight: 600; }
+  #cal-header button {
+    background: rgba(255,255,255,0.1); border: none; color: var(--text);
+    border-radius: 8px; width: 30px; height: 30px; cursor: pointer; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center; transition: background 0.15s;
+  }
+  #cal-header button:hover { background: rgba(255,255,255,0.18); }
+  #cal-btn-add {
+    background: rgba(79,195,247,0.15) !important; border: 1px solid rgba(79,195,247,0.3) !important;
+    color: var(--accent) !important; font-size: 1.1rem !important; padding: 0 10px !important; width: auto !important;
+  }
+  #cal-grid { flex: 1; display: flex; flex-direction: column; }
+  #cal-days-header { display: grid; grid-template-columns: repeat(7,1fr); text-align: center; margin-bottom: 4px; }
+  .cal-day-name { font-size: calc(0.6rem * var(--font-scale)); color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 0; }
+  #cal-days { display: grid; grid-template-columns: repeat(7,1fr); flex: 1; gap: 2px; }
+  .cal-cell {
+    display: flex; flex-direction: column; align-items: center;
+    border-radius: 8px; padding: 3px 2px; cursor: pointer; position: relative;
+    min-height: 0; transition: background 0.15s;
+  }
+  .cal-cell:hover { background: rgba(255,255,255,0.08); }
+  .cal-cell .cal-num {
+    font-size: calc(0.75rem * var(--font-scale)); font-weight: 500; line-height: 1.4;
+    width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%;
+  }
+  .cal-cell.today .cal-num { background: var(--accent); color: #000; font-weight: 700; }
+  .cal-cell.other-month .cal-num { color: var(--text-muted); opacity: 0.4; }
+  .cal-cell.has-event::after {
+    content: ''; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--accent3); position: absolute; bottom: 3px;
+  }
+  #cal-events { max-height: 70px; overflow-y: auto; margin-top: 8px; flex-shrink: 0; }
+  .cal-event-item {
+    display: flex; align-items: center; gap: 8px; padding: 4px 8px;
+    background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 4px;
+    font-size: calc(0.68rem * var(--font-scale));
+  }
+  .cal-event-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .cal-event-text { flex: 1; }
+  .cal-event-del { cursor: pointer; color: var(--text-muted); padding: 0 4px; opacity: 0; transition: opacity 0.2s; }
+  .cal-event-item:hover .cal-event-del { opacity: 1; }
+
+  /* ── SLIDESHOW ── */
+  #tile-slideshow { padding: 0; overflow: hidden; position: relative; }
+  #slideshow-inner {
+    width: 100%; height: 100%; position: relative;
+    background: #000;
+  }
+  .slide {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center;
+    opacity: 0; transition: opacity 1.2s ease;
+  }
+  .slide.active { opacity: 1; }
+  #slideshow-label {
+    position: absolute; top: 14px; left: 14px;
+    font-size: calc(0.65rem * var(--font-scale));
+    font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    color: rgba(255,255,255,0.6); z-index: 2;
+    background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px;
+  }
+  #slideshow-controls {
+    position: absolute; bottom: 14px; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    z-index: 2;
+  }
+  .slide-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.2s; }
+  .slide-dot.active { background: #fff; width: 18px; border-radius: 3px; }
+  #slideshow-upload {
+    position: absolute; top: 14px; right: 14px; z-index: 2;
+    background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.2);
+    color: #fff; border-radius: 8px; padding: 5px 10px; font-size: calc(0.68rem * var(--font-scale));
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.15s;
+  }
+  #slideshow-upload:hover { background: rgba(0,0,0,0.6); }
+  #slide-file-input { display: none; }
+  #slideshow-empty {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px; color: var(--text-muted);
+  }
+  #slideshow-empty .empty-icon { font-size: 2.5rem; opacity: 0.4; }
+  #slideshow-empty p { font-size: calc(0.75rem * var(--font-scale)); opacity: 0.6; }
+
+  /* ── MODAL ── */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(8px); z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-backdrop.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: rgba(20,25,35,0.96); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 24px; padding: 28px; min-width: 340px; max-width: 480px; width: 90%;
+    transform: scale(0.92); transition: transform 0.2s;
+  }
+  .modal-backdrop.open .modal { transform: scale(1); }
+  .modal h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 18px; }
+  .modal label { font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 5px; margin-top: 12px; }
+  .modal input, .modal select, .modal textarea {
+    width: 100%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px; padding: 9px 12px; color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; outline: none; transition: border-color 0.15s;
+  }
+  .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--accent); }
+  .modal select option { background: #1a1f2e; }
+  .modal-btns { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  .btn {
+    padding: 9px 20px; border-radius: 10px; border: none; font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-danger { background: rgba(239,83,80,0.15); color: #ef5350; border: 1px solid rgba(239,83,80,0.3); }
+  .btn-ghost { background: rgba(255,255,255,0.07); color: var(--text); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.12); }
+
+  /* ── SETTINGS PANEL ── */
+  #settings-modal .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .color-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .color-row input[type=color] { width: 36px; height: 30px; border: none; border-radius: 6px; cursor: pointer; background: none; padding: 0; }
+  .range-row { display: flex; align-items: center; gap: 10px; }
+  .range-row input[type=range] { flex: 1; accent-color: var(--accent); }
+  .range-val { font-size: 0.8rem; color: var(--accent); min-width: 28px; text-align: right; }
+  .section-title { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-top: 14px; margin-bottom: 6px; }
+
+  /* ── LOADING/ERROR ── */
+  .loader { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .tile { animation: fadeIn 0.5s ease both; }
+  #tile-clock     { animation-delay: 0.05s; }
+  #tile-weather   { animation-delay: 0.10s; }
+  #tile-spotify   { animation-delay: 0.15s; }
+  #tile-settings  { animation-delay: 0.20s; }
+  #tile-calendar  { animation-delay: 0.25s; }
+  #tile-slideshow { animation-delay: 0.30s; }
+</style>
+</head>
+<body>
+
+<div id="grid">
+
+  <!-- CLOCK -->
+  <div class="tile" id="tile-clock">
+    <div class="tile-label">Uhrzeit</div>
+    <div id="clock-time">00:00</div>
+    <div id="clock-date">Montag, 1. Januar</div>
+  </div>
+
+  <!-- WEATHER -->
+  <div class="tile" id="tile-weather">
+    <div class="tile-label">Wetter</div>
+    <div id="weather-main">
+      <div id="weather-icon">⏳</div>
+      <div>
+        <div id="weather-temp">--°</div>
+        <div id="weather-desc">Lade…</div>
+      </div>
+    </div>
+    <div id="weather-meta">
+      <span id="weather-hum">💧 --%</span>
+      <span id="weather-wind">💨 -- km/h</span>
+      <span id="weather-loc">📍 Standort…</span>
+    </div>
+    <div id="weather-forecast"></div>
+  </div>
+
+  <!-- SPOTIFY -->
+  <div class="tile" id="tile-spotify" onclick="openSpotify()">
+    <div class="spotify-logo">🎵</div>
+    <div class="spotify-label">Spotify</div>
+    <div class="spotify-sub">Antippen zum Öffnen</div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="tile" id="tile-settings" onclick="openSettings()">
+    <div class="settings-icon">⚙️</div>
+    <div class="settings-label">Einstellungen</div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="tile" id="tile-calendar">
+    <div id="cal-header">
+      <button onclick="calPrev()">‹</button>
+      <div id="cal-title">Kalender</div>
+      <div style="display:flex;gap:6px">
+        <button id="cal-btn-add" onclick="openAddEvent()">+</button>
+        <button onclick="calNext()">›</button>
+      </div>
+    </div>
+    <div id="cal-grid">
+      <div id="cal-days-header"></div>
+      <div id="cal-days"></div>
+    </div>
+    <div id="cal-events"></div>
+  </div>
+
+  <!-- SLIDESHOW -->
+  <div class="tile" id="tile-slideshow">
+    <div id="slideshow-inner">
+      <div id="slideshow-label">Fotos</div>
+      <button id="slideshow-upload" onclick="document.getElementById('slide-file-input').click()">📁 Bilder hinzufügen</button>
+      <input type="file" id="slide-file-input" multiple accept="image/*" onchange="addSlideImages(event)">
+      <div id="slideshow-empty">
+        <div class="empty-icon">🖼️</div>
+        <p>Tippe auf „Bilder hinzufügen"</p>
+      </div>
+      <div id="slides-container"></div>
+      <div id="slideshow-controls"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- EVENT MODAL -->
+<div class="modal-backdrop" id="event-modal">
+  <div class="modal">
+    <h2 id="event-modal-title">Termin hinzufügen</h2>
+    <label>Titel</label>
+    <input type="text" id="ev-title" placeholder="Terminbezeichnung">
+    <label>Datum</label>
+    <input type="date" id="ev-date">
+    <label>Uhrzeit (optional)</label>
+    <input type="time" id="ev-time">
+    <label>Farbe</label>
+    <input type="color" id="ev-color" value="#4fc3f7">
+    <div class="modal-btns">
+      <button class="btn btn-danger" id="ev-del-btn" onclick="deleteCurrentEvent()" style="display:none">Löschen</button>
+      <button class="btn btn-ghost" onclick="closeModal('event-modal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveEvent()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-backdrop" id="settings-modal">
+  <div class="modal" style="max-width:520px">
+    <h2>⚙️ Einstellungen</h2>
+
+    <div class="section-title">Farben</div>
+    <div class="settings-grid" id="settings-grid-colors">
+      <div>
+        <label>Hintergrund</label>
+        <div class="color-row"><input type="color" id="s-bg" value="#0d1117" oninput="applySetting('bg',this.value)"></div>
+      </div>
+      <div>
+        <label>Akzentfarbe</label>
+        <div class="color-row"><input type="color" id="s-accent" value="#4fc3f7" oninput="applySetting('accent',this.value)"></div>
+      </div>
+    </div>
+
+    <div class="section-title">Kacheln</div>
+    <label>Transparenz der Kacheln</label>
+    <div class="range-row">
+      <input type="range" id="s-alpha" min="1" max="30" value="7" oninput="applySetting('alpha',this.value); document.getElementById('v-alpha').textContent=this.value+'%'">
+      <span class="range-val" id="v-alpha">7%</span>
+    </div>
+
+    <div class="section-title">Schrift</div>
+    <label>Schriftgröße</label>
+    <div class="range-row">
+      <input type="range" id="s-font" min="70" max="140" value="100" oninput="applySetting('font',this.value); document.getElementById('v-font').textContent=this.value+'%'">
+      <span class="range-val" id="v-font">100%</span>
+    </div>
+
+    <div class="section-title">Diashow</div>
+    <label>Wechselintervall (Sekunden)</label>
+    <div class="range-row">
+      <input type="range" id="s-slide" min="5" max="120" value="30" oninput="document.getElementById('v-slide').textContent=this.value+'s'; slideshowInterval=this.value*1000; restartSlideshow()">
+      <span class="range-val" id="v-slide">30s</span>
+    </div>
+
+    <div class="section-title">Wetter</div>
+    <label>API-Key (Open-Meteo = kostenlos, kein Key nötig)</label>
+    <input type="text" id="s-owm" placeholder="OpenWeatherMap API Key (optional)">
+
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="resetSettings()">Zurücksetzen</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Speichern & Schließen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  CLOCK
+// ══════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  const opts = { timeZone: 'Europe/Berlin' };
+  const timeStr = now.toLocaleTimeString('de-DE', { ...opts, hour: '2-digit', minute: '2-digit' });
+  const dateStr = now.toLocaleDateString('de-DE', { ...opts, weekday: 'long', day: 'numeric', month: 'long' });
+  document.getElementById('clock-time').textContent = timeStr;
+  document.getElementById('clock-date').textContent = dateStr;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ══════════════════════════════════════════
+//  WEATHER (Open-Meteo — kostenlos, kein Key)
+// ══════════════════════════════════════════
+const WMO = {
+  0:'☀️',1:'🌤️',2:'⛅',3:'☁️',
+  45:'🌫️',48:'🌫️',
+  51:'🌦️',53:'🌦️',55:'🌧️',
+  61:'🌧️',63:'🌧️',65:'🌧️',
+  71:'❄️',73:'❄️',75:'❄️',
+  80:'🌦️',81:'🌧️',82:'⛈️',
+  95:'⛈️',96:'⛈️',99:'⛈️'
+};
+const WMO_DESC = {
+  0:'Klar',1:'Überwiegend klar',2:'Teilweise bewölkt',3:'Bedeckt',
+  45:'Nebel',48:'Raureif',
+  51:'Leichter Niesel',53:'Nieselregen',55:'Starker Niesel',
+  61:'Leichter Regen',63:'Regen',65:'Starker Regen',
+  71:'Leichter Schnee',73:'Schnee',75:'Starker Schnee',
+  80:'Regenschauer',81:'Starke Schauer',82:'Heftige Schauer',
+  95:'Gewitter',96:'Gewitter+Hagel',99:'Schwere Gewitter'
+};
+const DAYS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+async function loadWeather(lat, lon) {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe%2FBerlin&forecast_days=5`;
+    const res = await fetch(url);
+    const d = await res.json();
+    const c = d.current;
+    const dl = d.daily;
+
+    document.getElementById('weather-icon').textContent = WMO[c.weather_code] || '🌡️';
+    document.getElementById('weather-temp').textContent = Math.round(c.temperature_2m) + '°';
+    document.getElementById('weather-desc').textContent = WMO_DESC[c.weather_code] || '';
+    document.getElementById('weather-hum').textContent = '💧 ' + c.relative_humidity_2m + '%';
+    document.getElementById('weather-wind').textContent = '💨 ' + Math.round(c.wind_speed_10m) + ' km/h';
+
+    // Forecast
+    const fc = document.getElementById('weather-forecast');
+    fc.innerHTML = '';
+    for (let i = 1; i < 5; i++) {
+      const date = new Date(dl.time[i]);
+      const day = document.createElement('div');
+      day.className = 'fc-day';
+      day.innerHTML = `<div class="fc-name">${DAYS[date.getDay()]}</div>
+        <div class="fc-icon">${WMO[dl.weather_code[i]]||'🌡️'}</div>
+        <div class="fc-hi">${Math.round(dl.temperature_2m_max[i])}°</div>
+        <div class="fc-lo">${Math.round(dl.temperature_2m_min[i])}°</div>`;
+      fc.appendChild(day);
+    }
+  } catch(e) {
+    document.getElementById('weather-desc').textContent = 'Offline';
+  }
+}
+
+async function getWeather() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const {latitude:lat, longitude:lon} = pos.coords;
+        // Reverse geocode via nominatim
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`)
+          .then(r=>r.json()).then(d=>{
+            const city = d.address.city || d.address.town || d.address.village || 'Standort';
+            document.getElementById('weather-loc').textContent = '📍 ' + city;
+          }).catch(()=>{});
+        loadWeather(lat, lon);
+      },
+      () => {
+        // Fallback: Düsseldorf
+        document.getElementById('weather-loc').textContent = '📍 Düsseldorf';
+        loadWeather(51.2217, 6.7762);
+      }
+    );
+  } else {
+    loadWeather(51.2217, 6.7762);
+  }
+}
+getWeather();
+setInterval(getWeather, 10 * 60 * 1000); // alle 10 Min
+
+// ══════════════════════════════════════════
+//  CALENDAR
+// ══════════════════════════════════════════
+let calYear, calMonth, calSelectedDate = null, editingEventId = null;
+const today = new Date();
+calYear = today.getFullYear();
+calMonth = today.getMonth();
+
+function loadEvents() {
+  try { return JSON.parse(localStorage.getItem('kiosk_events') || '[]'); }
+  catch(e) { return []; }
+}
+function saveEvents(evs) {
+  localStorage.setItem('kiosk_events', JSON.stringify(evs));
+}
+
+function renderCalendar() {
+  const events = loadEvents();
+  const firstDay = new Date(calYear, calMonth, 1);
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  let startDow = firstDay.getDay(); // 0=Sun
+  startDow = (startDow + 6) % 7; // Mo=0
+
+  document.getElementById('cal-title').textContent =
+    firstDay.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+
+  // Day names
+  const header = document.getElementById('cal-days-header');
+  header.innerHTML = '';
+  ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-day-name';
+    el.textContent = d;
+    header.appendChild(el);
+  });
+
+  const grid = document.getElementById('cal-days');
+  grid.innerHTML = '';
+
+  // Prev month days
+  const prevDays = new Date(calYear, calMonth, 0).getDate();
+  for (let i = startDow - 1; i >= 0; i--) {
+    const cell = makeCellEl(prevDays - i, calYear, calMonth - 1, true, events);
+    grid.appendChild(cell);
+  }
+  // Current month
+  for (let d = 1; d <= daysInMonth; d++) {
+    const cell = makeCellEl(d, calYear, calMonth, false, events);
+    grid.appendChild(cell);
+  }
+  // Next month fill
+  const total = grid.children.length;
+  const nextCount = total > 35 ? 42 - total : 35 - total;
+  for (let d = 1; d <= nextCount; d++) {
+    const cell = makeCellEl(d, calYear, calMonth + 1, true, events);
+    grid.appendChild(cell);
+  }
+
+  renderEventsForDay(calSelectedDate, events);
+}
+
+function makeCellEl(day, year, month, otherMonth, events) {
+  const cell = document.createElement('div');
+  cell.className = 'cal-cell';
+  if (otherMonth) cell.classList.add('other-month');
+
+  const realDate = new Date(year, month, day);
+  const dateKey = dateToKey(realDate);
+
+  const isToday = realDate.toDateString() === today.toDateString();
+  if (isToday) cell.classList.add('today');
+
+  if (events.some(e => e.date === dateKey)) cell.classList.add('has-event');
+
+  const num = document.createElement('div');
+  num.className = 'cal-num';
+  num.textContent = day;
+  cell.appendChild(num);
+
+  cell.addEventListener('click', () => {
+    calSelectedDate = dateKey;
+    renderEventsForDay(dateKey, events);
+  });
+  return cell;
+}
+
+function dateToKey(d) {
+  return d.toISOString().split('T')[0];
+}
+
+function renderEventsForDay(dateKey, events) {
+  const container = document.getElementById('cal-events');
+  container.innerHTML = '';
+  if (!dateKey) return;
+  const dayEvents = events.filter(e => e.date === dateKey);
+  dayEvents.forEach(ev => {
+    const item = document.createElement('div');
+    item.className = 'cal-event-item';
+    item.innerHTML = `
+      <div class="cal-event-dot" style="background:${ev.color||'#4fc3f7'}"></div>
+      <div class="cal-event-text">${ev.time ? ev.time + ' · ' : ''}${ev.title}</div>
+      <div class="cal-event-del" onclick="editEvent('${ev.id}')">✏️</div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+function calPrev() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
+function calNext() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
+
+function openAddEvent(dateKey) {
+  editingEventId = null;
+  document.getElementById('event-modal-title').textContent = 'Termin hinzufügen';
+  document.getElementById('ev-title').value = '';
+  document.getElementById('ev-date').value = calSelectedDate || dateToKey(today);
+  document.getElementById('ev-time').value = '';
+  document.getElementById('ev-color').value = '#4fc3f7';
+  document.getElementById('ev-del-btn').style.display = 'none';
+  openModal('event-modal');
+}
+
+function editEvent(id) {
+  const events = loadEvents();
+  const ev = events.find(e => e.id === id);
+  if (!ev) return;
+  editingEventId = id;
+  document.getElementById('event-modal-title').textContent = 'Termin bearbeiten';
+  document.getElementById('ev-title').value = ev.title;
+  document.getElementById('ev-date').value = ev.date;
+  document.getElementById('ev-time').value = ev.time || '';
+  document.getElementById('ev-color').value = ev.color || '#4fc3f7';
+  document.getElementById('ev-del-btn').style.display = 'block';
+  openModal('event-modal');
+}
+
+function saveEvent() {
+  const title = document.getElementById('ev-title').value.trim();
+  const date = document.getElementById('ev-date').value;
+  const time = document.getElementById('ev-time').value;
+  const color = document.getElementById('ev-color').value;
+  if (!title || !date) return;
+
+  let events = loadEvents();
+  if (editingEventId) {
+    const idx = events.findIndex(e => e.id === editingEventId);
+    if (idx > -1) events[idx] = { ...events[idx], title, date, time, color };
+  } else {
+    events.push({ id: Date.now().toString(), title, date, time, color });
+  }
+  saveEvents(events);
+  calSelectedDate = date;
+  closeModal('event-modal');
+  renderCalendar();
+}
+
+function deleteCurrentEvent() {
+  if (!editingEventId) return;
+  let events = loadEvents().filter(e => e.id !== editingEventId);
+  saveEvents(events);
+  closeModal('event-modal');
+  renderCalendar();
+}
+
+renderCalendar();
+
+// ══════════════════════════════════════════
+//  SLIDESHOW
+// ══════════════════════════════════════════
+let slides = [];
+let currentSlide = 0;
+let slideshowTimer = null;
+let slideshowInterval = 30000;
+
+function loadStoredImages() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('kiosk_slides') || '[]');
+    slides = stored;
+    renderSlides();
+  } catch(e) {}
+}
+
+function addSlideImages(event) {
+  const files = Array.from(event.target.files);
+  let loaded = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      slides.push(e.target.result);
+      loaded++;
+      if (loaded === files.length) {
+        // Save only last 30 to avoid quota
+        if (slides.length > 30) slides = slides.slice(-30);
+        try { localStorage.setItem('kiosk_slides', JSON.stringify(slides)); } catch(e) {}
+        renderSlides();
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value = '';
+}
+
+function renderSlides() {
+  const container = document.getElementById('slides-container');
+  const empty = document.getElementById('slideshow-empty');
+  const controls = document.getElementById('slideshow-controls');
+  container.innerHTML = '';
+  controls.innerHTML = '';
+
+  if (slides.length === 0) {
+    empty.style.display = 'flex';
+    clearInterval(slideshowTimer);
+    return;
+  }
+  empty.style.display = 'none';
+
+  slides.forEach((src, i) => {
+    const slide = document.createElement('div');
+    slide.className = 'slide' + (i === currentSlide ? ' active' : '');
+    slide.style.backgroundImage = `url(${src})`;
+    container.appendChild(slide);
+
+    const dot = document.createElement('div');
+    dot.className = 'slide-dot' + (i === currentSlide ? ' active' : '');
+    dot.onclick = () => goToSlide(i);
+    controls.appendChild(dot);
+  });
+
+  restartSlideshow();
+}
+
+function goToSlide(idx) {
+  const els = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.slide-dot');
+  if (els[currentSlide]) els[currentSlide].classList.remove('active');
+  if (dots[currentSlide]) dots[currentSlide].classList.remove('active');
+  currentSlide = (idx + slides.length) % slides.length;
+  if (els[currentSlide]) els[currentSlide].classList.add('active');
+  if (dots[currentSlide]) dots[currentSlide].classList.add('active');
+}
+
+function restartSlideshow() {
+  clearInterval(slideshowTimer);
+  if (slides.length > 1) {
+    slideshowTimer = setInterval(() => goToSlide(currentSlide + 1), slideshowInterval);
+  }
+}
+
+loadStoredImages();
+
+// ══════════════════════════════════════════
+//  SPOTIFY
+// ══════════════════════════════════════════
+function openSpotify() {
+  // Try deep link first, fallback to web
+  const link = document.createElement('a');
+  link.href = 'spotify://';
+  link.click();
+  setTimeout(() => {
+    window.open('https://open.spotify.com', '_blank');
+  }, 800);
+}
+
+// ══════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════
+function applySetting(key, value) {
+  const root = document.documentElement;
+  if (key === 'bg') root.style.setProperty('--bg', value);
+  if (key === 'accent') root.style.setProperty('--accent', value);
+  if (key === 'alpha') root.style.setProperty('--tile-alpha', value/100);
+  if (key === 'font') root.style.setProperty('--font-scale', value/100);
+}
+
+function saveSettings() {
+  const s = {
+    bg: document.getElementById('s-bg').value,
+    accent: document.getElementById('s-accent').value,
+    alpha: document.getElementById('s-alpha').value,
+    font: document.getElementById('s-font').value,
+    slide: document.getElementById('s-slide').value,
+  };
+  localStorage.setItem('kiosk_settings', JSON.stringify(s));
+  slideshowInterval = s.slide * 1000;
+  restartSlideshow();
+  closeModal('settings-modal');
+}
+
+function resetSettings() {
+  localStorage.removeItem('kiosk_settings');
+  location.reload();
+}
+
+function openSettings() {
+  const s = JSON.parse(localStorage.getItem('kiosk_settings') || '{}');
+  if (s.bg) document.getElementById('s-bg').value = s.bg;
+  if (s.accent) document.getElementById('s-accent').value = s.accent;
+  if (s.alpha) { document.getElementById('s-alpha').value = s.alpha; document.getElementById('v-alpha').textContent = s.alpha+'%'; }
+  if (s.font) { document.getElementById('s-font').value = s.font; document.getElementById('v-font').textContent = s.font+'%'; }
+  if (s.slide) { document.getElementById('s-slide').value = s.slide; document.getElementById('v-slide').textContent = s.slide+'s'; }
+  openModal('settings-modal');
+}
+
+function applyStoredSettings() {
+  const s = JSON.parse(localStorage.getItem('kiosk_settings') || '{}');
+  if (s.bg) applySetting('bg', s.bg);
+  if (s.accent) applySetting('accent', s.accent);
+  if (s.alpha) applySetting('alpha', s.alpha);
+  if (s.font) applySetting('font', s.font);
+  if (s.slide) slideshowInterval = s.slide * 1000;
+}
+applyStoredSettings();
+
+// ══════════════════════════════════════════
+//  MODAL HELPERS
+// ══════════════════════════════════════════
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-backdrop').forEach(m => {
+  m.addEventListener('click', e => {
+    if (e.target === m) m.classList.remove('open');
+  });
+});
+
+// Prevent context menu (Kiosk)
+document.addEventListener('contextmenu', e => e.preventDefault());
+</script>
+</body>
+</html>
