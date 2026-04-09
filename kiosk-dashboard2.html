@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1117;
+    --bg-image: none;
+    --tile-bg: rgba(255,255,255,0.07);
+    --tile-border: rgba(255,255,255,0.10);
+    --tile-hover: rgba(255,255,255,0.11);
+    --accent: #4fc3f7;
+    --accent2: #81c784;
+    --accent3: #ffb74d;
+    --text: #f0f4f8;
+    --text-muted: rgba(240,244,248,0.55);
+    --radius: 20px;
+    --gap: 14px;
+    --font-scale: 1;
+    --tile-alpha: 0.07;
+  }
+
+  html, body {
+    width: 100vw; height: 100vh;
+    overflow: hidden;
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Hintergrundbild */
+  #bg-layer {
+    position: fixed; inset: 0; z-index: 0;
+    background-size: cover; background-position: center;
+    transition: opacity 0.5s;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(79,195,247,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 80% 90%, rgba(129,199,132,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255,183,77,0.04) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  #grid {
+    position: fixed; inset: 0;
+    display: grid;
+    grid-template-columns: 2fr 2fr 1.4fr 1.6fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    gap: var(--gap);
+    padding: var(--gap);
+    z-index: 1;
+  }
+
+  .tile {
+    background: rgba(255,255,255,var(--tile-alpha));
+    border: 1px solid var(--tile-border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    overflow: hidden;
+    position: relative;
+    transition: background 0.2s, transform 0.15s;
+    display: flex; flex-direction: column;
+    padding: 16px;
+  }
+  .tile:active { transform: scale(0.985); }
+
+  /* Grid placement */
+  #tile-clock     { grid-column: 1; grid-row: 1; }
+  #tile-weather   { grid-column: 2; grid-row: 1; }
+  #tile-spotify   { grid-column: 3; grid-row: 1; }
+  #tile-settings  { grid-column: 4; grid-row: 1; }
+  #tile-calendar  { grid-column: 1 / 3; grid-row: 2 / 4; }
+  #tile-slideshow { grid-column: 3 / 5; grid-row: 2 / 4; }
+
+  /* ── TILE LABELS ── */
+  .tile-label {
+    font-size: calc(0.65rem * var(--font-scale));
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    flex-shrink: 0;
+  }
+
+  /* ── CLOCK ── */
+  #tile-clock { justify-content: center; align-items: flex-start; }
+  #clock-time {
+    font-family: 'DM Mono', monospace;
+    font-size: calc(3.8rem * var(--font-scale));
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--text);
+  }
+  #clock-date {
+    font-size: calc(0.85rem * var(--font-scale));
+    color: var(--text-muted);
+    margin-top: 6px;
+    font-weight: 400;
+  }
+
+  /* ── WEATHER ── */
+  #tile-weather { justify-content: space-between; }
+  #weather-main { display: flex; align-items: center; gap: 10px; }
+  #weather-icon { font-size: calc(2.8rem * var(--font-scale)); line-height: 1; }
+  #weather-temp { font-size: calc(2.4rem * var(--font-scale)); font-weight: 300; font-family: 'DM Mono', monospace; }
+  #weather-desc { font-size: calc(0.78rem * var(--font-scale)); color: var(--text-muted); margin-top: 2px; }
+  #weather-meta { display: flex; gap: 12px; font-size: calc(0.72rem * var(--font-scale)); color: var(--text-muted); flex-wrap: wrap; }
+  #weather-forecast { display: flex; gap: 6px; flex: 1; align-items: flex-end; }
+  .fc-day {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    background: rgba(255,255,255,0.05); border-radius: 10px; padding: 6px 4px;
+    font-size: calc(0.65rem * var(--font-scale));
+  }
+  .fc-day .fc-icon { font-size: calc(1.1rem * var(--font-scale)); }
+  .fc-day .fc-name { color: var(--text-muted); margin-bottom: 2px; }
+  .fc-day .fc-hi { font-weight: 600; color: var(--accent3); }
+  .fc-day .fc-lo { color: var(--text-muted); }
+
+  /* ── SPOTIFY ── */
+  #tile-spotify {
+    justify-content: flex-start; cursor: pointer;
+    background: rgba(29,185,84,0.12);
+    border-color: rgba(29,185,84,0.25);
+    padding: 12px;
+  }
+  #tile-spotify:hover { background: rgba(29,185,84,0.18); }
+
+  /* Spotify: default (kein Now Playing) */
+  #spotify-default { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; }
+  .spotify-logo { font-size: calc(2.2rem * var(--font-scale)); }
+  .spotify-label { font-size: calc(0.8rem * var(--font-scale)); color: #1db954; font-weight: 600; margin-top: 6px; }
+  .spotify-sub { font-size: calc(0.62rem * var(--font-scale)); color: var(--text-muted); margin-top: 2px; text-align: center; }
+
+  /* Spotify: Now Playing */
+  #spotify-nowplaying { display: none; flex-direction: column; width: 100%; height: 100%; }
+  #sp-cover {
+    width: 100%; aspect-ratio: 1; border-radius: 10px;
+    background: rgba(29,185,84,0.15); object-fit: cover;
+    flex-shrink: 0; max-height: 80px;
+  }
+  #sp-info { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; margin-top: 8px; }
+  #sp-track { font-size: calc(0.78rem * var(--font-scale)); font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #sp-artist { font-size: calc(0.65rem * var(--font-scale)); color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #sp-progress-wrap { margin-top: 6px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+  #sp-progress-bar { height: 100%; background: #1db954; border-radius: 2px; width: 0%; transition: width 1s linear; }
+  #sp-controls { display: flex; justify-content: center; gap: 12px; margin-top: 6px; }
+  .sp-btn { background: none; border: none; color: rgba(255,255,255,0.6); font-size: 1.1rem; cursor: pointer; padding: 2px 6px; border-radius: 6px; transition: color 0.15s, background 0.15s; }
+  .sp-btn:hover { color: #1db954; background: rgba(29,185,84,0.1); }
+  #sp-play-btn { font-size: 1.4rem; color: #1db954; }
+
+  /* Spotify setup hint */
+  #spotify-setup { display: none; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 6px; text-align: center; }
+  #spotify-setup .setup-icon { font-size: 1.8rem; opacity: 0.5; }
+  #spotify-setup p { font-size: calc(0.62rem * var(--font-scale)); color: var(--text-muted); line-height: 1.4; }
+  #spotify-setup button { font-size: calc(0.65rem * var(--font-scale)); padding: 5px 12px; }
+
+  /* ── SETTINGS BUTTON ── */
+  #tile-settings {
+    justify-content: center; align-items: center; cursor: pointer;
+    background: rgba(255,255,255,0.04);
+  }
+  #tile-settings:hover { background: rgba(255,255,255,0.09); }
+  .settings-icon { font-size: calc(2rem * var(--font-scale)); opacity: 0.6; }
+  .settings-label { font-size: calc(0.7rem * var(--font-scale)); color: var(--text-muted); margin-top: 6px; }
+
+  /* ── CALENDAR ── */
+  #tile-calendar { padding: 16px; }
+  #cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-shrink: 0; }
+  #cal-title { font-size: calc(1rem * var(--font-scale)); font-weight: 600; }
+  #cal-header button {
+    background: rgba(255,255,255,0.1); border: none; color: var(--text);
+    border-radius: 8px; width: 30px; height: 30px; cursor: pointer; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center; transition: background 0.15s;
+  }
+  #cal-header button:hover { background: rgba(255,255,255,0.18); }
+  #cal-btn-add {
+    background: rgba(79,195,247,0.15) !important; border: 1px solid rgba(79,195,247,0.3) !important;
+    color: var(--accent) !important; font-size: 1.1rem !important; padding: 0 10px !important; width: auto !important;
+  }
+  #cal-grid { flex: 1; display: flex; flex-direction: column; }
+  #cal-days-header { display: grid; grid-template-columns: repeat(7,1fr); text-align: center; margin-bottom: 4px; }
+  .cal-day-name { font-size: calc(0.6rem * var(--font-scale)); color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 0; }
+  #cal-days { display: grid; grid-template-columns: repeat(7,1fr); flex: 1; gap: 2px; }
+  .cal-cell {
+    display: flex; flex-direction: column; align-items: center;
+    border-radius: 8px; padding: 3px 2px; cursor: pointer; position: relative;
+    min-height: 0; transition: background 0.15s;
+  }
+  .cal-cell:hover { background: rgba(255,255,255,0.08); }
+  .cal-cell .cal-num {
+    font-size: calc(0.75rem * var(--font-scale)); font-weight: 500; line-height: 1.4;
+    width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%;
+  }
+  .cal-cell.today .cal-num { background: var(--accent); color: #000; font-weight: 700; }
+  .cal-cell.other-month .cal-num { color: var(--text-muted); opacity: 0.4; }
+  .cal-cell.has-event::after {
+    content: ''; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--accent3); position: absolute; bottom: 3px;
+  }
+  #cal-events { max-height: 70px; overflow-y: auto; margin-top: 8px; flex-shrink: 0; }
+  .cal-event-item {
+    display: flex; align-items: center; gap: 8px; padding: 4px 8px;
+    background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 4px;
+    font-size: calc(0.68rem * var(--font-scale));
+  }
+  .cal-event-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .cal-event-text { flex: 1; }
+  .cal-event-del { cursor: pointer; color: var(--text-muted); padding: 0 4px; opacity: 0; transition: opacity 0.2s; }
+  .cal-event-item:hover .cal-event-del { opacity: 1; }
+
+  /* ── SLIDESHOW ── */
+  #tile-slideshow { padding: 0; overflow: hidden; position: relative; }
+  #slideshow-inner { width: 100%; height: 100%; position: relative; background: #000; }
+  .slide { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity 1.2s ease; }
+  .slide.active { opacity: 1; }
+  #slideshow-label {
+    position: absolute; top: 14px; left: 14px;
+    font-size: calc(0.65rem * var(--font-scale));
+    font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    color: rgba(255,255,255,0.6); z-index: 2;
+    background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px;
+  }
+  #slideshow-controls {
+    position: absolute; bottom: 14px; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: center; gap: 12px; z-index: 2;
+  }
+  .slide-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.2s; }
+  .slide-dot.active { background: #fff; width: 18px; border-radius: 3px; }
+  #slideshow-upload {
+    position: absolute; top: 14px; right: 14px; z-index: 2;
+    background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.2);
+    color: #fff; border-radius: 8px; padding: 5px 10px; font-size: calc(0.68rem * var(--font-scale));
+    cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.15s;
+  }
+  #slideshow-upload:hover { background: rgba(0,0,0,0.6); }
+  #slide-file-input { display: none; }
+  #slideshow-empty {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px; color: var(--text-muted);
+  }
+  #slideshow-empty .empty-icon { font-size: 2.5rem; opacity: 0.4; }
+  #slideshow-empty p { font-size: calc(0.75rem * var(--font-scale)); opacity: 0.6; }
+
+  /* ── MODAL ── */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(8px); z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-backdrop.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: rgba(20,25,35,0.96); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 24px; padding: 28px; min-width: 340px; max-width: 480px; width: 90%;
+    transform: scale(0.92); transition: transform 0.2s;
+  }
+  .modal-backdrop.open .modal { transform: scale(1); }
+  .modal h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 18px; }
+  .modal label { font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 5px; margin-top: 12px; }
+  .modal input, .modal select, .modal textarea {
+    width: 100%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px; padding: 9px 12px; color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; outline: none; transition: border-color 0.15s;
+  }
+  .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--accent); }
+  .modal select option { background: #1a1f2e; }
+  .modal-btns { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  .btn {
+    padding: 9px 20px; border-radius: 10px; border: none; font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-danger { background: rgba(239,83,80,0.15); color: #ef5350; border: 1px solid rgba(239,83,80,0.3); }
+  .btn-ghost { background: rgba(255,255,255,0.07); color: var(--text); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.12); }
+
+  /* ── SETTINGS PANEL ── */
+  #settings-modal .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  #settings-modal .settings-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .color-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .color-row input[type=color] { width: 36px; height: 30px; border: none; border-radius: 6px; cursor: pointer; background: none; padding: 0; }
+  .color-preview { flex: 1; height: 30px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); }
+  .range-row { display: flex; align-items: center; gap: 10px; }
+  .range-row input[type=range] { flex: 1; accent-color: var(--accent); }
+  .range-val { font-size: 0.8rem; color: var(--accent); min-width: 36px; text-align: right; }
+  .section-title { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-top: 14px; margin-bottom: 6px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px; }
+  .section-title:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+
+  /* BG image upload */
+  #bg-upload-input { display: none; }
+  .bg-preview {
+    width: 100%; height: 60px; border-radius: 10px; border: 1px dashed rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; color: var(--text-muted); cursor: pointer;
+    background-size: cover; background-position: center;
+    transition: border-color 0.15s; margin-top: 8px;
+  }
+  .bg-preview:hover { border-color: var(--accent); }
+  .bg-mode-btns { display: flex; gap: 6px; margin-top: 8px; }
+  .bg-mode-btn {
+    flex: 1; padding: 7px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05); color: var(--text-muted);
+    font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .bg-mode-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+  /* ── LOADING/ERROR ── */
+  .loader { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .photo-tab {
+    flex: 1; padding: 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05); color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .photo-tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+  .photo-tab:not(.active):hover { background: rgba(255,255,255,0.1); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .tile { animation: fadeIn 0.5s ease both; }
+  #tile-clock     { animation-delay: 0.05s; }
+  #tile-weather   { animation-delay: 0.10s; }
+  #tile-spotify   { animation-delay: 0.15s; }
+  #tile-settings  { animation-delay: 0.20s; }
+  #tile-calendar  { animation-delay: 0.25s; }
+  #tile-slideshow { animation-delay: 0.30s; }
+
+  /* Settings scrollable */
+  #settings-modal .modal { max-height: 90vh; overflow-y: auto; }
+
+  /* Spotify token input */
+  #sp-token-row { display: flex; gap: 8px; margin-top: 6px; }
+  #sp-token-row input { flex: 1; font-size: 0.75rem; }
+</style>
+</head>
+<body>
+
+<!-- Hintergrundbild-Layer -->
+<div id="bg-layer"></div>
+
+<div id="grid">
+
+  <!-- CLOCK -->
+  <div class="tile" id="tile-clock">
+    <div class="tile-label">Uhrzeit</div>
+    <div id="clock-time">00:00</div>
+    <div id="clock-date">Montag, 1. Januar</div>
+  </div>
+
+  <!-- WEATHER -->
+  <div class="tile" id="tile-weather">
+    <div class="tile-label">Wetter</div>
+    <div id="weather-main">
+      <div id="weather-icon">⏳</div>
+      <div>
+        <div id="weather-temp">--°</div>
+        <div id="weather-desc">Lade…</div>
+      </div>
+    </div>
+    <div id="weather-meta">
+      <span id="weather-hum">💧 --%</span>
+      <span id="weather-wind">💨 -- km/h</span>
+      <span id="weather-loc">📍 Standort…</span>
+    </div>
+    <div id="weather-forecast"></div>
+  </div>
+
+  <!-- SPOTIFY -->
+  <div class="tile" id="tile-spotify" onclick="spotifyTileClick()">
+    <!-- Default: kein Token -->
+    <div id="spotify-default">
+      <div class="spotify-logo">🎵</div>
+      <div class="spotify-label">Spotify</div>
+      <div class="spotify-sub">Antippen zum Öffnen</div>
+    </div>
+    <!-- Setup-Hinweis -->
+    <div id="spotify-setup">
+      <div class="setup-icon">🎵</div>
+      <p>Spotify verbinden<br>in den Einstellungen</p>
+      <button class="btn btn-ghost" onclick="event.stopPropagation();openSettings('spotify')" style="font-size:0.65rem;padding:5px 10px">Einrichten</button>
+    </div>
+    <!-- Now Playing -->
+    <div id="spotify-nowplaying">
+      <img id="sp-cover" src="" alt="Cover">
+      <div id="sp-info">
+        <div id="sp-track">—</div>
+        <div id="sp-artist">—</div>
+        <div id="sp-progress-wrap"><div id="sp-progress-bar"></div></div>
+      </div>
+      <div id="sp-controls">
+        <button class="sp-btn" onclick="event.stopPropagation();spotifyPrev()" title="Zurück">⏮</button>
+        <button class="sp-btn" id="sp-play-btn" onclick="event.stopPropagation();spotifyPlayPause()" title="Play/Pause">⏸</button>
+        <button class="sp-btn" onclick="event.stopPropagation();spotifyNext()" title="Weiter">⏭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="tile" id="tile-settings" onclick="openSettings()">
+    <div class="settings-icon">⚙️</div>
+    <div class="settings-label">Einstellungen</div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="tile" id="tile-calendar">
+    <div id="cal-header">
+      <button onclick="calPrev()">‹</button>
+      <div id="cal-title">Kalender</div>
+      <div style="display:flex;gap:6px">
+        <button id="cal-btn-add" onclick="openAddEvent()">+</button>
+        <button onclick="calNext()">›</button>
+      </div>
+    </div>
+    <div id="cal-grid">
+      <div id="cal-days-header"></div>
+      <div id="cal-days"></div>
+    </div>
+    <div id="cal-events"></div>
+  </div>
+
+  <!-- SLIDESHOW -->
+  <div class="tile" id="tile-slideshow">
+    <div id="slideshow-inner">
+      <div id="slideshow-label">Fotos</div>
+      <button id="slideshow-upload" onclick="openPhotoModal()">🖼️ Fotos verwalten</button>
+      <input type="file" id="slide-file-input" multiple accept="image/*" onchange="addSlideImages(event)">
+      <div id="slideshow-empty">
+        <div class="empty-icon">🖼️</div>
+        <p>Tippe auf „Fotos verwalten"</p>
+      </div>
+      <div id="slides-container"></div>
+      <div id="slideshow-controls"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- EVENT MODAL -->
+<div class="modal-backdrop" id="event-modal">
+  <div class="modal">
+    <h2 id="event-modal-title">Termin hinzufügen</h2>
+    <label>Titel</label>
+    <input type="text" id="ev-title" placeholder="Terminbezeichnung">
+    <label>Datum</label>
+    <input type="date" id="ev-date">
+    <label>Uhrzeit (optional)</label>
+    <input type="time" id="ev-time">
+    <label>Farbe</label>
+    <input type="color" id="ev-color" value="#4fc3f7">
+    <div class="modal-btns">
+      <button class="btn btn-danger" id="ev-del-btn" onclick="deleteCurrentEvent()" style="display:none">Löschen</button>
+      <button class="btn btn-ghost" onclick="closeModal('event-modal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveEvent()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHOTO MODAL -->
+<div class="modal-backdrop" id="photo-modal">
+  <div class="modal" style="max-width:580px;max-height:90vh;overflow-y:auto">
+    <h2>🖼️ Fotos verwalten</h2>
+    <div id="photo-tabs" style="display:flex;gap:6px;margin-bottom:14px;margin-top:4px">
+      <button class="photo-tab active" onclick="switchPhotoTab('tablet')" id="tab-tablet">📱 Tablet</button>
+      <button class="photo-tab" onclick="switchPhotoTab('url')" id="tab-url">🔗 URL</button>
+      <button class="photo-tab" onclick="switchPhotoTab('gphoto')" id="tab-gphoto">📷 Google Fotos</button>
+    </div>
+    <div id="tab-content-tablet" class="photo-tab-content">
+      <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;line-height:1.5">
+        Nutzt die <strong style="color:var(--accent)">Fully Kiosk PLUS API</strong> — öffnet den nativen Datei-Browser des Tablets.
+      </p>
+      <button class="btn btn-primary" onclick="browseFilesFullyKiosk()" style="width:100%;padding:14px;font-size:1rem">📂 Dateien vom Tablet wählen</button>
+      <div id="fully-status" style="font-size:0.72rem;color:var(--text-muted);margin-top:8px;text-align:center"></div>
+      <div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.04);border-radius:10px">
+        <div style="font-size:0.68rem;color:var(--text-muted);line-height:1.6">
+          <strong style="color:var(--text)">Falls der Button nicht reagiert:</strong><br>
+          Fully Kiosk → Einstellungen → <em>Web Content Settings</em> →<br>
+          ✅ <em>Enable File Access</em> aktivieren<br>
+          ✅ <em>Allow File Upload</em> aktivieren
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:10px;background:rgba(79,195,247,0.06);border-radius:10px;border:1px solid rgba(79,195,247,0.15)">
+        <div style="font-size:0.68rem;color:var(--text-muted);line-height:1.6">
+          <strong style="color:var(--accent)">Fallback (Standard-Browser):</strong>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="btn btn-ghost" onclick="document.getElementById('slide-file-input').click()" style="flex:1;font-size:0.8rem">📁 Standard Dateiauswahl</button>
+          <span id="upload-count" style="font-size:0.72rem;color:var(--accent);align-self:center"></span>
+        </div>
+      </div>
+    </div>
+    <div id="tab-content-url" class="photo-tab-content" style="display:none">
+      <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;line-height:1.5">Direkte Bild-URLs — funktionieren <strong style="color:var(--accent2)">immer</strong> im Fully Kiosk Browser.</p>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="url" id="photo-url-input" placeholder="https://beispiel.de/foto.jpg" style="flex:1">
+        <button class="btn btn-primary" onclick="addPhotoByUrl()">Hinzufügen</button>
+      </div>
+      <div id="url-status" style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px"></div>
+      <div style="padding:10px;background:rgba(255,255,255,0.04);border-radius:10px">
+        <div style="font-size:0.68rem;color:var(--text-muted);line-height:1.7">
+          <strong style="color:var(--text)">Empfohlene Dienste:</strong><br>
+          🔷 <strong>imgbb.com</strong> — Foto hochladen → „Direct link" kopieren<br>
+          🔷 <strong>GitHub</strong> — Foto ins Repo laden → Raw-URL verwenden
+        </div>
+      </div>
+    </div>
+    <div id="tab-content-gphoto" class="photo-tab-content" style="display:none">
+      <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:10px;line-height:1.5">Google Fotos Album automatisch laden.<br><strong style="color:var(--accent3)">Wichtig:</strong> Album muss auf <strong>„Öffentlich"</strong> gestellt sein.</p>
+      <div style="display:flex;gap:8px;margin-bottom:6px">
+        <input type="url" id="gphoto-url-input" placeholder="https://photos.google.com/share/..." style="flex:1">
+        <button class="btn btn-primary" onclick="loadGooglePhotos()">Laden</button>
+      </div>
+      <div id="gphoto-status" style="font-size:0.72rem;margin-bottom:10px"></div>
+    </div>
+    <div style="margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted)">Aktuelle Fotos (<span id="photo-count-label">0</span>)</div>
+        <button class="btn btn-danger" onclick="clearAllPhotos()" style="font-size:0.7rem;padding:4px 10px">Alle löschen</button>
+      </div>
+      <div id="photo-thumbs" style="display:flex;flex-wrap:wrap;gap:6px;max-height:100px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-btns" style="margin-top:14px">
+      <button class="btn btn-primary" onclick="closeModal('photo-modal')">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-backdrop" id="settings-modal">
+  <div class="modal" style="max-width:540px">
+    <h2>⚙️ Einstellungen</h2>
+
+    <!-- FARBEN -->
+    <div class="section-title">🎨 Farben & Schrift</div>
+    <div class="settings-grid-3" id="settings-grid-colors" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div>
+        <label>Hintergrundfarbe</label>
+        <div class="color-row">
+          <input type="color" id="s-bg" value="#0d1117" oninput="livePreview('bg',this.value)">
+          <div class="color-preview" id="prev-bg" style="background:#0d1117"></div>
+        </div>
+      </div>
+      <div>
+        <label>Schriftfarbe</label>
+        <div class="color-row">
+          <input type="color" id="s-text" value="#f0f4f8" oninput="livePreview('text',this.value)">
+          <div class="color-preview" id="prev-text" style="background:#f0f4f8"></div>
+        </div>
+      </div>
+      <div>
+        <label>Akzentfarbe</label>
+        <div class="color-row">
+          <input type="color" id="s-accent" value="#4fc3f7" oninput="livePreview('accent',this.value)">
+          <div class="color-preview" id="prev-accent" style="background:#4fc3f7"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HINTERGRUND -->
+    <div class="section-title">🖼️ Hintergrund</div>
+    <div class="bg-mode-btns">
+      <button class="bg-mode-btn active" id="bgmode-color" onclick="setBgMode('color')">🎨 Farbe</button>
+      <button class="bg-mode-btn" id="bgmode-image" onclick="setBgMode('image')">🖼️ Bild</button>
+      <button class="bg-mode-btn" id="bgmode-gradient" onclick="setBgMode('gradient')">🌈 Verlauf</button>
+    </div>
+    <div id="bg-color-section" style="margin-top:8px">
+      <label style="font-size:0.68rem;color:var(--text-muted)">Verwende die Hintergrundfarbe oben</label>
+    </div>
+    <div id="bg-image-section" style="display:none">
+      <div class="bg-preview" id="bg-preview-box" onclick="document.getElementById('bg-upload-input').click()">
+        <span id="bg-preview-hint">📁 Bild auswählen (tippen)</span>
+      </div>
+      <input type="file" id="bg-upload-input" accept="image/*" onchange="loadBgImage(event)">
+      <div style="margin-top:6px;display:flex;gap:8px;align-items:center">
+        <label style="margin:0;flex:1;font-size:0.7rem;color:var(--text-muted)">Abdunklung</label>
+        <input type="range" id="s-bg-dim" min="0" max="90" value="40" style="flex:2;accent-color:var(--accent)" oninput="updateBgDim(this.value);document.getElementById('v-bg-dim').textContent=this.value+'%'">
+        <span class="range-val" id="v-bg-dim">40%</span>
+      </div>
+    </div>
+    <div id="bg-gradient-section" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <div>
+          <label>Farbe 1</label>
+          <div class="color-row"><input type="color" id="s-grad1" value="#0d1117" oninput="updateGradient()"><div class="color-preview" style="background:#0d1117" id="prev-grad1"></div></div>
+        </div>
+        <div>
+          <label>Farbe 2</label>
+          <div class="color-row"><input type="color" id="s-grad2" value="#1a237e" oninput="updateGradient()"><div class="color-preview" style="background:#1a237e" id="prev-grad2"></div></div>
+        </div>
+      </div>
+      <label>Richtung</label>
+      <select id="s-grad-dir" onchange="updateGradient()">
+        <option value="135deg">↘ Diagonal</option>
+        <option value="180deg">↓ Vertikal</option>
+        <option value="90deg">→ Horizontal</option>
+        <option value="to bottom right">↘ Ecke</option>
+      </select>
+    </div>
+
+    <!-- KACHELN -->
+    <div class="section-title">🔲 Kacheln</div>
+    <label>Transparenz</label>
+    <div class="range-row">
+      <input type="range" id="s-alpha" min="1" max="35" value="7" oninput="livePreview('alpha',this.value);document.getElementById('v-alpha').textContent=this.value+'%'">
+      <span class="range-val" id="v-alpha">7%</span>
+    </div>
+
+    <!-- SCHRIFT -->
+    <div class="section-title">🔤 Schrift</div>
+    <label>Schriftgröße</label>
+    <div class="range-row">
+      <input type="range" id="s-font" min="70" max="140" value="100" oninput="livePreview('font',this.value);document.getElementById('v-font').textContent=this.value+'%'">
+      <span class="range-val" id="v-font">100%</span>
+    </div>
+    <label>Schriftart</label>
+    <select id="s-fontfamily" onchange="livePreview('fontfamily',this.value)">
+      <option value="'DM Sans', sans-serif">DM Sans (Standard)</option>
+      <option value="'Inter', sans-serif">Inter</option>
+      <option value="'Roboto', sans-serif">Roboto</option>
+      <option value="'Georgia', serif">Georgia (Serif)</option>
+      <option value="'DM Mono', monospace">DM Mono</option>
+    </select>
+
+    <!-- DIASHOW -->
+    <div class="section-title">🖼️ Diashow</div>
+    <label>Wechselintervall</label>
+    <div class="range-row">
+      <input type="range" id="s-slide" min="5" max="120" value="30" oninput="document.getElementById('v-slide').textContent=this.value+'s';slideshowInterval=this.value*1000;restartSlideshow()">
+      <span class="range-val" id="v-slide">30s</span>
+    </div>
+
+    <!-- SPOTIFY -->
+    <div class="section-title" id="settings-spotify-section">🎵 Spotify Now Playing</div>
+    <p style="font-size:0.72rem;color:var(--text-muted);line-height:1.5;margin-bottom:8px">
+      Um den aktuellen Song anzuzeigen, brauchst du ein <strong style="color:var(--accent)">Spotify Access Token</strong>.<br>
+      <a href="https://developer.spotify.com/console/get-the-users-currently-playing-track/" target="_blank" style="color:var(--accent);font-size:0.68rem">→ Token hier holen (Get Token klicken, einloggen)</a>
+    </p>
+    <label>Access Token</label>
+    <div id="sp-token-row">
+      <input type="password" id="s-sp-token" placeholder="Spotify Access Token einfügen…">
+      <button class="btn btn-primary" onclick="testSpotifyToken()" style="white-space:nowrap">Testen</button>
+    </div>
+    <div id="sp-token-status" style="font-size:0.7rem;margin-top:6px;color:var(--text-muted)"></div>
+    <p style="font-size:0.65rem;color:var(--text-muted);margin-top:6px;line-height:1.4">
+      ℹ️ Token läuft nach 1h ab. Für dauerhaften Betrieb: Token erneuern oder Spotify-App direkt öffnen.
+    </p>
+
+    <div class="modal-btns">
+      <button class="btn btn-danger" onclick="resetSettings()">Zurücksetzen</button>
+      <button class="btn btn-ghost" onclick="closeModal('settings-modal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Speichern ✓</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  CLOCK
+// ══════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  const opts = { timeZone: 'Europe/Berlin' };
+  const timeStr = now.toLocaleTimeString('de-DE', { ...opts, hour: '2-digit', minute: '2-digit' });
+  const dateStr = now.toLocaleDateString('de-DE', { ...opts, weekday: 'long', day: 'numeric', month: 'long' });
+  document.getElementById('clock-time').textContent = timeStr;
+  document.getElementById('clock-date').textContent = dateStr;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ══════════════════════════════════════════
+//  WEATHER
+// ══════════════════════════════════════════
+const WMO = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'❄️',73:'❄️',75:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️',96:'⛈️',99:'⛈️'};
+const WMO_DESC = {0:'Klar',1:'Überwiegend klar',2:'Teilweise bewölkt',3:'Bedeckt',45:'Nebel',48:'Raureif',51:'Leichter Niesel',53:'Nieselregen',55:'Starker Niesel',61:'Leichter Regen',63:'Regen',65:'Starker Regen',71:'Leichter Schnee',73:'Schnee',75:'Starker Schnee',80:'Regenschauer',81:'Starke Schauer',82:'Heftige Schauer',95:'Gewitter',96:'Gewitter+Hagel',99:'Schwere Gewitter'};
+const DAYS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+async function loadWeather(lat, lon) {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe%2FBerlin&forecast_days=5`;
+    const res = await fetch(url);
+    const d = await res.json();
+    const c = d.current;
+    const dl = d.daily;
+    document.getElementById('weather-icon').textContent = WMO[c.weather_code] || '🌡️';
+    document.getElementById('weather-temp').textContent = Math.round(c.temperature_2m) + '°';
+    document.getElementById('weather-desc').textContent = WMO_DESC[c.weather_code] || '';
+    document.getElementById('weather-hum').textContent = '💧 ' + c.relative_humidity_2m + '%';
+    document.getElementById('weather-wind').textContent = '💨 ' + Math.round(c.wind_speed_10m) + ' km/h';
+    const fc = document.getElementById('weather-forecast');
+    fc.innerHTML = '';
+    for (let i = 1; i < 5; i++) {
+      const date = new Date(dl.time[i]);
+      const day = document.createElement('div');
+      day.className = 'fc-day';
+      day.innerHTML = `<div class="fc-name">${DAYS[date.getDay()]}</div><div class="fc-icon">${WMO[dl.weather_code[i]]||'🌡️'}</div><div class="fc-hi">${Math.round(dl.temperature_2m_max[i])}°</div><div class="fc-lo">${Math.round(dl.temperature_2m_min[i])}°</div>`;
+      fc.appendChild(day);
+    }
+  } catch(e) { document.getElementById('weather-desc').textContent = 'Offline'; }
+}
+
+async function getWeather() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const {latitude:lat, longitude:lon} = pos.coords;
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`)
+          .then(r=>r.json()).then(d=>{ document.getElementById('weather-loc').textContent = '📍 ' + (d.address.city||d.address.town||d.address.village||'Standort'); }).catch(()=>{});
+        loadWeather(lat, lon);
+      },
+      () => { document.getElementById('weather-loc').textContent = '📍 Düsseldorf'; loadWeather(51.2217, 6.7762); }
+    );
+  } else { loadWeather(51.2217, 6.7762); }
+}
+getWeather();
+setInterval(getWeather, 10 * 60 * 1000);
+
+// ══════════════════════════════════════════
+//  CALENDAR
+// ══════════════════════════════════════════
+let calYear, calMonth, calSelectedDate = null, editingEventId = null;
+const today = new Date();
+calYear = today.getFullYear();
+calMonth = today.getMonth();
+
+function loadEvents() { try { return JSON.parse(localStorage.getItem('kiosk_events') || '[]'); } catch(e) { return []; } }
+function saveEvents(evs) { localStorage.setItem('kiosk_events', JSON.stringify(evs)); }
+
+function renderCalendar() {
+  const events = loadEvents();
+  const firstDay = new Date(calYear, calMonth, 1);
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  let startDow = firstDay.getDay();
+  startDow = (startDow + 6) % 7;
+  document.getElementById('cal-title').textContent = firstDay.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  const header = document.getElementById('cal-days-header');
+  header.innerHTML = '';
+  ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => { const el = document.createElement('div'); el.className = 'cal-day-name'; el.textContent = d; header.appendChild(el); });
+  const grid = document.getElementById('cal-days');
+  grid.innerHTML = '';
+  const prevDays = new Date(calYear, calMonth, 0).getDate();
+  for (let i = startDow - 1; i >= 0; i--) grid.appendChild(makeCellEl(prevDays - i, calYear, calMonth - 1, true, events));
+  for (let d = 1; d <= daysInMonth; d++) grid.appendChild(makeCellEl(d, calYear, calMonth, false, events));
+  const total = grid.children.length;
+  const nextCount = total > 35 ? 42 - total : 35 - total;
+  for (let d = 1; d <= nextCount; d++) grid.appendChild(makeCellEl(d, calYear, calMonth + 1, true, events));
+  renderEventsForDay(calSelectedDate, events);
+}
+
+function makeCellEl(day, year, month, otherMonth, events) {
+  const cell = document.createElement('div');
+  cell.className = 'cal-cell';
+  if (otherMonth) cell.classList.add('other-month');
+  const realDate = new Date(year, month, day);
+  const dateKey = dateToKey(realDate);
+  if (realDate.toDateString() === today.toDateString()) cell.classList.add('today');
+  if (events.some(e => e.date === dateKey)) cell.classList.add('has-event');
+  const num = document.createElement('div');
+  num.className = 'cal-num';
+  num.textContent = day;
+  cell.appendChild(num);
+  cell.addEventListener('click', () => { calSelectedDate = dateKey; renderEventsForDay(dateKey, events); });
+  return cell;
+}
+
+function dateToKey(d) { return d.toISOString().split('T')[0]; }
+
+function renderEventsForDay(dateKey, events) {
+  const container = document.getElementById('cal-events');
+  container.innerHTML = '';
+  if (!dateKey) return;
+  events.filter(e => e.date === dateKey).forEach(ev => {
+    const item = document.createElement('div');
+    item.className = 'cal-event-item';
+    item.innerHTML = `<div class="cal-event-dot" style="background:${ev.color||'#4fc3f7'}"></div><div class="cal-event-text">${ev.time ? ev.time + ' · ' : ''}${ev.title}</div><div class="cal-event-del" onclick="editEvent('${ev.id}')">✏️</div>`;
+    container.appendChild(item);
+  });
+}
+
+function calPrev() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
+function calNext() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
+
+function openAddEvent() {
+  editingEventId = null;
+  document.getElementById('event-modal-title').textContent = 'Termin hinzufügen';
+  document.getElementById('ev-title').value = '';
+  document.getElementById('ev-date').value = calSelectedDate || dateToKey(today);
+  document.getElementById('ev-time').value = '';
+  document.getElementById('ev-color').value = '#4fc3f7';
+  document.getElementById('ev-del-btn').style.display = 'none';
+  openModal('event-modal');
+}
+
+function editEvent(id) {
+  const ev = loadEvents().find(e => e.id === id);
+  if (!ev) return;
+  editingEventId = id;
+  document.getElementById('event-modal-title').textContent = 'Termin bearbeiten';
+  document.getElementById('ev-title').value = ev.title;
+  document.getElementById('ev-date').value = ev.date;
+  document.getElementById('ev-time').value = ev.time || '';
+  document.getElementById('ev-color').value = ev.color || '#4fc3f7';
+  document.getElementById('ev-del-btn').style.display = 'block';
+  openModal('event-modal');
+}
+
+function saveEvent() {
+  const title = document.getElementById('ev-title').value.trim();
+  const date = document.getElementById('ev-date').value;
+  const time = document.getElementById('ev-time').value;
+  const color = document.getElementById('ev-color').value;
+  if (!title || !date) return;
+  let events = loadEvents();
+  if (editingEventId) {
+    const idx = events.findIndex(e => e.id === editingEventId);
+    if (idx > -1) events[idx] = { ...events[idx], title, date, time, color };
+  } else {
+    events.push({ id: Date.now().toString(), title, date, time, color });
+  }
+  saveEvents(events);
+  calSelectedDate = date;
+  closeModal('event-modal');
+  renderCalendar();
+}
+
+function deleteCurrentEvent() {
+  if (!editingEventId) return;
+  saveEvents(loadEvents().filter(e => e.id !== editingEventId));
+  closeModal('event-modal');
+  renderCalendar();
+}
+renderCalendar();
+
+// ══════════════════════════════════════════
+//  SLIDESHOW
+// ══════════════════════════════════════════
+let slides = [], currentSlide = 0, slideshowTimer = null, slideshowInterval = 30000;
+
+function loadStoredImages() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('kiosk_slides_v2') || '[]');
+    slides = stored.map(s => typeof s === 'string' ? { src: s, type: 'base64' } : s);
+    renderSlides();
+  } catch(e) { slides = []; }
+}
+
+function persistSlides() {
+  const toSave = slides.filter(s => s.type === 'url');
+  const b64 = slides.filter(s => s.type === 'base64');
+  try { localStorage.setItem('kiosk_slides_v2', JSON.stringify([...b64, ...toSave])); }
+  catch(e) { try { localStorage.setItem('kiosk_slides_v2', JSON.stringify(toSave)); } catch(e2) {} }
+}
+
+function addSlideImages(event) {
+  const files = Array.from(event.target.files);
+  let loaded = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      slides.push({ src: e.target.result, type: 'base64' });
+      loaded++;
+      if (loaded === files.length) {
+        if (slides.length > 40) slides = slides.slice(-40);
+        persistSlides(); renderSlides(); refreshPhotoModal();
+        document.getElementById('upload-count').textContent = files.length + ' Foto(s) ✓';
+        setTimeout(() => { document.getElementById('upload-count').textContent = ''; }, 3000);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value = '';
+}
+
+function addPhotoByUrl() {
+  const input = document.getElementById('photo-url-input');
+  const status = document.getElementById('url-status');
+  const url = input.value.trim();
+  if (!url || !url.startsWith('http')) { status.style.color='#ef5350'; status.textContent='⚠️ Bitte gültige URL eingeben'; return; }
+  if (slides.find(s => s.src === url)) { status.style.color='var(--text-muted)'; status.textContent='ℹ️ Bereits vorhanden.'; return; }
+  slides.push({ src: url, type: 'url' });
+  persistSlides(); renderSlides(); refreshPhotoModal();
+  input.value = ''; status.style.color='var(--accent2)'; status.textContent='✅ Hinzugefügt!';
+  setTimeout(() => { status.textContent = ''; }, 3000);
+}
+
+async function loadGooglePhotos() {
+  const input = document.getElementById('gphoto-url-input');
+  const url = input.value.trim();
+  const status = document.getElementById('gphoto-status');
+  if (!url || !url.includes('photos.google.com')) { status.textContent='⚠️ Bitte gültigen Google Fotos Link eingeben.'; return; }
+  status.textContent = '⏳ Lade Album…';
+  try {
+    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+    const res = await fetch(proxy);
+    const data = await res.json();
+    const matches = [...new Set((data.contents.match(/https:\/\/lh3\.googleusercontent\.com\/[A-Za-z0-9_\-]+/g) || []))];
+    if (matches.length === 0) { status.textContent = '⚠️ Keine Fotos gefunden. Album muss öffentlich sein.'; return; }
+    const imgUrls = matches.slice(0, 50).map(u => u + '=w1920-h1080');
+    imgUrls.forEach(src => { if (!slides.find(s => s.src === src)) slides.push({ src, type: 'url' }); });
+    persistSlides(); renderSlides(); refreshPhotoModal();
+    status.textContent = `✅ ${imgUrls.length} Fotos geladen!`; input.value = '';
+  } catch(e) { status.textContent = '⚠️ Fehler. Ist das Album öffentlich?'; }
+}
+
+function browseFilesFullyKiosk() {
+  const status = document.getElementById('fully-status');
+  if (typeof fully !== 'undefined' && typeof fully.browseFiles === 'function') {
+    status.textContent = '⏳ Datei-Browser öffnet…';
+    try {
+      fully.browseFiles('image/*', function(fileUri) {
+        if (!fileUri) { status.textContent = ''; return; }
+        const uris = fileUri.split('|').filter(Boolean);
+        uris.forEach(uri => { const src = uri.trim(); if (src && !slides.find(s => s.src === src)) slides.push({ src, type: 'url' }); });
+        persistSlides(); renderSlides(); refreshPhotoModal();
+        status.textContent = `✅ ${uris.length} Foto(s) hinzugefügt!`;
+        setTimeout(() => { status.textContent = ''; }, 4000);
+      });
+    } catch(e) { status.textContent = '⚠️ Fehler: ' + e.message; }
+  } else if (typeof fully !== 'undefined' && typeof fully.openFilePicker === 'function') {
+    status.textContent = '⏳ Datei-Browser öffnet…';
+    try {
+      fully.openFilePicker('image/*', function(result) {
+        if (!result) return;
+        const uris = result.split('|').filter(Boolean);
+        uris.forEach(uri => { const src = uri.trim(); if (src && !slides.find(s => s.src === src)) slides.push({ src, type: 'url' }); });
+        persistSlides(); renderSlides(); refreshPhotoModal();
+        status.textContent = `✅ ${uris.length} Foto(s) hinzugefügt!`;
+      });
+    } catch(e) { status.textContent = '⚠️ Fehler: ' + e.message; }
+  } else {
+    document.getElementById('slide-file-input').click();
+  }
+}
+
+function switchPhotoTab(tab) {
+  ['tablet','url','gphoto'].forEach(t => {
+    document.getElementById('tab-content-' + t).style.display = t === tab ? 'block' : 'none';
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+}
+
+function openPhotoModal() { refreshPhotoModal(); openModal('photo-modal'); }
+
+function refreshPhotoModal() {
+  const thumbs = document.getElementById('photo-thumbs');
+  const countLabel = document.getElementById('photo-count-label');
+  thumbs.innerHTML = ''; countLabel.textContent = slides.length;
+  slides.forEach((s, i) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;width:60px;height:60px;flex-shrink:0';
+    const img = document.createElement('img');
+    img.src = s.src;
+    img.style.cssText = 'width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.15)';
+    img.onerror = () => { img.style.background='rgba(255,0,0,0.2)'; img.src=''; };
+    const del = document.createElement('div');
+    del.textContent = '✕';
+    del.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#ef5350;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;font-weight:700';
+    del.onclick = () => { slides.splice(i, 1); persistSlides(); renderSlides(); refreshPhotoModal(); };
+    wrap.appendChild(img); wrap.appendChild(del); thumbs.appendChild(wrap);
+  });
+}
+
+function clearAllPhotos() { if (!confirm('Alle Fotos löschen?')) return; slides = []; persistSlides(); renderSlides(); refreshPhotoModal(); }
+
+function renderSlides() {
+  const container = document.getElementById('slides-container');
+  const empty = document.getElementById('slideshow-empty');
+  const controls = document.getElementById('slideshow-controls');
+  container.innerHTML = ''; controls.innerHTML = '';
+  if (slides.length === 0) { empty.style.display = 'flex'; clearInterval(slideshowTimer); return; }
+  empty.style.display = 'none';
+  slides.forEach((s, i) => {
+    const slide = document.createElement('div');
+    slide.className = 'slide' + (i === currentSlide ? ' active' : '');
+    slide.style.backgroundImage = `url(${s.src})`;
+    container.appendChild(slide);
+    const dot = document.createElement('div');
+    dot.className = 'slide-dot' + (i === currentSlide ? ' active' : '');
+    dot.onclick = () => goToSlide(i);
+    controls.appendChild(dot);
+  });
+  restartSlideshow();
+}
+
+function goToSlide(idx) {
+  const els = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.slide-dot');
+  if (els[currentSlide]) els[currentSlide].classList.remove('active');
+  if (dots[currentSlide]) dots[currentSlide].classList.remove('active');
+  currentSlide = (idx + slides.length) % slides.length;
+  if (els[currentSlide]) els[currentSlide].classList.add('active');
+  if (dots[currentSlide]) dots[currentSlide].classList.add('active');
+}
+
+function restartSlideshow() {
+  clearInterval(slideshowTimer);
+  if (slides.length > 1) slideshowTimer = setInterval(() => goToSlide(currentSlide + 1), slideshowInterval);
+}
+loadStoredImages();
+
+// ══════════════════════════════════════════
+//  SPOTIFY NOW PLAYING
+// ══════════════════════════════════════════
+let spToken = '', spPollTimer = null, spIsPlaying = false;
+
+function spotifyTileClick() {
+  if (!spToken) {
+    // Kein Token: App öffnen
+    const link = document.createElement('a');
+    link.href = 'spotify://';
+    link.click();
+    setTimeout(() => window.open('https://open.spotify.com', '_blank'), 800);
+  }
+  // Mit Token: Kachel zeigt schon Now Playing, kein Action nötig
+}
+
+function updateSpotifyUI() {
+  const hasToken = !!spToken;
+  document.getElementById('spotify-default').style.display = hasToken ? 'none' : 'flex';
+  document.getElementById('spotify-setup').style.display = 'none';
+  document.getElementById('spotify-nowplaying').style.display = hasToken ? 'flex' : 'none';
+}
+
+async function fetchNowPlaying() {
+  if (!spToken) return;
+  try {
+    const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+      headers: { 'Authorization': 'Bearer ' + spToken }
+    });
+    if (res.status === 401) {
+      // Token abgelaufen
+      document.getElementById('sp-artist').textContent = '⚠️ Token abgelaufen';
+      document.getElementById('sp-track').textContent = 'In Einstellungen erneuern';
+      return;
+    }
+    if (res.status === 204 || res.status === 200 && res.headers.get('content-length') === '0') {
+      document.getElementById('sp-track').textContent = 'Nichts wird abgespielt';
+      document.getElementById('sp-artist').textContent = '—';
+      document.getElementById('sp-cover').src = '';
+      document.getElementById('sp-progress-bar').style.width = '0%';
+      spIsPlaying = false;
+      document.getElementById('sp-play-btn').textContent = '▶';
+      return;
+    }
+    const d = await res.json();
+    if (!d || !d.item) return;
+    spIsPlaying = d.is_playing;
+    document.getElementById('sp-track').textContent = d.item.name;
+    document.getElementById('sp-artist').textContent = d.item.artists.map(a=>a.name).join(', ');
+    const img = d.item.album.images[0];
+    if (img) document.getElementById('sp-cover').src = img.url;
+    const pct = d.progress_ms / d.item.duration_ms * 100;
+    document.getElementById('sp-progress-bar').style.width = pct + '%';
+    document.getElementById('sp-play-btn').textContent = d.is_playing ? '⏸' : '▶';
+  } catch(e) {}
+}
+
+async function spotifyPlayPause() {
+  if (!spToken) return;
+  try {
+    const endpoint = spIsPlaying ? 'pause' : 'play';
+    await fetch(`https://api.spotify.com/v1/me/player/${endpoint}`, {
+      method: 'PUT', headers: { 'Authorization': 'Bearer ' + spToken }
+    });
+    setTimeout(fetchNowPlaying, 500);
+  } catch(e) {}
+}
+
+async function spotifyNext() {
+  if (!spToken) return;
+  try {
+    await fetch('https://api.spotify.com/v1/me/player/next', { method: 'POST', headers: { 'Authorization': 'Bearer ' + spToken } });
+    setTimeout(fetchNowPlaying, 600);
+  } catch(e) {}
+}
+
+async function spotifyPrev() {
+  if (!spToken) return;
+  try {
+    await fetch('https://api.spotify.com/v1/me/player/previous', { method: 'POST', headers: { 'Authorization': 'Bearer ' + spToken } });
+    setTimeout(fetchNowPlaying, 600);
+  } catch(e) {}
+}
+
+async function testSpotifyToken() {
+  const token = document.getElementById('s-sp-token').value.trim();
+  const status = document.getElementById('sp-token-status');
+  if (!token) { status.textContent = '⚠️ Kein Token eingegeben.'; return; }
+  status.textContent = '⏳ Teste…';
+  try {
+    const res = await fetch('https://api.spotify.com/v1/me', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (res.ok) {
+      const d = await res.json();
+      status.style.color = 'var(--accent2)';
+      status.textContent = `✅ Verbunden als: ${d.display_name || d.id}`;
+    } else {
+      status.style.color = '#ef5350';
+      status.textContent = '❌ Token ungültig oder abgelaufen.';
+    }
+  } catch(e) { status.style.color='#ef5350'; status.textContent = '❌ Fehler: ' + e.message; }
+}
+
+function startSpotifyPolling() {
+  clearInterval(spPollTimer);
+  if (spToken) {
+    fetchNowPlaying();
+    spPollTimer = setInterval(fetchNowPlaying, 10000);
+  }
+}
+
+// ══════════════════════════════════════════
+//  BACKGROUND
+// ══════════════════════════════════════════
+let bgMode = 'color', bgImageData = null, bgDim = 40;
+
+function setBgMode(mode) {
+  bgMode = mode;
+  ['color','image','gradient'].forEach(m => {
+    document.getElementById('bgmode-' + m).classList.toggle('active', m === mode);
+    document.getElementById('bg-' + m + '-section').style.display = m === mode ? 'block' : 'none';
+  });
+  applyBackground();
+}
+
+function applyBackground() {
+  const layer = document.getElementById('bg-layer');
+  const body = document.body;
+  if (bgMode === 'color') {
+    layer.style.background = '';
+    layer.style.backgroundImage = '';
+    body.style.background = document.getElementById('s-bg').value;
+  } else if (bgMode === 'image' && bgImageData) {
+    body.style.background = '#000';
+    layer.style.backgroundImage = `url(${bgImageData})`;
+    layer.style.backgroundSize = 'cover';
+    layer.style.backgroundPosition = 'center';
+    layer.style.backgroundColor = `rgba(0,0,0,${bgDim/100})`;
+    // Overlay für Abdunklung
+    layer.style.boxShadow = `inset 0 0 0 9999px rgba(0,0,0,${bgDim/100})`;
+  } else if (bgMode === 'gradient') {
+    const c1 = document.getElementById('s-grad1').value;
+    const c2 = document.getElementById('s-grad2').value;
+    const dir = document.getElementById('s-grad-dir').value;
+    layer.style.backgroundImage = '';
+    body.style.background = `linear-gradient(${dir}, ${c1}, ${c2})`;
+    layer.style.background = '';
+  }
+}
+
+function loadBgImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    bgImageData = e.target.result;
+    const preview = document.getElementById('bg-preview-box');
+    preview.style.backgroundImage = `url(${bgImageData})`;
+    document.getElementById('bg-preview-hint').style.display = 'none';
+    applyBackground();
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateBgDim(val) {
+  bgDim = parseInt(val);
+  applyBackground();
+}
+
+function updateGradient() {
+  document.getElementById('prev-grad1').style.background = document.getElementById('s-grad1').value;
+  document.getElementById('prev-grad2').style.background = document.getElementById('s-grad2').value;
+  applyBackground();
+}
+
+// ══════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════
+function livePreview(key, value) {
+  const root = document.documentElement;
+  if (key === 'bg') { root.style.setProperty('--bg', value); document.getElementById('prev-bg').style.background = value; applyBackground(); }
+  if (key === 'text') { root.style.setProperty('--text', value); root.style.setProperty('--text-muted', value + '8c'); document.getElementById('prev-text').style.background = value; }
+  if (key === 'accent') { root.style.setProperty('--accent', value); document.getElementById('prev-accent').style.background = value; }
+  if (key === 'alpha') root.style.setProperty('--tile-alpha', value/100);
+  if (key === 'font') root.style.setProperty('--font-scale', value/100);
+  if (key === 'fontfamily') document.body.style.fontFamily = value;
+}
+
+function saveSettings() {
+  const token = document.getElementById('s-sp-token').value.trim();
+  const s = {
+    bg: document.getElementById('s-bg').value,
+    text: document.getElementById('s-text').value,
+    accent: document.getElementById('s-accent').value,
+    alpha: document.getElementById('s-alpha').value,
+    font: document.getElementById('s-font').value,
+    fontfamily: document.getElementById('s-fontfamily').value,
+    slide: document.getElementById('s-slide').value,
+    spToken: token,
+    bgMode: bgMode,
+    bgImageData: bgMode === 'image' ? bgImageData : null,
+    bgDim: bgDim,
+    grad1: document.getElementById('s-grad1').value,
+    grad2: document.getElementById('s-grad2').value,
+    gradDir: document.getElementById('s-grad-dir').value,
+  };
+  localStorage.setItem('kiosk_settings', JSON.stringify(s));
+  slideshowInterval = s.slide * 1000;
+  restartSlideshow();
+
+  if (token && token !== spToken) {
+    spToken = token;
+    updateSpotifyUI();
+    startSpotifyPolling();
+  } else if (!token) {
+    spToken = '';
+    updateSpotifyUI();
+    clearInterval(spPollTimer);
+  }
+  closeModal('settings-modal');
+}
+
+function resetSettings() {
+  if (!confirm('Alle Einstellungen zurücksetzen?')) return;
+  localStorage.removeItem('kiosk_settings');
+  location.reload();
+}
+
+function openSettings(section) {
+  const s = JSON.parse(localStorage.getItem('kiosk_settings') || '{}');
+  if (s.bg) { document.getElementById('s-bg').value = s.bg; document.getElementById('prev-bg').style.background = s.bg; }
+  if (s.text) { document.getElementById('s-text').value = s.text; document.getElementById('prev-text').style.background = s.text; }
+  if (s.accent) { document.getElementById('s-accent').value = s.accent; document.getElementById('prev-accent').style.background = s.accent; }
+  if (s.alpha) { document.getElementById('s-alpha').value = s.alpha; document.getElementById('v-alpha').textContent = s.alpha+'%'; }
+  if (s.font) { document.getElementById('s-font').value = s.font; document.getElementById('v-font').textContent = s.font+'%'; }
+  if (s.fontfamily) document.getElementById('s-fontfamily').value = s.fontfamily;
+  if (s.slide) { document.getElementById('s-slide').value = s.slide; document.getElementById('v-slide').textContent = s.slide+'s'; }
+  if (s.spToken) document.getElementById('s-sp-token').value = s.spToken;
+  if (s.bgMode) setBgMode(s.bgMode);
+  if (s.grad1) { document.getElementById('s-grad1').value = s.grad1; document.getElementById('prev-grad1').style.background = s.grad1; }
+  if (s.grad2) { document.getElementById('s-grad2').value = s.grad2; document.getElementById('prev-grad2').style.background = s.grad2; }
+  if (s.gradDir) document.getElementById('s-grad-dir').value = s.gradDir;
+  openModal('settings-modal');
+  if (section === 'spotify') {
+    setTimeout(() => { document.getElementById('settings-spotify-section').scrollIntoView({behavior:'smooth'}); }, 200);
+  }
+}
+
+function applyStoredSettings() {
+  const s = JSON.parse(localStorage.getItem('kiosk_settings') || '{}');
+  const root = document.documentElement;
+  if (s.bg) { root.style.setProperty('--bg', s.bg); document.body.style.background = s.bg; }
+  if (s.text) { root.style.setProperty('--text', s.text); root.style.setProperty('--text-muted', s.text + '8c'); }
+  if (s.accent) root.style.setProperty('--accent', s.accent);
+  if (s.alpha) root.style.setProperty('--tile-alpha', s.alpha/100);
+  if (s.font) root.style.setProperty('--font-scale', s.font/100);
+  if (s.fontfamily) document.body.style.fontFamily = s.fontfamily;
+  if (s.slide) slideshowInterval = s.slide * 1000;
+  if (s.spToken) {
+    spToken = s.spToken;
+    updateSpotifyUI();
+    startSpotifyPolling();
+  }
+  if (s.bgMode) {
+    bgMode = s.bgMode;
+    if (s.bgImageData) bgImageData = s.bgImageData;
+    if (s.bgDim !== undefined) bgDim = s.bgDim;
+    if (s.grad1) { document.getElementById('s-grad1').value = s.grad1; document.getElementById('s-grad2').value = s.grad2 || '#1a237e'; }
+    if (s.gradDir) document.getElementById('s-grad-dir').value = s.gradDir;
+    applyBackground();
+  }
+}
+applyStoredSettings();
+
+// ══════════════════════════════════════════
+//  MODAL HELPERS
+// ══════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-backdrop').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+document.addEventListener('contextmenu', e => e.preventDefault());
+</script>
+</body>
+</html>
