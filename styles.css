@@ -1,0 +1,400 @@
+:root {
+  --bg-color: #0f1218;
+  --tile-rgb: 33, 38, 50;
+  --tile-alpha: 0.72;
+  --text-color: #f5f7fc;
+  --muted: #c6cbdb;
+  --font-scale: 1;
+  --radius: 18px;
+  --gap: 12px;
+  --shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: calc(16px * var(--font-scale));
+  color: var(--text-color);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(120, 160, 255, 0.15), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(120, 255, 220, 0.1), transparent 45%),
+    var(--bg-color);
+}
+
+body {
+  touch-action: manipulation;
+}
+
+.dashboard {
+  width: 100vw;
+  height: 100vh;
+  padding: 12px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: var(--gap);
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: rgba(18, 22, 30, 0.55);
+  backdrop-filter: blur(10px);
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.subtitle {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.header-actions,
+.tile-toolbar,
+.spotify-controls,
+.slide-controls,
+.modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.grid {
+  min-height: 0;
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(8, minmax(0, 1fr));
+}
+
+.tile {
+  background: rgba(var(--tile-rgb), var(--tile-alpha));
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+}
+
+.tile.editing {
+  border-style: dashed;
+}
+
+.tile-toolbar {
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.tile h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+#tile-weather {
+  grid-column: 1 / span 4;
+  grid-row: 1 / span 4;
+}
+
+#tile-calendar {
+  grid-column: 5 / span 5;
+  grid-row: 1 / span 6;
+}
+
+#tile-clock {
+  grid-column: 10 / span 3;
+  grid-row: 1 / span 3;
+}
+
+#tile-slideshow {
+  grid-column: 1 / span 6;
+  grid-row: 5 / span 4;
+}
+
+#tile-spotify {
+  grid-column: 7 / span 6;
+  grid-row: 7 / span 2;
+}
+
+.weather-now {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+}
+
+.weather-icon {
+  font-size: 2.2rem;
+}
+
+.weather-temp {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.weather-desc,
+.weather-loc,
+.integration-note {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.forecast {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.forecast-day {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 6px;
+  text-align: center;
+  font-size: 0.75rem;
+}
+
+.calendar-head {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  font-size: 0.75rem;
+}
+
+.day,
+.dow {
+  text-align: center;
+  padding: 5px;
+  border-radius: 8px;
+}
+
+.dow {
+  color: var(--muted);
+}
+
+.day.today {
+  background: rgba(110, 180, 255, 0.45);
+}
+
+.day.has-event {
+  outline: 2px solid rgba(140, 230, 190, 0.8);
+}
+
+.event-list {
+  margin-top: 8px;
+  overflow: auto;
+  min-height: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.event-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 7px;
+}
+
+.event-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.clock-time {
+  margin-top: auto;
+  font-size: clamp(1.9rem, 4vw, 3.4rem);
+  font-weight: 700;
+}
+
+.clock-date {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.slide-stage {
+  position: relative;
+  flex: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.slide-stage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+
+.slide-empty {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+.slide-controls {
+  margin-top: 8px;
+  justify-content: space-between;
+}
+
+.spotify-layout {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 10px;
+}
+
+.artwork {
+  width: 96px;
+  height: 96px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3f8cff, #8f61ff);
+}
+
+.track-title {
+  font-weight: 700;
+}
+
+.track-artist {
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.btn,
+.file-pill,
+.tile-config-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font: inherit;
+  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.btn.secondary {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn.small {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+}
+
+.btn.icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+.toggle-wrap {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.file-pill input {
+  display: none;
+}
+
+.panel {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: min(300px, 60vw);
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: rgba(16, 19, 26, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: var(--shadow);
+  display: none;
+  z-index: 90;
+}
+
+.panel.open {
+  display: grid;
+  gap: 8px;
+}
+
+.panel label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.panel input[type="range"],
+.panel input[type="color"] {
+  width: 100%;
+}
+
+.modal {
+  border: 0;
+  border-radius: 14px;
+  padding: 0;
+  overflow: hidden;
+  color: var(--text-color);
+  background: rgba(15, 18, 25, 0.95);
+}
+
+.modal::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.modal form {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  min-width: min(420px, 84vw);
+}
+
+.modal input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+}
+
+@media (orientation: portrait) {
+  body::before {
+    content: "Rotate tablet to landscape for kiosk dashboard.";
+    position: fixed;
+    inset: 0;
+    background: #0e1117;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    z-index: 120;
+    font-size: 1.2rem;
+    padding: 20px;
+  }
+}
