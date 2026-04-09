@@ -14,1185 +14,297 @@
 /* ═══════════════════════════════════════════════════
    RESET & BASE
 ══════════════════════════════════════════════════ */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
-}
-
-:root {
-  --bg:           #141926;
-  --tile-r: 255;
-  --tile-g: 255;
-  --tile-b: 255;
-  --tile-a:       0.12;
-  --tile-radius:  18px;
-  --text:         #e8eaf0;
-  --text-dim:     rgba(232,234,240,0.55);
-  --accent:       #5b8dee;
-  --accent2:      #1ed760;
-  --border:       rgba(255,255,255,0.10);
-  --shadow-color: rgba(0,0,0,0.55);
-  --font-scale:   1;
-  --gap:          clamp(6px, 1vw, 12px);
-}
-
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  font-size: calc(13px * var(--font-scale));
-  line-height: 1.4;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-button {
-  font-family: inherit;
-  cursor: pointer;
-  border: none;
-  background: none;
-  color: inherit;
-  touch-action: manipulation;
-}
-
-input[type="text"], input[type="date"], input[type="time"] {
-  font-family: inherit;
-}
-
-a { color: inherit; text-decoration: none; }
-
-/* ═══════════════════════════════════════════════════
-   BACKGROUND CANVAS
-══════════════════════════════════════════════════ */
-#bgCanvas {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* ═══════════════════════════════════════════════════
-   DASHBOARD GRID
-══════════════════════════════════════════════════ */
-.dashboard {
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  display: grid;
-  gap: var(--gap);
-  padding: var(--gap);
-  /* Layout: 3 columns, 2 rows
-     Col 1: Clock + Spotify (stacked)
-     Col 2: Weather + Calendar (stacked)
-     Col 3: Slideshow (full height)
-  */
-  grid-template-columns: 1fr 1.15fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  grid-template-areas:
-    "clock   weather    slideshow"
-    "spotify calendar   slideshow";
-  overflow: hidden;
-}
-
-/* ═══════════════════════════════════════════════════
-   TILES — BASE 3D GLASSMORPHISM STYLE
-══════════════════════════════════════════════════ */
-.tile {
-  position: relative;
-  border-radius: var(--tile-radius);
-  overflow: hidden;
-  /* 3D layered shadow system */
-  box-shadow:
-    0 1px 0 0 rgba(255,255,255,0.18) inset,        /* top highlight */
-    0 -1px 0 0 rgba(0,0,0,0.25) inset,              /* bottom edge */
-    0 8px 32px var(--shadow-color),                 /* main lift */
-    0 2px 8px rgba(0,0,0,0.35),                     /* close shadow */
-    0 0 0 1px rgba(255,255,255,0.07);               /* border glow */
-  background: rgba(var(--tile-r), var(--tile-g), var(--tile-b), var(--tile-a));
-  backdrop-filter: blur(24px) saturate(1.6);
-  -webkit-backdrop-filter: blur(24px) saturate(1.6);
-  border: 1px solid var(--border);
-  transition: box-shadow 0.3s ease, transform 0.2s ease;
-  touch-action: manipulation;
-}
-
-.tile:active {
-  transform: scale(0.995);
-}
-
-/* Shine gradient on top edge — light reflection */
-.tile-shine {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 50%;
-  background: linear-gradient(
-    180deg,
-    rgba(255,255,255,0.12) 0%,
-    rgba(255,255,255,0.03) 50%,
-    transparent 100%
-  );
-  border-radius: var(--tile-radius) var(--tile-radius) 100% 100%;
-  pointer-events: none;
-  z-index: 10;
-}
-
-/* Inner content area */
-.tile-inner {
-  position: relative;
-  z-index: 2;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: clamp(8px, 1.2vw, 16px);
-  overflow: hidden;
-}
-
-/* Tile grid assignments */
-.tile-clock     { grid-area: clock; }
-.tile-weather   { grid-area: weather; }
-.tile-calendar  { grid-area: calendar; }
-.tile-slideshow { grid-area: slideshow; }
-.tile-spotify   { grid-area: spotify; }
-
-/* ── Tile header bar ── */
-.tile-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 8px;
-  flex-shrink: 0;
-}
-
-.tile-label {
-  font-size: calc(0.72em * var(--font-scale));
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.65;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-/* ═══════════════════════════════════════════════════
-   CLOCK TILE
-══════════════════════════════════════════════════ */
-.tile-clock .tile-inner {
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  gap: 4px;
-}
-
-.clock-time {
-  font-family: 'DM Serif Display', serif;
-  font-size: clamp(2.4em, 4.5vw, 5em);
-  font-weight: 400;
-  letter-spacing: -0.02em;
-  color: var(--text);
-  line-height: 1;
-  text-shadow: 0 2px 20px rgba(91,141,238,0.4);
-}
-
-.clock-date {
-  font-size: calc(0.85em * var(--font-scale));
-  font-weight: 400;
-  opacity: 0.75;
-  margin-top: 4px;
-}
-
-.clock-zone {
-  font-size: calc(0.65em * var(--font-scale));
-  opacity: 0.4;
-  margin-top: 2px;
-  letter-spacing: 0.06em;
-}
-
-/* ═══════════════════════════════════════════════════
-   WEATHER TILE
-══════════════════════════════════════════════════ */
-.weather-location {
-  font-size: calc(0.75em * var(--font-scale));
-  opacity: 0.6;
-  font-style: italic;
-}
-
-.weather-main {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-height: 0;
-}
-
-.weather-icon-big {
-  font-size: clamp(2.2em, 3.5vw, 4em);
-  line-height: 1;
-  flex-shrink: 0;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
-}
-
-.weather-current-info {
-  flex: 1;
-}
-
-.weather-temp {
-  font-family: 'DM Serif Display', serif;
-  font-size: clamp(1.8em, 3vw, 3.2em);
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.weather-desc {
-  font-size: calc(0.78em * var(--font-scale));
-  opacity: 0.7;
-  margin-top: 2px;
-}
-
-.weather-details {
-  display: flex;
-  gap: 10px;
-  margin-top: 4px;
-  font-size: calc(0.7em * var(--font-scale));
-  opacity: 0.6;
-}
-
-.weather-forecast {
-  display: flex;
-  justify-content: space-between;
-  gap: 4px;
-  flex-shrink: 0;
-  border-top: 1px solid var(--border);
-  padding-top: 6px;
-  margin-top: 4px;
-}
-
-.forecast-day {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  flex: 1;
-}
-
-.forecast-day-name {
-  font-size: calc(0.6em * var(--font-scale));
-  opacity: 0.55;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.forecast-day-icon {
-  font-size: calc(1em * var(--font-scale));
-}
-
-.forecast-day-temp {
-  font-size: calc(0.7em * var(--font-scale));
-  font-weight: 500;
-}
-
-.forecast-day-low {
-  font-size: calc(0.62em * var(--font-scale));
-  opacity: 0.45;
-}
-
-/* ═══════════════════════════════════════════════════
-   CALENDAR TILE
-══════════════════════════════════════════════════ */
-.tile-calendar .tile-inner {
-  gap: 0;
-}
-
-.cal-nav {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid var(--border);
-  font-size: 1.1em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s;
-  flex-shrink: 0;
-}
-
-.cal-nav:hover, .cal-nav:active {
-  background: rgba(255,255,255,0.18);
-}
-
-.cal-add-btn {
-  margin-left: auto;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: white;
-  font-size: 1em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(91,141,238,0.4);
-  flex-shrink: 0;
-}
-
-.cal-grid-header {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  text-align: center;
-  margin-bottom: 3px;
-  flex-shrink: 0;
-}
-
-.cal-grid-header span {
-  font-size: calc(0.6em * var(--font-scale));
-  opacity: 0.45;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 2px 0;
-}
-
-.cal-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  flex: 1;
-  gap: 1px;
-  min-height: 0;
-}
-
-.cal-day {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  border-radius: 50%;
-  aspect-ratio: 1;
-  font-size: calc(0.72em * var(--font-scale));
-  cursor: pointer;
-  transition: background 0.15s;
-  max-height: 28px;
-  max-width: 28px;
-  margin: auto;
-  width: 100%;
-}
-
-.cal-day:hover {
-  background: rgba(255,255,255,0.12);
-}
-
-.cal-day.today {
-  background: var(--accent);
-  color: white;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(91,141,238,0.5);
-}
-
-.cal-day.other-month {
-  opacity: 0.25;
-}
-
-.cal-day.has-event::after {
-  content: '';
-  position: absolute;
-  bottom: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--accent2);
-}
-
-.cal-day.today.has-event::after {
-  background: white;
-}
-
-.cal-events-mini {
-  flex-shrink: 0;
-  border-top: 1px solid var(--border);
-  padding-top: 5px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  overflow: hidden;
-  max-height: 50px;
-}
-
-.cal-event-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: calc(0.66em * var(--font-scale));
-  cursor: pointer;
-  border-radius: 4px;
-  padding: 1px 3px;
-  transition: background 0.1s;
-}
-
-.cal-event-item:hover {
-  background: rgba(255,255,255,0.08);
-}
-
-.cal-event-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.cal-event-text {
-  opacity: 0.8;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ═══════════════════════════════════════════════════
-   SLIDESHOW TILE
-══════════════════════════════════════════════════ */
-.tile-slideshow .tile-inner {
-  gap: 0;
-}
-
-.slideshow-controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: auto;
-}
-
-.ss-btn, .ss-upload-label {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9em;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.ss-btn:hover, .ss-upload-label:hover {
-  background: rgba(255,255,255,0.18);
-}
-
-.slideshow-frame {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  gap: 4px;
-}
-
-.slideshow-img-wrap {
-  flex: 1;
-  min-height: 0;
-  border-radius: calc(var(--tile-radius) - 4px);
-  overflow: hidden;
-  background: rgba(0,0,0,0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.slideshow-img-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: opacity 0.6s ease;
-}
-
-.slideshow-placeholder {
-  text-align: center;
-  opacity: 0.4;
-  padding: 10px;
-}
-
-.slideshow-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-  min-height: 16px;
-}
-
-.slideshow-dots {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.ss-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.25);
-  transition: background 0.2s, width 0.2s;
-}
-
-.ss-dot.active {
-  background: white;
-  width: 12px;
-  border-radius: 3px;
-}
-
-.slideshow-counter {
-  font-size: calc(0.62em * var(--font-scale));
-  opacity: 0.4;
-}
-
-/* ═══════════════════════════════════════════════════
-   SPOTIFY TILE
-══════════════════════════════════════════════════ */
-.spotify-logo-icon {
-  color: #1ed760;
-  vertical-align: middle;
-}
-
-.spotify-open-btn {
-  font-size: calc(0.65em * var(--font-scale));
-  opacity: 0.6;
-  padding: 3px 8px;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.07);
-  border: 1px solid var(--border);
-  transition: background 0.15s, opacity 0.15s;
-  margin-left: auto;
-}
-
-.spotify-open-btn:hover {
-  background: rgba(255,255,255,0.15);
-  opacity: 1;
-}
-
-.spotify-body {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.spotify-art-wrap {
-  width: clamp(55px, 8vw, 90px);
-  height: clamp(55px, 8vw, 90px);
-  flex-shrink: 0;
-  border-radius: 10px;
-  overflow: hidden;
-  background: rgba(255,255,255,0.06);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-}
-
-.spotify-art {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.spotify-art-placeholder {
-  font-size: 2em;
-  opacity: 0.3;
-}
-
-.spotify-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.spotify-track {
-  font-size: calc(0.88em * var(--font-scale));
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.spotify-artist {
-  font-size: calc(0.75em * var(--font-scale));
-  opacity: 0.7;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.spotify-album {
-  font-size: calc(0.65em * var(--font-scale));
-  opacity: 0.45;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 4px;
-}
-
-.spotify-progress-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.spotify-time {
-  font-size: calc(0.6em * var(--font-scale));
-  opacity: 0.5;
-  flex-shrink: 0;
-  font-variant-numeric: tabular-nums;
-}
-
-.spotify-progress-bar {
-  flex: 1;
-  height: 3px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 2px;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.spotify-progress-fill {
-  height: 100%;
-  background: #1ed760;
-  border-radius: 2px;
-  transition: width 1s linear;
-}
-
-.spotify-transport {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.sp-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8em;
-  background: rgba(255,255,255,0.07);
-  border: 1px solid var(--border);
-  transition: background 0.15s, transform 0.1s;
-}
-
-.sp-btn:active { transform: scale(0.92); }
-
-.sp-btn.sp-play {
-  background: #1ed760;
-  color: #000;
-  border-color: transparent;
-  width: 34px;
-  height: 34px;
-  font-size: 0.9em;
-  box-shadow: 0 2px 10px rgba(30,215,96,0.45);
-}
-
-.spotify-auth-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  flex-shrink: 0;
-  border-top: 1px solid var(--border);
-  padding-top: 6px;
-  margin-top: 4px;
-}
-
-.spotify-connect-btn {
-  font-size: calc(0.68em * var(--font-scale));
-  background: #1ed760;
-  color: #000;
-  font-weight: 600;
-  border-radius: 20px;
-  padding: 4px 12px;
-  box-shadow: 0 2px 8px rgba(30,215,96,0.4);
-  transition: opacity 0.15s;
-}
-
-.spotify-connect-btn:hover { opacity: 0.85; }
-
-.spotify-mock-note {
-  font-size: calc(0.6em * var(--font-scale));
-  opacity: 0.35;
-  font-style: italic;
-}
-
-/* ═══════════════════════════════════════════════════
-   GEAR BUTTON
-══════════════════════════════════════════════════ */
-.gear-btn {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 100;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.10);
-  border: 1px solid rgba(255,255,255,0.15);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255,255,255,0.7);
-  transition: background 0.2s, transform 0.3s ease, color 0.2s;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-}
-
-.gear-btn:hover, .gear-btn:active {
-  background: rgba(255,255,255,0.2);
-  color: white;
-}
-
-.gear-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-.gear-btn.open {
-  transform: rotate(60deg);
-  background: rgba(91,141,238,0.3);
-  color: white;
-  border-color: rgba(91,141,238,0.4);
-}
-
-/* ═══════════════════════════════════════════════════
-   SETTINGS PANEL
-══════════════════════════════════════════════════ */
-.settings-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  display: flex;
-  align-items: stretch;
-  justify-content: flex-end;
-  background: rgba(0,0,0,0.4);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  transition: opacity 0.3s ease;
-}
-
-.settings-overlay.hidden {
-  display: none;
-}
-
-.settings-panel {
-  width: min(380px, 88vw);
-  background: rgba(18, 22, 36, 0.97);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border-left: 1px solid rgba(255,255,255,0.10);
-  box-shadow: -8px 0 40px rgba(0,0,0,0.6);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  animation: slideInRight 0.25s ease;
-}
-
-@keyframes slideInRight {
-  from { transform: translateX(100%); }
-  to   { transform: translateX(0); }
-}
-
-.settings-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 18px;
-  font-weight: 600;
-  font-size: 1.05em;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  flex-shrink: 0;
-}
-
-.settings-close {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12);
-  font-size: 0.85em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s;
-}
-
-.settings-close:hover { background: rgba(255,80,80,0.3); }
-
-.settings-body {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 12px 18px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.15) transparent;
-}
-
-.settings-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.settings-section-title {
-  font-size: 0.68em;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  opacity: 0.4;
-  font-weight: 600;
-  margin-bottom: -2px;
-}
-
-.settings-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 0.88em;
-  cursor: pointer;
-}
-
-.settings-row span { opacity: 0.85; flex-shrink: 0; }
-
-.settings-row input[type="color"] {
-  width: 36px;
-  height: 28px;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 6px;
-  padding: 2px;
-  cursor: pointer;
-  background: transparent;
-}
-
-.slider-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  justify-content: flex-end;
-}
-
-.slider-wrap input[type="range"] {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 120px;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(255,255,255,0.15);
-  outline: none;
-  cursor: pointer;
-}
-
-.slider-wrap input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
-  cursor: pointer;
-}
-
-.slider-val {
-  min-width: 36px;
-  text-align: right;
-  font-size: 0.8em;
-  opacity: 0.6;
-  font-variant-numeric: tabular-nums;
-}
-
-.text-input {
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 8px;
-  padding: 5px 9px;
-  color: var(--text);
-  font-size: 0.85em;
-  outline: none;
-  width: 140px;
-  transition: border-color 0.2s;
-}
-
-.text-input:focus {
-  border-color: var(--accent);
-}
-
-/* Theme presets */
-.theme-presets {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-}
-
-.preset-btn {
-  padding: 7px 4px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.10);
-  font-size: 0.78em;
-  text-align: center;
-  transition: background 0.15s, border-color 0.15s;
-  cursor: pointer;
-}
-
-.preset-btn:hover, .preset-btn.active {
-  background: rgba(91,141,238,0.25);
-  border-color: rgba(91,141,238,0.5);
-}
-
-/* Toggle */
-.toggle {
-  position: relative;
-  display: inline-block;
-  width: 42px;
-  height: 24px;
-  flex-shrink: 0;
-}
-
-.toggle input { opacity: 0; width: 0; height: 0; }
-
-.toggle-slider {
-  position: absolute;
-  inset: 0;
-  background: rgba(255,255,255,0.12);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background 0.25s;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-.toggle-slider::before {
-  content: '';
-  position: absolute;
-  left: 3px;
-  top: 3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: white;
-  transition: transform 0.25s;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-}
-
-.toggle input:checked + .toggle-slider { background: var(--accent); }
-.toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
-
-/* Settings footer */
-.settings-footer {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255,255,255,0.08);
-  margin-top: 4px;
-}
-
-.btn-reset {
-  padding: 8px 16px;
-  border-radius: 10px;
-  background: rgba(255,80,80,0.15);
-  border: 1px solid rgba(255,80,80,0.25);
-  font-size: 0.85em;
-  color: #ff8080;
-  transition: background 0.15s;
-}
-
-.btn-reset:hover { background: rgba(255,80,80,0.25); }
-
-.btn-save {
-  padding: 8px 18px;
-  border-radius: 10px;
-  background: var(--accent);
-  color: white;
-  font-weight: 600;
-  font-size: 0.85em;
-  transition: opacity 0.15s;
-  box-shadow: 0 2px 10px rgba(91,141,238,0.4);
-}
-
-.btn-save:hover { opacity: 0.85; }
-
-/* ═══════════════════════════════════════════════════
-   CALENDAR MODAL
-══════════════════════════════════════════════════ */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 300;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-overlay.hidden { display: none; }
-
-.modal-panel {
-  background: rgba(18, 22, 36, 0.98);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 18px;
-  width: min(340px, 90vw);
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
-  animation: modalPop 0.2s ease;
-}
-
-@keyframes modalPop {
-  from { transform: scale(0.92); opacity: 0; }
-  to   { transform: scale(1); opacity: 1; }
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  font-weight: 600;
-}
-
-.modal-body {
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.modal-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 0.88em;
-}
-
-.modal-row span { opacity: 0.75; flex-shrink: 0; }
-
-.modal-row .text-input { width: 160px; }
-
-.modal-row input[type="color"] {
-  width: 36px;
-  height: 28px;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 6px;
-  padding: 2px;
-  background: transparent;
-  cursor: pointer;
-}
-
-.modal-footer {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  padding: 10px 16px 14px;
-  border-top: 1px solid rgba(255,255,255,0.08);
-}
-
-/* ═══════════════════════════════════════════════════
-   DRAG & DROP (edit mode)
-══════════════════════════════════════════════════ */
-.edit-mode .tile {
-  cursor: grab;
-  animation: tileWiggle 0.5s infinite alternate ease-in-out;
-}
-
-@keyframes tileWiggle {
-  from { transform: rotate(-0.3deg) scale(0.995); }
-  to   { transform: rotate(0.3deg) scale(1.002); }
-}
-
-.edit-mode .tile:active { cursor: grabbing; }
-
-.tile.drag-over {
-  box-shadow:
-    0 1px 0 0 rgba(255,255,255,0.18) inset,
-    0 -1px 0 0 rgba(0,0,0,0.25) inset,
-    0 8px 32px var(--shadow-color),
-    0 2px 8px rgba(0,0,0,0.35),
-    0 0 0 2px var(--accent);
-}
-
-/* ═══════════════════════════════════════════════════
-   RESIZE HANDLE (edit mode)
-══════════════════════════════════════════════════ */
-.resize-handle {
-  position: absolute;
-  bottom: 4px;
-  right: 4px;
-  width: 16px;
-  height: 16px;
-  opacity: 0;
-  cursor: se-resize;
-  z-index: 20;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M6 2L2 6M6 5L5 6M6 2L2 2' stroke='white' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") center/12px no-repeat;
-  transition: opacity 0.2s;
-}
-
-.edit-mode .resize-handle { opacity: 0.5; }
-.edit-mode .resize-handle:hover { opacity: 1; }
-
-/* ═══════════════════════════════════════════════════
-   LOADING STATE
-══════════════════════════════════════════════════ */
-.shimmer {
-  background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 6px;
-  color: transparent !important;
-}
-
-@keyframes shimmer {
-  from { background-position: 200% 0; }
-  to   { background-position: -200% 0; }
-}
-
-/* ═══════════════════════════════════════════════════
-   SCROLLBAR (settings panel only)
-══════════════════════════════════════════════════ */
-.settings-body::-webkit-scrollbar {
-  width: 4px;
-}
-
-.settings-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.settings-body::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.12);
-  border-radius: 2px;
-}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#141926;--tile-r:255;--tile-g:255;--tile-b:255;--tile-a:0.12;
+  --tile-radius:18px;--text:#e8eaf0;--text-dim:rgba(232,234,240,.55);
+  --accent:#5b8dee;--accent2:#1ed760;--border:rgba(255,255,255,.10);
+  --shadow-color:rgba(0,0,0,.55);--font-scale:1;--gap:clamp(6px,1vw,12px);
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:calc(13px * var(--font-scale));
+  line-height:1.4;user-select:none;-webkit-user-select:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;touch-action:manipulation;}
+input[type="text"],input[type="date"],input[type="time"]{font-family:inherit;}
+a{color:inherit;text-decoration:none;}
+
+/* ─── BG CANVAS ─── */
+#bgCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+/* ─── DASHBOARD GRID ─── */
+.dashboard{
+  position:fixed;inset:0;z-index:1;display:grid;gap:var(--gap);padding:var(--gap);
+  grid-template-columns:1fr 1.15fr 1fr;
+  grid-template-rows:1fr 1fr;
+  grid-template-areas:"clock weather slideshow" "spotify calendar slideshow";
+  overflow:hidden;
+}
+
+/* ─── TILES 3D ─── */
+.tile{
+  position:relative;border-radius:var(--tile-radius);overflow:hidden;
+  box-shadow:0 1px 0 0 rgba(255,255,255,.18) inset,0 -1px 0 0 rgba(0,0,0,.25) inset,
+    0 8px 32px var(--shadow-color),0 2px 8px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.07);
+  background:rgba(var(--tile-r),var(--tile-g),var(--tile-b),var(--tile-a));
+  backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);
+  border:1px solid var(--border);transition:box-shadow .3s ease,transform .2s ease;
+  touch-action:manipulation;
+}
+.tile:active{transform:scale(.995);}
+.tile-shine{
+  position:absolute;top:0;left:0;right:0;height:50%;pointer-events:none;z-index:10;
+  background:linear-gradient(180deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.03) 50%,transparent 100%);
+  border-radius:var(--tile-radius) var(--tile-radius) 100% 100%;
+}
+.tile-inner{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;
+  padding:clamp(8px,1.2vw,16px);overflow:hidden;}
+.tile-clock{grid-area:clock;} .tile-weather{grid-area:weather;}
+.tile-calendar{grid-area:calendar;} .tile-slideshow{grid-area:slideshow;}
+.tile-spotify{grid-area:spotify;}
+
+/* ─── TILE HEADER ─── */
+.tile-header{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-shrink:0;}
+.tile-label{font-size:calc(.72em * var(--font-scale));font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;opacity:.65;flex:1;display:flex;align-items:center;gap:5px;}
+
+/* ─── CLOCK ─── */
+.tile-clock .tile-inner{justify-content:center;align-items:center;text-align:center;gap:4px;}
+.clock-time{font-family:'DM Serif Display',serif;font-size:clamp(2.4em,4.5vw,5em);
+  font-weight:400;letter-spacing:-.02em;color:var(--text);line-height:1;
+  text-shadow:0 2px 20px rgba(91,141,238,.4);}
+.clock-date{font-size:calc(.85em * var(--font-scale));opacity:.75;margin-top:4px;}
+.clock-zone{font-size:calc(.65em * var(--font-scale));opacity:.4;margin-top:2px;letter-spacing:.06em;}
+
+/* ─── WEATHER ─── */
+.weather-location{font-size:calc(.75em * var(--font-scale));opacity:.6;font-style:italic;}
+.weather-main{display:flex;align-items:center;gap:10px;flex:1;min-height:0;}
+.weather-icon-big{font-size:clamp(2.2em,3.5vw,4em);line-height:1;flex-shrink:0;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4));}
+.weather-temp{font-family:'DM Serif Display',serif;font-size:clamp(1.8em,3vw,3.2em);line-height:1;letter-spacing:-.02em;}
+.weather-desc{font-size:calc(.78em * var(--font-scale));opacity:.7;margin-top:2px;}
+.weather-details{display:flex;gap:10px;margin-top:4px;font-size:calc(.7em * var(--font-scale));opacity:.6;}
+.weather-forecast{display:flex;justify-content:space-between;gap:4px;flex-shrink:0;
+  border-top:1px solid var(--border);padding-top:6px;margin-top:4px;}
+.forecast-day{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;}
+.forecast-day-name{font-size:calc(.6em * var(--font-scale));opacity:.55;text-transform:uppercase;letter-spacing:.05em;}
+.forecast-day-icon{font-size:calc(1em * var(--font-scale));}
+.forecast-day-temp{font-size:calc(.7em * var(--font-scale));font-weight:500;}
+.forecast-day-low{font-size:calc(.62em * var(--font-scale));opacity:.45;}
+
+/* ─── CALENDAR ─── */
+.tile-calendar .tile-inner{gap:0;}
+.cal-nav{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.08);
+  border:1px solid var(--border);font-size:1.1em;display:flex;align-items:center;
+  justify-content:center;transition:background .15s;flex-shrink:0;}
+.cal-nav:hover,.cal-nav:active{background:rgba(255,255,255,.18);}
+.cal-add-btn{margin-left:auto;width:26px;height:26px;border-radius:50%;background:var(--accent);
+  color:white;font-size:1em;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(91,141,238,.4);flex-shrink:0;}
+.cal-grid-header{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;
+  margin-bottom:3px;flex-shrink:0;}
+.cal-grid-header span{font-size:calc(.6em * var(--font-scale));opacity:.45;
+  letter-spacing:.04em;text-transform:uppercase;padding:2px 0;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);flex:1;gap:1px;min-height:0;}
+.cal-day{display:flex;align-items:center;justify-content:center;position:relative;
+  border-radius:50%;aspect-ratio:1;font-size:calc(.72em * var(--font-scale));cursor:pointer;
+  transition:background .15s;max-height:28px;max-width:28px;margin:auto;width:100%;}
+.cal-day:hover{background:rgba(255,255,255,.12);}
+.cal-day.today{background:var(--accent);color:white;font-weight:600;box-shadow:0 2px 8px rgba(91,141,238,.5);}
+.cal-day.other-month{opacity:.25;}
+.cal-day.has-event::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:var(--accent2);}
+.cal-day.today.has-event::after{background:white;}
+.cal-events-mini{flex-shrink:0;border-top:1px solid var(--border);padding-top:5px;
+  display:flex;flex-direction:column;gap:2px;overflow:hidden;max-height:50px;}
+.cal-event-item{display:flex;align-items:center;gap:5px;font-size:calc(.66em * var(--font-scale));
+  cursor:pointer;border-radius:4px;padding:1px 3px;transition:background .1s;}
+.cal-event-item:hover{background:rgba(255,255,255,.08);}
+.cal-event-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.cal-event-text{opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* ─── SLIDESHOW ─── */
+.tile-slideshow .tile-inner{gap:0;}
+.slideshow-controls{display:flex;align-items:center;gap:4px;margin-left:auto;}
+.ss-btn,.ss-upload-label{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.08);
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:.9em;cursor:pointer;transition:background .15s;}
+.ss-btn:hover,.ss-upload-label:hover{background:rgba(255,255,255,.18);}
+.slideshow-frame{flex:1;display:flex;flex-direction:column;min-height:0;gap:4px;}
+.slideshow-img-wrap{flex:1;min-height:0;border-radius:calc(var(--tile-radius) - 4px);overflow:hidden;
+  background:rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;position:relative;}
+.slideshow-img-wrap img{width:100%;height:100%;object-fit:cover;transition:opacity .6s ease;}
+.slideshow-placeholder{text-align:center;opacity:.4;padding:10px;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;}
+.slideshow-source-bar{
+  display:flex;gap:4px;align-items:center;flex-shrink:0;
+  border-top:1px solid var(--border);padding-top:5px;
+}
+.ss-source-btn{
+  flex:1;padding:4px 6px;border-radius:8px;font-size:calc(.62em * var(--font-scale));
+  background:rgba(255,255,255,.07);border:1px solid var(--border);
+  transition:background .15s,border-color .15s;display:flex;align-items:center;
+  justify-content:center;gap:4px;cursor:pointer;
+}
+.ss-source-btn:hover{background:rgba(255,255,255,.15);}
+.ss-source-btn.active{background:rgba(91,141,238,.25);border-color:rgba(91,141,238,.5);}
+.ss-source-btn svg{width:12px;height:12px;flex-shrink:0;}
+.slideshow-meta{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;min-height:16px;}
+.slideshow-dots{display:flex;gap:4px;align-items:center;}
+.ss-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.25);transition:background .2s,width .2s;}
+.ss-dot.active{background:white;width:12px;border-radius:3px;}
+.slideshow-counter{font-size:calc(.62em * var(--font-scale));opacity:.4;}
+/* Status badge on image */
+.ss-source-badge{
+  position:absolute;top:6px;left:6px;background:rgba(0,0,0,.55);
+  backdrop-filter:blur(8px);border-radius:6px;padding:2px 7px;
+  font-size:.6em;opacity:.8;display:flex;align-items:center;gap:4px;
+}
+
+/* ─── SPOTIFY ─── */
+.spotify-logo-icon{color:#1ed760;vertical-align:middle;}
+.spotify-open-btn{font-size:calc(.65em * var(--font-scale));opacity:.6;padding:3px 8px;
+  border-radius:20px;background:rgba(255,255,255,.07);border:1px solid var(--border);
+  transition:background .15s,opacity .15s;margin-left:auto;}
+.spotify-open-btn:hover{background:rgba(255,255,255,.15);opacity:1;}
+.spotify-body{display:flex;align-items:center;gap:10px;flex:1;min-height:0;overflow:hidden;}
+.spotify-art-wrap{width:clamp(55px,8vw,90px);height:clamp(55px,8vw,90px);flex-shrink:0;
+  border-radius:10px;overflow:hidden;background:rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.4);}
+.spotify-art{width:100%;height:100%;object-fit:cover;}
+.spotify-art-placeholder{font-size:2em;opacity:.3;}
+.spotify-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.spotify-track{font-size:calc(.88em * var(--font-scale));font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.spotify-artist{font-size:calc(.75em * var(--font-scale));opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.spotify-album{font-size:calc(.65em * var(--font-scale));opacity:.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;}
+.spotify-progress-wrap{display:flex;align-items:center;gap:6px;}
+.spotify-time{font-size:calc(.6em * var(--font-scale));opacity:.5;flex-shrink:0;font-variant-numeric:tabular-nums;}
+.spotify-progress-bar{flex:1;height:3px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden;cursor:pointer;}
+.spotify-progress-fill{height:100%;background:#1ed760;border-radius:2px;transition:width 1s linear;}
+.spotify-transport{display:flex;align-items:center;gap:6px;margin-top:4px;}
+.sp-btn{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.8em;background:rgba(255,255,255,.07);border:1px solid var(--border);transition:background .15s,transform .1s;}
+.sp-btn:active{transform:scale(.92);}
+.sp-btn.sp-play{background:#1ed760;color:#000;border-color:transparent;width:34px;height:34px;
+  font-size:.9em;box-shadow:0 2px 10px rgba(30,215,96,.45);}
+.spotify-auth-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  flex-shrink:0;border-top:1px solid var(--border);padding-top:6px;margin-top:4px;}
+.spotify-connect-btn{font-size:calc(.68em * var(--font-scale));background:#1ed760;color:#000;
+  font-weight:600;border-radius:20px;padding:4px 12px;box-shadow:0 2px 8px rgba(30,215,96,.4);transition:opacity .15s;}
+.spotify-connect-btn:hover{opacity:.85;}
+.spotify-mock-note{font-size:calc(.6em * var(--font-scale));opacity:.35;font-style:italic;}
+
+/* ─── GEAR BUTTON ─── */
+.gear-btn{
+  position:fixed;top:12px;right:12px;z-index:100;width:40px;height:40px;border-radius:50%;
+  background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.15);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);
+  transition:background .2s,transform .3s ease,color .2s;box-shadow:0 2px 12px rgba(0,0,0,.3);
+}
+.gear-btn:hover,.gear-btn:active{background:rgba(255,255,255,.2);color:white;}
+.gear-btn svg{width:18px;height:18px;}
+.gear-btn.open{transform:rotate(60deg);background:rgba(91,141,238,.3);color:white;border-color:rgba(91,141,238,.4);}
+
+/* ─── SETTINGS PANEL ─── */
+.settings-overlay{position:fixed;inset:0;z-index:200;display:flex;align-items:stretch;
+  justify-content:flex-end;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
+.settings-overlay.hidden{display:none;}
+.settings-panel{width:min(400px,90vw);background:rgba(18,22,36,.97);backdrop-filter:blur(30px);
+  -webkit-backdrop-filter:blur(30px);border-left:1px solid rgba(255,255,255,.10);
+  box-shadow:-8px 0 40px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden;
+  animation:slideInRight .25s ease;}
+@keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.settings-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;
+  font-weight:600;font-size:1.05em;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+.settings-close{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);font-size:.85em;display:flex;align-items:center;
+  justify-content:center;transition:background .15s;}
+.settings-close:hover{background:rgba(255,80,80,.3);}
+.settings-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px 18px 18px;
+  display:flex;flex-direction:column;gap:18px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent;}
+.settings-body::-webkit-scrollbar{width:4px;}
+.settings-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:2px;}
+.settings-section{display:flex;flex-direction:column;gap:10px;}
+.settings-section-title{font-size:.68em;text-transform:uppercase;letter-spacing:.1em;opacity:.4;font-weight:600;margin-bottom:-2px;}
+.settings-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.88em;cursor:pointer;}
+.settings-row span{opacity:.85;flex-shrink:0;}
+.settings-row input[type="color"]{width:36px;height:28px;border:1px solid rgba(255,255,255,.12);
+  border-radius:6px;padding:2px;cursor:pointer;background:transparent;}
+.slider-wrap{display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end;}
+.slider-wrap input[type="range"]{-webkit-appearance:none;appearance:none;width:110px;height:4px;
+  border-radius:2px;background:rgba(255,255,255,.15);outline:none;cursor:pointer;}
+.slider-wrap input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;
+  border-radius:50%;background:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer;}
+.slider-val{min-width:36px;text-align:right;font-size:.8em;opacity:.6;font-variant-numeric:tabular-nums;}
+.text-input{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  border-radius:8px;padding:5px 9px;color:var(--text);font-size:.85em;outline:none;width:140px;transition:border-color .2s;}
+.text-input:focus{border-color:var(--accent);}
+.theme-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.preset-btn{padding:7px 4px;border-radius:10px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);font-size:.78em;text-align:center;
+  transition:background .15s,border-color .15s;cursor:pointer;}
+.preset-btn:hover,.preset-btn.active{background:rgba(91,141,238,.25);border-color:rgba(91,141,238,.5);}
+.toggle{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,.12);border-radius:12px;
+  cursor:pointer;transition:background .25s;border:1px solid rgba(255,255,255,.1);}
+.toggle-slider::before{content:'';position:absolute;left:3px;top:3px;width:16px;height:16px;
+  border-radius:50%;background:white;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.toggle input:checked + .toggle-slider{background:var(--accent);}
+.toggle input:checked + .toggle-slider::before{transform:translateX(18px);}
+.settings-footer{display:flex;gap:8px;justify-content:flex-end;padding-top:8px;
+  border-top:1px solid rgba(255,255,255,.08);margin-top:4px;}
+.btn-reset{padding:8px 16px;border-radius:10px;background:rgba(255,80,80,.15);
+  border:1px solid rgba(255,80,80,.25);font-size:.85em;color:#ff8080;transition:background .15s;}
+.btn-reset:hover{background:rgba(255,80,80,.25);}
+.btn-save{padding:8px 18px;border-radius:10px;background:var(--accent);color:white;
+  font-weight:600;font-size:.85em;transition:opacity .15s;box-shadow:0 2px 10px rgba(91,141,238,.4);}
+.btn-save:hover{opacity:.85;}
+
+/* ─── GOOGLE AUTH BUTTONS ─── */
+.google-connect-row{
+  display:flex;gap:6px;align-items:center;flex-wrap:wrap;
+}
+.google-btn{
+  display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;
+  font-size:.78em;font-weight:500;cursor:pointer;transition:background .15s,border-color .15s;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);flex:1;
+  justify-content:center;
+}
+.google-btn:hover{background:rgba(255,255,255,.14);}
+.google-btn.connected{background:rgba(30,215,96,.15);border-color:rgba(30,215,96,.35);color:#6eed9a;}
+.google-btn svg{width:14px;height:14px;flex-shrink:0;}
+.google-status{font-size:.68em;opacity:.5;font-style:italic;margin-top:-4px;}
+
+/* ─── MODAL ─── */
+.modal-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.55);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;}
+.modal-overlay.hidden{display:none;}
+.modal-panel{background:rgba(18,22,36,.98);border:1px solid rgba(255,255,255,.12);border-radius:18px;
+  width:min(340px,90vw);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.7);animation:modalPop .2s ease;}
+@keyframes modalPop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);font-weight:600;}
+.modal-body{padding:14px 16px;display:flex;flex-direction:column;gap:12px;}
+.modal-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.88em;}
+.modal-row span{opacity:.75;flex-shrink:0;}
+.modal-row .text-input{width:160px;}
+.modal-row input[type="color"]{width:36px;height:28px;border:1px solid rgba(255,255,255,.12);
+  border-radius:6px;padding:2px;background:transparent;cursor:pointer;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;padding:10px 16px 14px;
+  border-top:1px solid rgba(255,255,255,.08);}
+
+/* ─── DRAG & DROP ─── */
+.edit-mode .tile{cursor:grab;animation:tileWiggle .5s infinite alternate ease-in-out;}
+@keyframes tileWiggle{from{transform:rotate(-.3deg) scale(.995)}to{transform:rotate(.3deg) scale(1.002)}}
+.edit-mode .tile:active{cursor:grabbing;}
+.tile.drag-over{box-shadow:0 1px 0 0 rgba(255,255,255,.18) inset,0 -1px 0 0 rgba(0,0,0,.25) inset,
+  0 8px 32px var(--shadow-color),0 2px 8px rgba(0,0,0,.35),0 0 0 2px var(--accent);}
   </style>
 </head>
 <body>
 
 <canvas id="bgCanvas"></canvas>
-
-<button id="gearBtn" class="gear-btn" title="Einstellungen" aria-label="Einstellungen">
+<button id="gearBtn" class="gear-btn" title="Einstellungen">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="12" r="3"/>
     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -1224,9 +336,7 @@ a { color: inherit; text-decoration: none; }
         <div class="weather-current-info">
           <div class="weather-temp" id="weatherTemp">18°</div>
           <div class="weather-desc" id="weatherDesc">Teilweise bewölkt</div>
-          <div class="weather-details" id="weatherDetails">
-            <span>💧 62%</span><span>💨 14 km/h</span>
-          </div>
+          <div class="weather-details" id="weatherDetails"><span>💧 62%</span><span>💨 14 km/h</span></div>
         </div>
       </div>
       <div class="weather-forecast" id="weatherForecast"></div>
@@ -1261,18 +371,34 @@ a { color: inherit; text-decoration: none; }
           <button class="ss-btn" id="ssPrev">‹</button>
           <button class="ss-btn" id="ssPlay">⏸</button>
           <button class="ss-btn" id="ssNext">›</button>
-          <label class="ss-upload-label" title="Fotos hinzufügen">
+          <label class="ss-upload-label" title="Lokale Fotos">
             📁<input type="file" id="ssUpload" accept="image/*" multiple style="display:none" />
           </label>
         </div>
       </div>
       <div class="slideshow-frame" id="slideshowFrame">
         <div class="slideshow-img-wrap" id="slideshowImgWrap">
-          <img id="slideshowImg" src="" alt="" style="display:none" />
+          <img id="slideshowImg" src="" alt="" />
           <div class="slideshow-placeholder" id="slideshowPlaceholder">
-            <div style="font-size:2.5em">🖼</div>
-            <div style="font-size:0.8em;opacity:0.7;margin-top:6px">Fotos hier ablegen oder 📁 tippen</div>
+            <div style="font-size:2.2em">🖼</div>
+            <div style="font-size:.75em;opacity:.6;margin-top:6px;text-align:center">📁 Lokal · 📸 Google Fotos · ☁️ Drive</div>
           </div>
+          <div class="ss-source-badge" id="ssSourceBadge" style="display:none"></div>
+        </div>
+        <!-- Source buttons -->
+        <div class="slideshow-source-bar">
+          <button class="ss-source-btn active" id="ssSrcLocal" title="Lokale Fotos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            Lokal
+          </button>
+          <button class="ss-source-btn" id="ssSrcGPhotos" title="Google Fotos">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" opacity=".3"/><path d="M12 12.5c-.83 0-1.5-.67-1.5-1.5S11.17 9.5 12 9.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+            Fotos
+          </button>
+          <button class="ss-source-btn" id="ssSrcDrive" title="Google Drive">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+            Drive
+          </button>
         </div>
         <div class="slideshow-meta">
           <div class="slideshow-dots" id="slideshowDots"></div>
@@ -1289,7 +415,7 @@ a { color: inherit; text-decoration: none; }
       <div class="tile-header">
         <span class="tile-label">
           <svg class="spotify-logo-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.87 7.077-.496 9.713 1.115.294.18.387.563.206.857zm1.223-2.722a.78.78 0 0 1-1.072.257C14.1 12.26 10.64 11.7 7.4 12.646a.779.779 0 0 1-.97-.519.781.781 0 0 1 .519-.97c3.668-1.113 7.527-.574 10.378 1.489a.779.779 0 0 1 .482.056zm.105-2.835C15.199 9.04 10.537 8.88 7.43 9.797a.935.935 0 1 1-.541-1.789c3.571-1.08 9.504-.872 13.253 1.455a.935.935 0 0 1-1.228 1.404z"/>
+            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.87 7.077-.496 9.713 1.115.294.18.387.563.206.857zm1.223-2.722a.78.78 0 0 1-1.072.257C14.1 12.26 10.64 11.7 7.4 12.646a.779.779 0 1 1-.451-1.489c3.668-1.113 7.527-.574 10.378 1.489a.779.779 0 0 1 .307 1.056zm.105-2.835C15.199 9.04 10.537 8.88 7.43 9.797a.935.935 0 1 1-.541-1.789c3.571-1.08 9.504-.872 13.253 1.455a.935.935 0 0 1-1.228 1.404z"/>
           </svg>
           Spotify
         </span>
@@ -1306,9 +432,7 @@ a { color: inherit; text-decoration: none; }
           <div class="spotify-album" id="spotifyAlbum">Speaking in Tongues</div>
           <div class="spotify-progress-wrap">
             <span class="spotify-time" id="spotifyTimeCurrent">1:24</span>
-            <div class="spotify-progress-bar">
-              <div class="spotify-progress-fill" id="spotifyProgressFill" style="width:42%"></div>
-            </div>
+            <div class="spotify-progress-bar"><div class="spotify-progress-fill" id="spotifyProgressFill" style="width:42%"></div></div>
             <span class="spotify-time" id="spotifyTimeTotal">3:17</span>
           </div>
           <div class="spotify-transport">
@@ -1318,59 +442,40 @@ a { color: inherit; text-decoration: none; }
           </div>
         </div>
       </div>
-      <div class="spotify-auth-bar" id="spotifyAuthBar">
+      <div class="spotify-auth-bar">
         <button class="spotify-connect-btn" id="spotifyConnectBtn">Mit Spotify verbinden</button>
-        <span class="spotify-mock-note">Mock-Daten aktiv</span>
+        <span class="spotify-mock-note" id="spotifyStatus">Mock-Daten aktiv</span>
       </div>
     </div>
   </div>
 
 </main>
 
-<!-- SETTINGS PANEL -->
+<!-- ══ SETTINGS PANEL ══ -->
 <div id="settingsOverlay" class="settings-overlay hidden">
-  <div id="settingsPanel" class="settings-panel">
+  <div class="settings-panel">
     <div class="settings-header">
       <span>⚙ Einstellungen</span>
       <button id="settingsClose" class="settings-close">✕</button>
     </div>
     <div class="settings-body">
+
       <div class="settings-section">
         <div class="settings-section-title">Farben &amp; Stil</div>
-        <label class="settings-row">
-          <span>Hintergrund</span>
-          <input type="color" id="setBgColor" value="#141926" />
+        <label class="settings-row"><span>Hintergrund</span><input type="color" id="setBgColor" value="#141926" /></label>
+        <label class="settings-row"><span>Kachel-Farbe</span><input type="color" id="setTileColor" value="#ffffff" /></label>
+        <label class="settings-row"><span>Text-Farbe</span><input type="color" id="setTextColor" value="#e8eaf0" /></label>
+        <label class="settings-row"><span>Transparenz</span>
+          <div class="slider-wrap"><input type="range" id="setTransparency" min="5" max="90" value="15" /><span class="slider-val" id="setTransparencyVal">15%</span></div>
         </label>
-        <label class="settings-row">
-          <span>Kachel-Farbe</span>
-          <input type="color" id="setTileColor" value="#ffffff" />
+        <label class="settings-row"><span>Schriftgröße</span>
+          <div class="slider-wrap"><input type="range" id="setFontSize" min="70" max="130" value="100" /><span class="slider-val" id="setFontSizeVal">100%</span></div>
         </label>
-        <label class="settings-row">
-          <span>Text-Farbe</span>
-          <input type="color" id="setTextColor" value="#e8eaf0" />
-        </label>
-        <label class="settings-row">
-          <span>Transparenz</span>
-          <div class="slider-wrap">
-            <input type="range" id="setTransparency" min="5" max="90" value="15" />
-            <span class="slider-val" id="setTransparencyVal">15%</span>
-          </div>
-        </label>
-        <label class="settings-row">
-          <span>Schriftgröße</span>
-          <div class="slider-wrap">
-            <input type="range" id="setFontSize" min="70" max="130" value="100" />
-            <span class="slider-val" id="setFontSizeVal">100%</span>
-          </div>
-        </label>
-        <label class="settings-row">
-          <span>Eckenradius</span>
-          <div class="slider-wrap">
-            <input type="range" id="setRadius" min="4" max="32" value="18" />
-            <span class="slider-val" id="setRadiusVal">18px</span>
-          </div>
+        <label class="settings-row"><span>Eckenradius</span>
+          <div class="slider-wrap"><input type="range" id="setRadius" min="4" max="32" value="18" /><span class="slider-val" id="setRadiusVal">18px</span></div>
         </label>
       </div>
+
       <div class="settings-section">
         <div class="settings-section-title">Theme-Presets</div>
         <div class="theme-presets">
@@ -1382,37 +487,86 @@ a { color: inherit; text-decoration: none; }
           <button class="preset-btn" data-theme="slate">🪨 Slate</button>
         </div>
       </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">📸 Google Fotos</div>
+        <div class="google-connect-row">
+          <button class="google-btn" id="gPhotosConnectBtn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            Verbinden
+          </button>
+          <button class="google-btn" id="gPhotosDisconnectBtn" style="display:none">✓ Getrennt</button>
+        </div>
+        <div class="google-status" id="gPhotosStatus">Nicht verbunden · lokale Fotos aktiv</div>
+        <!-- INTEGRATION POINT: Google Photos OAuth
+             1. Google Cloud Console → Credentials → OAuth 2.0 Client ID (Web)
+             2. Scopes: https://www.googleapis.com/auth/photoslibrary.readonly
+             3. Replace GOOGLE_PHOTOS_CLIENT_ID below -->
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">☁️ Google Drive</div>
+        <label class="settings-row">
+          <span>Ordner-ID</span>
+          <input type="text" id="setDriveFolderId" class="text-input" value="" placeholder="Drive Ordner-ID" />
+        </label>
+        <div class="google-connect-row">
+          <button class="google-btn" id="gDriveConnectBtn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" fill="#4285F4"/></svg>
+            Verbinden
+          </button>
+          <button class="google-btn" id="gDriveDisconnectBtn" style="display:none">✓ Getrennt</button>
+        </div>
+        <div class="google-status" id="gDriveStatus">Nicht verbunden</div>
+        <!-- INTEGRATION POINT: Google Drive OAuth
+             1. Same OAuth Client ID as Photos (add drive.readonly scope)
+             2. Scope: https://www.googleapis.com/auth/drive.readonly
+             3. API: https://www.googleapis.com/drive/v3/files?q='FOLDER_ID'+in+parents -->
+      </div>
+
       <div class="settings-section">
         <div class="settings-section-title">Slideshow</div>
+        <label class="settings-row"><span>Intervall (Sek.)</span>
+          <div class="slider-wrap"><input type="range" id="setSsInterval" min="5" max="120" value="30" /><span class="slider-val" id="setSsIntervalVal">30s</span></div>
+        </label>
         <label class="settings-row">
-          <span>Intervall (Sek.)</span>
-          <div class="slider-wrap">
-            <input type="range" id="setSsInterval" min="5" max="120" value="30" />
-            <span class="slider-val" id="setSsIntervalVal">30s</span>
-          </div>
+          <span>Fotos löschen</span>
+          <button class="btn-reset" id="ssClearBtn" style="padding:4px 10px;font-size:.75em">🗑 Alle</button>
         </label>
       </div>
+
       <div class="settings-section">
-        <div class="settings-section-title">Wetter</div>
+        <div class="settings-section-title">🎵 Spotify</div>
         <label class="settings-row">
-          <span>Stadt</span>
-          <input type="text" id="setWeatherCity" class="text-input" value="Düsseldorf" placeholder="Stadtname" />
+          <span>Client ID</span>
+          <input type="text" id="setSpClientId" class="text-input" value="" placeholder="Spotify Client ID" />
         </label>
-        <label class="settings-row">
-          <span>API-Key</span>
-          <input type="text" id="setWeatherApiKey" class="text-input" value="" placeholder="OpenWeatherMap Key" />
-        </label>
+        <div class="google-connect-row">
+          <button class="google-btn" id="spOAuthBtn">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.87 7.077-.496 9.713 1.115.294.18.387.563.206.857zm1.223-2.722a.78.78 0 0 1-1.072.257C14.1 12.26 10.64 11.7 7.4 12.646a.779.779 0 1 1-.451-1.489c3.668-1.113 7.527-.574 10.378 1.489a.779.779 0 0 1 .307 1.056zm.105-2.835C15.199 9.04 10.537 8.88 7.43 9.797a.935.935 0 1 1-.541-1.789c3.571-1.08 9.504-.872 13.253 1.455a.935.935 0 0 1-1.228 1.404z" fill="#1ed760"/></svg>
+            Mit Spotify verbinden
+          </button>
+          <button class="google-btn" id="spDisconnectBtn" style="display:none">✓ Trennen</button>
+        </div>
+        <div class="google-status" id="spSettingsStatus">Nicht verbunden · Mock-Daten aktiv</div>
+        <div class="google-status" style="opacity:.4;margin-top:2px">
+          Client ID: developer.spotify.com → App → Redirect URI = diese URL
+        </div>
       </div>
+
+
+        <label class="settings-row"><span>Stadt</span><input type="text" id="setWeatherCity" class="text-input" value="Düsseldorf" placeholder="Stadtname" /></label>
+        <label class="settings-row"><span>API-Key</span><input type="text" id="setWeatherApiKey" class="text-input" value="" placeholder="OpenWeatherMap Key" /></label>
+      </div>
+
       <div class="settings-section">
         <div class="settings-section-title">Layout</div>
         <label class="settings-row">
           <span>Kacheln verschieben</span>
-          <label class="toggle">
-            <input type="checkbox" id="setEditMode" />
-            <span class="toggle-slider"></span>
-          </label>
+          <label class="toggle"><input type="checkbox" id="setEditMode" /><span class="toggle-slider"></span></label>
         </label>
       </div>
+
       <div class="settings-footer">
         <button id="setReset" class="btn-reset">↺ Standard</button>
         <button id="settingsClose2" class="btn-save">✓ Fertig</button>
@@ -1421,7 +575,7 @@ a { color: inherit; text-decoration: none; }
   </div>
 </div>
 
-<!-- CALENDAR MODAL -->
+<!-- ══ CALENDAR MODAL ══ -->
 <div id="calModalOverlay" class="modal-overlay hidden">
   <div class="modal-panel">
     <div class="modal-header">
@@ -1429,22 +583,10 @@ a { color: inherit; text-decoration: none; }
       <button id="calModalClose" class="settings-close">✕</button>
     </div>
     <div class="modal-body">
-      <label class="modal-row">
-        <span>Titel</span>
-        <input type="text" id="calEventTitle" class="text-input" placeholder="Termintitel" />
-      </label>
-      <label class="modal-row">
-        <span>Datum</span>
-        <input type="date" id="calEventDate" class="text-input" />
-      </label>
-      <label class="modal-row">
-        <span>Uhrzeit</span>
-        <input type="time" id="calEventTime" class="text-input" value="09:00" />
-      </label>
-      <label class="modal-row">
-        <span>Farbe</span>
-        <input type="color" id="calEventColor" value="#4f8ef7" />
-      </label>
+      <label class="modal-row"><span>Titel</span><input type="text" id="calEventTitle" class="text-input" placeholder="Termintitel" /></label>
+      <label class="modal-row"><span>Datum</span><input type="date" id="calEventDate" class="text-input" /></label>
+      <label class="modal-row"><span>Uhrzeit</span><input type="time" id="calEventTime" class="text-input" value="09:00" /></label>
+      <label class="modal-row"><span>Farbe</span><input type="color" id="calEventColor" value="#4f8ef7" /></label>
     </div>
     <div class="modal-footer">
       <button id="calModalDelete" class="btn-reset" style="display:none">🗑 Löschen</button>
@@ -1454,165 +596,108 @@ a { color: inherit; text-decoration: none; }
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════
-   DASHBOARD APP — app.js
-   Vanilla JS only, modular structure
-   LocalStorage key prefix: "dash_"
-══════════════════════════════════════════════════ */
-
 'use strict';
 
-// ─────────────────────────────────────────
-// STORAGE HELPERS
-// ─────────────────────────────────────────
+// ════════════════════════════════════════════════
+// GOOGLE OAUTH CONFIG
+// INTEGRATION POINT: Set your Client IDs here
+// Google Cloud Console → APIs & Services → Credentials
+// ════════════════════════════════════════════════
+const GOOGLE_CLIENT_ID   = 'YOUR_GOOGLE_CLIENT_ID'; // Replace with your OAuth 2.0 Client ID
+const GOOGLE_REDIRECT    = window.location.origin + window.location.pathname;
+const SCOPE_PHOTOS       = 'https://www.googleapis.com/auth/photoslibrary.readonly';
+const SCOPE_DRIVE        = 'https://www.googleapis.com/auth/drive.readonly';
+const PHOTOS_API         = 'https://photoslibrary.googleapis.com/v1';
+const DRIVE_API          = 'https://www.googleapis.com/drive/v3';
+
+// ════════════════════════════════════════════════
+// LOCALSTORAGE HELPER
+// ════════════════════════════════════════════════
 const Store = {
   get(key, fallback = null) {
-    try {
-      const v = localStorage.getItem('dash_' + key);
-      return v !== null ? JSON.parse(v) : fallback;
-    } catch { return fallback; }
+    try { const v = localStorage.getItem('dash_' + key); return v !== null ? JSON.parse(v) : fallback; }
+    catch { return fallback; }
   },
   set(key, val) {
-    try { localStorage.setItem('dash_' + key, JSON.stringify(val)); } catch {}
+    try { localStorage.setItem('dash_' + key, JSON.stringify(val)); } catch(e) { console.warn('Store.set', e); }
   }
 };
 
-// ─────────────────────────────────────────
-// DEFAULT SETTINGS
-// ─────────────────────────────────────────
+// ════════════════════════════════════════════════
+// INDEXEDDB — Bild-Speicher (kein 5MB LocalStorage-Limit)
+// Speichert base64-Bilder dauerhaft im Browser
+// ════════════════════════════════════════════════
+const ImageDB = (() => {
+  const DB = 'dashImgDB', ST = 'images';
+  let db = null;
+
+  function open() {
+    return new Promise((res, rej) => {
+      if (db) return res(db);
+      const r = indexedDB.open(DB, 1);
+      r.onupgradeneeded = e => {
+        const d = e.target.result;
+        if (!d.objectStoreNames.contains(ST))
+          d.createObjectStore(ST, { keyPath: 'id', autoIncrement: true });
+      };
+      r.onsuccess = e => { db = e.target.result; res(db); };
+      r.onerror   = e => rej(e);
+    });
+  }
+
+  async function getAll() {
+    const d = await open();
+    return new Promise((res, rej) => {
+      const tx = d.transaction(ST, 'readonly');
+      const r  = tx.objectStore(ST).getAll();
+      r.onsuccess = () => res(r.result || []);
+      r.onerror   = e => rej(e);
+    });
+  }
+
+  async function addOne(dataUrl, source = 'local', name = '') {
+    const d = await open();
+    return new Promise((res, rej) => {
+      const tx = d.transaction(ST, 'readwrite');
+      const r  = tx.objectStore(ST).add({ data: dataUrl, source, name });
+      r.onsuccess = () => res(r.result);
+      r.onerror   = e => rej(e);
+    });
+  }
+
+  async function clear() {
+    const d = await open();
+    return new Promise((res, rej) => {
+      const tx = d.transaction(ST, 'readwrite');
+      const r  = tx.objectStore(ST).clear();
+      r.onsuccess = () => res();
+      r.onerror   = e => rej(e);
+    });
+  }
+
+  return { getAll, addOne, clear };
+})();
+
+// ════════════════════════════════════════════════
+// DEFAULTS & THEMES
+// ════════════════════════════════════════════════
 const DEFAULTS = {
-  bgColor:      '#141926',
-  tileColor:    '#ffffff',
-  textColor:    '#e8eaf0',
-  transparency: 15,
-  fontSize:     100,
-  radius:       18,
-  ssInterval:   30,
-  weatherCity:  'Düsseldorf',
-  weatherApiKey: '',
-  editMode:     false,
-  tileOrder:    ['clock','weather','calendar','slideshow','spotify']
+  bgColor:'#141926', tileColor:'#ffffff', textColor:'#e8eaf0',
+  transparency:15, fontSize:100, radius:18, ssInterval:30,
+  weatherCity:'Düsseldorf', weatherApiKey:'', editMode:false,
+  gPhotosToken:'', gPhotosExpiry:0,
+  gDriveToken:'', gDriveExpiry:0, driveFolderId:''
 };
 
 const THEMES = {
-  night:  { bg: '#141926', tile: '#ffffff', text: '#e8eaf0', transparency: 15 },
-  dawn:   { bg: '#2b1a14', tile: '#ffcc88', text: '#ffe8cc', transparency: 12 },
-  ocean:  { bg: '#0d1f2d', tile: '#60c8ff', text: '#cce8ff', transparency: 14 },
-  forest: { bg: '#0f1e14', tile: '#60e890', text: '#ccffe0', transparency: 13 },
-  rose:   { bg: '#1e0f1a', tile: '#ff80b4', text: '#ffe0ef', transparency: 14 },
-  slate:  { bg: '#181e24', tile: '#c0ccd8', text: '#dce5ee', transparency: 16 }
+  night:  { bg:'#141926', tile:'#ffffff', text:'#e8eaf0', transparency:15 },
+  dawn:   { bg:'#2b1a14', tile:'#ffcc88', text:'#ffe8cc', transparency:12 },
+  ocean:  { bg:'#0d1f2d', tile:'#60c8ff', text:'#cce8ff', transparency:14 },
+  forest: { bg:'#0f1e14', tile:'#60e890', text:'#ccffe0', transparency:13 },
+  rose:   { bg:'#1e0f1a', tile:'#ff80b4', text:'#ffe0ef', transparency:14 },
+  slate:  { bg:'#181e24', tile:'#c0ccd8', text:'#dce5ee', transparency:16 }
 };
 
-// ─────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────
-let settings = { ...DEFAULTS, ...Store.get('settings', {}) };
-let calEvents = Store.get('calEvents', []);
-let ssImages  = Store.get('ssImages', []);   // base64 strings
-let ssIndex   = 0;
-let ssPlaying = true;
-let ssTimer   = null;
-let calCurrentYear, calCurrentMonth;
-let calEditingId = null;
-let spPlaying = true;
-let spMockTimer = null;
-let spProgress = 0.42;
-
-// ─────────────────────────────────────────
-// APPLY SETTINGS TO DOM
-// ─────────────────────────────────────────
-function applySettings() {
-  const r = document.documentElement;
-  // Parse tile color into rgb components for rgba usage
-  const tc = hexToRgb(settings.tileColor) || { r: 255, g: 255, b: 255 };
-  r.style.setProperty('--tile-r', tc.r);
-  r.style.setProperty('--tile-g', tc.g);
-  r.style.setProperty('--tile-b', tc.b);
-  r.style.setProperty('--tile-a', (settings.transparency / 100).toFixed(2));
-  r.style.setProperty('--bg', settings.bgColor);
-  r.style.setProperty('--text', settings.textColor);
-  r.style.setProperty('--tile-radius', settings.radius + 'px');
-  r.style.setProperty('--font-scale', (settings.fontSize / 100).toFixed(2));
-  document.body.style.background = settings.bgColor;
-  // Redraw background canvas
-  drawBg();
-}
-
-function hexToRgb(hex) {
-  const res = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return res ? { r: parseInt(res[1],16), g: parseInt(res[2],16), b: parseInt(res[3],16) } : null;
-}
-
-function saveSettings() {
-  Store.set('settings', settings);
-  applySettings();
-}
-
-// ─────────────────────────────────────────
-// ANIMATED BACKGROUND CANVAS
-// ─────────────────────────────────────────
-const bgCanvas  = document.getElementById('bgCanvas');
-const bgCtx     = bgCanvas.getContext('2d');
-let bgFrame     = 0;
-
-function resizeBg() {
-  bgCanvas.width  = window.innerWidth;
-  bgCanvas.height = window.innerHeight;
-}
-
-function drawBg() {
-  const w = bgCanvas.width, h = bgCanvas.height;
-  bgCtx.clearRect(0, 0, w, h);
-  bgCtx.fillStyle = settings.bgColor;
-  bgCtx.fillRect(0, 0, w, h);
-
-  const time = bgFrame * 0.003;
-  const orbs = [
-    { x: 0.15 + Math.sin(time * 0.7) * 0.08, y: 0.2  + Math.cos(time * 0.5) * 0.06, r: 0.35, hue: 220 },
-    { x: 0.75 + Math.cos(time * 0.4) * 0.06, y: 0.15 + Math.sin(time * 0.6) * 0.08, r: 0.30, hue: 250 },
-    { x: 0.50 + Math.sin(time * 0.6) * 0.07, y: 0.75 + Math.cos(time * 0.4) * 0.05, r: 0.28, hue: 200 },
-    { x: 0.85 + Math.cos(time * 0.8) * 0.04, y: 0.80 + Math.sin(time * 0.7) * 0.05, r: 0.22, hue: 270 }
-  ];
-
-  orbs.forEach(o => {
-    const gx = o.x * w, gy = o.y * h, gr = o.r * Math.max(w, h);
-    const grad = bgCtx.createRadialGradient(gx, gy, 0, gx, gy, gr);
-    grad.addColorStop(0, `hsla(${o.hue},60%,38%,0.14)`);
-    grad.addColorStop(1, 'transparent');
-    bgCtx.fillStyle = grad;
-    bgCtx.fillRect(0, 0, w, h);
-  });
-
-  bgFrame++;
-}
-
-function animateBg() {
-  drawBg();
-  requestAnimationFrame(animateBg);
-}
-
-// ─────────────────────────────────────────
-// CLOCK
-// ─────────────────────────────────────────
-function updateClock() {
-  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
-  const hh  = String(now.getHours()).padStart(2,'0');
-  const mm  = String(now.getMinutes()).padStart(2,'0');
-  const ss  = String(now.getSeconds()).padStart(2,'0');
-  document.getElementById('clockTime').textContent = `${hh}:${mm}:${ss}`;
-
-  const days = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
-  const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  document.getElementById('clockDate').textContent =
-    `${days[now.getDay()]}, ${now.getDate()}. ${months[now.getMonth()]}`;
-}
-
-// ─────────────────────────────────────────
-// WEATHER
-// INTEGRATION POINT: OpenWeatherMap
-// Replace fetchWeatherMock with fetchWeatherAPI when API key is set
-// API endpoint: https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={key}&units=metric&lang=de
-// ─────────────────────────────────────────
 const WEATHER_ICONS = {
   '01d':'☀️','01n':'🌙','02d':'⛅','02n':'🌥','03d':'🌥','03n':'🌥',
   '04d':'☁️','04n':'☁️','09d':'🌧','09n':'🌧','10d':'🌦','10n':'🌧',
@@ -1620,274 +705,286 @@ const WEATHER_ICONS = {
 };
 
 const MOCK_WEATHER = {
-  city: 'Düsseldorf',
-  temp: 18, feels: 16, desc: 'Teilweise bewölkt',
-  icon: '02d', humidity: 62, wind: 14,
-  forecast: [
-    { day:'Do', icon:'03d', high:19, low:12 },
-    { day:'Fr', icon:'10d', high:14, low:9  },
-    { day:'Sa', icon:'01d', high:22, low:13 },
-    { day:'So', icon:'01d', high:24, low:14 },
-    { day:'Mo', icon:'02d', high:20, low:12 }
+  city:'Düsseldorf', temp:18, feels:16, desc:'Teilweise bewölkt',
+  icon:'02d', humidity:62, wind:14,
+  forecast:[
+    {day:'Do',icon:'03d',high:19,low:12},{day:'Fr',icon:'10d',high:14,low:9},
+    {day:'Sa',icon:'01d',high:22,low:13},{day:'So',icon:'01d',high:24,low:14},
+    {day:'Mo',icon:'02d',high:20,low:12}
   ]
 };
 
-function renderWeather(data) {
-  document.getElementById('weatherLocation').textContent = data.city;
-  document.getElementById('weatherIconBig').textContent  = WEATHER_ICONS[data.icon] || '🌤';
-  document.getElementById('weatherTemp').textContent     = `${Math.round(data.temp)}°`;
-  document.getElementById('weatherDesc').textContent     = data.desc;
-  document.getElementById('weatherDetails').innerHTML    =
-    `<span>💧 ${data.humidity}%</span><span>💨 ${data.wind} km/h</span>`;
+const MOCK_TRACKS = [
+  {title:'Burning Down the House',artist:'Talking Heads',album:'Speaking in Tongues',dur:197},
+  {title:'This Must Be the Place',artist:'Talking Heads',album:'Speaking in Tongues',dur:272},
+  {title:'Once in a Lifetime',artist:'Talking Heads',album:'Remain in Light',dur:244},
+  {title:'Take On Me',artist:'a-ha',album:'Hunting High and Low',dur:225},
+  {title:'Running Up That Hill',artist:'Kate Bush',album:'Hounds of Love',dur:300}
+];
 
-  const fc = document.getElementById('weatherForecast');
-  fc.innerHTML = data.forecast.map(d => `
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let settings   = { ...DEFAULTS, ...Store.get('settings', {}) };
+let calEvents  = Store.get('calEvents', []);
+
+// Slideshow state
+let ssImages   = [];   // Array of {data: url/dataurl, source: 'local'|'gphotos'|'drive', name: string}
+let ssIndex    = 0;
+let ssPlaying  = true;
+let ssTimer    = null;
+let ssSource   = 'local'; // current active source: 'local'|'gphotos'|'drive'
+
+// Calendar state
+let calCurrentYear, calCurrentMonth, calEditingId = null;
+
+// Spotify mock state
+let spTrackIdx = 0, spDuration = 197, spElapsed = 82, spPlaying = true, spMockTimer = null;
+
+// ════════════════════════════════════════════════
+// APPLY SETTINGS → CSS VARIABLES
+// ════════════════════════════════════════════════
+function applySettings() {
+  const r = document.documentElement;
+  const tc = hexToRgb(settings.tileColor) || {r:255,g:255,b:255};
+  r.style.setProperty('--tile-r', tc.r);
+  r.style.setProperty('--tile-g', tc.g);
+  r.style.setProperty('--tile-b', tc.b);
+  r.style.setProperty('--tile-a', (settings.transparency/100).toFixed(2));
+  r.style.setProperty('--bg', settings.bgColor);
+  r.style.setProperty('--text', settings.textColor);
+  r.style.setProperty('--tile-radius', settings.radius + 'px');
+  r.style.setProperty('--font-scale', (settings.fontSize/100).toFixed(2));
+  document.body.style.background = settings.bgColor;
+}
+
+function hexToRgb(hex) {
+  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return r ? {r:parseInt(r[1],16),g:parseInt(r[2],16),b:parseInt(r[3],16)} : null;
+}
+
+function saveSettings() { Store.set('settings', settings); applySettings(); }
+
+// ════════════════════════════════════════════════
+// BACKGROUND CANVAS
+// ════════════════════════════════════════════════
+const bgCanvas = document.getElementById('bgCanvas');
+const bgCtx    = bgCanvas.getContext('2d');
+let   bgFrame  = 0;
+
+function resizeBg() { bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight; }
+
+function drawBg() {
+  const w = bgCanvas.width, h = bgCanvas.height, t = bgFrame * 0.003;
+  bgCtx.clearRect(0,0,w,h);
+  bgCtx.fillStyle = settings.bgColor;
+  bgCtx.fillRect(0,0,w,h);
+  [{x:.15+Math.sin(t*.7)*.08,y:.2+Math.cos(t*.5)*.06,r:.35,hue:220},
+   {x:.75+Math.cos(t*.4)*.06,y:.15+Math.sin(t*.6)*.08,r:.30,hue:250},
+   {x:.50+Math.sin(t*.6)*.07,y:.75+Math.cos(t*.4)*.05,r:.28,hue:200},
+   {x:.85+Math.cos(t*.8)*.04,y:.80+Math.sin(t*.7)*.05,r:.22,hue:270}
+  ].forEach(o => {
+    const gx=o.x*w, gy=o.y*h, gr=o.r*Math.max(w,h);
+    const g = bgCtx.createRadialGradient(gx,gy,0,gx,gy,gr);
+    g.addColorStop(0,`hsla(${o.hue},60%,38%,.14)`);
+    g.addColorStop(1,'transparent');
+    bgCtx.fillStyle = g;
+    bgCtx.fillRect(0,0,w,h);
+  });
+  bgFrame++;
+}
+
+function animateBg() { drawBg(); requestAnimationFrame(animateBg); }
+
+// ════════════════════════════════════════════════
+// CLOCK
+// ════════════════════════════════════════════════
+function updateClock() {
+  const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Berlin'}));
+  document.getElementById('clockTime').textContent =
+    [now.getHours(),now.getMinutes(),now.getSeconds()].map(n=>String(n).padStart(2,'0')).join(':');
+  const days=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+  const mons=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  document.getElementById('clockDate').textContent = `${days[now.getDay()]}, ${now.getDate()}. ${mons[now.getMonth()]}`;
+}
+
+// ════════════════════════════════════════════════
+// WEATHER
+// INTEGRATION POINT: OpenWeatherMap
+// ════════════════════════════════════════════════
+function renderWeather(d) {
+  document.getElementById('weatherLocation').textContent = d.city;
+  document.getElementById('weatherIconBig').textContent  = WEATHER_ICONS[d.icon]||'🌤';
+  document.getElementById('weatherTemp').textContent     = Math.round(d.temp)+'°';
+  document.getElementById('weatherDesc').textContent     = d.desc;
+  document.getElementById('weatherDetails').innerHTML    = `<span>💧 ${d.humidity}%</span><span>💨 ${d.wind} km/h</span>`;
+  document.getElementById('weatherForecast').innerHTML   = d.forecast.map(f=>`
     <div class="forecast-day">
-      <div class="forecast-day-name">${d.day}</div>
-      <div class="forecast-day-icon">${WEATHER_ICONS[d.icon] || '🌤'}</div>
-      <div class="forecast-day-temp">${d.high}°</div>
-      <div class="forecast-day-low">${d.low}°</div>
-    </div>
-  `).join('');
+      <div class="forecast-day-name">${f.day}</div>
+      <div class="forecast-day-icon">${WEATHER_ICONS[f.icon]||'🌤'}</div>
+      <div class="forecast-day-temp">${f.high}°</div>
+      <div class="forecast-day-low">${f.low}°</div>
+    </div>`).join('');
 }
 
 async function fetchWeather() {
-  const key  = settings.weatherApiKey;
-  const city = settings.weatherCity;
-
-  if (!key) {
-    // Use mock data
-    renderWeather({ ...MOCK_WEATHER, city });
-    return;
-  }
-
-  // INTEGRATION POINT: Real API call
+  const key = settings.weatherApiKey, city = settings.weatherCity;
+  if (!key) { renderWeather({...MOCK_WEATHER, city}); return; }
   try {
-    const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=${key}&units=metric&lang=de`;
-    const res  = await fetch(url);
-    if (!res.ok) throw new Error('Weather fetch failed');
-    const json = await res.json();
-
-    const current = json.list[0];
-    const dailyMap = {};
-    json.list.forEach(item => {
-      const date = new Date(item.dt * 1000);
-      const dKey  = date.toLocaleDateString('de-DE', { weekday: 'short', timeZone: 'Europe/Berlin' });
-      if (!dailyMap[dKey]) dailyMap[dKey] = { temps: [], icon: item.weather[0].icon };
-      dailyMap[dKey].temps.push(item.main.temp);
+    const r = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=${key}&units=metric&lang=de`);
+    if (!r.ok) throw new Error();
+    const j = await r.json();
+    const cur = j.list[0];
+    const dm = {};
+    j.list.forEach(item => {
+      const dKey = new Date(item.dt*1000).toLocaleDateString('de-DE',{weekday:'short',timeZone:'Europe/Berlin'});
+      if (!dm[dKey]) dm[dKey]={temps:[],icon:item.weather[0].icon};
+      dm[dKey].temps.push(item.main.temp);
     });
-
-    const forecast = Object.entries(dailyMap).slice(1, 6).map(([day, v]) => ({
-      day,
-      icon: v.icon,
-      high: Math.round(Math.max(...v.temps)),
-      low:  Math.round(Math.min(...v.temps))
+    const forecast = Object.entries(dm).slice(1,6).map(([day,v])=>({
+      day, icon:v.icon, high:Math.round(Math.max(...v.temps)), low:Math.round(Math.min(...v.temps))
     }));
-
-    renderWeather({
-      city,
-      temp:     current.main.temp,
-      feels:    current.main.feels_like,
-      desc:     current.weather[0].description,
-      icon:     current.weather[0].icon,
-      humidity: current.main.humidity,
-      wind:     Math.round(current.wind.speed * 3.6),
-      forecast
-    });
-  } catch (e) {
-    console.warn('Weather API error, using mock:', e);
-    renderWeather({ ...MOCK_WEATHER, city });
-  }
+    renderWeather({city, temp:cur.main.temp, feels:cur.main.feels_like,
+      desc:cur.weather[0].description, icon:cur.weather[0].icon,
+      humidity:cur.main.humidity, wind:Math.round(cur.wind.speed*3.6), forecast});
+  } catch { renderWeather({...MOCK_WEATHER, city}); }
 }
 
-// ─────────────────────────────────────────
+// ════════════════════════════════════════════════
 // CALENDAR
-// INTEGRATION POINT: Google Calendar
-// Load events from Google Calendar API
-// and merge with local events.
-// ─────────────────────────────────────────
+// INTEGRATION POINT: Google Calendar API
+// ════════════════════════════════════════════════
 function calInit() {
-  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
-  calCurrentYear  = now.getFullYear();
-  calCurrentMonth = now.getMonth();
+  const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Berlin'}));
+  calCurrentYear = now.getFullYear(); calCurrentMonth = now.getMonth();
   renderCalendar();
 }
 
 function renderCalendar() {
-  const MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  const MONTHS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
   document.getElementById('calMonthLabel').textContent = `${MONTHS[calCurrentMonth]} ${calCurrentYear}`;
-
   const grid = document.getElementById('calGrid');
   grid.innerHTML = '';
-
-  // First day of month (0=Sun … 6=Sat, adjust to Mon-start)
-  const firstDay = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
-  const startOffset = firstDay === 0 ? 6 : firstDay - 1;
-  const daysInMonth = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
-  const daysInPrev  = new Date(calCurrentYear, calCurrentMonth, 0).getDate();
-
-  const todayObj = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
-  const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth()+1).padStart(2,'0')}-${String(todayObj.getDate()).padStart(2,'0')}`;
-
+  const fd = new Date(calCurrentYear,calCurrentMonth,1).getDay();
+  const startOff = fd===0?6:fd-1;
+  const dim  = new Date(calCurrentYear,calCurrentMonth+1,0).getDate();
+  const dimp = new Date(calCurrentYear,calCurrentMonth,0).getDate();
+  const now  = new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Berlin'}));
+  const todStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   const cells = [];
-  // Prev month fill
-  for (let i = startOffset - 1; i >= 0; i--) {
-    cells.push({ day: daysInPrev - i, current: false });
-  }
-  // Current month
-  for (let d = 1; d <= daysInMonth; d++) {
-    cells.push({ day: d, current: true });
-  }
-  // Next month fill
-  const remaining = 42 - cells.length;
-  for (let d = 1; d <= remaining; d++) {
-    cells.push({ day: d, current: false });
-  }
-
-  cells.forEach(({ day, current }) => {
-    const dateStr = current
-      ? `${calCurrentYear}-${String(calCurrentMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
-      : '';
-    const hasEvent = current && calEvents.some(e => e.date === dateStr);
-    const isToday  = current && dateStr === todayStr;
-
+  for (let i=startOff-1;i>=0;i--) cells.push({day:dimp-i,current:false});
+  for (let d=1;d<=dim;d++) cells.push({day:d,current:true});
+  while (cells.length<42) cells.push({day:cells.length-dim-startOff+1,current:false});
+  cells.forEach(({day,current})=>{
+    const ds = current?`${calCurrentYear}-${String(calCurrentMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`:'';
+    const hasEv = current && calEvents.some(e=>e.date===ds);
+    const isToday = current && ds===todStr;
     const el = document.createElement('div');
-    el.className = 'cal-day' +
-      (isToday  ? ' today' : '') +
-      (!current ? ' other-month' : '') +
-      (hasEvent ? ' has-event' : '');
+    el.className='cal-day'+(isToday?' today':'')+((!current)?' other-month':'')+(hasEv?' has-event':'');
     el.textContent = day;
-
-    if (current) {
-      el.addEventListener('click', () => openCalModal(null, dateStr));
-    }
+    if (current) el.addEventListener('click',()=>openCalModal(null,ds));
     grid.appendChild(el);
   });
-
   renderCalEventsMini();
 }
 
 function renderCalEventsMini() {
   const mini = document.getElementById('calEventsMini');
-  const todayObj = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
-  const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth()+1).padStart(2,'0')}-${String(todayObj.getDate()).padStart(2,'0')}`;
-
-  // Show today's + upcoming this month
-  const relevant = calEvents
-    .filter(e => e.date >= todayStr &&
-      e.date.startsWith(`${calCurrentYear}-${String(calCurrentMonth+1).padStart(2,'0')}`))
-    .sort((a,b) => a.date.localeCompare(b.date))
-    .slice(0, 3);
-
-  if (!relevant.length) {
-    mini.innerHTML = `<span style="font-size:0.65em;opacity:0.3">Keine Termine diesen Monat</span>`;
-    return;
-  }
-
-  mini.innerHTML = relevant.map(e => `
+  const now  = new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Berlin'}));
+  const todStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const rel = calEvents.filter(e=>e.date>=todStr && e.date.startsWith(`${calCurrentYear}-${String(calCurrentMonth+1).padStart(2,'0')}`))
+    .sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
+  if (!rel.length) { mini.innerHTML=`<span style="font-size:.65em;opacity:.3">Keine Termine diesen Monat</span>`; return; }
+  mini.innerHTML = rel.map(e=>`
     <div class="cal-event-item" data-id="${e.id}">
       <div class="cal-event-dot" style="background:${e.color}"></div>
-      <div class="cal-event-text">${e.time ? e.time + ' · ' : ''}${e.title}</div>
-    </div>
-  `).join('');
-
-  mini.querySelectorAll('.cal-event-item').forEach(el => {
-    el.addEventListener('click', () => {
-      const ev = calEvents.find(e => e.id == el.dataset.id);
-      if (ev) openCalModal(ev);
-    });
+      <div class="cal-event-text">${e.time?e.time+' · ':''}${e.title}</div>
+    </div>`).join('');
+  mini.querySelectorAll('.cal-event-item').forEach(el=>{
+    el.addEventListener('click',()=>{ const ev=calEvents.find(e=>e.id==el.dataset.id); if(ev)openCalModal(ev); });
   });
 }
 
-// Calendar modal
-function openCalModal(event = null, prefillDate = null) {
-  calEditingId = event ? event.id : null;
-  const title = document.getElementById('calModalTitle');
-  const delBtn = document.getElementById('calModalDelete');
-  title.textContent = event ? 'Termin bearbeiten' : 'Termin hinzufügen';
-  delBtn.style.display = event ? 'inline-block' : 'none';
-
-  document.getElementById('calEventTitle').value = event ? event.title : '';
-  document.getElementById('calEventDate').value  = event ? event.date  : (prefillDate || '');
-  document.getElementById('calEventTime').value  = event ? (event.time || '09:00') : '09:00';
-  document.getElementById('calEventColor').value = event ? event.color : '#4f8ef7';
-
+function openCalModal(event=null, prefillDate=null) {
+  calEditingId = event?event.id:null;
+  document.getElementById('calModalTitle').textContent = event?'Termin bearbeiten':'Termin hinzufügen';
+  document.getElementById('calModalDelete').style.display = event?'inline-block':'none';
+  document.getElementById('calEventTitle').value = event?event.title:'';
+  document.getElementById('calEventDate').value  = event?event.date:(prefillDate||'');
+  document.getElementById('calEventTime').value  = event?(event.time||'09:00'):'09:00';
+  document.getElementById('calEventColor').value = event?event.color:'#4f8ef7';
   document.getElementById('calModalOverlay').classList.remove('hidden');
   document.getElementById('calEventTitle').focus();
 }
 
 function saveCalEvent() {
-  const title = document.getElementById('calEventTitle').value.trim();
-  const date  = document.getElementById('calEventDate').value;
-  const time  = document.getElementById('calEventTime').value;
-  const color = document.getElementById('calEventColor').value;
-
-  if (!title || !date) return;
-
-  if (calEditingId !== null) {
-    const idx = calEvents.findIndex(e => e.id === calEditingId);
-    if (idx > -1) calEvents[idx] = { ...calEvents[idx], title, date, time, color };
-  } else {
-    calEvents.push({ id: Date.now(), title, date, time, color });
-  }
-
-  Store.set('calEvents', calEvents);
+  const title=document.getElementById('calEventTitle').value.trim();
+  const date =document.getElementById('calEventDate').value;
+  const time =document.getElementById('calEventTime').value;
+  const color=document.getElementById('calEventColor').value;
+  if (!title||!date) return;
+  if (calEditingId!==null) {
+    const idx=calEvents.findIndex(e=>e.id===calEditingId);
+    if (idx>-1) calEvents[idx]={...calEvents[idx],title,date,time,color};
+  } else { calEvents.push({id:Date.now(),title,date,time,color}); }
+  Store.set('calEvents',calEvents);
   document.getElementById('calModalOverlay').classList.add('hidden');
   renderCalendar();
 }
 
 function deleteCalEvent() {
-  if (calEditingId === null) return;
-  calEvents = calEvents.filter(e => e.id !== calEditingId);
-  Store.set('calEvents', calEvents);
+  if (calEditingId===null) return;
+  calEvents=calEvents.filter(e=>e.id!==calEditingId);
+  Store.set('calEvents',calEvents);
   document.getElementById('calModalOverlay').classList.add('hidden');
   renderCalendar();
 }
 
-// ─────────────────────────────────────────
-// SLIDESHOW
-// INTEGRATION POINT: Google Photos
-// Replace ssImages array with Google Photos API
-// https://developers.google.com/photos/library/reference/rest
-// ─────────────────────────────────────────
+// ════════════════════════════════════════════════
+// SLIDESHOW — CORE RENDER
+// ════════════════════════════════════════════════
 function renderSlideshow() {
   const img   = document.getElementById('slideshowImg');
   const ph    = document.getElementById('slideshowPlaceholder');
   const dots  = document.getElementById('slideshowDots');
   const count = document.getElementById('slideshowCounter');
+  const badge = document.getElementById('ssSourceBadge');
 
   if (!ssImages.length) {
     img.style.display = 'none';
     ph.style.display  = 'flex';
-    dots.innerHTML    = '';
+    badge.style.display = 'none';
+    dots.innerHTML = '';
     count.textContent = '';
     return;
   }
 
-  ph.style.display  = 'none';
-  img.style.display = 'block';
+  ph.style.display = 'none';
+  const item = ssImages[ssIndex];
 
-  // Fade transition
+  // Show source badge
+  const badgeLabels = {local:'📁 Lokal', gphotos:'📸 Google Fotos', drive:'☁️ Drive'};
+  badge.style.display = 'flex';
+  badge.textContent = badgeLabels[item.source] || '🖼';
+
+  // Fade in
   img.style.opacity = '0';
-  img.src = ssImages[ssIndex];
-  img.onload = () => { img.style.opacity = '1'; };
-  // also handle already-cached
-  if (img.complete) img.style.opacity = '1';
+  img.style.display = 'block';
+  img.src = item.data;
+  const showImg = () => { img.style.opacity = '1'; };
+  img.onload = showImg;
+  if (img.complete && img.naturalWidth) showImg();
 
-  count.textContent = `${ssIndex + 1} / ${ssImages.length}`;
+  count.textContent = `${ssIndex+1} / ${ssImages.length}`;
 
-  // Dots (max 8 shown)
-  const maxDots = 8;
+  // Dots
+  const maxDots = 10;
   if (ssImages.length <= maxDots) {
-    dots.innerHTML = ssImages.map((_, i) =>
-      `<div class="ss-dot${i === ssIndex ? ' active' : ''}"></div>`
-    ).join('');
-  } else {
-    dots.textContent = '';
-  }
+    dots.innerHTML = ssImages.map((_,i)=>`<div class="ss-dot${i===ssIndex?' active':''}"></div>`).join('');
+  } else { dots.innerHTML=''; }
 }
 
-function ssAdvance(dir = 1) {
+function ssAdvance(dir=1) {
   if (!ssImages.length) return;
   ssIndex = (ssIndex + dir + ssImages.length) % ssImages.length;
   renderSlideshow();
@@ -1895,421 +992,684 @@ function ssAdvance(dir = 1) {
 
 function ssPausePlay() {
   ssPlaying = !ssPlaying;
-  document.getElementById('ssPlay').textContent = ssPlaying ? '⏸' : '▶';
+  document.getElementById('ssPlay').textContent = ssPlaying?'⏸':'▶';
   if (ssPlaying) startSsTimer(); else clearTimeout(ssTimer);
 }
 
 function startSsTimer() {
   clearTimeout(ssTimer);
-  if (!ssPlaying || ssImages.length < 2) return;
-  ssTimer = setTimeout(() => {
-    ssAdvance(1);
-    startSsTimer();
-  }, settings.ssInterval * 1000);
+  if (!ssPlaying || ssImages.length<2) return;
+  ssTimer = setTimeout(()=>{ ssAdvance(1); startSsTimer(); }, settings.ssInterval*1000);
 }
 
-function handleSsUpload(files) {
-  const newImages = [];
-  let loaded = 0;
-  [...files].forEach(file => {
+// ════════════════════════════════════════════════
+// SLIDESHOW — LOCAL FILE UPLOAD (IndexedDB)
+// ════════════════════════════════════════════════
+async function handleSsUpload(files) {
+  const fileArr = [...files];
+  for (const file of fileArr) {
+    const dataUrl = await readFileAsDataUrl(file);
+    await ImageDB.addOne(dataUrl, 'local', file.name);
+  }
+  await loadLocalImages();
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((res,rej) => {
     const reader = new FileReader();
-    reader.onload = e => {
-      newImages.push(e.target.result);
-      loaded++;
-      if (loaded === files.length) {
-        ssImages = [...ssImages, ...newImages];
-        Store.set('ssImages', ssImages);
-        ssIndex = ssImages.length - loaded;
-        renderSlideshow();
-        startSsTimer();
-      }
-    };
+    reader.onload  = e => res(e.target.result);
+    reader.onerror = e => rej(e);
     reader.readAsDataURL(file);
   });
 }
 
-// Drag-drop into slideshow tile
-function setupSsDrop() {
-  const frame = document.getElementById('slideshowFrame');
-  frame.addEventListener('dragover', e => {
-    e.preventDefault();
-    frame.style.outline = '2px dashed rgba(255,255,255,0.4)';
-  });
-  frame.addEventListener('dragleave', () => {
-    frame.style.outline = '';
-  });
-  frame.addEventListener('drop', e => {
-    e.preventDefault();
-    frame.style.outline = '';
-    if (e.dataTransfer.files.length) handleSsUpload(e.dataTransfer.files);
-  });
+async function loadLocalImages() {
+  const records = await ImageDB.getAll();
+  const localOnes = records.map(r=>({ data: r.data, source:'local', name: r.name||'' }));
+  // Merge: keep non-local sources (Google), replace local ones
+  const nonLocal = ssImages.filter(i=>i.source!=='local');
+  ssImages = [...localOnes, ...nonLocal];
+  if (ssIndex >= ssImages.length) ssIndex = 0;
+  setSourceActive('local');
+  renderSlideshow();
+  startSsTimer();
 }
 
-// ─────────────────────────────────────────
-// SPOTIFY (MOCK + INTEGRATION POINT)
-// INTEGRATION POINT: Spotify OAuth + Web Playback SDK
-// 1. Register app at https://developer.spotify.com/dashboard
-// 2. Add redirect URI
-// 3. Implement PKCE Authorization Code Flow
-// 4. Use Spotify Web Playback SDK for transport controls
-// 5. Replace mock functions below with real API calls
-// ─────────────────────────────────────────
-const MOCK_TRACKS = [
-  { title: 'Burning Down the House', artist: 'Talking Heads', album: 'Speaking in Tongues', dur: 197 },
-  { title: 'This Must Be the Place', artist: 'Talking Heads', album: 'Speaking in Tongues', dur: 272 },
-  { title: 'Once in a Lifetime',      artist: 'Talking Heads', album: 'Remain in Light',    dur: 244 },
-  { title: 'Take On Me',              artist: 'a-ha',          album: 'Hunting High and Low', dur: 225 },
-  { title: 'Running Up That Hill',    artist: 'Kate Bush',     album: 'Hounds of Love',     dur: 300 }
-];
+async function clearAllImages() {
+  await ImageDB.clear();
+  ssImages = ssImages.filter(i=>i.source!=='local');
+  ssIndex = 0;
+  renderSlideshow();
+  startSsTimer();
+}
 
-let spTrackIdx = 0;
-let spDuration = MOCK_TRACKS[0].dur;
-let spElapsed  = 82;
+function setupSsDrop() {
+  const frame = document.getElementById('slideshowFrame');
+  frame.addEventListener('dragover', e=>{ e.preventDefault(); frame.style.outline='2px dashed rgba(255,255,255,.4)'; });
+  frame.addEventListener('dragleave', ()=>{ frame.style.outline=''; });
+  frame.addEventListener('drop', e=>{ e.preventDefault(); frame.style.outline=''; if(e.dataTransfer.files.length) handleSsUpload(e.dataTransfer.files); });
+}
 
+// ════════════════════════════════════════════════
+// GOOGLE OAUTH — SHARED HELPER
+// ════════════════════════════════════════════════
+function googleOAuthUrl(scope) {
+  const params = new URLSearchParams({
+    client_id:     GOOGLE_CLIENT_ID,
+    redirect_uri:  GOOGLE_REDIRECT,
+    response_type: 'token',
+    scope,
+    include_granted_scopes: 'true',
+    state: scope.includes('photoslibrary') ? 'gphotos' : 'gdrive'
+  });
+  return 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+}
+
+function handleOAuthCallback() {
+  // Parse token from URL hash after redirect
+  if (!window.location.hash.includes('access_token')) return;
+  const params = new URLSearchParams(window.location.hash.substring(1));
+  const token  = params.get('access_token');
+  const expiry = Date.now() + (parseInt(params.get('expires_in')||3600)*1000);
+  const state  = params.get('state');
+
+  if (!token) return;
+
+  if (state === 'gphotos') {
+    settings.gPhotosToken  = token;
+    settings.gPhotosExpiry = expiry;
+    saveSettings();
+    updateGoogleStatusUI();
+    fetchGooglePhotos();
+  } else if (state === 'gdrive') {
+    settings.gDriveToken  = token;
+    settings.gDriveExpiry = expiry;
+    saveSettings();
+    updateGoogleStatusUI();
+    fetchGoogleDriveImages();
+  }
+
+  // Clean URL hash
+  history.replaceState(null, '', window.location.pathname);
+}
+
+function isTokenValid(expiry) { return expiry && Date.now() < expiry - 60000; }
+
+// ════════════════════════════════════════════════
+// GOOGLE PHOTOS API
+// INTEGRATION POINT: photoslibrary.googleapis.com
+// Fetches latest 50 photos from Google Photos library
+// ════════════════════════════════════════════════
+async function fetchGooglePhotos() {
+  if (!isTokenValid(settings.gPhotosExpiry)) {
+    document.getElementById('gPhotosStatus').textContent = 'Token abgelaufen — bitte neu verbinden';
+    return;
+  }
+  try {
+    document.getElementById('gPhotosStatus').textContent = 'Lade Fotos…';
+    const res = await fetch(`${PHOTOS_API}/mediaItems?pageSize=50`, {
+      headers: { Authorization: `Bearer ${settings.gPhotosToken}` }
+    });
+    if (!res.ok) throw new Error('Photos API ' + res.status);
+    const data = await res.json();
+    const items = (data.mediaItems || []).filter(i=>i.mimeType&&i.mimeType.startsWith('image/'));
+
+    // Build URLs: append =w1920-h1080 for display size
+    const googlePhotos = items.map(i=>({
+      data: i.baseUrl + '=w1920-h1080',
+      source: 'gphotos',
+      name: i.filename || ''
+    }));
+
+    // Replace gphotos entries in ssImages
+    ssImages = [...ssImages.filter(i=>i.source!=='gphotos'), ...googlePhotos];
+    ssIndex = 0;
+    setSourceActive('gphotos');
+    renderSlideshow();
+    startSsTimer();
+    document.getElementById('gPhotosStatus').textContent = `✓ ${googlePhotos.length} Fotos geladen`;
+    document.getElementById('gPhotosConnectBtn').style.display = 'none';
+    document.getElementById('gPhotosDisconnectBtn').style.display = '';
+    document.getElementById('gPhotosDisconnectBtn').className = 'google-btn connected';
+    document.getElementById('gPhotosDisconnectBtn').textContent = `✓ ${googlePhotos.length} Fotos`;
+  } catch(e) {
+    console.error('Google Photos error:', e);
+    document.getElementById('gPhotosStatus').textContent = 'Fehler: ' + e.message;
+  }
+}
+
+// ════════════════════════════════════════════════
+// GOOGLE DRIVE API
+// INTEGRATION POINT: drive.googleapis.com
+// Fetches image files from a specific Drive folder
+// ════════════════════════════════════════════════
+async function fetchGoogleDriveImages() {
+  if (!isTokenValid(settings.gDriveExpiry)) {
+    document.getElementById('gDriveStatus').textContent = 'Token abgelaufen — bitte neu verbinden';
+    return;
+  }
+  const folderId = settings.driveFolderId || document.getElementById('setDriveFolderId').value.trim();
+  if (!folderId) {
+    document.getElementById('gDriveStatus').textContent = 'Bitte Ordner-ID eingeben';
+    return;
+  }
+  try {
+    document.getElementById('gDriveStatus').textContent = 'Lade Drive-Bilder…';
+    const q = encodeURIComponent(`'${folderId}' in parents and mimeType contains 'image/' and trashed=false`);
+    const res = await fetch(
+      `${DRIVE_API}/files?q=${q}&fields=files(id,name,mimeType,thumbnailLink,webContentLink)&pageSize=50`,
+      { headers: { Authorization: `Bearer ${settings.gDriveToken}` } }
+    );
+    if (!res.ok) throw new Error('Drive API ' + res.status);
+    const data = await res.json();
+    const files = data.files || [];
+
+    // Build thumbnail URLs for display (thumbnailLink is directly accessible)
+    // For full-res: use webContentLink but requires alt=media
+    const driveImages = files.map(f=>({
+      data: (f.thumbnailLink||'').replace('=s220','=s1600'),
+      source: 'drive',
+      name: f.name
+    })).filter(f=>f.data);
+
+    ssImages = [...ssImages.filter(i=>i.source!=='drive'), ...driveImages];
+    ssIndex = 0;
+    setSourceActive('drive');
+    renderSlideshow();
+    startSsTimer();
+    document.getElementById('gDriveStatus').textContent = `✓ ${driveImages.length} Bilder aus Drive`;
+    document.getElementById('gDriveConnectBtn').style.display = 'none';
+    document.getElementById('gDriveDisconnectBtn').style.display = '';
+    document.getElementById('gDriveDisconnectBtn').className = 'google-btn connected';
+    document.getElementById('gDriveDisconnectBtn').textContent = `✓ ${driveImages.length} Bilder`;
+  } catch(e) {
+    console.error('Google Drive error:', e);
+    document.getElementById('gDriveStatus').textContent = 'Fehler: ' + e.message;
+  }
+}
+
+function updateGoogleStatusUI() {
+  if (isTokenValid(settings.gPhotosExpiry)) {
+    document.getElementById('gPhotosConnectBtn').style.display = 'none';
+    document.getElementById('gPhotosDisconnectBtn').style.display = '';
+    document.getElementById('gPhotosDisconnectBtn').className = 'google-btn connected';
+    document.getElementById('gPhotosStatus').textContent = 'Verbunden · Token aktiv';
+  }
+  if (isTokenValid(settings.gDriveExpiry)) {
+    document.getElementById('gDriveConnectBtn').style.display = 'none';
+    document.getElementById('gDriveDisconnectBtn').style.display = '';
+    document.getElementById('gDriveDisconnectBtn').className = 'google-btn connected';
+    document.getElementById('gDriveStatus').textContent = 'Verbunden · Token aktiv';
+  }
+}
+
+// ════════════════════════════════════════════════
+// SOURCE BUTTON SWITCHER
+// ════════════════════════════════════════════════
+function setSourceActive(src) {
+  ssSource = src;
+  ['local','gphotos','drive'].forEach(s=>{
+    const btn = document.getElementById('ssSrc' + (s==='local'?'Local':s==='gphotos'?'GPhotos':'Drive'));
+    if (btn) btn.classList.toggle('active', s===src);
+  });
+  // Jump to first image of this source
+  const idx = ssImages.findIndex(i=>i.source===src);
+  if (idx>-1) { ssIndex=idx; renderSlideshow(); }
+}
+
+// ════════════════════════════════════════════════
+// SPOTIFY — ECHTE WEB API STEUERUNG
+// Nutzt Implicit Grant Token aus URL-Hash
+// Scopes: user-read-playback-state user-modify-playback-state
+// ════════════════════════════════════════════════
+
+// Spotify Token aus localStorage
+let spToken    = Store.get('spToken', '');
+let spTokenExp = Store.get('spTokenExp', 0);
+let spPollTimer = null;
+
+function spTokenValid() { return spToken && Date.now() < spTokenExp - 30000; }
+
+// Liest Spotify Token aus URL-Hash nach OAuth-Redirect
+function handleSpotifyCallback() {
+  if (!window.location.hash.includes('access_token')) return false;
+  const p   = new URLSearchParams(window.location.hash.replace('#','?'));
+  const tok = p.get('access_token');
+  const exp = parseInt(p.get('expires_in') || '3600');
+  const st  = p.get('state');
+  if (tok && st === 'spotify') {
+    spToken    = tok;
+    spTokenExp = Date.now() + exp * 1000;
+    Store.set('spToken', spToken);
+    Store.set('spTokenExp', spTokenExp);
+    history.replaceState(null, '', window.location.pathname);
+    return true;
+  }
+  return false;
+}
+
+// Spotify API helper
+async function spApi(method, path, body) {
+  if (!spTokenValid()) { spShowMock(); return null; }
+  try {
+    const opts = {
+      method,
+      headers: { Authorization: 'Bearer ' + spToken }
+    };
+    if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+    const r = await fetch('https://api.spotify.com/v1' + path, opts);
+    if (r.status === 204) return {};
+    if (!r.ok) {
+      if (r.status === 401) { spToken = ''; Store.set('spToken',''); spShowMock(); }
+      return null;
+    }
+    return await r.json();
+  } catch(e) { console.warn('Spotify API error', e); return null; }
+}
+
+// Aktuellen Playback-Status abrufen und anzeigen
+async function spFetchPlayback() {
+  const data = await spApi('GET', '/me/player');
+  if (!data || !data.item) { spShowMock(); return; }
+
+  const track  = data.item;
+  const album  = track.album;
+  const art    = album?.images?.[0]?.url;
+  const isPlay = data.is_playing;
+
+  document.getElementById('spotifyTrack').textContent  = track.name;
+  document.getElementById('spotifyArtist').textContent = track.artists.map(a=>a.name).join(', ');
+  document.getElementById('spotifyAlbum').textContent  = album?.name || '';
+
+  // Album Art
+  const artImg = document.getElementById('spotifyArt');
+  const artPh  = document.getElementById('spotifyArtPlaceholder');
+  if (art) { artImg.src = art; artImg.style.display='block'; artPh.style.display='none'; }
+  else     { artImg.style.display='none'; artPh.style.display=''; }
+
+  // Progress
+  const elapsed  = Math.floor((data.progress_ms||0) / 1000);
+  const duration = Math.floor((track.duration_ms||1) / 1000);
+  const pct      = Math.min(100, (elapsed/duration)*100);
+  document.getElementById('spotifyProgressFill').style.width = pct + '%';
+  document.getElementById('spotifyTimeCurrent').textContent  = fmtTime(elapsed);
+  document.getElementById('spotifyTimeTotal').textContent    = fmtTime(duration);
+
+  // Play/Pause Button
+  document.getElementById('spPlay').textContent = isPlay ? '⏸' : '▶';
+  spPlaying = isPlay;
+
+  // Auth bar: zeige "Verbunden"
+  document.getElementById('spotifyConnectBtn').style.display = 'none';
+  document.getElementById('spotifyStatus').textContent = '✓ Verbunden';
+  document.getElementById('spotifyStatus').style.color = '#1ed760';
+}
+
+// Spotify Transport-Aktionen
+async function spDoPlay()   { await spApi('PUT',  '/me/player/play'); setTimeout(spFetchPlayback, 300); }
+async function spDoPause()  { await spApi('PUT',  '/me/player/pause'); setTimeout(spFetchPlayback, 300); }
+async function spDoNext()   { await spApi('POST', '/me/player/next');  setTimeout(spFetchPlayback, 600); }
+async function spDoPrev()   { await spApi('POST', '/me/player/previous'); setTimeout(spFetchPlayback, 600); }
+
+// Poll alle 5 Sekunden für Live-Updates
+function spStartPoll() {
+  clearInterval(spPollTimer);
+  if (!spTokenValid()) return;
+  spFetchPlayback();
+  spPollTimer = setInterval(spFetchPlayback, 5000);
+}
+
+// Mock fallback wenn kein Token
 function renderSpotifyMock() {
-  const t = MOCK_TRACKS[spTrackIdx];
+  const t=MOCK_TRACKS[spTrackIdx];
   document.getElementById('spotifyTrack').textContent  = t.title;
   document.getElementById('spotifyArtist').textContent = t.artist;
   document.getElementById('spotifyAlbum').textContent  = t.album;
-  spDuration = t.dur;
-  updateSpProgress();
+  spDuration = t.dur; updateSpProgress();
 }
 
 function updateSpProgress() {
-  const fill = document.getElementById('spotifyProgressFill');
-  const cur  = document.getElementById('spotifyTimeCurrent');
-  const tot  = document.getElementById('spotifyTimeTotal');
-  const pct  = Math.min(100, (spElapsed / spDuration) * 100);
-  fill.style.width = pct + '%';
-  cur.textContent  = fmtTime(spElapsed);
-  tot.textContent  = fmtTime(spDuration);
+  const pct = Math.min(100,(spElapsed/spDuration)*100);
+  document.getElementById('spotifyProgressFill').style.width = pct+'%';
+  document.getElementById('spotifyTimeCurrent').textContent  = fmtTime(spElapsed);
+  document.getElementById('spotifyTimeTotal').textContent    = fmtTime(spDuration);
 }
 
-function fmtTime(sec) {
-  const m = Math.floor(sec / 60);
-  const s = String(Math.floor(sec % 60)).padStart(2,'0');
-  return `${m}:${s}`;
+function spShowMock() {
+  renderSpotifyMock();
+  clearInterval(spPollTimer);
+  document.getElementById('spPlay').textContent = '▶';
+  document.getElementById('spotifyConnectBtn').style.display = '';
+  document.getElementById('spotifyStatus').textContent = 'Mock-Daten aktiv';
+  document.getElementById('spotifyStatus').style.color = '';
+  spStartMockTimer();
 }
+
+function fmtTime(s) { return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`; }
 
 function spStartMockTimer() {
   clearInterval(spMockTimer);
   if (!spPlaying) return;
-  spMockTimer = setInterval(() => {
-    spElapsed = (spElapsed + 1) % (spDuration + 1);
-    if (spElapsed === 0) {
-      spTrackIdx = (spTrackIdx + 1) % MOCK_TRACKS.length;
-      renderSpotifyMock();
-    }
+  spMockTimer = setInterval(()=>{
+    spElapsed=(spElapsed+1)%(spDuration+1);
+    if(spElapsed===0){ spTrackIdx=(spTrackIdx+1)%MOCK_TRACKS.length; renderSpotifyMock(); }
     updateSpProgress();
-  }, 1000);
+  },1000);
 }
 
-function spTogglePlay() {
-  spPlaying = !spPlaying;
-  document.getElementById('spPlay').textContent = spPlaying ? '⏸' : '▶';
-  spStartMockTimer();
-}
-
-// ─────────────────────────────────────────
+// ════════════════════════════════════════════════
 // SETTINGS PANEL
-// ─────────────────────────────────────────
+// ════════════════════════════════════════════════
 function populateSettingsUI() {
-  document.getElementById('setBgColor').value       = settings.bgColor;
-  document.getElementById('setTileColor').value     = settings.tileColor;
-  document.getElementById('setTextColor').value     = settings.textColor;
-  document.getElementById('setTransparency').value  = settings.transparency;
-  document.getElementById('setTransparencyVal').textContent = settings.transparency + '%';
-  document.getElementById('setFontSize').value      = settings.fontSize;
-  document.getElementById('setFontSizeVal').textContent     = settings.fontSize + '%';
-  document.getElementById('setRadius').value        = settings.radius;
-  document.getElementById('setRadiusVal').textContent       = settings.radius + 'px';
-  document.getElementById('setSsInterval').value   = settings.ssInterval;
-  document.getElementById('setSsIntervalVal').textContent   = settings.ssInterval + 's';
-  document.getElementById('setWeatherCity').value  = settings.weatherCity;
-  document.getElementById('setWeatherApiKey').value= settings.weatherApiKey || '';
-  document.getElementById('setEditMode').checked   = settings.editMode;
+  document.getElementById('setBgColor').value         = settings.bgColor;
+  document.getElementById('setTileColor').value       = settings.tileColor;
+  document.getElementById('setTextColor').value       = settings.textColor;
+  document.getElementById('setTransparency').value    = settings.transparency;
+  document.getElementById('setTransparencyVal').textContent = settings.transparency+'%';
+  document.getElementById('setFontSize').value        = settings.fontSize;
+  document.getElementById('setFontSizeVal').textContent     = settings.fontSize+'%';
+  document.getElementById('setRadius').value          = settings.radius;
+  document.getElementById('setRadiusVal').textContent       = settings.radius+'px';
+  document.getElementById('setSsInterval').value      = settings.ssInterval;
+  document.getElementById('setSsIntervalVal').textContent   = settings.ssInterval+'s';
+  document.getElementById('setWeatherCity').value     = settings.weatherCity;
+  document.getElementById('setWeatherApiKey').value   = settings.weatherApiKey||'';
+  document.getElementById('setDriveFolderId').value   = settings.driveFolderId||'';
+  document.getElementById('setEditMode').checked      = settings.editMode;
+  updateGoogleStatusUI();
 }
 
-function openSettings() {
-  populateSettingsUI();
-  document.getElementById('settingsOverlay').classList.remove('hidden');
-  document.getElementById('gearBtn').classList.add('open');
-}
-
-function closeSettings() {
-  document.getElementById('settingsOverlay').classList.add('hidden');
-  document.getElementById('gearBtn').classList.remove('open');
-  saveSettings();
-  // Refresh weather if city/key changed
-  fetchWeather();
-  // Update slideshow timer
-  startSsTimer();
-}
+function openSettings()  { populateSettingsUI(); updateSpotifySettingsUI(); document.getElementById('settingsOverlay').classList.remove('hidden'); document.getElementById('gearBtn').classList.add('open'); }
+function closeSettings() { document.getElementById('settingsOverlay').classList.add('hidden'); document.getElementById('gearBtn').classList.remove('open'); saveSettings(); fetchWeather(); startSsTimer(); }
 
 function setupSettingsListeners() {
   document.getElementById('gearBtn').addEventListener('click', openSettings);
-  document.getElementById('settingsClose').addEventListener('click',  closeSettings);
-  document.getElementById('settingsClose2').addEventListener('click', closeSettings);
-  document.getElementById('settingsOverlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('settingsOverlay')) closeSettings();
-  });
+  ['settingsClose','settingsClose2'].forEach(id=>document.getElementById(id).addEventListener('click',closeSettings));
+  document.getElementById('settingsOverlay').addEventListener('click',e=>{ if(e.target===document.getElementById('settingsOverlay')) closeSettings(); });
 
-  // Live color pickers
-  document.getElementById('setBgColor').addEventListener('input', e => {
-    settings.bgColor = e.target.value; applySettings();
-  });
-  document.getElementById('setTileColor').addEventListener('input', e => {
-    settings.tileColor = e.target.value; applySettings();
-  });
-  document.getElementById('setTextColor').addEventListener('input', e => {
-    settings.textColor = e.target.value; applySettings();
-  });
+  // Live pickers
+  document.getElementById('setBgColor').addEventListener('input',e=>{settings.bgColor=e.target.value;applySettings();});
+  document.getElementById('setTileColor').addEventListener('input',e=>{settings.tileColor=e.target.value;applySettings();});
+  document.getElementById('setTextColor').addEventListener('input',e=>{settings.textColor=e.target.value;applySettings();});
 
   // Live sliders
-  const sliders = [
-    { id: 'setTransparency', key: 'transparency', valId: 'setTransparencyVal', suffix: '%' },
-    { id: 'setFontSize',     key: 'fontSize',     valId: 'setFontSizeVal',     suffix: '%' },
-    { id: 'setRadius',       key: 'radius',        valId: 'setRadiusVal',       suffix: 'px' },
-    { id: 'setSsInterval',   key: 'ssInterval',    valId: 'setSsIntervalVal',   suffix: 's', noApply: true }
-  ];
-
-  sliders.forEach(({ id, key, valId, suffix, noApply }) => {
-    document.getElementById(id).addEventListener('input', e => {
-      const v = Number(e.target.value);
-      settings[key] = v;
-      document.getElementById(valId).textContent = v + suffix;
-      if (!noApply) applySettings();
+  [['setTransparency','transparency','setTransparencyVal','%'],
+   ['setFontSize','fontSize','setFontSizeVal','%'],
+   ['setRadius','radius','setRadiusVal','px'],
+   ['setSsInterval','ssInterval','setSsIntervalVal','s',true]
+  ].forEach(([id,key,valId,sfx,noApply])=>{
+    document.getElementById(id).addEventListener('input',e=>{
+      const v=Number(e.target.value);
+      settings[key]=v;
+      document.getElementById(valId).textContent=v+sfx;
+      if(!noApply) applySettings();
     });
   });
 
   // Theme presets
-  document.querySelectorAll('.preset-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const t = THEMES[btn.dataset.theme];
-      if (!t) return;
-      settings.bgColor      = t.bg;
-      settings.tileColor    = t.tile;
-      settings.textColor    = t.text;
-      settings.transparency = t.transparency;
-      applySettings();
-      populateSettingsUI();
-      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.preset-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const t=THEMES[btn.dataset.theme]; if(!t) return;
+      Object.assign(settings,{bgColor:t.bg,tileColor:t.tile,textColor:t.text,transparency:t.transparency});
+      applySettings(); populateSettingsUI();
+      document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
     });
   });
 
+  // Text inputs
+  document.getElementById('setWeatherCity').addEventListener('change',e=>{settings.weatherCity=e.target.value;});
+  document.getElementById('setWeatherApiKey').addEventListener('change',e=>{settings.weatherApiKey=e.target.value;});
+  document.getElementById('setDriveFolderId').addEventListener('change',e=>{settings.driveFolderId=e.target.value;});
+  document.getElementById('setEditMode').addEventListener('change',e=>{settings.editMode=e.target.checked;toggleEditMode(settings.editMode);});
+
   // Reset
-  document.getElementById('setReset').addEventListener('click', () => {
-    settings = { ...DEFAULTS };
-    applySettings();
-    populateSettingsUI();
+  document.getElementById('setReset').addEventListener('click',()=>{
+    Object.assign(settings,DEFAULTS); applySettings(); populateSettingsUI();
   });
 
-  // Text inputs (not live — applied on close)
-  document.getElementById('setWeatherCity').addEventListener('change', e => {
-    settings.weatherCity = e.target.value;
+  // Slideshow clear
+  document.getElementById('ssClearBtn').addEventListener('click',async()=>{ if(confirm('Alle lokalen Fotos löschen?')) await clearAllImages(); });
+
+  // Google Photos connect
+  document.getElementById('gPhotosConnectBtn').addEventListener('click',()=>{
+    if (GOOGLE_CLIENT_ID==='YOUR_GOOGLE_CLIENT_ID') {
+      alert('Bitte zuerst GOOGLE_CLIENT_ID im Code eintragen.\nSiehe Einstellungen → ☁ Google Fotos für Anleitung.');
+      return;
+    }
+    window.location.href = googleOAuthUrl(SCOPE_PHOTOS);
   });
-  document.getElementById('setWeatherApiKey').addEventListener('change', e => {
-    settings.weatherApiKey = e.target.value;
+  document.getElementById('gPhotosDisconnectBtn').addEventListener('click',()=>{
+    settings.gPhotosToken=''; settings.gPhotosExpiry=0; saveSettings();
+    ssImages=ssImages.filter(i=>i.source!=='gphotos');
+    renderSlideshow();
+    document.getElementById('gPhotosConnectBtn').style.display='';
+    document.getElementById('gPhotosDisconnectBtn').style.display='none';
+    document.getElementById('gPhotosStatus').textContent='Getrennt · lokale Fotos aktiv';
   });
 
-  // Edit mode toggle
-  document.getElementById('setEditMode').addEventListener('change', e => {
-    settings.editMode = e.target.checked;
-    toggleEditMode(settings.editMode);
+  // Google Drive connect
+  document.getElementById('gDriveConnectBtn').addEventListener('click',()=>{
+    if (GOOGLE_CLIENT_ID==='YOUR_GOOGLE_CLIENT_ID') {
+      alert('Bitte zuerst GOOGLE_CLIENT_ID im Code eintragen.');
+      return;
+    }
+    settings.driveFolderId = document.getElementById('setDriveFolderId').value.trim();
+    saveSettings();
+    window.location.href = googleOAuthUrl(SCOPE_DRIVE);
+  });
+  document.getElementById('gDriveDisconnectBtn').addEventListener('click',()=>{
+    settings.gDriveToken=''; settings.gDriveExpiry=0; saveSettings();
+    ssImages=ssImages.filter(i=>i.source!=='drive');
+    renderSlideshow();
+    document.getElementById('gDriveConnectBtn').style.display='';
+    document.getElementById('gDriveDisconnectBtn').style.display='none';
+    document.getElementById('gDriveStatus').textContent='Getrennt';
+  });
+
+  // Source buttons in tile
+  document.getElementById('ssSrcLocal').addEventListener('click',()=>setSourceActive('local'));
+  document.getElementById('ssSrcGPhotos').addEventListener('click',()=>{
+    if (!isTokenValid(settings.gPhotosExpiry)) { openSettings(); return; }
+    setSourceActive('gphotos');
+  });
+  document.getElementById('ssSrcDrive').addEventListener('click',()=>{
+    if (!isTokenValid(settings.gDriveExpiry)) { openSettings(); return; }
+    setSourceActive('drive');
   });
 }
 
-// ─────────────────────────────────────────
-// EDIT MODE (drag & drop tile reorder)
-// ─────────────────────────────────────────
-let dragSrc = null;
+// ════════════════════════════════════════════════
+// DRAG & DROP TILE REORDER
+// ════════════════════════════════════════════════
+function toggleEditMode(active) { document.getElementById('dashboard').classList.toggle('edit-mode',active); }
 
-function toggleEditMode(active) {
-  document.getElementById('dashboard').classList.toggle('edit-mode', active);
-}
-
+let dragSrc=null;
 function setupDragDrop() {
-  const tiles = document.querySelectorAll('.tile');
-  tiles.forEach(tile => {
-    tile.setAttribute('draggable', true);
-
-    tile.addEventListener('dragstart', e => {
-      dragSrc = tile;
-      setTimeout(() => tile.style.opacity = '0.5', 0);
-    });
-
-    tile.addEventListener('dragend', () => {
-      tile.style.opacity = '';
-      document.querySelectorAll('.tile').forEach(t => t.classList.remove('drag-over'));
-    });
-
-    tile.addEventListener('dragover', e => {
-      if (!settings.editMode) return;
-      e.preventDefault();
-      tile.classList.add('drag-over');
-    });
-
-    tile.addEventListener('dragleave', () => {
-      tile.classList.remove('drag-over');
-    });
-
-    tile.addEventListener('drop', e => {
-      e.preventDefault();
-      tile.classList.remove('drag-over');
-      if (!settings.editMode || !dragSrc || dragSrc === tile) return;
-
-      // Swap grid-area
-      const srcArea  = getComputedStyle(dragSrc).gridArea;
-      const destArea = getComputedStyle(tile).gridArea;
-      dragSrc.style.gridArea = destArea;
-      tile.style.gridArea    = srcArea;
-
-      // Persist order by tile data attribute
-      const order = [...document.querySelectorAll('.tile')].map(t => ({
-        id:   t.dataset.tile,
-        area: getComputedStyle(t).gridArea
-      }));
-      Store.set('tileAreas', order);
+  document.querySelectorAll('.tile').forEach(tile=>{
+    tile.setAttribute('draggable',true);
+    tile.addEventListener('dragstart',()=>{ dragSrc=tile; setTimeout(()=>tile.style.opacity='.5',0); });
+    tile.addEventListener('dragend',()=>{ tile.style.opacity=''; document.querySelectorAll('.tile').forEach(t=>t.classList.remove('drag-over')); });
+    tile.addEventListener('dragover',e=>{ if(!settings.editMode) return; e.preventDefault(); tile.classList.add('drag-over'); });
+    tile.addEventListener('dragleave',()=>tile.classList.remove('drag-over'));
+    tile.addEventListener('drop',e=>{
+      e.preventDefault(); tile.classList.remove('drag-over');
+      if(!settings.editMode||!dragSrc||dragSrc===tile) return;
+      const sa=getComputedStyle(dragSrc).gridArea, da=getComputedStyle(tile).gridArea;
+      dragSrc.style.gridArea=da; tile.style.gridArea=sa;
+      Store.set('tileAreas',[...document.querySelectorAll('.tile')].map(t=>({id:t.dataset.tile,area:getComputedStyle(t).gridArea})));
     });
   });
 }
 
 function restoreTileAreas() {
-  const saved = Store.get('tileAreas', null);
-  if (!saved) return;
-  saved.forEach(({ id, area }) => {
-    const el = document.querySelector(`[data-tile="${id}"]`);
-    if (el) el.style.gridArea = area;
-  });
+  const saved=Store.get('tileAreas',null); if(!saved) return;
+  saved.forEach(({id,area})=>{ const el=document.querySelector(`[data-tile="${id}"]`); if(el) el.style.gridArea=area; });
 }
 
-// ─────────────────────────────────────────
-// CALENDAR MODAL EVENTS
-// ─────────────────────────────────────────
+// ════════════════════════════════════════════════
+// CALENDAR MODAL SETUP
+// ════════════════════════════════════════════════
 function setupCalModal() {
-  document.getElementById('calAddBtn').addEventListener('click', () => openCalModal());
-  document.getElementById('calModalClose').addEventListener('click', () => {
-    document.getElementById('calModalOverlay').classList.add('hidden');
-  });
-  document.getElementById('calModalOverlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('calModalOverlay'))
-      document.getElementById('calModalOverlay').classList.add('hidden');
-  });
-  document.getElementById('calModalSave').addEventListener('click', saveCalEvent);
-  document.getElementById('calModalDelete').addEventListener('click', deleteCalEvent);
-  document.getElementById('calPrev').addEventListener('click', () => {
-    calCurrentMonth--;
-    if (calCurrentMonth < 0) { calCurrentMonth = 11; calCurrentYear--; }
-    renderCalendar();
-  });
-  document.getElementById('calNext').addEventListener('click', () => {
-    calCurrentMonth++;
-    if (calCurrentMonth > 11) { calCurrentMonth = 0; calCurrentYear++; }
-    renderCalendar();
-  });
+  document.getElementById('calAddBtn').addEventListener('click',()=>openCalModal());
+  document.getElementById('calModalClose').addEventListener('click',()=>document.getElementById('calModalOverlay').classList.add('hidden'));
+  document.getElementById('calModalOverlay').addEventListener('click',e=>{ if(e.target===document.getElementById('calModalOverlay')) document.getElementById('calModalOverlay').classList.add('hidden'); });
+  document.getElementById('calModalSave').addEventListener('click',saveCalEvent);
+  document.getElementById('calModalDelete').addEventListener('click',deleteCalEvent);
+  document.getElementById('calPrev').addEventListener('click',()=>{ calCurrentMonth--; if(calCurrentMonth<0){calCurrentMonth=11;calCurrentYear--;} renderCalendar(); });
+  document.getElementById('calNext').addEventListener('click',()=>{ calCurrentMonth++; if(calCurrentMonth>11){calCurrentMonth=0;calCurrentYear++;} renderCalendar(); });
 }
 
-// ─────────────────────────────────────────
-// SLIDESHOW EVENTS
-// ─────────────────────────────────────────
+// ════════════════════════════════════════════════
+// SLIDESHOW SETUP
+// ════════════════════════════════════════════════
 function setupSlideshow() {
-  document.getElementById('ssPrev').addEventListener('click', () => ssAdvance(-1));
-  document.getElementById('ssNext').addEventListener('click', () => ssAdvance(1));
-  document.getElementById('ssPlay').addEventListener('click', ssPausePlay);
-  document.getElementById('ssUpload').addEventListener('change', e => {
-    handleSsUpload(e.target.files);
-    e.target.value = '';
-  });
+  document.getElementById('ssPrev').addEventListener('click',()=>ssAdvance(-1));
+  document.getElementById('ssNext').addEventListener('click',()=>ssAdvance(1));
+  document.getElementById('ssPlay').addEventListener('click',ssPausePlay);
+  document.getElementById('ssUpload').addEventListener('change',e=>{ handleSsUpload(e.target.files); e.target.value=''; });
   setupSsDrop();
-  renderSlideshow();
-  startSsTimer();
 }
 
-// ─────────────────────────────────────────
-// SPOTIFY MOCK EVENTS
-// INTEGRATION POINT: Replace with Spotify Web API calls
-// ─────────────────────────────────────────
+// ════════════════════════════════════════════════
+// SPOTIFY SETUP — echte Steuerung via Web API
+// ════════════════════════════════════════════════
 function setupSpotify() {
-  document.getElementById('spPlay').addEventListener('click', spTogglePlay);
-  document.getElementById('spPrev').addEventListener('click', () => {
-    spTrackIdx = (spTrackIdx - 1 + MOCK_TRACKS.length) % MOCK_TRACKS.length;
-    spElapsed  = 0;
-    renderSpotifyMock();
-    if (spPlaying) spStartMockTimer();
-  });
-  document.getElementById('spNext').addEventListener('click', () => {
-    spTrackIdx = (spTrackIdx + 1) % MOCK_TRACKS.length;
-    spElapsed  = 0;
-    renderSpotifyMock();
-    if (spPlaying) spStartMockTimer();
+  // Play/Pause — echt oder mock
+  document.getElementById('spPlay').addEventListener('click', async () => {
+    if (spTokenValid()) {
+      if (spPlaying) await spDoPause(); else await spDoPlay();
+    } else {
+      // Mock fallback
+      spPlaying = !spPlaying;
+      document.getElementById('spPlay').textContent = spPlaying ? '⏸' : '▶';
+      spStartMockTimer();
+    }
   });
 
-  // Spotify connect button — open OAuth flow
-  // INTEGRATION POINT: Replace href with your actual Spotify OAuth URL
+  // Zurück
+  document.getElementById('spPrev').addEventListener('click', async () => {
+    if (spTokenValid()) {
+      await spDoPrev();
+    } else {
+      spTrackIdx=(spTrackIdx-1+MOCK_TRACKS.length)%MOCK_TRACKS.length;
+      spElapsed=0; renderSpotifyMock(); if(spPlaying) spStartMockTimer();
+    }
+  });
+
+  // Weiter
+  document.getElementById('spNext').addEventListener('click', async () => {
+    if (spTokenValid()) {
+      await spDoNext();
+    } else {
+      spTrackIdx=(spTrackIdx+1)%MOCK_TRACKS.length;
+      spElapsed=0; renderSpotifyMock(); if(spPlaying) spStartMockTimer();
+    }
+  });
+
+  // Connect-Button im Tile
   document.getElementById('spotifyConnectBtn').addEventListener('click', () => {
-    const CLIENT_ID    = 'YOUR_SPOTIFY_CLIENT_ID'; // REPLACE
-    const REDIRECT_URI = encodeURIComponent(window.location.href.split('?')[0]);
-    const SCOPES       = 'user-read-playback-state user-modify-playback-state streaming';
-    const authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${REDIRECT_URI}&scope=${encodeURIComponent(SCOPES)}`;
-    window.open(authUrl, '_blank');
-    // After auth, parse access_token from URL hash and store in settings
+    openSettings();
+    setTimeout(()=>{
+      document.getElementById('setSpClientId').focus();
+    }, 400);
+  });
+}
+
+// Spotify OAuth + Settings Buttons
+function setupSpotifySettings() {
+  // Client ID aus Storage laden
+  const savedClientId = Store.get('spClientId','');
+  if (savedClientId) document.getElementById('setSpClientId').value = savedClientId;
+
+  document.getElementById('setSpClientId').addEventListener('change', e => {
+    Store.set('spClientId', e.target.value.trim());
   });
 
-  renderSpotifyMock();
-  spStartMockTimer();
+  document.getElementById('spOAuthBtn').addEventListener('click', () => {
+    const clientId = document.getElementById('setSpClientId').value.trim() || Store.get('spClientId','');
+    if (!clientId) { alert('Bitte zuerst deine Spotify Client ID eingeben.\n\nSo geht es:\n1. developer.spotify.com → Dashboard → App erstellen\n2. Redirect URI eintragen: ' + window.location.href.split('#')[0] + '\n3. Client ID hier einfügen'); return; }
+    Store.set('spClientId', clientId);
+    const scope = 'user-read-playback-state user-modify-playback-state user-read-currently-playing';
+    const redirect = window.location.href.split('#')[0];
+    const url = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirect)}&scope=${encodeURIComponent(scope)}&state=spotify&show_dialog=true`;
+    window.location.href = url;
+  });
+
+  document.getElementById('spDisconnectBtn').addEventListener('click', () => {
+    spToken=''; spTokenExp=0;
+    Store.set('spToken',''); Store.set('spTokenExp',0);
+    spShowMock();
+    updateSpotifySettingsUI();
+  });
+
+  updateSpotifySettingsUI();
 }
 
-// ─────────────────────────────────────────
-// WINDOW RESIZE
-// ─────────────────────────────────────────
-function onResize() {
-  resizeBg();
+function updateSpotifySettingsUI() {
+  const connected = spTokenValid();
+  document.getElementById('spOAuthBtn').style.display      = connected ? 'none' : '';
+  document.getElementById('spDisconnectBtn').style.display = connected ? '' : 'none';
+  document.getElementById('spSettingsStatus').textContent  = connected
+    ? '✓ Verbunden · Token aktiv · Steuerung live'
+    : 'Nicht verbunden · Mock-Daten aktiv';
+  document.getElementById('spSettingsStatus').style.color  = connected ? '#1ed760' : '';
+  if (document.getElementById('setSpClientId').value === '')
+    document.getElementById('setSpClientId').value = Store.get('spClientId','');
 }
 
-// ─────────────────────────────────────────
+// ════════════════════════════════════════════════
 // INIT
-// ─────────────────────────────────────────
-function init() {
-  // Restore + apply settings
-  applySettings();
+// ════════════════════════════════════════════════
+async function init() {
+  // ── 1. OAuth Callbacks abfangen ──
+  const wasSpotify = handleSpotifyCallback();
+  handleOAuthCallback(); // Google
 
-  // Restore tile positions
+  // ── 2. Visual ──
+  applySettings();
   restoreTileAreas();
 
-  // Start background animation
+  // ── 3. Background ──
   resizeBg();
   animateBg();
 
-  // Clock
+  // ── 4. Clock ──
   updateClock();
   setInterval(updateClock, 1000);
 
-  // Weather
+  // ── 5. Weather ──
   fetchWeather();
-  setInterval(fetchWeather, 10 * 60 * 1000); // refresh every 10 min
+  setInterval(fetchWeather, 10*60*1000);
 
-  // Calendar
+  // ── 6. Calendar ──
   calInit();
   setupCalModal();
 
-  // Slideshow
+  // ── 7. Slideshow ──
   setupSlideshow();
+  await loadLocalImages();
+  if (isTokenValid(settings.gPhotosExpiry)) fetchGooglePhotos();
+  if (isTokenValid(settings.gDriveExpiry))  fetchGoogleDriveImages();
 
-  // Spotify
+  // ── 8. Spotify ──
   setupSpotify();
+  if (spTokenValid()) {
+    // Echter Token vorhanden → Live-Steuerung
+    spStartPoll();
+  } else {
+    // Kein Token → Mock
+    spShowMock();
+  }
 
-  // Settings
+  // ── 9. Settings ──
   setupSettingsListeners();
+  setupSpotifySettings();
   toggleEditMode(settings.editMode);
-
-  // Drag & drop
   setupDragDrop();
 
-  // Resize
-  window.addEventListener('resize', onResize);
+  window.addEventListener('resize', resizeBg);
 
-  // Handle keyboard close (Escape)
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       document.getElementById('settingsOverlay').classList.add('hidden');
@@ -2318,11 +1678,8 @@ function init() {
     }
   });
 
-  // Prevent context menu on long press (kiosk mode)
   document.addEventListener('contextmenu', e => e.preventDefault());
-
-  // Prevent scroll anywhere
-  document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+  document.addEventListener('touchmove',   e => e.preventDefault(), { passive: false });
 }
 
 document.addEventListener('DOMContentLoaded', init);
