@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Android Tablet Kiosk</title>
+    
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --tile-color: rgba(255, 255, 255, 0.15);
+            --text-color: #ffffff;
+            --font-size: 16px;
+            --radius: 24px;
+            --accent: #4cc9f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body, html {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: var(--font-size);
+        }
+
+        #dashboard-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--bg-color) 0%, #16213e 100%);
+            z-index: -1;
+        }
+
+        .grid-container {
+            display: grid;
+            width: 100vw;
+            height: 100vh;
+            padding: 20px;
+            gap: 20px;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+        }
+
+        /* 3D Glassmorphism Tiles */
+        .tile {
+            background: var(--tile-color);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 
+                0 15px 35px rgba(0,0,0,0.4),
+                inset 0 1px 2px rgba(255,255,255,0.3);
+            position: relative;
+        }
+
+        .tile-header {
+            padding: 15px 20px 5px 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            opacity: 0.6;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tile-content {
+            flex: 1;
+            padding: 10px 20px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Widget Styles */
+        #clock-time { font-size: 5rem; font-weight: 800; line-height: 1; letter-spacing: -2px; }
+        #clock-date { font-size: 1.4rem; margin-top: 10px; opacity: 0.9; }
+
+        .weather-main { font-size: 3.5rem; display: flex; align-items: center; gap: 20px; }
+        .forecast-row { display: flex; gap: 15px; margin-top: 20px; width: 100%; justify-content: space-around; }
+        .forecast-item { text-align: center; font-size: 0.8rem; }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .cal-day { font-size: 0.75rem; padding: 8px; border-radius: 10px; background: rgba(255,255,255,0.05); }
+        .has-event { background: var(--accent); color: #000; font-weight: bold; box-shadow: 0 0 10px var(--accent); }
+
+        .spotify-widget img { width: 100px; height: 100px; border-radius: 15px; margin-bottom: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
+        .player-controls { display: flex; gap: 25px; font-size: 2.5rem; margin-top: 15px; }
+
+        .slideshow-widget img {
+            width: 100%; height: 100%; object-fit: cover;
+            border-radius: calc(var(--radius) - 10px);
+        }
+
+        /* Settings */
+        #settings-trigger {
+            position: fixed;
+            top: 25px; right: 25px;
+            font-size: 32px;
+            cursor: pointer;
+            z-index: 100;
+            background: rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 50%;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        #settings-panel {
+            position: fixed;
+            right: -380px; top: 0;
+            width: 350px; height: 100vh;
+            background: rgba(0,0,0,0.92);
+            backdrop-filter: blur(30px);
+            z-index: 1000;
+            padding: 40px;
+            transition: right 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            box-shadow: -20px 0 50px rgba(0,0,0,0.5);
+        }
+
+        #settings-panel.open { right: 0; }
+        .setting-item { display: flex; flex-direction: column; gap: 10px; }
+        .setting-item label { font-size: 0.85rem; font-weight: 600; color: var(--accent); }
+        input[type="range"] { accent-color: var(--accent); }
+        input[type="color"] { width: 100%; height: 40px; border: none; border-radius: 8px; background: transparent; cursor: pointer; }
+
+        button {
+            padding: 15px; border-radius: 15px; border: none;
+            background: var(--accent); color: #000; font-weight: 700;
+            cursor: pointer; transition: 0.2s;
+        }
+
+        .reset-btn { background: rgba(255,255,255,0.1); color: #fff; margin-top: auto; }
+
+        /* Modal */
+        .modal {
+            display: none; position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 2000;
+        }
+        .modal-content {
+            background: #222; padding: 30px; border-radius: 25px;
+            display: flex; flex-direction: column; gap: 20px; width: 90%; max-width: 400px;
+            border: 1px solid #444;
+        }
+        input[type="text"], input[type="date"] {
+            padding: 15px; border-radius: 12px; border: 1px solid #444; background: #111; color: #fff; font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="dashboard-bg"></div>
+    
+    <div class="grid-container" id="main-grid">
+        <div class="tile" data-id="clock">
+            <div class="tile-content">
+                <div id="clock-time">00:00</div>
+                <div id="clock-date">...</div>
+            </div>
+        </div>
+
+        <div class="tile" data-id="weather">
+            <div class="tile-header"><i class="ph ph-cloud-sun"></i> Wetter</div>
+            <div class="tile-content">
+                <div class="weather-main">
+                    <span id="temp-now">22°C</span>
+                    <i class="ph-fill ph-sun" style="color: #ffbe0b;"></i>
+                </div>
+                <div class="forecast-row" id="forecast-container"></div>
+            </div>
+        </div>
+
+        <div class="tile" data-id="calendar">
+            <div class="tile-header"><i class="ph ph-calendar-blank"></i> Kalender</div>
+            <div class="tile-content" style="justify-content: flex-start;">
+                <div id="calendar-month-year" style="font-weight: 700; font-size: 1.1rem;"></div>
+                <div class="calendar-grid" id="calendar-days"></div>
+                <button style="margin-top: 20px; padding: 8px 20px;" onclick="openEventModal()">+ Event</button>
+            </div>
+        </div>
+
+        <div class="tile" data-id="spotify">
+            <div class="tile-header"><i class="ph ph-spotify-logo"></i> Spotify</div>
+            <div class="tile-content">
+                <img src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300" id="track-art">
+                <div style="font-weight: 700; font-size: 1.2rem;">Midnight City</div>
+                <div style="font-size: 0.9rem; opacity: 0.6;">M83</div>
+                <div class="player-controls">
+                    <i class="ph ph-skip-back"></i>
+                    <i class="ph-fill ph-play-circle"></i>
+                    <i class="ph ph-skip-forward"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="tile" data-id="slideshow">
+            <div class="tile-header"><i class="ph ph-image"></i> Galerie</div>
+            <div class="tile-content" style="padding: 0;">
+                <img id="slideshow-img" src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800">
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-trigger" onclick="toggleSettings()"><i class="ph ph-gear-six"></i></div>
+
+    <div id="settings-panel">
+        <h2>Dashboard</h2>
+        <div class="setting-item">
+            <label>Hintergrund</label>
+            <input type="color" id="set-bg-color" value="#1a1a2e">
+        </div>
+        <div class="setting-item">
+            <label>Kachel Farbe</label>
+            <input type="color" id="set-tile-color" value="#ffffff">
+        </div>
+        <div class="setting-item">
+            <label>Text Farbe</label>
+            <input type="color" id="set-text-color" value="#ffffff">
+        </div>
+        <div class="setting-item">
+            <label>Transparenz</label>
+            <input type="range" id="set-opacity" min="0.05" max="0.8" step="0.01" value="0.15">
+        </div>
+        <div class="setting-item">
+            <label>Eckenabrundung</label>
+            <input type="range" id="set-radius" min="0" max="60" step="2" value="24">
+        </div>
+        <button class="reset-btn" onclick="resetSettings()">Werkseinstellungen</button>
+        <button onclick="toggleSettings()">Fertig</button>
+    </div>
+
+    <div id="event-modal" class="modal">
+        <div class="modal-content">
+            <h3>Neues Event</h3>
+            <input type="text" id="event-title" placeholder="Event Name">
+            <input type="date" id="event-date">
+            <button onclick="saveEvent()">Speichern</button>
+            <button class="reset-btn" onclick="closeEventModal()">Abbrechen</button>
+        </div>
+    </div>
+
+    <script>
+        let config = JSON.parse(localStorage.getItem('kioskConfig')) || {
+            bgColor: '#1a1a2e',
+            tileColor: '#ffffff',
+            textColor: '#ffffff',
+            opacity: 0.15,
+            fontSize: 16,
+            radius: 24,
+            events: []
+        };
+
+        function applyConfig() {
+            const root = document.documentElement;
+            root.style.setProperty('--bg-color', config.bgColor);
+            root.style.setProperty('--text-color', config.textColor);
+            root.style.setProperty('--radius', config.radius + 'px');
+            const rgb = hexToRgb(config.tileColor);
+            root.style.setProperty('--tile-color', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${config.opacity})`);
+        }
+
+        function startClock() {
+            const update = () => {
+                const now = new Date();
+                document.getElementById('clock-time').textContent = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('clock-date').textContent = now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+            };
+            update(); setInterval(update, 1000);
+        }
+
+        function renderWeather() {
+            const container = document.getElementById('forecast-container');
+            ['Mo', 'Di', 'Mi', 'Do', 'Fr'].forEach(d => {
+                container.innerHTML += `<div class="forecast-item"><div>${d}</div><i class="ph-bold ph-sun"></i><div>20°</div></div>`;
+            });
+        }
+
+        function renderCalendar() {
+            const container = document.getElementById('calendar-days');
+            const now = new Date();
+            document.getElementById('calendar-month-year').textContent = now.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+            container.innerHTML = '';
+            for(let i = 1; i <= 31; i++) {
+                const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                const hasEvent = config.events.some(e => e.date === dateStr);
+                container.innerHTML += `<div class="cal-day ${hasEvent ? 'has-event' : ''}">${i}</div>`;
+            }
+        }
+
+        function startSlideshow() {
+            const imgs = ['https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800','https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=800','https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800'];
+            let i = 0; setInterval(() => { i = (i + 1) % imgs.length; document.getElementById('slideshow-img').src = imgs[i]; }, 45000);
+        }
+
+        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('open'); }
+
+        function setupListeners() {
+            const ids = {'set-bg-color':'bgColor','set-tile-color':'tileColor','set-text-color':'textColor','set-opacity':'opacity','set-radius':'radius'};
+            Object.keys(ids).forEach(id => {
+                document.getElementById(id).addEventListener('input', (e) => {
+                    config[ids[id]] = e.target.value;
+                    applyConfig();
+                    localStorage.setItem('kioskConfig', JSON.stringify(config));
+                });
+            });
+        }
+
+        function openEventModal() { document.getElementById('event-modal').style.display = 'flex'; }
+        function closeEventModal() { document.getElementById('event-modal').style.display = 'none'; }
+        function saveEvent() {
+            const title = document.getElementById('event-title').value;
+            const date = document.getElementById('event-date').value;
+            if(title && date) {
+                config.events.push({ title, date });
+                localStorage.setItem('kioskConfig', JSON.stringify(config));
+                renderCalendar(); closeEventModal();
+            }
+        }
+
+        function resetSettings() { localStorage.removeItem('kioskConfig'); location.reload(); }
+        function hexToRgb(hex) {
+            let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+            return {r, g, b};
+        }
+
+        Sortable.create(document.getElementById('main-grid'), { animation: 200 });
+        window.onload = () => { applyConfig(); startClock(); renderWeather(); renderCalendar(); startSlideshow(); setupListeners(); };
+    </script>
+</body>
+</html>
