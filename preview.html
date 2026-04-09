@@ -1,1072 +1,915 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>MyAnnaLove</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg: #0d0d14;
-  --glass: rgba(255,255,255,0.10);
-  --border: rgba(255,255,255,0.18);
-  --border-light: rgba(255,255,255,0.10);
-  --accent: #c8a96e;
-  --accent2: #7eb8c4;
-  --text: #f4f1ec;
-  --muted: rgba(244,241,236,0.50);
-  --danger: #e07070;
-  --blur: blur(28px);
-  --shadow: 0 8px 32px rgba(0,0,0,0.40), 0 1px 0 rgba(255,255,255,0.08) inset;
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-html, body {
-  width:100%; height:100%;
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  overflow: hidden;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#10131a" />
+  <title>Home Dashboard</title>
+  <style>
+    :root{
+      --bg:#0f1218;
+      --bg2:#0a0d13;
+      --text:#f5f7fc;
+      --muted:#bac2d7;
+      --tile:rgba(30,36,48,.68);
+      --tile-border:rgba(255,255,255,.12);
+      --accent:#8fc2ff;
+      --accent2:#8ff0c9;
+      --danger:#ff8d8d;
+      --radius:22px;
+      --gap:14px;
+      --shadow:0 18px 50px rgba(0,0,0,.30);
+    }
 
-/* ── BACKGROUND ── */
-#bg-slideshow { position:fixed; inset:0; z-index:0; }
-#bg-slideshow img { display:none; }
-#bg-overlay {
-  position:absolute; inset:0;
-  background: var(--user-bg, linear-gradient(135deg, #0d0d1a 0%, #1a0a2e 50%, #0a1628 100%));
-  opacity: var(--user-bg-opacity, 1);
-  transition: background 0.5s ease;
-}
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(126,163,255,.16), transparent 34%),
+        radial-gradient(circle at 82% 78%, rgba(125,255,214,.10), transparent 36%),
+        linear-gradient(180deg,var(--bg),var(--bg2));
+      color:var(--text);
+    }
 
-/* ── GLASS TILE ── */
-.tile {
-  background: rgba(15,15,25,0.52);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-.tile * {
-  text-shadow:
-    0 0 8px rgba(0,0,0,1),
-    0 1px 3px rgba(0,0,0,1),
-    0 0 20px rgba(0,0,0,0.8);
-}
+    body{padding:14px}
 
-/* ══ LANDSCAPE GRID ══ */
-#app {
-  position:relative; z-index:1;
-  width:100vw; height:100vh;
-  display:grid;
-  grid-template-columns: 280px 280px 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap:14px;
-  padding:16px;
-}
+    .app{
+      width:100%;
+      height:100%;
+      display:grid;
+      grid-template-rows:auto 1fr;
+      gap:14px;
+    }
 
-/* CLOCK — top left */
-#tile-clock {
-  grid-column:1; grid-row:1;
-  display:flex; flex-direction:column;
-  justify-content:space-between;
-  padding:26px 26px 20px;
-}
-#tile-clock-top { display:flex; flex-direction:column; }
-#time-display {
-  font-family:'Playfair Display',serif;
-  font-size: clamp(50px, 6vw, 88px);
-  font-weight:300; letter-spacing:-2px; line-height:1;
-  text-shadow: 0 0 10px rgba(0,0,0,1), 0 2px 4px rgba(0,0,0,1), 1px 1px 0 rgba(0,0,0,0.8), -1px -1px 0 rgba(0,0,0,0.8);
-}
-#time-display .colon { color:var(--accent); animation:blink 1s step-end infinite; }
-#time-display .secs { font-size:0.34em; vertical-align:super; color:var(--muted); margin-left:4px; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
-#date-display {
-  font-size:12px; font-weight:400; color:var(--muted);
-  letter-spacing:2.5px; text-transform:uppercase; margin-top:10px;
-}
-#controls-bar { display:flex; gap:8px; flex-wrap:wrap; }
-.ctrl-btn {
-  background:rgba(255,255,255,0.08); border:1px solid var(--border-light);
-  border-radius:10px; color:var(--muted); font-family:'DM Sans',sans-serif;
-  font-size:11px; padding:7px 13px; cursor:pointer; transition:all 0.2s; white-space:nowrap;
-}
-.ctrl-btn:hover, .ctrl-btn:active { background:rgba(200,169,110,0.20); border-color:var(--accent); color:var(--accent); }
+    .toolbar{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:24px;
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--tile-border);
+      backdrop-filter:blur(16px);
+      box-shadow:var(--shadow);
+      flex-wrap:wrap;
+    }
 
-/* WEATHER — bottom left */
-#tile-weather {
-  grid-column:1; grid-row:2;
-  display:flex; flex-direction:column; justify-content:center;
-  padding:22px 26px; gap:8px;
-}
-.weather-main { display:flex; align-items:center; gap:14px; }
-#weather-icon { font-size:46px; line-height:1; }
-#weather-temp { font-family:'Playfair Display',serif; font-size:54px; font-weight:300; line-height:1; }
-#weather-temp sup { font-size:20px; color:var(--accent); }
-.weather-meta { display:flex; flex-direction:column; gap:3px; }
-#weather-desc { font-size:14px; font-weight:500; text-transform:capitalize; }
-#weather-details { font-size:11px; color:var(--muted); }
-#weather-city { font-size:10px; color:var(--accent); letter-spacing:2.5px; text-transform:uppercase; margin-top:2px; }
+    .brand{
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin-right:6px;
+    }
 
-/* 5-Tage Vorschau */
-#weather-forecast {
-  display:flex; gap:6px; margin-top:12px;
-  padding-top:10px; border-top:1px solid var(--border-light);
-}
-.fc-day {
-  flex:1; display:flex; flex-direction:column;
-  align-items:center; gap:3px;
-  background:rgba(255,255,255,0.05);
-  border-radius:10px; padding:6px 4px;
-}
-.fc-name { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
-.fc-icon { font-size:18px; line-height:1; }
-.fc-temp { font-size:11px; font-weight:500; color:var(--text); }
-.fc-temp span { font-size:10px; color:var(--muted); }
+    .spacer{flex:1}
 
-/* PHOTO TILE — mitte oben */
-#tile-photos {
-  grid-column:2; grid-row:1;
-  position:relative; padding:0; cursor:pointer;
-}
-#tile-photos-inner { position:absolute; inset:0; }
-#tile-photos-inner img {
-  position:absolute; inset:0; width:100%; height:100%;
-  object-fit:cover; opacity:0; transition:opacity 2s ease;
-}
-#tile-photos-inner img.active { opacity:1; }
-#tile-photos-gradient {
-  position:absolute; inset:0; z-index:1;
-  background:linear-gradient(to top, rgba(13,13,20,0.65) 0%, transparent 55%);
-}
-#tile-photos-label {
-  position:absolute; bottom:14px; left:16px; z-index:2;
-  font-size:10px; color:rgba(255,255,255,0.55); letter-spacing:2px; text-transform:uppercase;
-}
-#tile-photos-counter {
-  position:absolute; bottom:16px; right:14px; z-index:2;
-  display:flex; gap:4px; align-items:center;
-}
-.photo-dot { width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,0.30); transition:background 0.3s; }
-.photo-dot.on { background:white; }
-#tile-photos-empty {
-  position:absolute; inset:0; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:10px;
-  color:var(--muted); font-size:12px; z-index:2; text-align:center; padding:20px;
-}
-#tile-photos-empty span { font-size:34px; }
+    button, input, textarea, select { font: inherit; }
 
-/* UPCOMING — mitte unten */
-#tile-upcoming {
-  grid-column:2; grid-row:2;
-  display:flex; flex-direction:column;
-  padding:14px 16px; overflow:hidden;
-}
-.section-header {
-  display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;
-}
-.section-title { font-size:10px; font-weight:600; color:var(--accent); letter-spacing:2.5px; text-transform:uppercase; }
-.add-btn {
-  background:rgba(200,169,110,0.14); border:1px solid rgba(200,169,110,0.28);
-  border-radius:8px; color:var(--accent); font-size:16px;
-  width:26px; height:26px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; transition:all 0.2s;
-}
-.add-btn:hover { background:rgba(200,169,110,0.28); }
-#upcoming-list { overflow-y:auto; flex:1; }
-#upcoming-list::-webkit-scrollbar { width:2px; }
-#upcoming-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:1px; }
-.upcoming-item {
-  display:flex; gap:10px; padding:7px 0;
-  border-bottom:1px solid rgba(255,255,255,0.06);
-  align-items:center; cursor:pointer;
-}
-.upcoming-item:last-child { border-bottom:none; }
-.up-date {
-  display:flex; flex-direction:column; align-items:center;
-  min-width:32px; background:rgba(255,255,255,0.06);
-  border-radius:8px; padding:4px 5px;
-}
-.up-day { font-size:15px; font-weight:600; line-height:1; color:var(--accent); }
-.up-mon { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:1px; }
-.up-info { flex:1; }
-.up-name { font-size:12px; font-weight:500; }
-.up-time { font-size:10px; color:var(--muted); margin-top:1px; }
-.no-events { color:var(--muted); font-size:12px; text-align:center; padding:12px 0; }
+    .btn, .file-label{
+      border:none;
+      border-radius:999px;
+      padding:10px 14px;
+      color:var(--text);
+      background:rgba(255,255,255,.10);
+      border:1px solid var(--tile-border);
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
 
-/* CALENDAR — rechts voll */
-#tile-calendar {
-  grid-column:3; grid-row:1/3;
-  display:flex; flex-direction:column;
-  padding:16px 14px;
-}
-.cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-.cal-title { font-family:'Playfair Display',serif; font-size:17px; font-weight:400; }
-.cal-nav { display:flex; gap:5px; }
-.cal-nav-btn {
-  background:rgba(255,255,255,0.06); border:1px solid var(--border-light);
-  border-radius:7px; color:var(--muted); font-size:13px;
-  width:27px; height:27px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; transition:all 0.2s;
-}
-.cal-nav-btn:hover { border-color:var(--accent); color:var(--accent); }
-.cal-weekdays { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; margin-bottom:4px; }
-.cal-weekday { text-align:center; font-size:9px; font-weight:600; color:var(--muted); letter-spacing:0.8px; text-transform:uppercase; padding:3px 0; }
-.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; flex:1; }
-.cal-day {
-  aspect-ratio:1; display:flex; align-items:center; justify-content:center;
-  border-radius:9px; cursor:pointer; transition:all 0.15s;
-  position:relative; font-size:12px;
-}
-.cal-day:hover { background:rgba(255,255,255,0.10); }
-.cal-day.other-month { color:rgba(244,241,236,0.18); }
-.cal-day.today { background:rgba(200,169,110,0.22); color:var(--accent); font-weight:700; border:1px solid rgba(200,169,110,0.45); }
-.cal-day.selected { background:var(--accent); color:var(--bg); font-weight:700; }
-.cal-day.has-event::after { content:''; position:absolute; bottom:2px; width:3px; height:3px; border-radius:50%; background:var(--accent2); }
-.cal-day.today.has-event::after, .cal-day.selected.has-event::after { background:var(--bg); }
+    .btn:hover, .file-label:hover{background:rgba(255,255,255,.14)}
+    .btn.primary{background:var(--accent); color:#0a1018; font-weight:700}
+    .btn.danger{background:rgba(255,141,141,.18); border-color:rgba(255,141,141,.35)}
+    .file-label input{display:none}
 
-#day-events-panel {
-  margin-top:8px; padding-top:8px;
-  border-top:1px solid var(--border-light);
-  overflow-y:auto; max-height:100px;
-}
-#day-events-panel::-webkit-scrollbar { width:2px; }
-#day-events-panel::-webkit-scrollbar-thumb { background:var(--border); border-radius:1px; }
-.event-item {
-  display:flex; align-items:center; gap:8px;
-  padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px;
-}
-.event-item:last-child { border-bottom:none; }
-.ev-dot { width:5px; height:5px; border-radius:50%; background:var(--accent2); flex-shrink:0; }
-.ev-dot.gcal { background:#4285f4; }
-.ev-time { color:var(--accent); min-width:32px; font-size:10px; }
-.ev-name { flex:1; }
-.ev-del {
-  background:none; border:none; color:var(--muted);
-  cursor:pointer; font-size:12px; opacity:0; transition:opacity 0.2s; padding:0 2px;
-}
-.event-item:hover .ev-del { opacity:1; }
-.ev-del:hover { color:var(--danger); }
+    .workspace{
+      min-height:0;
+      overflow:auto;
+      border-radius:28px;
+    }
 
-/* ══ PORTRAIT ══ */
-@media (orientation:portrait) {
-  #app {
-    grid-template-columns:1fr 1fr;
-    grid-template-rows:auto auto 1fr 140px;
-    gap:12px; padding:13px;
-  }
-  #tile-clock { grid-column:1/3; grid-row:1; flex-direction:row; align-items:center; padding:18px 20px; }
-  #tile-clock-top { flex:1; }
-  #time-display { font-size:clamp(44px,13vw,76px); }
-  #controls-bar { margin-top:0; flex-direction:column; gap:6px; }
-  .ctrl-btn { font-size:12px; padding:9px 14px; }
-  #tile-weather { grid-column:1; grid-row:2; padding:14px 16px; }
-  #weather-temp { font-size:38px; } #weather-icon { font-size:34px; }
-  #tile-photos { grid-column:2; grid-row:2; min-height:130px; }
-  #tile-calendar { grid-column:1/3; grid-row:3; padding:14px; }
-  #day-events-panel { max-height:110px; }
-  #tile-upcoming { grid-column:1/3; grid-row:4; padding:14px 16px; }
-}
+    .grid{
+      min-height:100%;
+      display:grid;
+      grid-template-columns:repeat(12,minmax(0,1fr));
+      grid-auto-rows:88px;
+      gap:var(--gap);
+    }
 
-/* ══ MODALS ══ */
-.modal-overlay {
-  position:fixed; inset:0; z-index:100;
-  background:rgba(10,10,18,0.78);
-  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-  display:flex; align-items:center; justify-content:center;
-  opacity:0; pointer-events:none; transition:opacity 0.25s;
-}
-.modal-overlay.open { opacity:1; pointer-events:all; }
-.modal {
-  background:#16161f; border:1px solid var(--border);
-  border-radius:26px; padding:26px 28px;
-  width:min(480px,92vw); max-height:88vh; overflow-y:auto;
-  transform:translateY(16px); transition:transform 0.25s;
-}
-.modal-overlay.open .modal { transform:translateY(0); }
-.modal::-webkit-scrollbar { width:3px; }
-.modal::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-.modal h2 { font-family:'Playfair Display',serif; font-size:21px; font-weight:400; margin-bottom:18px; }
-.modal label {
-  display:block; font-size:10px; font-weight:600; color:var(--accent);
-  letter-spacing:1.5px; text-transform:uppercase; margin-bottom:5px; margin-top:13px;
-}
-.modal input {
-  width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--border-light);
-  border-radius:12px; color:var(--text); font-family:'DM Sans',sans-serif;
-  font-size:14px; padding:10px 14px; outline:none; transition:border-color 0.2s; -webkit-appearance:none;
-}
-.modal input:focus { border-color:var(--accent); }
-.modal-footer { display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
-.btn { border-radius:12px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; padding:10px 20px; cursor:pointer; transition:all 0.2s; border:none; }
-.btn-primary { background:var(--accent); color:var(--bg); }
-.btn-primary:hover { background:#d4b57a; }
-.btn-secondary { background:rgba(255,255,255,0.07); border:1px solid var(--border-light); color:var(--muted); }
-.btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
-.btn-danger { background:rgba(224,112,112,0.12); border:1px solid rgba(224,112,112,0.30); color:var(--danger); }
-.btn-danger:hover { background:rgba(224,112,112,0.22); }
-.settings-section { margin-top:16px; padding-top:14px; border-top:1px solid var(--border-light); }
-.settings-section:first-child { margin-top:0; border-top:none; padding-top:0; }
-.settings-section h3 { font-size:10px; font-weight:600; color:var(--accent); letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; }
-.hint { font-size:11px; color:var(--muted); line-height:1.55; margin-top:6px; }
-.hint code { color:var(--accent2); font-size:10px; }
-#drop-area {
-  border:2px dashed var(--border-light); border-radius:13px; padding:16px;
-  text-align:center; cursor:pointer; transition:all 0.2s; color:var(--muted); font-size:12px;
-}
-#drop-area:hover, #drop-area.dragover { border-color:var(--accent); background:rgba(200,169,110,0.05); color:var(--accent); }
-#drop-area .di { font-size:26px; display:block; margin-bottom:5px; }
-.tab-btn {
-  flex:1; background:rgba(255,255,255,0.05); border:1px solid var(--border-light);
-  border-radius:9px; color:var(--muted); font-family:'DM Sans',sans-serif;
-  font-size:12px; padding:8px 10px; cursor:pointer; transition:all 0.2s;
-}
-.tab-btn.active { background:rgba(200,169,110,0.18); border-color:var(--accent); color:var(--accent); }
-.photo-thumb { width:50px; height:50px; border-radius:9px; object-fit:cover; border:2px solid var(--border-light); cursor:pointer; transition:border-color 0.2s; }
-.photo-thumb:hover { border-color:var(--danger); }
-#logo { position:fixed; bottom:14px; right:18px; z-index:2; font-family:'Playfair Display',serif; font-size:11px; color:rgba(255,255,255,0.12); letter-spacing:3px; text-transform:uppercase; pointer-events:none; }
+    .tile{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+      overflow:hidden;
+      border-radius:var(--radius);
+      background:var(--tile);
+      border:1px solid var(--tile-border);
+      backdrop-filter:blur(14px);
+      box-shadow:var(--shadow);
+    }
 
-/* ── SPOTIFY WIDGET ── */
-#spotify-bar {
-  margin-top:10px;
-  padding:14px 16px;
-  border-radius:18px;
-  cursor:pointer;
-  background:
-    linear-gradient(135deg, rgba(30,215,96,0.22) 0%, rgba(15,15,25,0.72) 65%),
-    rgba(255,255,255,0.05);
-  border:1px solid rgba(30,215,96,0.22);
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.28),
-    inset 0 1px 0 rgba(255,255,255,0.08);
-  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-}
-#spotify-bar:hover,
-#spotify-bar:active{
-  transform:translateY(-1px) scale(1.01);
-  border-color:rgba(30,215,96,0.42);
-  box-shadow:
-    0 14px 34px rgba(0,0,0,0.34),
-    0 0 0 1px rgba(30,215,96,0.10) inset;
-}
-.spotify-widget-inner{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:14px;
-}
-.spotify-left{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  min-width:0;
-}
-.spotify-icon-wrap{
-  width:52px;
-  height:52px;
-  border-radius:16px;
-  background:linear-gradient(135deg, #1ed760 0%, #0f8f43 100%);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  box-shadow:0 8px 22px rgba(30,215,96,0.28);
-  flex-shrink:0;
-}
-.spotify-icon{
-  font-size:24px;
-  color:#08110b;
-  font-weight:700;
-  line-height:1;
-}
-.spotify-text{
-  min-width:0;
-}
-.spotify-title{
-  font-size:14px;
-  font-weight:600;
-  color:#ffffff;
-  letter-spacing:.2px;
-}
-.spotify-subtitle{
-  font-size:10px;
-  color:rgba(244,241,236,0.62);
-  margin-top:3px;
-  letter-spacing:.8px;
-  text-transform:uppercase;
-}
-.spotify-right{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-shrink:0;
-}
-.spotify-badge{
-  font-size:9px;
-  font-weight:700;
-  letter-spacing:1.2px;
-  text-transform:uppercase;
-  color:#1ed760;
-  background:rgba(30,215,96,0.12);
-  border:1px solid rgba(30,215,96,0.24);
-  padding:5px 8px;
-  border-radius:999px;
-}
-.spotify-arrow{
-  font-size:28px;
-  line-height:1;
-  color:rgba(255,255,255,0.72);
-  margin-top:-1px;
-}
-.spotify-mini-bars{
-  display:flex;
-  align-items:flex-end;
-  gap:4px;
-  height:22px;
-  margin-top:12px;
-  opacity:.9;
-}
-.spotify-mini-bars span{
-  width:4px;
-  border-radius:999px;
-  background:linear-gradient(180deg,#1ed760 0%, rgba(30,215,96,0.28) 100%);
-  animation:spotifyBars 1.1s ease-in-out infinite;
-}
-.spotify-mini-bars span:nth-child(1){height:10px;animation-delay:.0s;}
-.spotify-mini-bars span:nth-child(2){height:18px;animation-delay:.15s;}
-.spotify-mini-bars span:nth-child(3){height:13px;animation-delay:.3s;}
-.spotify-mini-bars span:nth-child(4){height:20px;animation-delay:.45s;}
-@keyframes spotifyBars{
-  0%,100%{transform:scaleY(.55);opacity:.65;}
-  50%{transform:scaleY(1);opacity:1;}
-}
-</style>
+    .tile.dragging{opacity:.45}
+    .tile.drop-target{outline:2px dashed rgba(255,255,255,.45); outline-offset:-8px}
+
+    .tile-inner{
+      height:100%;
+      min-height:0;
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .tile-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .tile-title{
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+
+    .tile-tools{
+      display:none;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    body.edit-mode .tile-tools{display:flex}
+
+    .icon-btn{
+      width:30px;
+      height:30px;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      color:var(--text);
+      background:rgba(255,255,255,.10);
+      border:1px solid var(--tile-border);
+    }
+
+    .clock-time{
+      margin-top:auto;
+      font-size:clamp(38px,5vw,76px);
+      line-height:1;
+      font-weight:800;
+    }
+
+    .clock-date{
+      font-size:clamp(16px,1.6vw,22px);
+      color:var(--muted);
+    }
+
+    .weather-city{
+      font-size:clamp(22px,2vw,34px);
+      font-weight:700;
+    }
+
+    .weather-temp{
+      font-size:clamp(42px,4vw,74px);
+      line-height:1;
+      font-weight:800;
+    }
+
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+
+    .forecast{
+      margin-top:auto;
+      display:grid;
+      grid-template-columns:repeat(5,minmax(0,1fr));
+      gap:8px;
+    }
+
+    .forecast-item{
+      padding:10px 8px;
+      border-radius:14px;
+      text-align:center;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.06);
+      font-size:12px;
+    }
+
+    .calendar-month{
+      font-size:clamp(18px,1.8vw,28px);
+      font-weight:700;
+    }
+
+    .calendar-grid{
+      display:grid;
+      grid-template-columns:repeat(7,minmax(0,1fr));
+      gap:6px;
+      text-align:center;
+      font-size:13px;
+    }
+
+    .dow{
+      color:var(--muted);
+      padding:4px 0;
+    }
+
+    .day{
+      padding:8px 0;
+      border-radius:12px;
+      background:rgba(255,255,255,.04);
+      min-height:34px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .day.empty{background:transparent}
+    .day.today{
+      background:var(--accent);
+      color:#0a1018;
+      font-weight:800;
+    }
+    .day.has-event{
+      outline:2px solid rgba(143,240,201,.75);
+      outline-offset:-2px;
+    }
+
+    .agenda{
+      margin-top:auto;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      overflow:auto;
+      min-height:0;
+    }
+
+    .agenda-item{
+      padding:10px 12px;
+      border-radius:14px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.06);
+    }
+
+    .agenda-item strong{display:block; margin-bottom:4px}
+
+    .slide-stage{
+      flex:1;
+      min-height:0;
+      overflow:hidden;
+      border-radius:18px;
+      background:rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .slide-stage img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .slide-empty{
+      color:var(--muted);
+      text-align:center;
+      padding:24px;
+    }
+
+    .slidestrip{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+      max-height:84px;
+      overflow:hidden;
+    }
+
+    .slidestrip img{
+      width:100%;
+      height:76px;
+      object-fit:cover;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    iframe{
+      width:100%;
+      height:100%;
+      border:none;
+      border-radius:18px;
+      background:rgba(0,0,0,.18);
+    }
+
+    .settings{
+      position:fixed;
+      left:14px;
+      right:14px;
+      bottom:14px;
+      z-index:50;
+      display:none;
+      max-height:72vh;
+      overflow:auto;
+      padding:16px;
+      border-radius:26px;
+      background:rgba(17,20,28,.96);
+      border:1px solid var(--tile-border);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(16px);
+    }
+
+    .settings.open{display:block}
+
+    .settings-top{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom:12px;
+    }
+
+    .settings-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+    }
+
+    .settings label{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .settings input, .settings textarea{
+      width:100%;
+      min-height:46px;
+      padding:12px;
+      border-radius:16px;
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border:1px solid var(--tile-border);
+      resize:vertical;
+    }
+
+    .settings textarea{min-height:110px}
+
+    @media (max-width:1100px){
+      .grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+      .settings-grid{grid-template-columns:1fr}
+    }
+
+    @media (max-width:700px){
+      .grid{grid-template-columns:repeat(2,minmax(0,1fr)); grid-auto-rows:120px}
+    }
+  </style>
 </head>
 <body>
-
-<div id="bg-slideshow"><div id="bg-overlay"></div></div>
-
-<div id="app">
-
-  <!-- CLOCK -->
-  <div class="tile" id="tile-clock">
-    <div id="tile-clock-top">
-      <div id="time-display">
-        <span id="hours">--</span><span class="colon">:</span><span id="minutes">--</span><span class="secs" id="seconds">--</span>
-      </div>
-      <div id="date-display">Lade…</div>
-    </div>
-    <div id="controls-bar">
-      <button class="ctrl-btn" onclick="openSettings()">⚙ Einstellungen</button>
-      <button class="ctrl-btn" onclick="openAddEvent()">＋ Termin</button>
-      <button class="ctrl-btn" id="ss-toggle" onclick="toggleSS()">⏸ Pause</button>
-    </div>
-
-    <!-- SPOTIFY -->
-    <div id="spotify-bar" onclick="openSpotifyApp()">
-      <div class="spotify-widget-inner">
-        <div class="spotify-left">
-          <div class="spotify-icon-wrap">
-            <div class="spotify-icon">♫</div>
-          </div>
-          <div class="spotify-text">
-            <div class="spotify-title">Spotify</div>
-            <div class="spotify-subtitle">Tippen zum Öffnen</div>
-          </div>
-        </div>
-
-        <div class="spotify-right">
-          <div class="spotify-badge">LIVE</div>
-          <div class="spotify-arrow">›</div>
-        </div>
-      </div>
-
-      <div class="spotify-mini-bars">
-        <span></span><span></span><span></span><span></span>
-      </div>
-    </div>
+<div class="app">
+  <div class="toolbar">
+    <div class="brand">Home Dashboard</div>
+    <button class="btn" id="editBtn">Bearbeiten</button>
+    <label class="file-label">Bilder hochladen <input id="imageInput" type="file" accept="image/*" multiple></label>
+    <button class="btn" id="settingsBtn">Einstellungen</button>
+    <button class="btn" id="addTileBtn">+ Kachel</button>
+    <div class="spacer"></div>
+    <button class="btn danger" id="resetBtn">Reset</button>
   </div>
 
-  <!-- WEATHER -->
-  <div class="tile" id="tile-weather">
-    <div class="weather-main">
-      <div id="weather-icon">🌤</div>
-      <div id="weather-temp">--<sup>°</sup></div>
-      <div class="weather-meta">
-        <div id="weather-desc">Lade…</div>
-        <div id="weather-details">Luftf.: --% · Wind: -- km/h</div>
-        <div id="weather-city">DÜSSELDORF</div>
-      </div>
-    </div>
-    <div id="weather-forecast"></div>
-  </div>
-
-  <!-- PHOTOS -->
-  <div class="tile" id="tile-photos" onclick="nextPhoto()">
-    <div id="tile-photos-inner"></div>
-    <div id="tile-photos-gradient"></div>
-    <div id="tile-photos-counter"></div>
-    <div id="tile-photos-label">FOTOS</div>
-    <div id="tile-photos-empty">
-      <span>🖼</span>
-      Fotos laden<br>in Einstellungen
-    </div>
-  </div>
-
-  <!-- UPCOMING -->
-  <div class="tile" id="tile-upcoming">
-    <div class="section-header">
-      <div class="section-title">Nächste Termine</div>
-      <button class="add-btn" onclick="openAddEvent()">+</button>
-    </div>
-    <div id="upcoming-list"></div>
-  </div>
-
-  <!-- CALENDAR -->
-  <div class="tile" id="tile-calendar">
-    <div class="cal-header">
-      <div class="cal-title" id="cal-month-label">—</div>
-      <div class="cal-nav">
-        <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
-        <button class="cal-nav-btn" onclick="goToday()">●</button>
-        <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
-      </div>
-    </div>
-    <div class="cal-weekdays">
-      <div class="cal-weekday">Mo</div><div class="cal-weekday">Di</div><div class="cal-weekday">Mi</div>
-      <div class="cal-weekday">Do</div><div class="cal-weekday">Fr</div><div class="cal-weekday">Sa</div><div class="cal-weekday">So</div>
-    </div>
-    <div class="cal-grid" id="cal-grid"></div>
-    <div id="day-events-panel">
-      <div class="section-header" style="margin-bottom:8px">
-        <div class="section-title" id="day-label">Heute</div>
-        <button class="add-btn" onclick="openAddEvent()" style="width:22px;height:22px;font-size:14px">+</button>
-      </div>
-      <div id="events-list"></div>
-    </div>
-  </div>
-
-</div>
-
-<div id="logo">MyAnnaLove</div>
-
-<!-- ADD EVENT -->
-<div class="modal-overlay" id="modal-add">
-  <div class="modal">
-    <h2>Neuer Termin</h2>
-    <label>Datum</label><input type="date" id="ev-date">
-    <label>Uhrzeit (optional)</label><input type="time" id="ev-time">
-    <label>Bezeichnung</label><input type="text" id="ev-title" placeholder="z.B. Zahnarzt, Geburtstag…">
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modal-add')">Abbrechen</button>
-      <button class="btn btn-primary" onclick="saveEvent()">Speichern</button>
-    </div>
+  <div class="workspace">
+    <div class="grid" id="grid"></div>
   </div>
 </div>
 
-<!-- SETTINGS -->
-<div class="modal-overlay" id="modal-settings">
-  <div class="modal">
-    <h2>Einstellungen</h2>
-
-    <div class="settings-section">
-      <h3>Hintergrund</h3>
-      <label>Farbe 1</label>
-      <input type="color" id="set-bg1" value="#0d0d1a">
-      <label>Farbe 2</label>
-      <input type="color" id="set-bg2" value="#1a0a2e">
-      <label>Richtung</label>
-      <select id="set-bg-dir" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border-light);border-radius:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:10px 14px;outline:none;-webkit-appearance:none;">
-        <option value="135deg">Diagonal</option>
-        <option value="to bottom">Von oben nach unten</option>
-        <option value="to right">Von links nach rechts</option>
-        <option value="to bottom right">Diagonal rechts unten</option>
-      </select>
-      <label>Transparenz der Kacheln</label>
-      <input type="range" id="set-tile-opacity" min="20" max="90" value="52" style="width:100%;accent-color:var(--accent)">
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">
-        Weniger = mehr transparent · Mehr = dunkler
-      </div>
-    </div>
-
-    <div class="settings-section">
-      <h3>Wetter API</h3>
-      <label>OpenWeatherMap API Key</label>
-      <input type="text" id="set-apikey" placeholder="Kostenlos: openweathermap.org/api">
-    </div>
-
-    <div class="settings-section">
-      <h3>Fotos / Slideshow</h3>
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <button class="tab-btn active" id="tab-local" onclick="switchTab('local')">📁 Tablet-Ordner</button>
-        <button class="tab-btn" id="tab-gdrive" onclick="switchTab('gdrive')">☁️ Google Drive</button>
-      </div>
-      <div id="tab-panel-local">
-        <div id="drop-area" onclick="document.getElementById('file-input').click()">
-          <span class="di">🖼</span>Fotos antippen
-        </div>
-        <input type="file" id="file-input" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
-        <button class="btn btn-secondary" style="margin-top:8px;font-size:12px;width:100%" onclick="document.getElementById('folder-input').click()">📂 Ganzen Ordner auswählen</button>
-        <input type="file" id="folder-input" accept="image/*" multiple webkitdirectory style="display:none" onchange="handleFiles(this.files)">
-        <div id="photo-list"></div>
-      </div>
-      <div id="tab-panel-gdrive" style="display:none">
-        <label>Google Drive Ordner-ID</label>
-        <input type="text" id="set-gdrive-id" placeholder="z.B. 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs">
-        <p class="hint">Ordner öffnen → Link kopieren → ID aus URL:<br><code>drive.google.com/drive/folders/<strong style="color:var(--accent)">ID</strong></code><br>Ordner muss öffentlich sein.</p>
-        <button class="btn btn-secondary" style="margin-top:10px;font-size:12px;width:100%" onclick="loadGDrive()">🔄 Fotos laden</button>
-        <div id="gdrive-status" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center"></div>
-      </div>
-      <div style="margin-top:14px">
-        <label>Anzeigedauer pro Foto (Sekunden)</label>
-        <input type="number" id="set-interval" value="8" min="3" max="60">
-      </div>
-    </div>
-
-    <div class="settings-section">
-      <h3>Google Kalender Sync</h3>
-      <label>iCal URL</label>
-      <input type="text" id="set-gcal" placeholder="https://calendar.google.com/calendar/ical/…">
-      <p class="hint">Kalender-Einstellungen → Kalenderintegration → <strong>Geheime Adresse im iCal-Format</strong></p>
-      <button class="btn btn-secondary" style="margin-top:10px;font-size:12px" onclick="syncGCal()">🔄 Jetzt synchronisieren</button>
-    </div>
-
-    <div class="settings-section">
-      <h3>Daten</h3>
-      <button class="btn btn-danger" style="font-size:12px" onclick="clearAllEvents()">Alle Termine löschen</button>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modal-settings')">Schließen</button>
-      <button class="btn btn-primary" onclick="saveSettings()">Speichern</button>
-    </div>
+<div class="settings" id="settingsPanel">
+  <div class="settings-top">
+    <strong style="font-size:18px">Einstellungen</strong>
+    <div class="spacer"></div>
+    <button class="btn" id="closeSettings">Schließen</button>
+  </div>
+  <div class="settings-grid">
+    <label>Stadt
+      <input id="cityInput" placeholder="z. B. Düsseldorf">
+    </label>
+    <label>Slideshow Sekunden
+      <input id="slideSecondsInput" type="number" min="3" max="300">
+    </label>
+    <label>Spotify Embed URL
+      <input id="spotifyInput" placeholder="https://open.spotify.com/embed/...">
+    </label>
+    <label>YouTube Embed URL
+      <input id="youtubeInput" placeholder="https://www.youtube.com/embed/...">
+    </label>
+    <label>Termine (eine Zeile pro Termin: 2026-04-06 18:00 | Titel)
+      <textarea id="eventsInput"></textarea>
+    </label>
+    <label>Rezepte (eine Zeile pro Rezept: Titel | Zeit | Zutaten)
+      <textarea id="recipesInput"></textarea>
+    </label>
+  </div>
+  <div style="display:flex; gap:10px; margin-top:14px">
+    <button class="btn primary" id="saveSettingsBtn">Speichern</button>
   </div>
 </div>
 
 <script>
-// STATE
-let state = {
-  events:{}, photos:[], gdrivePhotos:[],
-  apiKey:'769c5861cd255a3982bafb1680abf194',
-  gcalUrl:'', gdriveId:'', interval:8
-};
-let calYear,calMonth,selectedDate;
-let tileIdx=0, bgIdx=0, ssRunning=true, ssTimer=null;
-const DAYS=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
-const MONTHS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-const MS=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
-const WI={'01d':'☀️','01n':'🌙','02d':'⛅','02n':'🌙','03d':'☁️','03n':'☁️','04d':'☁️','04n':'☁️','09d':'🌧','09n':'🌧','10d':'🌦','10n':'🌧','11d':'⛈','11n':'⛈','13d':'❄️','13n':'❄️','50d':'🌫','50n':'🌫'};
+(function(){
+  "use strict";
 
-function init() {
-  loadState();
-  const n=new Date(); calYear=n.getFullYear(); calMonth=n.getMonth(); selectedDate=ds(n);
-  clock(); setInterval(clock,1000);
-  renderCal(); renderDayEvs(selectedDate); renderUpcoming();
-  buildSlides(); startSS();
-  fetchWeather(); setInterval(fetchWeather,600000);
-  setupDrop(); setupModals();
-}
+  const STORAGE_KEY = "dashboard-home-fixed-v1";
 
-function loadState() { try{const s=localStorage.getItem('al3');if(s)state={...state,...JSON.parse(s)};}catch(e){} }
-function saveState() { try{localStorage.setItem('al3',JSON.stringify(state));}catch(e){} }
-
-function pad(n){return n<10?'0'+n:''+n;}
-function ds(d){return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;}
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
-// CLOCK
-function clock() {
-  const n=new Date();
-  document.getElementById('hours').textContent=pad(n.getHours());
-  document.getElementById('minutes').textContent=pad(n.getMinutes());
-  document.getElementById('seconds').textContent=pad(n.getSeconds());
-  document.getElementById('date-display').textContent=`${DAYS[n.getDay()]}, ${n.getDate()}. ${MONTHS[n.getMonth()]} ${n.getFullYear()}`;
-}
-
-// SPOTIFY OPEN
-function openSpotifyApp() {
-  const appUrl = "spotify://";
-  const webUrl = "https://open.spotify.com/";
-
-  window.location.href = appUrl;
-
-  setTimeout(() => {
-    window.open(webUrl, "_blank");
-  }, 500);
-}
-
-// WEATHER
-const DAYS_SHORT = ['So','Mo','Di','Mi','Do','Fr','Sa'];
-
-async function fetchWeather() {
-  if(!state.apiKey) return;
-  try {
-    const r=await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Düsseldorf,DE&appid=${state.apiKey}&units=metric&lang=de`);
-    const d=await r.json();
-    if(d.cod!==200) return;
-    document.getElementById('weather-icon').textContent=WI[d.weather[0].icon]||'🌤';
-    document.getElementById('weather-temp').innerHTML=`${Math.round(d.main.temp)}<sup>°</sup>`;
-    document.getElementById('weather-desc').textContent=d.weather[0].description;
-    document.getElementById('weather-details').textContent=`Luftf.: ${d.main.humidity}% · Wind: ${Math.round(d.wind.speed*3.6)} km/h`;
-
-    const f=await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=Düsseldorf,DE&appid=${state.apiKey}&units=metric&lang=de&cnt=40`);
-    const fd=await f.json();
-    if(fd.cod!=='200') return;
-
-    const days = {};
-    fd.list.forEach(item => {
-      const date = new Date(item.dt * 1000);
-      const dateStr = date.toDateString();
-      const hour = date.getHours();
-      if (!days[dateStr] || Math.abs(hour - 12) < Math.abs(new Date(days[dateStr].dt*1000).getHours() - 12)) {
-        days[dateStr] = item;
-      }
-    });
-
-    const forecasts = Object.values(days).slice(0, 5);
-    const fc = document.getElementById('weather-forecast');
-    fc.innerHTML = forecasts.map(item => {
-      const date = new Date(item.dt * 1000);
-      const dayName = DAYS_SHORT[date.getDay()];
-      const icon = WI[item.weather[0].icon] || '🌤';
-      const temp = Math.round(item.main.temp);
-      const min = Math.round(item.main.temp_min);
-      return `<div class="fc-day">
-        <div class="fc-name">${dayName}</div>
-        <div class="fc-icon">${icon}</div>
-        <div class="fc-temp">${temp}°<span>/${min}°</span></div>
-      </div>`;
-    }).join('');
-  } catch(e){ document.getElementById('weather-desc').textContent='Keine Verbindung'; }
-}
-
-// SLIDESHOW
-function allPhotos(){return[...(state.photos||[]),...(state.gdrivePhotos||[])];}
-
-function buildSlides() {
-  const ph=allPhotos();
-  const empty=document.getElementById('tile-photos-empty');
-  const label=document.getElementById('tile-photos-label');
-  const inner=document.getElementById('tile-photos-inner');
-  inner.innerHTML='';
-  if(ph.length){
-    empty.style.display='none'; label.style.display='block';
-    ph.forEach((src,i)=>{
-      const img=document.createElement('img');
-      img.src=src; img.crossOrigin='anonymous';
-      if(i===0)img.classList.add('active');
-      inner.appendChild(img);
-    });
-  } else { empty.style.display='flex'; label.style.display='none'; }
-  const bg=document.getElementById('bg-slideshow');
-  bg.querySelectorAll('img').forEach(e=>e.remove());
-  ph.forEach((src,i)=>{
-    const img=document.createElement('img');
-    img.src=src; img.crossOrigin='anonymous';
-    if(i===0)img.classList.add('active');
-    bg.appendChild(img);
-  });
-  updateDots();
-}
-
-function updateDots() {
-  const ph=allPhotos(); const n=Math.min(ph.length,10);
-  const c=document.getElementById('tile-photos-counter');
-  c.innerHTML=Array.from({length:n},(_,i)=>`<div class="photo-dot ${i===tileIdx%n?'on':''}"></div>`).join('');
-}
-
-function startSS() {
-  if(ssTimer)clearInterval(ssTimer);
-  if(allPhotos().length<2)return;
-  ssTimer=setInterval(advance,(state.interval||8)*1000);
-}
-
-function advance() {
-  const ph=allPhotos(); if(!ph.length)return;
-  const ti=document.querySelectorAll('#tile-photos-inner img');
-  if(ti.length){ti[tileIdx%ti.length].classList.remove('active');tileIdx=(tileIdx+1)%ti.length;ti[tileIdx].classList.add('active');}
-  const bi=document.querySelectorAll('#bg-slideshow img');
-  if(bi.length){bi[bgIdx%bi.length].classList.remove('active');bgIdx=(bgIdx+1)%bi.length;bi[bgIdx].classList.add('active');}
-  updateDots();
-}
-
-function nextPhoto(){advance();}
-function toggleSS(){
-  ssRunning=!ssRunning;
-  const b=document.getElementById('ss-toggle');
-  if(ssRunning){startSS();b.textContent='⏸ Pause';}
-  else{clearInterval(ssTimer);b.textContent='▶ Play';}
-}
-
-// CALENDAR
-function renderCal() {
-  document.getElementById('cal-month-label').textContent=`${MONTHS[calMonth]} ${calYear}`;
-  const grid=document.getElementById('cal-grid'); grid.innerHTML='';
-  const today=ds(new Date());
-  let sd=new Date(calYear,calMonth,1).getDay(); sd=sd===0?6:sd-1;
-  const dim=new Date(calYear,calMonth+1,0).getDate();
-  const dip=new Date(calYear,calMonth,0).getDate();
-  const tot=Math.ceil((sd+dim)/7)*7;
-  for(let i=0;i<tot;i++){
-    const cell=document.createElement('div'); cell.classList.add('cal-day');
-    let date,other=false;
-    if(i<sd){date=new Date(calYear,calMonth-1,dip-sd+i+1);other=true;}
-    else if(i>=sd+dim){date=new Date(calYear,calMonth+1,i-sd-dim+1);other=true;}
-    else{date=new Date(calYear,calMonth,i-sd+1);}
-    const d2=ds(date); cell.textContent=date.getDate();
-    if(other)cell.classList.add('other-month');
-    if(d2===today)cell.classList.add('today');
-    if(d2===selectedDate)cell.classList.add('selected');
-    if(state.events[d2]?.length)cell.classList.add('has-event');
-    cell.onclick=()=>{selectedDate=d2;renderCal();renderDayEvs(d2);};
-    grid.appendChild(cell);
-  }
-}
-function changeMonth(d){calMonth+=d;if(calMonth<0){calMonth=11;calYear--;}if(calMonth>11){calMonth=0;calYear++;}renderCal();}
-function goToday(){const n=new Date();calYear=n.getFullYear();calMonth=n.getMonth();selectedDate=ds(n);renderCal();renderDayEvs(selectedDate);}
-
-function renderDayEvs(d2) {
-  const evs=(state.events[d2]||[]).sort((a,b)=>(a.time||'99').localeCompare(b.time||'99'));
-  const lbl=document.getElementById('day-label');
-  const today=ds(new Date());
-  if(d2===today)lbl.textContent='Heute';
-  else{const x=new Date(d2+'T00:00:00');lbl.textContent=`${x.getDate()}. ${MS[x.getMonth()]}`;}
-  const list=document.getElementById('events-list');
-  if(!evs.length){list.innerHTML='<div class="no-events" style="font-size:11px">Keine Termine</div>';return;}
-  list.innerHTML=evs.map(ev=>`<div class="event-item"><div class="ev-dot ${ev.source==='gcal'?'gcal':''}"></div><div class="ev-time">${ev.time||'—'}</div><div class="ev-name">${esc(ev.title)}</div>${ev.source!=='gcal'?`<button class="ev-del" onclick="delEv('${d2}','${ev.id}')">✕</button>`:''}</div>`).join('');
-}
-
-function renderUpcoming() {
-  const list=document.getElementById('upcoming-list');
-  const today=new Date(); today.setHours(0,0,0,0);
-  const items=[];
-  for(let i=0;i<=30;i++){
-    const d2=new Date(today); d2.setDate(today.getDate()+i);
-    const dstr=ds(d2);
-    (state.events[dstr]||[]).forEach(ev=>items.push({dstr,date:d2,ev}));
-    if(items.length>=5)break;
-  }
-  if(!items.length){list.innerHTML='<div class="no-events">Keine Termine in 30 Tagen</div>';return;}
-  list.innerHTML=items.map(({dstr,date,ev})=>`<div class="upcoming-item" onclick="selDate('${dstr}')"><div class="up-date"><div class="up-day">${date.getDate()}</div><div class="up-mon">${MS[date.getMonth()]}</div></div><div class="up-info"><div class="up-name">${esc(ev.title)}</div>${ev.time?`<div class="up-time">🕐 ${ev.time}</div>`:''}</div></div>`).join('');
-}
-
-function selDate(d2){selectedDate=d2;const x=new Date(d2+'T00:00:00');calYear=x.getFullYear();calMonth=x.getMonth();renderCal();renderDayEvs(d2);}
-function delEv(d2,id){state.events[d2]=(state.events[d2]||[]).filter(e=>e.id!==id);if(!state.events[d2].length)delete state.events[d2];saveState();renderCal();renderDayEvs(d2);renderUpcoming();}
-
-function clearAllEvents(){
-  if(!confirm('Alle lokalen Termine löschen?'))return;
-  Object.keys(state.events).forEach(d2=>{state.events[d2]=state.events[d2].filter(e=>e.source==='gcal');if(!state.events[d2].length)delete state.events[d2];});
-  saveState();renderCal();renderDayEvs(selectedDate);renderUpcoming();
-}
-
-// ADD EVENT
-function openAddEvent(){document.getElementById('ev-date').value=selectedDate;document.getElementById('ev-time').value='';document.getElementById('ev-title').value='';openModal('modal-add');setTimeout(()=>document.getElementById('ev-title').focus(),300);}
-function saveEvent(){
-  const date=document.getElementById('ev-date').value;
-  const time=document.getElementById('ev-time').value;
-  const title=document.getElementById('ev-title').value.trim();
-  if(!date||!title){alert('Bitte Datum und Bezeichnung eingeben.');return;}
-  if(!state.events[date])state.events[date]=[];
-  state.events[date].push({id:Date.now().toString(36),time,title,source:'local'});
-  saveState();selDate(date);renderUpcoming();closeModal('modal-add');
-}
-
-// GCAL
-async function syncGCal(){
-  const url=state.gcalUrl;if(!url){alert('Bitte iCal URL eingeben.');return;}
-  Object.keys(state.events).forEach(d2=>{state.events[d2]=state.events[d2].filter(e=>e.source!=='gcal');if(!state.events[d2].length)delete state.events[d2];});
-  try{
-    const r=await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
-    if(!r.ok)throw new Error('Fetch failed');
-    parseIcal(await r.text());
-    saveState();renderCal();renderDayEvs(selectedDate);renderUpcoming();
-    alert('Google Kalender synchronisiert! ✓');
-  }catch(e){alert('Sync fehlgeschlagen: '+e.message);}
-}
-function parseIcal(text){
-  const lines=text.replace(/\r\n /g,'').replace(/\r\n/g,'\n').split('\n');
-  let inEv=false,ev={};
-  for(const line of lines){
-    if(line==='BEGIN:VEVENT'){inEv=true;ev={};continue;}
-    if(line==='END:VEVENT'){
-      inEv=false;
-      if(ev.dtstart&&ev.summary){
-        const d2=icalDs(ev.dtstart),time=icalTime(ev.dtstart);
-        if(d2){if(!state.events[d2])state.events[d2]=[];state.events[d2].push({id:'g'+Math.random().toString(36).slice(2),time,title:ev.summary,source:'gcal'});}
-      }continue;
-    }
-    if(!inEv)continue;
-    const[key,...rest]=line.split(':');const val=rest.join(':');const bk=key.split(';')[0];
-    if(bk==='DTSTART')ev.dtstart={key,val};
-    else if(bk==='SUMMARY')ev.summary=val.replace(/\\,/g,',').replace(/\\n/g,' ');
-  }
-}
-function icalDs(d){const v=d.val.replace(/[^0-9T]/g,'');if(!v||v.length<8)return null;return`${v.slice(0,4)}-${v.slice(4,6)}-${v.slice(6,8)}`;}
-function icalTime(d){const v=d.val;if(v.includes('T')&&v.length>=15)return`${v.slice(9,11)}:${v.slice(11,13)}`;return'';}
-
-// SETTINGS
-function openSettings(){
-  document.getElementById('set-apikey').value=state.apiKey||'';
-  document.getElementById('set-gcal').value=state.gcalUrl||'';
-  document.getElementById('set-interval').value=state.interval||8;
-  document.getElementById('set-gdrive-id').value=state.gdriveId||'';
-  document.getElementById('set-bg1').value=state.bgColor1||'#0d0d1a';
-  document.getElementById('set-bg2').value=state.bgColor2||'#1a0a2e';
-  document.getElementById('set-bg-dir').value=state.bgDir||'135deg';
-  document.getElementById('set-tile-opacity').value=state.tileOpacity||52;
-  if(state.gdrivePhotos?.length)document.getElementById('gdrive-status').textContent=`✓ ${state.gdrivePhotos.length} Fotos aus Google Drive`;
-  renderPhotoList();openModal('modal-settings');
-}
-function saveSettings(){
-  state.apiKey=document.getElementById('set-apikey').value.trim();
-  state.gcalUrl=document.getElementById('set-gcal').value.trim();
-  state.interval=parseInt(document.getElementById('set-interval').value)||8;
-  state.gdriveId=document.getElementById('set-gdrive-id').value.trim();
-  state.bgColor1=document.getElementById('set-bg1').value;
-  state.bgColor2=document.getElementById('set-bg2').value;
-  state.bgDir=document.getElementById('set-bg-dir').value;
-  state.tileOpacity=document.getElementById('set-tile-opacity').value;
-  applyBackground();
-  saveState();fetchWeather();buildSlides();startSS();closeModal('modal-settings');
-}
-
-function applyBackground(){
-  const c1=state.bgColor1||'#0d0d1a';
-  const c2=state.bgColor2||'#1a0a2e';
-  const dir=state.bgDir||'135deg';
-  const op=state.tileOpacity||52;
-  document.getElementById('bg-overlay').style.background=`linear-gradient(${dir}, ${c1} 0%, ${c2} 100%)`;
-  document.querySelectorAll('.tile').forEach(t=>{
-    t.style.background=`rgba(8,8,16,${op/100})`;
-  });
-}
-
-// PHOTOS
-function switchTab(t){
-  document.getElementById('tab-local').classList.toggle('active',t==='local');
-  document.getElementById('tab-gdrive').classList.toggle('active',t==='gdrive');
-  document.getElementById('tab-panel-local').style.display=t==='local'?'':'none';
-  document.getElementById('tab-panel-gdrive').style.display=t==='gdrive'?'':'none';
-}
-function setupDrop(){
-  const a=document.getElementById('drop-area');
-  a.addEventListener('dragover',e=>{e.preventDefault();a.classList.add('dragover');});
-  a.addEventListener('dragleave',()=>a.classList.remove('dragover'));
-  a.addEventListener('drop',e=>{e.preventDefault();a.classList.remove('dragover');handleFiles(e.dataTransfer.files);});
-}
-function handleFiles(files){
-  const imgs=Array.from(files).filter(f=>f.type.startsWith('image/'));
-  if(!imgs.length)return;
-  let done=0;
-  imgs.forEach(file=>{
-    const r=new FileReader();
-    r.onload=e=>{state.photos.push(e.target.result);if(++done===imgs.length){saveState();renderPhotoList();buildSlides();startSS();}};
-    r.readAsDataURL(file);
-  });
-}
-function renderPhotoList(){
-  const list=document.getElementById('photo-list');
-  if(!state.photos.length){list.innerHTML='';return;}
-  list.innerHTML=`<div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:11px;color:var(--muted)">${state.photos.length} Foto${state.photos.length>1?'s':''}</span><button class="btn btn-danger" style="font-size:11px;padding:4px 10px" onclick="clearPhotos()">Alle entfernen</button></div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${state.photos.map((s,i)=>`<img class="photo-thumb" src="${s}" onclick="removePhoto(${i})" title="Entfernen">`).join('')}</div>`;
-}
-function removePhoto(i){state.photos.splice(i,1);saveState();renderPhotoList();buildSlides();}
-function clearPhotos(){if(!confirm('Alle Fotos entfernen?'))return;state.photos=[];saveState();renderPhotoList();buildSlides();}
-
-async function loadGDrive(){
-  const id=document.getElementById('set-gdrive-id').value.trim();
-  if(!id){alert('Bitte Ordner-ID eingeben.');return;}
-  const status=document.getElementById('gdrive-status');
-  status.textContent='⏳ Lade…';
-
-  const tryFetch = async (proxyUrl) => {
-    const r = await fetch(proxyUrl);
-    const html = await r.text();
-    const matches = [...html.matchAll(/\/file\/d\/([a-zA-Z0-9_-]{25,})/g)];
-    return [...new Set(matches.map(m=>m[1]))];
+  const defaultState = {
+    city: "Düsseldorf",
+    coords: { lat: 51.2277, lon: 6.7735 },
+    slideSeconds: 10,
+    spotifyUrl: "https://open.spotify.com/embed/playlist/37i9dQZF1DX4WYpdgoIcn6?utm_source=generator",
+    youtubeUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
+    photos: [],
+    events: [
+      "2026-04-10 09:00 | Arzttermin",
+      "2026-04-11 15:00 | Einkauf",
+      "2026-04-12 19:00 | Abendessen"
+    ],
+    recipes: [
+      "Pasta | 20 Min | Nudeln, Tomaten, Knoblauch",
+      "Omelett | 10 Min | Eier, Salz, Pfeffer",
+      "Salat | 8 Min | Gurke, Tomate, Feta"
+    ],
+    layout: [
+      {id:"clock",type:"clock",w:4,h:2,title:"Uhr"},
+      {id:"weather",type:"weather",w:4,h:3,title:"Wetter"},
+      {id:"calendar",type:"calendar",w:4,h:3,title:"Kalender"},
+      {id:"slideshow",type:"slideshow",w:6,h:4,title:"Slideshow"},
+      {id:"agenda",type:"agenda",w:3,h:4,title:"Termine"},
+      {id:"spotify",type:"spotify",w:3,h:4,title:"Spotify"},
+      {id:"youtube",type:"youtube",w:6,h:3,title:"YouTube"},
+      {id:"recipes",type:"recipes",w:6,h:3,title:"Rezepte"}
+    ]
   };
 
-  let ids = [];
-  const folderUrl = `https://drive.google.com/embeddedfolderview?id=${id}#list`;
-
-  try {
-    ids = await tryFetch(`https://corsproxy.io/?${encodeURIComponent(folderUrl)}`);
-  } catch(e) {}
-
-  if (!ids.length) {
-    try {
-      ids = await tryFetch(`https://api.allorigins.win/get?url=${encodeURIComponent(folderUrl)}`);
-    } catch(e) {}
+  function deepCopy(obj){
+    return JSON.parse(JSON.stringify(obj));
   }
 
-  if (!ids.length) {
-    status.textContent='❌ Keine Bilder gefunden. Ordner öffentlich?';
-    return;
-  }
-
-  state.gdrivePhotos = ids.map(fileId =>
-    `https://lh3.googleusercontent.com/d/${fileId}`
-  );
-  state.gdriveId = id;
-  saveState();
-  buildSlides();
-  startSS();
-  status.textContent = `✓ ${ids.length} Fotos geladen!`;
-}
-
-// MODALS
-function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-function setupModals(){
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
-  document.querySelectorAll('.modal-overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});});
-}
-
-// ADAPTIVE TEXT COLOR
-function analyzeImageBrightness(imgEl, callback) {
-  try {
-    const canvas = document.createElement('canvas');
-    canvas.width = 50; canvas.height = 50;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(imgEl, 0, 0, 50, 50);
-    const data = ctx.getImageData(0, 0, 50, 50).data;
-    let total = 0;
-    for (let i = 0; i < data.length; i += 4) {
-      total += (data[i] * 0.299 + data[i+1] * 0.587 + data[i+2] * 0.114);
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return deepCopy(defaultState);
+      const parsed = JSON.parse(raw);
+      const state = deepCopy(defaultState);
+      if(typeof parsed.city === "string") state.city = parsed.city;
+      if(parsed.coords && Number.isFinite(parsed.coords.lat) && Number.isFinite(parsed.coords.lon)) state.coords = parsed.coords;
+      if(Number.isFinite(Number(parsed.slideSeconds))) state.slideSeconds = Math.max(3, Number(parsed.slideSeconds));
+      if(typeof parsed.spotifyUrl === "string") state.spotifyUrl = parsed.spotifyUrl;
+      if(typeof parsed.youtubeUrl === "string") state.youtubeUrl = parsed.youtubeUrl;
+      if(Array.isArray(parsed.photos)) state.photos = parsed.photos.filter(v => typeof v === "string");
+      if(Array.isArray(parsed.events)) state.events = parsed.events.filter(v => typeof v === "string");
+      if(Array.isArray(parsed.recipes)) state.recipes = parsed.recipes.filter(v => typeof v === "string");
+      if(Array.isArray(parsed.layout) && parsed.layout.length){
+        state.layout = parsed.layout.filter(item =>
+          item && typeof item.type === "string" && Number.isFinite(item.w) && Number.isFinite(item.h)
+        ).map(item => ({
+          id: String(item.id || (item.type + "-" + Date.now())),
+          type: String(item.type),
+          w: Math.max(2, Math.min(12, Number(item.w))),
+          h: Math.max(2, Math.min(6, Number(item.h))),
+          title: String(item.title || item.type)
+        }));
+        if(!state.layout.length) state.layout = deepCopy(defaultState.layout);
+      }
+      return state;
+    }catch(error){
+      return deepCopy(defaultState);
     }
-    const avg = total / (data.length / 4);
-    callback(avg);
-  } catch(e) { callback(100); }
-}
+  }
 
-function applyAdaptiveColors(brightness) {
-  const isDark = brightness < 140;
-  const textColor = isDark ? '#f4f1ec' : '#1a1a1a';
-  const mutedColor = isDark ? 'rgba(244,241,236,0.55)' : 'rgba(20,20,20,0.65)';
-  const accentColor = isDark ? '#c8a96e' : '#8a6030';
+  let state = loadState();
+  const grid = document.getElementById("grid");
+  const settingsPanel = document.getElementById("settingsPanel");
+  let slideshowIndex = 0;
+  let slideTimer = null;
 
-  document.documentElement.style.setProperty('--text', textColor);
-  document.documentElement.style.setProperty('--muted', mutedColor);
-  document.documentElement.style.setProperty('--accent', accentColor);
-}
+  function saveState(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
 
-function checkAdaptiveColor() {
-  const activeImg = document.querySelector('#bg-slideshow img.active');
-  if (!activeImg || !activeImg.complete) return;
-  analyzeImageBrightness(activeImg, applyAdaptiveColors);
-}
+  function textToEmbedYoutube(value){
+    value = (value || "").trim();
+    if(!value) return defaultState.youtubeUrl;
+    if(value.includes("/embed/")) return value;
+    const match = value.match(/[?&]v=([^&]+)/) || value.match(/youtu\.be\/([^?&]+)/);
+    if(match && match[1]) return "https://www.youtube.com/embed/" + match[1];
+    return value;
+  }
 
-const _origAdvance = advance;
-advance = function() {
-  _origAdvance();
-  setTimeout(checkAdaptiveColor, 2600);
-};
+  function textToEmbedSpotify(value){
+    value = (value || "").trim();
+    if(!value) return defaultState.spotifyUrl;
+    if(value.includes("/embed/")) return value;
+    return value.replace("open.spotify.com/", "open.spotify.com/embed/");
+  }
 
-init();
-applyBackground();
-setTimeout(checkAdaptiveColor, 1000);
+  function cycleTileSize(item){
+    const sizes = [
+      {w:4,h:2},
+      {w:4,h:3},
+      {w:6,h:3},
+      {w:6,h:4}
+    ];
+    const idx = sizes.findIndex(s => s.w === item.w && s.h === item.h);
+    const next = sizes[(idx + 1 + sizes.length) % sizes.length];
+    item.w = next.w;
+    item.h = next.h;
+  }
+
+  function escapeHtml(str){
+    return String(str)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function formatEvent(line){
+    const parts = (line || "").split("|").map(s => s.trim());
+    const when = parts[0] || "";
+    const title = parts[1] || parts[0] || "Termin";
+    return '<div class="agenda-item"><strong>' + escapeHtml(title) + '</strong><div class="muted small">' + escapeHtml(when) + '</div></div>';
+  }
+
+  function formatRecipe(line){
+    const p = (line || "").split("|").map(s => s.trim());
+    return '<div class="agenda-item"><strong>' + escapeHtml(p[0] || "Rezept") + '</strong><div class="muted small">' + escapeHtml(p[1] || "") + '</div><div class="small">' + escapeHtml(p[2] || "") + '</div></div>';
+  }
+
+  function createCalendarHTML(){
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const first = new Date(year, month, 1);
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    const startDay = (first.getDay() + 6) % 7;
+    const monthTitle = now.toLocaleDateString("de-DE",{month:"long",year:"numeric"});
+    const eventDays = new Set(
+      (state.events || []).map(line => {
+        const raw = String(line).split("|")[0].trim().split(" ")[0];
+        return raw;
+      })
+    );
+
+    let html = '<div class="calendar-month">' + escapeHtml(monthTitle) + '</div>';
+    html += '<div class="calendar-grid">';
+    ["Mo","Di","Mi","Do","Fr","Sa","So"].forEach(d => html += '<div class="dow">' + d + '</div>');
+    for(let i=0;i<startDay;i++) html += '<div class="day empty"></div>';
+    for(let d=1; d<=lastDate; d++){
+      const dateKey = year + "-" + String(month + 1).padStart(2,"0") + "-" + String(d).padStart(2,"0");
+      const classes = ["day"];
+      if(d === now.getDate()) classes.push("today");
+      if(eventDays.has(dateKey)) classes.push("has-event");
+      html += '<div class="' + classes.join(" ") + '">' + d + '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function weatherCodeLabel(code){
+    const map = {
+      0:"Klar",1:"Überwiegend klar",2:"Teilweise bewölkt",3:"Bewölkt",
+      45:"Nebel",48:"Raureifnebel",51:"Leichter Nieselregen",53:"Nieselregen",55:"Starker Nieselregen",
+      61:"Leichter Regen",63:"Regen",65:"Starker Regen",71:"Leichter Schnee",73:"Schnee",75:"Starker Schneefall",
+      80:"Regenschauer",81:"Starke Schauer",82:"Sehr starke Schauer",95:"Gewitter",96:"Gewitter mit Hagel",99:"Starkes Gewitter"
+    };
+    return map[code] || "Aktuell";
+  }
+
+  function weatherCodeIcon(code){
+    if([0].includes(code)) return "☀️";
+    if([1,2].includes(code)) return "🌤️";
+    if([3].includes(code)) return "☁️";
+    if([45,48].includes(code)) return "🌫️";
+    if([51,53,55,61,63,65,80,81,82].includes(code)) return "🌧️";
+    if([71,73,75].includes(code)) return "❄️";
+    if([95,96,99].includes(code)) return "⛈️";
+    return "⛅";
+  }
+
+  async function geocodeCity(city){
+    try{
+      const res = await fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(city) + "&count=1&language=de&format=json");
+      const data = await res.json();
+      if(data && data.results && data.results[0]){
+        state.coords = {lat:data.results[0].latitude, lon:data.results[0].longitude};
+        state.city = data.results[0].name;
+        saveState();
+      }
+    }catch(error){}
+  }
+
+  async function loadWeather(){
+    const tempEl = document.getElementById("weatherTemp");
+    const cityEl = document.getElementById("weatherCity");
+    const descEl = document.getElementById("weatherDesc");
+    const metaEl = document.getElementById("weatherMeta");
+    const iconEl = document.getElementById("weatherIcon");
+    const forecastEl = document.getElementById("weatherForecast");
+    if(!tempEl || !cityEl || !descEl || !metaEl || !iconEl || !forecastEl) return;
+
+    cityEl.textContent = state.city;
+
+    try{
+      const lat = state.coords.lat;
+      const lon = state.coords.lon;
+      const url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto";
+      const res = await fetch(url);
+      if(!res.ok) throw new Error("weather");
+      const data = await res.json();
+
+      tempEl.textContent = Math.round(data.current.temperature_2m) + "°";
+      descEl.textContent = weatherCodeLabel(data.current.weather_code);
+      metaEl.textContent = "Gefühlt " + Math.round(data.current.apparent_temperature) + "° · Wind " + Math.round(data.current.wind_speed_10m) + " km/h";
+      iconEl.textContent = weatherCodeIcon(data.current.weather_code);
+
+      forecastEl.innerHTML = "";
+      data.daily.time.slice(0,5).forEach((day, idx) => {
+        const date = new Date(day);
+        const div = document.createElement("div");
+        div.className = "forecast-item";
+        div.innerHTML = '<div><strong>' + date.toLocaleDateString("de-DE",{weekday:"short"}) + '</strong></div>'
+          + '<div style="font-size:20px; margin:6px 0">' + weatherCodeIcon(data.daily.weather_code[idx]) + '</div>'
+          + '<div>' + Math.round(data.daily.temperature_2m_max[idx]) + '° / ' + Math.round(data.daily.temperature_2m_min[idx]) + '°</div>';
+        forecastEl.appendChild(div);
+      });
+    }catch(error){
+      tempEl.textContent = "--°";
+      descEl.textContent = "Wetter konnte nicht geladen werden";
+      metaEl.textContent = "Offline oder API nicht erreichbar";
+      iconEl.textContent = "⛅";
+      forecastEl.innerHTML = "";
+    }
+  }
+
+  function updateClock(){
+    const t = document.getElementById("clockTime");
+    const d = document.getElementById("clockDate");
+    if(!t || !d) return;
+    const now = new Date();
+    t.textContent = now.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit", second:"2-digit"});
+    d.textContent = now.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  }
+
+  function renderTileBody(item, body){
+    if(item.type === "clock"){
+      body.innerHTML = '<div class="clock-time" id="clockTime">--:--:--</div><div class="clock-date" id="clockDate">--</div>';
+      return;
+    }
+
+    if(item.type === "weather"){
+      body.innerHTML = ''
+        + '<div class="weather-city">' + '<span id="weatherIcon">⛅</span> <span id="weatherCity">' + escapeHtml(state.city) + '</span></div>'
+        + '<div class="weather-temp" id="weatherTemp">--°</div>'
+        + '<div class="muted" id="weatherDesc">Lade Wetter...</div>'
+        + '<div class="muted small" id="weatherMeta"></div>'
+        + '<div class="forecast" id="weatherForecast"></div>';
+      loadWeather();
+      return;
+    }
+
+    if(item.type === "calendar"){
+      body.innerHTML = createCalendarHTML();
+      return;
+    }
+
+    if(item.type === "slideshow"){
+      const current = state.photos.length ? state.photos[slideshowIndex % state.photos.length] : null;
+      body.innerHTML = ''
+        + '<div class="slide-stage">'
+        +   (current
+              ? '<img id="slideImage" src="' + current + '" alt="Slideshow">'
+              : '<div class="slide-empty">Noch keine Bilder hochgeladen</div>')
+        + '</div>'
+        + '<div class="slidestrip">'
+        + (state.photos || []).slice(0,3).map(src => '<img src="' + src + '" alt="">').join("")
+        + '</div>';
+      return;
+    }
+
+    if(item.type === "agenda"){
+      body.innerHTML = state.events.length
+        ? '<div class="agenda">' + state.events.map(formatEvent).join("") + '</div>'
+        : '<div class="muted">Keine Termine eingetragen</div>';
+      return;
+    }
+
+    if(item.type === "spotify"){
+      body.innerHTML = '<iframe src="' + escapeHtml(state.spotifyUrl) + '" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>';
+      return;
+    }
+
+    if(item.type === "youtube"){
+      body.innerHTML = '<iframe src="' + escapeHtml(state.youtubeUrl) + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>';
+      return;
+    }
+
+    if(item.type === "recipes"){
+      body.innerHTML = state.recipes.length
+        ? '<div class="agenda">' + state.recipes.map(formatRecipe).join("") + '</div>'
+        : '<div class="muted">Keine Rezepte eingetragen</div>';
+      return;
+    }
+
+    body.innerHTML = '<div class="muted">Leere Kachel</div>';
+  }
+
+  function bindDrag(tile){
+    tile.addEventListener("dragstart", e => {
+      if(!document.body.classList.contains("edit-mode")){ e.preventDefault(); return; }
+      tile.classList.add("dragging");
+      e.dataTransfer.setData("text/plain", tile.dataset.id);
+    });
+
+    tile.addEventListener("dragend", () => tile.classList.remove("dragging"));
+
+    tile.addEventListener("dragover", e => {
+      if(!document.body.classList.contains("edit-mode")) return;
+      e.preventDefault();
+      tile.classList.add("drop-target");
+    });
+
+    tile.addEventListener("dragleave", () => tile.classList.remove("drop-target"));
+
+    tile.addEventListener("drop", e => {
+      if(!document.body.classList.contains("edit-mode")) return;
+      e.preventDefault();
+      tile.classList.remove("drop-target");
+
+      const fromId = e.dataTransfer.getData("text/plain");
+      const toId = tile.dataset.id;
+      if(!fromId || fromId === toId) return;
+
+      const fromIndex = state.layout.findIndex(t => t.id === fromId);
+      const toIndex = state.layout.findIndex(t => t.id === toId);
+      if(fromIndex < 0 || toIndex < 0) return;
+
+      const moved = state.layout.splice(fromIndex, 1)[0];
+      state.layout.splice(toIndex, 0, moved);
+      saveState();
+      render();
+    });
+  }
+
+  function render(){
+    if(!Array.isArray(state.layout) || !state.layout.length){
+      state.layout = deepCopy(defaultState.layout);
+    }
+
+    grid.innerHTML = "";
+
+    state.layout.forEach(item => {
+      const tile = document.createElement("div");
+      tile.className = "tile";
+      tile.draggable = true;
+      tile.dataset.id = item.id;
+      tile.style.gridColumn = "span " + item.w;
+      tile.style.gridRow = "span " + item.h;
+
+      tile.innerHTML =
+        '<div class="tile-inner">'
+        + '<div class="tile-header">'
+        +   '<div class="tile-title">' + escapeHtml(item.title || item.type) + '</div>'
+        +   '<div class="tile-tools">'
+        +     '<button class="icon-btn resize-btn" title="Größe ändern">⤢</button>'
+        +     '<button class="icon-btn delete-btn" title="Löschen">×</button>'
+        +   '</div>'
+        + '</div>'
+        + '<div class="tile-body" style="display:flex; flex-direction:column; gap:10px; min-height:0; flex:1"></div>'
+        + '</div>';
+
+      renderTileBody(item, tile.querySelector(".tile-body"));
+
+      tile.querySelector(".resize-btn").addEventListener("click", e => {
+        e.stopPropagation();
+        cycleTileSize(item);
+        saveState();
+        render();
+      });
+
+      tile.querySelector(".delete-btn").addEventListener("click", e => {
+        e.stopPropagation();
+        if(state.layout.length <= 1) return;
+        state.layout = state.layout.filter(t => t.id !== item.id);
+        saveState();
+        render();
+      });
+
+      bindDrag(tile);
+      grid.appendChild(tile);
+    });
+
+    updateClock();
+  }
+
+  function startSlideshow(){
+    if(slideTimer) clearInterval(slideTimer);
+    slideTimer = setInterval(() => {
+      if(!state.photos.length) return;
+      slideshowIndex = (slideshowIndex + 1) % state.photos.length;
+      const img = document.getElementById("slideImage");
+      if(img) img.src = state.photos[slideshowIndex];
+    }, Math.max(3, Number(state.slideSeconds || 10)) * 1000);
+  }
+
+  function readFile(file){
+    return new Promise((resolve,reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById("editBtn").addEventListener("click", () => {
+    document.body.classList.toggle("edit-mode");
+  });
+
+  document.getElementById("settingsBtn").addEventListener("click", () => {
+    document.getElementById("cityInput").value = state.city || "";
+    document.getElementById("slideSecondsInput").value = state.slideSeconds || 10;
+    document.getElementById("spotifyInput").value = state.spotifyUrl || "";
+    document.getElementById("youtubeInput").value = state.youtubeUrl || "";
+    document.getElementById("eventsInput").value = (state.events || []).join("\n");
+    document.getElementById("recipesInput").value = (state.recipes || []).join("\n");
+    settingsPanel.classList.add("open");
+  });
+
+  document.getElementById("closeSettings").addEventListener("click", () => settingsPanel.classList.remove("open"));
+
+  document.getElementById("saveSettingsBtn").addEventListener("click", async () => {
+    const newCity = document.getElementById("cityInput").value.trim();
+    state.slideSeconds = Math.max(3, Number(document.getElementById("slideSecondsInput").value || 10));
+    state.spotifyUrl = textToEmbedSpotify(document.getElementById("spotifyInput").value.trim());
+    state.youtubeUrl = textToEmbedYoutube(document.getElementById("youtubeInput").value.trim());
+    state.events = document.getElementById("eventsInput").value.split("\n").map(s => s.trim()).filter(Boolean);
+    state.recipes = document.getElementById("recipesInput").value.split("\n").map(s => s.trim()).filter(Boolean);
+    if(newCity && newCity !== state.city){
+      state.city = newCity;
+      await geocodeCity(newCity);
+    }
+    saveState();
+    settingsPanel.classList.remove("open");
+    render();
+    startSlideshow();
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  });
+
+  document.getElementById("imageInput").addEventListener("change", async e => {
+    const files = Array.from(e.target.files || []);
+    for(const file of files){
+      state.photos.push(await readFile(file));
+    }
+    saveState();
+    render();
+    startSlideshow();
+  });
+
+  document.getElementById("addTileBtn").addEventListener("click", () => {
+    const options = [
+      {type:"clock",title:"Uhr"},
+      {type:"weather",title:"Wetter"},
+      {type:"calendar",title:"Kalender"},
+      {type:"slideshow",title:"Slideshow"},
+      {type:"agenda",title:"Termine"},
+      {type:"spotify",title:"Spotify"},
+      {type:"youtube",title:"YouTube"},
+      {type:"recipes",title:"Rezepte"}
+    ];
+    const next = options[state.layout.length % options.length];
+    state.layout.push({id: next.type + "-" + Date.now(), type: next.type, title: next.title, w: 4, h: 3});
+    saveState();
+    render();
+  });
+
+  render();
+  startSlideshow();
+  loadWeather();
+  updateClock();
+  setInterval(updateClock, 1000);
+})();
 </script>
 </body>
 </html>
