@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<!-- Gear button always on top -->
+
+<button id="gearBtn" class="gear-btn" title="Einstellungen" aria-label="Einstellungen">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </svg>
+</button>
+
+<!-- ── MAIN DASHBOARD ── -->
+
+<main id="dashboard" class="dashboard">
+
+  <!-- CLOCK -->
+
+  <div class="tile tile-clock" id="tile-clock" data-tile="clock">
+    <div class="tile-shine"></div>
+    <div class="tile-inner">
+      <div class="clock-time" id="clockTime">00:00:00</div>
+      <div class="clock-date" id="clockDate">Montag, 1. Januar</div>
+      <div class="clock-zone">Berlin · UTC+2</div>
+    </div>
+  </div>
+
+  <!-- WEATHER -->
+
+  <div class="tile tile-weather" id="tile-weather" data-tile="weather">
+    <div class="tile-shine"></div>
+    <div class="tile-inner">
+      <div class="tile-header">
+        <span class="tile-label">Wetter</span>
+        <span class="weather-location" id="weatherLocation">Düsseldorf</span>
+      </div>
+      <div class="weather-main">
+        <div class="weather-icon-big" id="weatherIconBig">🌤</div>
+        <div class="weather-current-info">
+          <div class="weather-temp" id="weatherTemp">18°</div>
+          <div class="weather-desc" id="weatherDesc">Teilweise bewölkt</div>
+          <div class="weather-details" id="weatherDetails">
+            <span>💧 62%</span>
+            <span>💨 14 km/h</span>
+          </div>
+        </div>
+      </div>
+      <div class="weather-forecast" id="weatherForecast"></div>
+    </div>
+  </div>
+
+  <!-- CALENDAR -->
+
+  <div class="tile tile-calendar" id="tile-calendar" data-tile="calendar">
+    <div class="tile-shine"></div>
+    <div class="tile-inner">
+      <div class="tile-header">
+        <button class="cal-nav" id="calPrev">‹</button>
+        <span class="tile-label" id="calMonthLabel">April 2026</span>
+        <button class="cal-nav" id="calNext">›</button>
+        <button class="cal-add-btn" id="calAddBtn">＋</button>
+      </div>
+      <div class="cal-grid-header">
+        <span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-events-mini" id="calEventsMini"></div>
+    </div>
+  </div>
+
+  <!-- SLIDESHOW -->
+
+  <div class="tile tile-slideshow" id="tile-slideshow" data-tile="slideshow">
+    <div class="tile-shine"></div>
+    <div class="tile-inner">
+      <div class="tile-header">
+        <span class="tile-label">Fotos</span>
+        <div class="slideshow-controls">
+          <button class="ss-btn" id="ssPrev">‹</button>
+          <button class="ss-btn" id="ssPlay">⏸</button>
+          <button class="ss-btn" id="ssNext">›</button>
+          <label class="ss-upload-label" title="Fotos hinzufügen">
+            📁<input type="file" id="ssUpload" accept="image/*" multiple style="display:none" />
+          </label>
+        </div>
+      </div>
+      <div class="slideshow-frame" id="slideshowFrame">
+        <div class="slideshow-img-wrap" id="slideshowImgWrap">
+          <img id="slideshowImg" src="" alt="" style="display:none" />
+          <div class="slideshow-placeholder" id="slideshowPlaceholder">
+            <div style="font-size:2.5em">🖼</div>
+            <div style="font-size:0.8em;opacity:0.7;margin-top:6px">Fotos hier ablegen oder 📁 tippen</div>
+          </div>
+        </div>
+        <div class="slideshow-meta">
+          <div class="slideshow-dots" id="slideshowDots"></div>
+          <div class="slideshow-counter" id="slideshowCounter"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPOTIFY -->
+
+  <div class="tile tile-spotify" id="tile-spotify" data-tile="spotify">
+    <div class="tile-shine"></div>
+    <div class="tile-inner">
+      <div class="tile-header">
+        <span class="tile-label">
+          <svg class="spotify-logo-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.87 7.077-.496 9.713 1.115.294.18.387.563.206.857zm1.223-2.722a.78.78 0 0 1-1.072.257C14.1 12.26 10.64 11.7 7.4 12.646a.779.779 0 0 1-.97-.519.781.781 0 0 1 .519-.97c3.668-1.113 7.527-.574 10.378 1.489a.779.779 0 0 1 .482.056zm.105-2.835C15.199 9.04 10.537 8.88 7.43 9.797a.935.935 0 1 1-.541-1.789c3.571-1.08 9.504-.872 13.253 1.455a.935.935 0 0 1-1.228 1.404z"/>
+          </svg>
+          Spotify
+        </span>
+        <a class="spotify-open-btn" href="https://open.spotify.com" target="_blank" rel="noopener">Öffnen ↗</a>
+      </div>
+      <div class="spotify-body">
+        <div class="spotify-art-wrap">
+          <img class="spotify-art" id="spotifyArt" src="" alt="" style="display:none" />
+          <div class="spotify-art-placeholder" id="spotifyArtPlaceholder">♪</div>
+        </div>
+        <div class="spotify-info">
+          <div class="spotify-track" id="spotifyTrack">Burning Down the House</div>
+          <div class="spotify-artist" id="spotifyArtist">Talking Heads</div>
+          <div class="spotify-album" id="spotifyAlbum">Speaking in Tongues</div>
+          <div class="spotify-progress-wrap">
+            <span class="spotify-time" id="spotifyTimeCurrent">1:24</span>
+            <div class="spotify-progress-bar">
+              <div class="spotify-progress-fill" id="spotifyProgressFill" style="width:42%"></div>
+            </div>
+            <span class="spotify-time" id="spotifyTimeTotal">3:17</span>
+          </div>
+          <div class="spotify-transport">
+            <button class="sp-btn" id="spPrev">⏮</button>
+            <button class="sp-btn sp-play" id="spPlay">▶</button>
+            <button class="sp-btn" id="spNext">⏭</button>
+          </div>
+        </div>
+      </div>
+      <!-- INTEGRATION POINT: Spotify OAuth — replace mock below -->
+      <div class="spotify-auth-bar" id="spotifyAuthBar">
+        <button class="spotify-connect-btn" id="spotifyConnectBtn">Mit Spotify verbinden</button>
+        <span class="spotify-mock-note">Mock-Daten aktiv</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── SETTINGS PANEL ── -->
+
+<div id="settingsOverlay" class="settings-overlay hidden" aria-modal="true" role="dialog">
+  <div id="settingsPanel" class="settings-panel">
+    <div class="settings-header">
+      <span>⚙ Einstellungen</span>
+      <button id="settingsClose" class="settings-close">✕</button>
+    </div>
+    <div class="settings-body">
+
+```
+  <div class="settings-section">
+    <div class="settings-section-title">Farben &amp; Stil</div>
+    <label class="settings-row">
+      <span>Hintergrund</span>
+      <input type="color" id="setBgColor" value="#141926" />
+    </label>
+    <label class="settings-row">
+      <span>Kachel-Farbe</span>
+      <input type="color" id="setTileColor" value="#ffffff" />
+    </label>
+    <label class="settings-row">
+      <span>Text-Farbe</span>
+      <input type="color" id="setTextColor" value="#e8eaf0" />
+    </label>
+    <label class="settings-row">
+      <span>Transparenz <small>(Kacheln)</small></span>
+      <div class="slider-wrap">
+        <input type="range" id="setTransparency" min="5" max="90" value="15" />
+        <span class="slider-val" id="setTransparencyVal">15%</span>
+      </div>
+    </label>
+    <label class="settings-row">
+      <span>Schriftgröße</span>
+      <div class="slider-wrap">
+        <input type="range" id="setFontSize" min="70" max="130" value="100" />
+        <span class="slider-val" id="setFontSizeVal">100%</span>
+      </div>
+    </label>
+    <label class="settings-row">
+      <span>Eckenradius</span>
+      <div class="slider-wrap">
+        <input type="range" id="setRadius" min="4" max="32" value="18" />
+        <span class="slider-val" id="setRadiusVal">18px</span>
+      </div>
+    </label>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">Theme-Presets</div>
+    <div class="theme-presets">
+      <button class="preset-btn active" data-theme="night">🌙 Nacht</button>
+      <button class="preset-btn" data-theme="dawn">🌅 Morgen</button>
+      <button class="preset-btn" data-theme="ocean">🌊 Ozean</button>
+      <button class="preset-btn" data-theme="forest">🌿 Wald</button>
+      <button class="preset-btn" data-theme="rose">🌸 Rose</button>
+      <button class="preset-btn" data-theme="slate">🪨 Slate</button>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">Slideshow</div>
+    <label class="settings-row">
+      <span>Intervall (Sekunden)</span>
+      <div class="slider-wrap">
+        <input type="range" id="setSsInterval" min="5" max="120" value="30" />
+        <span class="slider-val" id="setSsIntervalVal">30s</span>
+      </div>
+    </label>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">Wetter</div>
+    <!-- INTEGRATION POINT: OpenWeatherMap -->
+    <label class="settings-row">
+      <span>Stadt</span>
+      <input type="text" id="setWeatherCity" class="text-input" value="Düsseldorf" placeholder="Stadtname" />
+    </label>
+    <label class="settings-row">
+      <span>API-Key</span>
+      <input type="text" id="setWeatherApiKey" class="text-input" value="" placeholder="OpenWeatherMap Key" />
+    </label>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">Layout-Bearbeitung</div>
+    <label class="settings-row">
+      <span>Kacheln verschieben</span>
+      <label class="toggle">
+        <input type="checkbox" id="setEditMode" />
+        <span class="toggle-slider"></span>
+      </label>
+    </label>
+  </div>
+
+  <div class="settings-footer">
+    <button id="setReset" class="btn-reset">↺ Standard</button>
+    <button id="settingsClose2" class="btn-save">✓ Fertig</button>
+  </div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- ── CALENDAR MODAL ── -->
+
+<div id="calModalOverlay" class="modal-overlay hidden" aria-modal="true" role="dialog">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <span id="calModalTitle">Termin</span>
+      <button id="calModalClose" class="settings-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="modal-row">
+        <span>Titel</span>
+        <input type="text" id="calEventTitle" class="text-input" placeholder="Termintitel" />
+      </label>
+      <label class="modal-row">
+        <span>Datum</span>
+        <input type="date" id="calEventDate" class="text-input" />
+      </label>
+      <label class="modal-row">
+        <span>Uhrzeit</span>
+        <input type="time" id="calEventTime" class="text-input" value="09:00" />
+      </label>
+      <label class="modal-row">
+        <span>Farbe</span>
+        <input type="color" id="calEventColor" value="#4f8ef7" />
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button id="calModalDelete" class="btn-reset" style="display:none">🗑 Löschen</button>
+      <button id="calModalSave" class="btn-save">💾 Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
