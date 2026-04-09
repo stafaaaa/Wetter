@@ -653,19 +653,21 @@
 
     <!-- SPOTIFY -->
     <div class="section-title" id="settings-spotify-section">🎵 Spotify Now Playing</div>
-    <p style="font-size:0.72rem;color:var(--text-muted);line-height:1.5;margin-bottom:8px">
-      Um den aktuellen Song anzuzeigen, brauchst du ein <strong style="color:var(--accent)">Spotify Access Token</strong>.<br>
-      <a href="https://developer.spotify.com/console/get-the-users-currently-playing-track/" target="_blank" style="color:var(--accent);font-size:0.68rem">→ Token hier holen (Get Token klicken, einloggen)</a>
-    </p>
-    <label>Access Token</label>
-    <div id="sp-token-row">
-      <input type="password" id="s-sp-token" placeholder="Spotify Access Token einfügen…">
-      <button class="btn btn-primary" onclick="testSpotifyToken()" style="white-space:nowrap">Testen</button>
+    <div id="sp-login-area">
+      <div id="sp-status-box" style="padding:10px;background:rgba(29,185,84,0.08);border:1px solid rgba(29,185,84,0.2);border-radius:10px;margin-bottom:10px;font-size:0.75rem;color:var(--text-muted)">
+        Status: <span id="sp-connected-status">Nicht verbunden</span>
+      </div>
+      <button class="btn btn-primary" onclick="spotifyLogin();closeModal('settings-modal')" style="width:100%;padding:12px;font-size:0.9rem;background:#1db954;display:flex;align-items:center;justify-content:center;gap:8px">
+        🎵 Mit Spotify verbinden
+      </button>
+      <p style="font-size:0.65rem;color:var(--text-muted);margin-top:8px;line-height:1.5;text-align:center">
+        Einmal klicken → Spotify-Login → automatisch zurück zum Dashboard.<br>
+        Token wird automatisch gespeichert. Nach 1h einfach nochmal klicken.
+      </p>
+      <button id="sp-disconnect-btn" class="btn btn-danger" onclick="disconnectSpotify()" style="width:100%;margin-top:8px;display:none">
+        Spotify trennen
+      </button>
     </div>
-    <div id="sp-token-status" style="font-size:0.7rem;margin-top:6px;color:var(--text-muted)"></div>
-    <p style="font-size:0.65rem;color:var(--text-muted);margin-top:6px;line-height:1.4">
-      ℹ️ Token läuft nach 1h ab. Für dauerhaften Betrieb: Token erneuern oder Spotify-App direkt öffnen.
-    </p>
 
     <div class="modal-btns">
       <button class="btn btn-danger" onclick="resetSettings()">Zurücksetzen</button>
@@ -1023,17 +1025,35 @@ loadStoredImages();
 // ══════════════════════════════════════════
 //  SPOTIFY NOW PLAYING
 // ══════════════════════════════════════════
+const SP_CLIENT_ID = 'c2d20533a6aa4d3a844836eb77bb5345';
+const SP_REDIRECT   = 'https://stafaaaa.github.io/Wetter/kiosk-dashboard2.html';
+const SP_SCOPES     = 'user-read-currently-playing user-read-playback-state user-modify-playback-state';
+
 let spToken = '', spPollTimer = null, spIsPlaying = false;
+
+// ── Token aus URL-Hash lesen (nach OAuth-Redirect) ──
+function extractTokenFromHash() {
+  const hash = window.location.hash;
+  if (!hash) return null;
+  const params = new URLSearchParams(hash.substring(1));
+  const token = params.get('access_token');
+  if (token) {
+    // Hash aus URL entfernen (sauber)
+    history.replaceState(null, '', window.location.pathname);
+    return token;
+  }
+  return null;
+}
+
+function spotifyLogin() {
+  const url = `https://accounts.spotify.com/authorize?client_id=${SP_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(SP_REDIRECT)}&scope=${encodeURIComponent(SP_SCOPES)}`;
+  window.location.href = url;
+}
 
 function spotifyTileClick() {
   if (!spToken) {
-    // Kein Token: App öffnen
-    const link = document.createElement('a');
-    link.href = 'spotify://';
-    link.click();
-    setTimeout(() => window.open('https://open.spotify.com', '_blank'), 800);
+    spotifyLogin();
   }
-  // Mit Token: Kachel zeigt schon Now Playing, kein Action nötig
 }
 
 function updateSpotifyUI() {
@@ -1104,22 +1124,26 @@ async function spotifyPrev() {
   } catch(e) {}
 }
 
-async function testSpotifyToken() {
-  const token = document.getElementById('s-sp-token').value.trim();
-  const status = document.getElementById('sp-token-status');
-  if (!token) { status.textContent = '⚠️ Kein Token eingegeben.'; return; }
-  status.textContent = '⏳ Teste…';
-  try {
-    const res = await fetch('https://api.spotify.com/v1/me', { headers: { 'Authorization': 'Bearer ' + token } });
-    if (res.ok) {
-      const d = await res.json();
-      status.style.color = 'var(--accent2)';
-      status.textContent = `✅ Verbunden als: ${d.display_name || d.id}`;
-    } else {
-      status.style.color = '#ef5350';
-      status.textContent = '❌ Token ungültig oder abgelaufen.';
-    }
-  } catch(e) { status.style.color='#ef5350'; status.textContent = '❌ Fehler: ' + e.message; }
+function disconnectSpotify() {
+  spToken = '';
+  localStorage.removeItem('kiosk_sp_token');
+  clearInterval(spPollTimer);
+  updateSpotifyUI();
+  updateSpotifySettingsUI();
+}
+
+function updateSpotifySettingsUI() {
+  const statusEl = document.getElementById('sp-connected-status');
+  const disconnectBtn = document.getElementById('sp-disconnect-btn');
+  if (spToken) {
+    statusEl.style.color = '#1db954';
+    statusEl.textContent = '✅ Verbunden';
+    if (disconnectBtn) disconnectBtn.style.display = 'block';
+  } else {
+    statusEl.style.color = 'var(--text-muted)';
+    statusEl.textContent = 'Nicht verbunden';
+    if (disconnectBtn) disconnectBtn.style.display = 'none';
+  }
 }
 
 function startSpotifyPolling() {
@@ -1129,6 +1153,20 @@ function startSpotifyPolling() {
     spPollTimer = setInterval(fetchNowPlaying, 10000);
   }
 }
+
+// ── Auto-Init: Token aus URL oder localStorage ──
+(function initSpotify() {
+  const fromHash = extractTokenFromHash();
+  if (fromHash) {
+    spToken = fromHash;
+    localStorage.setItem('kiosk_sp_token', spToken);
+  } else {
+    const stored = localStorage.getItem('kiosk_sp_token');
+    if (stored) spToken = stored;
+  }
+  updateSpotifyUI();
+  if (spToken) startSpotifyPolling();
+})();
 
 // ══════════════════════════════════════════
 //  BACKGROUND
@@ -1208,7 +1246,6 @@ function livePreview(key, value) {
 }
 
 function saveSettings() {
-  const token = document.getElementById('s-sp-token').value.trim();
   const s = {
     bg: document.getElementById('s-bg').value,
     text: document.getElementById('s-text').value,
@@ -1217,7 +1254,6 @@ function saveSettings() {
     font: document.getElementById('s-font').value,
     fontfamily: document.getElementById('s-fontfamily').value,
     slide: document.getElementById('s-slide').value,
-    spToken: token,
     bgMode: bgMode,
     bgImageData: bgMode === 'image' ? bgImageData : null,
     bgDim: bgDim,
@@ -1228,16 +1264,6 @@ function saveSettings() {
   localStorage.setItem('kiosk_settings', JSON.stringify(s));
   slideshowInterval = s.slide * 1000;
   restartSlideshow();
-
-  if (token && token !== spToken) {
-    spToken = token;
-    updateSpotifyUI();
-    startSpotifyPolling();
-  } else if (!token) {
-    spToken = '';
-    updateSpotifyUI();
-    clearInterval(spPollTimer);
-  }
   closeModal('settings-modal');
 }
 
@@ -1256,11 +1282,11 @@ function openSettings(section) {
   if (s.font) { document.getElementById('s-font').value = s.font; document.getElementById('v-font').textContent = s.font+'%'; }
   if (s.fontfamily) document.getElementById('s-fontfamily').value = s.fontfamily;
   if (s.slide) { document.getElementById('s-slide').value = s.slide; document.getElementById('v-slide').textContent = s.slide+'s'; }
-  if (s.spToken) document.getElementById('s-sp-token').value = s.spToken;
   if (s.bgMode) setBgMode(s.bgMode);
   if (s.grad1) { document.getElementById('s-grad1').value = s.grad1; document.getElementById('prev-grad1').style.background = s.grad1; }
   if (s.grad2) { document.getElementById('s-grad2').value = s.grad2; document.getElementById('prev-grad2').style.background = s.grad2; }
   if (s.gradDir) document.getElementById('s-grad-dir').value = s.gradDir;
+  updateSpotifySettingsUI();
   openModal('settings-modal');
   if (section === 'spotify') {
     setTimeout(() => { document.getElementById('settings-spotify-section').scrollIntoView({behavior:'smooth'}); }, 200);
@@ -1277,11 +1303,6 @@ function applyStoredSettings() {
   if (s.font) root.style.setProperty('--font-scale', s.font/100);
   if (s.fontfamily) document.body.style.fontFamily = s.fontfamily;
   if (s.slide) slideshowInterval = s.slide * 1000;
-  if (s.spToken) {
-    spToken = s.spToken;
-    updateSpotifyUI();
-    startSpotifyPolling();
-  }
   if (s.bgMode) {
     bgMode = s.bgMode;
     if (s.bgImageData) bgImageData = s.bgImageData;
