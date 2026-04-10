@@ -1,1471 +1,879 @@
 <!DOCTYPE html>
 <html lang="de">
-<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Home Dashboard</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#111318" />
-  <title>Kiosk Tablet Dashboard</title>
-  <style>
-    :root{
-      --bg:#0f1012; --tile:rgba(30,31,35,.74); --tile2:rgba(26,27,31,.86);
-      --border:rgba(255,255,255,.09); --text:#f3f4f6; --muted:#b8bdc7; --accent:#f2b869;
-      --shadow:0 14px 40px rgba(0,0,0,.35); --radius:26px; --gap:14px;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
-    body{
-      background:
-        radial-gradient(circle at top right, rgba(242,184,105,.08), transparent 25%),
-        radial-gradient(circle at bottom left, rgba(101,163,255,.10), transparent 22%),
-        var(--bg);
-      overflow:hidden;
-    }
-    .app{display:flex;flex-direction:column;height:100vh;padding:14px;gap:12px}
-    .toolbar{
-      display:flex;gap:10px;align-items:center;flex-wrap:wrap;
-      background:rgba(255,255,255,.04);border:1px solid var(--border);
-      border-radius:22px;padding:10px 12px;box-shadow:var(--shadow);backdrop-filter: blur(18px);
-    }
-    .brand{font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:12px;color:var(--muted);margin-right:8px}
-    .spacer{flex:1}
-    button,.file-label,input,textarea{font:inherit}
-    .btn,.file-label{
-      appearance:none;border:none;border-radius:999px;padding:10px 14px;color:var(--text);
-      background:rgba(255,255,255,.08);border:1px solid var(--border);cursor:pointer
-    }
-    .btn.primary{background:var(--accent);color:#111;font-weight:700}
-    .file-label input{display:none}
-    .workspace{flex:1;min-height:0;overflow:auto;border-radius:28px}
-    .grid{display:grid;grid-template-columns:repeat(12,1fr);grid-auto-rows:86px;gap:var(--gap);min-height:100%}
-    .tile{
-      position:relative;background:linear-gradient(180deg,var(--tile),var(--tile2));border:1px solid var(--border);
-      box-shadow:var(--shadow);border-radius:var(--radius);overflow:hidden;backdrop-filter:blur(18px);user-select:none;min-height:120px
-    }
-    .tile.dragging{opacity:.45}.tile.drop-target{outline:2px dashed rgba(255,255,255,.45);outline-offset:-8px}
-    .tile-inner{height:100%;padding:18px;display:flex;flex-direction:column;gap:10px}
-    .tile-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .label{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
-    .tile-tools{display:none;gap:8px}.edit-mode .tile-tools{display:flex}
-    .icon-btn{width:30px;height:30px;border-radius:999px;border:none;cursor:pointer;background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--border)}
-    .clock-time{font-size:clamp(42px,4vw,76px);font-weight:700;line-height:1;margin-top:auto}
-    .clock-date{font-size:clamp(15px,1.5vw,24px);color:var(--muted)}
-    .weather-temp{font-size:clamp(44px,4vw,78px);font-weight:700;line-height:1}
-    .weather-city{font-size:clamp(22px,2vw,34px);font-weight:700}
-    .muted{color:var(--muted)}
-    .calendar-month{font-size:clamp(20px,1.8vw,30px);font-weight:700}
-    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;text-align:center;font-size:13px}
-    .dow{color:var(--muted);padding-bottom:4px}
-    .day{padding:8px 0;border-radius:14px;background:rgba(255,255,255,.03)}
-    .day.empty{background:transparent}.day.today{background:var(--accent);color:#111;font-weight:700}
-    .slideshow-tile{position:relative;flex:1;min-height:0;border-radius:20px;overflow:hidden;background:#1a1a1a;border:1px solid rgba(255,255,255,.08)}
-    .slideshow-tile img{width:100%;height:100%;object-fit:cover;display:block}
-    .slide-empty{height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);text-align:center;padding:24px}
-    .slidestrip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:90px;overflow:hidden}
-    .slidestrip img{width:100%;height:80px;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,.08)}
-    .agenda,.recipes{display:flex;flex-direction:column;gap:10px;overflow:auto;min-height:0}
-    .agenda-item,.recipe{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);padding:12px 14px;border-radius:16px}
-    .agenda-item strong,.recipe strong{display:block;margin-bottom:4px}
-    iframe{width:100%;height:100%;border:none;border-radius:18px;background:rgba(0,0,0,.2)}
-    .settings{
-      position:fixed;left:14px;right:14px;bottom:14px;background:rgba(18,19,22,.96);border:1px solid var(--border);
-      border-radius:28px;padding:16px;box-shadow:var(--shadow);display:none;z-index:40;max-height:72vh;overflow:auto
-    }
-    .settings.open{display:block}
-    .settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    .settings label{display:flex;flex-direction:column;gap:8px;color:var(--muted);font-size:14px}
-    .settings input,.settings textarea{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border);border-radius:16px;padding:12px;resize:vertical;min-height:46px}
-    @media (max-width:1100px){.grid{grid-template-columns:repeat(6,1fr)}.settings-grid{grid-template-columns:1fr}}
-    @media (max-width:700px){.grid{grid-template-columns:repeat(2,1fr);grid-auto-rows:120px}}
-:root {
-  --bg-color: #0f1218;
-  --tile-rgb: 33, 38, 50;
-  --tile-alpha: 0.72;
-  --text-color: #f5f7fc;
-  --muted: #c6cbdb;
-  --font-scale: 1;
-  --radius: 18px;
-  --gap: 12px;
-  --shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
-}
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Home Dashboard · Liquid Glass</title>
+<style>
 * {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-
-html,
-body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: calc(16px * var(--font-scale));
-  color: var(--text-color);
-  background:
-    radial-gradient(circle at 20% 20%, rgba(120, 160, 255, 0.15), transparent 40%),
-    radial-gradient(circle at 80% 70%, rgba(120, 255, 220, 0.1), transparent 45%),
-    var(--bg-color);
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+font-family: system-ui, -apple-system, 'Helvetica Neue', 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
 }
 
 body {
-  touch-action: manipulation;
+min-height: 100vh;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 0;
+margin: 0;
+transition: background 0.3s ease;
+background: #aaccdd;
 }
 
 .dashboard {
-  width: 100vw;
-  height: 100vh;
-  padding: 12px;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: var(--gap);
+width: 100vw;
+height: 100vh;
+backdrop-filter: blur(40px) saturate(200%);
+-webkit-backdrop-filter: blur(40px) saturate(200%);
+display: flex;
+flex-direction: column;
+padding: 20px 24px 24px 24px;
+overflow: hidden;
+background-size: cover;
+background-position: center;
+transition: background 0.3s;
+position: relative;
+}
+.dashboard::before {
+content: "";
+position: absolute;
+top: 0; left: 0; right: 0; bottom: 0;
+background: inherit;
+background-size: cover;
+background-position: center;
+filter: brightness(1.1) saturate(1.2);
+z-index: -1;
 }
 
-.dashboard-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px;
-  border-radius: var(--radius);
-  background: rgba(18, 22, 30, 0.55);
-  backdrop-filter: blur(10px);
+.toolbar {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 8px 8px 20px 8px;
+flex-shrink: 0;
+position: relative;
+z-index: 5;
 }
 
-h1 {
-  margin: 0;
-  font-size: 1.25rem;
+.toolbar-left {
+display: flex;
+align-items: center;
+gap: 20px;
 }
 
-.subtitle {
-  margin: 2px 0 0;
-  color: var(--muted);
-  font-size: 0.8rem;
+.burger-menu {
+background: rgba(255, 255, 255, 0.25);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border: 0.5px solid rgba(255, 255, 255, 0.4);
+color: #1d1d1f;
+width: 52px;
+height: 52px;
+border-radius: 18px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 1.8rem;
+cursor: pointer;
+box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+transition: all 0.2s;
+}
+body.theme-dark .burger-menu { color: #ffffff; background: rgba(40,40,45,0.5); }
+
+.dashboard-title {
+font-size: 2rem;
+font-weight: 600;
+letter-spacing: -0.02em;
+color: #1d1d1f;
+text-shadow: 0 2px 10px rgba(255,255,255,0.5);
+}
+body.theme-dark .dashboard-title { color: #ffffff; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+
+.menu-dropdown {
+position: absolute;
+top: 75px;
+left: 24px;
+background: rgba(255, 255, 255, 0.7);
+backdrop-filter: blur(50px);
+-webkit-backdrop-filter: blur(50px);
+border: 0.5px solid rgba(255,255,255,0.6);
+border-radius: 24px;
+padding: 12px 8px;
+min-width: 240px;
+box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+z-index: 100;
+display: none;
+}
+body.theme-dark .menu-dropdown { background: rgba(30,30,35,0.8); border-color: rgba(255,255,255,0.2); }
+.menu-dropdown.show { display: block; }
+.menu-item {
+padding: 14px 20px;
+color: #1d1d1f;
+font-size: 1.1rem;
+font-weight: 500;
+cursor: pointer;
+border-radius: 16px;
+transition: all 0.15s;
+display: flex;
+align-items: center;
+gap: 12px;
+}
+body.theme-dark .menu-item { color: #ffffff; }
+.menu-item:hover { background: rgba(120, 120, 140, 0.15); }
+.menu-divider { height: 1px; background: rgba(0,0,0,0.1); margin: 8px 0; }
+
+.grid-container {
+display: grid;
+grid-template-columns: repeat(6, 1fr);
+grid-auto-rows: minmax(140px, auto);
+gap: 20px;
+flex: 1;
+overflow-y: auto;
+padding: 4px;
+z-index: 2;
 }
 
-.header-actions,
-.tile-toolbar,
-.spotify-controls,
-.slide-controls,
-.modal-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.grid {
-  min-height: 0;
-  display: grid;
-  gap: var(--gap);
-  grid-template-columns: repeat(12, 1fr);
-  grid-template-rows: repeat(8, minmax(0, 1fr));
-}
-
+/* Kachel mit Resize-Handle */
 .tile {
-  background: rgba(var(--tile-rgb), var(--tile-alpha));
-  border-radius: var(--radius);
-  padding: 12px;
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(10px);
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  position: relative;
+backdrop-filter: blur(30px);
+-webkit-backdrop-filter: blur(30px);
+border: 1px solid rgba(255, 255, 255, 0.3);
+border-radius: 36px;
+padding: 22px 24px;
+box-shadow: 0 30px 50px -15px rgba(0,0,0,0.2), 0 10px 20px -5px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.6);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+position: relative;
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+background-size: cover;
+background-position: center;
+color: #1d1d1f;
+transform: perspective(2000px) rotateX(2deg) rotateY(0.5deg) translateZ(5px);
+transform-style: preserve-3d;
+background-color: rgba(255, 255, 255, 0.4);
+}
+.tile:hover {
+transform: perspective(2000px) rotateX(1deg) rotateY(1deg) translateZ(12px);
+box-shadow: 0 40px 70px -15px rgba(0,0,0,0.25), 0 15px 25px -8px rgba(0,0,0,0.15);
+}
+.tile.edit-mode {
+border: 3px dashed rgba(0, 122, 255, 0.6);
+cursor: grab;
+}
+.tile::before {
+content: "";
+position: absolute;
+top: 0; left: 0; right: 0; bottom: 0;
+background: inherit;
+background-size: cover;
+background-position: center;
+filter: brightness(1.05);
+z-index: 0;
+}
+.tile::after {
+content: "";
+position: absolute;
+top: 0; left: 0; right: 0; bottom: 0;
+background: linear-gradient(145deg, rgba(255,255,255,0.3) 0%, transparent 60%);
+pointer-events: none;
+z-index: 1;
 }
 
-.tile.editing {
-  border-style: dashed;
+.tile-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 18px;
+font-weight: 600;
+font-size: 1.3rem;
+position: relative;
+z-index: 2;
+}
+.tile-controls { display: flex; gap: 10px; }
+.icon-btn {
+background: rgba(255, 255, 255, 0.3);
+backdrop-filter: blur(10px);
+border: 0.5px solid rgba(255,255,255,0.5);
+color: #1d1d1f;
+font-size: 1.3rem;
+cursor: pointer;
+width: 44px;
+height: 44px;
+border-radius: 44px;
+display: flex;
+align-items: center;
+justify-content: center;
+box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+body.theme-dark .icon-btn { color: #ffffff; background: rgba(40,40,45,0.5); }
+
+.tile-content {
+flex: 1;
+display: flex;
+flex-direction: column;
+overflow: auto;
+position: relative;
+z-index: 2;
 }
 
-.tile-toolbar {
-  justify-content: space-between;
-  margin-bottom: 8px;
+/* Resize Handle */
+.resize-handle {
+position: absolute;
+bottom: 12px;
+right: 12px;
+width: 36px;
+height: 36px;
+background: rgba(255,255,255,0.4);
+backdrop-filter: blur(8px);
+border-radius: 12px;
+display: flex;
+align-items: center;
+justify-content: center;
+cursor: nwse-resize;
+z-index: 10;
+border: 0.5px solid rgba(255,255,255,0.6);
+color: #1d1d1f;
+font-size: 1.5rem;
+opacity: 0;
+transition: opacity 0.2s;
+pointer-events: none;
+}
+.tile.edit-mode .resize-handle {
+opacity: 1;
+pointer-events: auto;
 }
 
-.tile h2 {
-  margin: 0;
-  font-size: 1rem;
+.flip-clock {
+display: flex;
+gap: 8px;
+font-size: 4.5rem !important;
+font-weight: 300;
+line-height: 1.1;
+}
+.flip-digit {
+background: rgba(255, 255, 255, 0.3);
+backdrop-filter: blur(8px);
+padding: 12px 18px;
+border-radius: 24px;
+box-shadow: inset 0 2px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.1);
+border-bottom: 2px solid rgba(255,255,255,0.5);
 }
 
-#tile-weather {
-  grid-column: 1 / span 4;
-  grid-row: 1 / span 4;
+.weather-icon-large {
+font-size: 4rem;
+filter: drop-shadow(0 8px 12px rgba(0,0,0,0.1));
+animation: float 5s ease-in-out infinite;
 }
-
-#tile-calendar {
-  grid-column: 5 / span 5;
-  grid-row: 1 / span 6;
+@keyframes float {
+0% { transform: translateY(0px); }
+50% { transform: translateY(-8px); }
+100% { transform: translateY(0px); }
 }
-
-#tile-clock {
-  grid-column: 10 / span 3;
-  grid-row: 1 / span 3;
-}
-
-#tile-slideshow {
-  grid-column: 1 / span 6;
-  grid-row: 5 / span 4;
-}
-
-#tile-spotify {
-  grid-column: 7 / span 6;
-  grid-row: 7 / span 2;
-}
-
-.weather-now {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 12px;
-}
-
-.weather-icon {
-  font-size: 2.2rem;
-}
-
-.weather-temp {
-  font-size: 2rem;
-  font-weight: 700;
-}
-
-.weather-desc,
-.weather-loc,
-.integration-note {
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.forecast {
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.forecast-day {
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
-  padding: 6px;
-  text-align: center;
-  font-size: 0.75rem;
-}
-
-.calendar-head {
-  font-weight: 600;
-  margin-bottom: 8px;
+.forecast-item {
+background: rgba(255, 255, 255, 0.2);
+backdrop-filter: blur(10px);
+border-radius: 24px;
+padding: 10px 14px;
+text-align: center;
+animation: softPulse 4s infinite;
+box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
 }
 
 .calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 4px;
-  font-size: 0.75rem;
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+gap: 6px;
+margin-top: 8px;
+}
+.cal-day {
+padding: 12px 0;
+border-radius: 20px;
+background: rgba(255, 255, 255, 0.15);
+}
+.today {
+background: rgba(0, 122, 255, 0.3);
+font-weight: bold;
+box-shadow: 0 0 0 2px rgba(0,122,255,0.3);
+}
+.has-event::after {
+content: "•";
+color: #ff9500;
+font-size: 22px;
 }
 
-.day,
-.dow {
-  text-align: center;
-  padding: 5px;
-  border-radius: 8px;
+.slideshow-img {
+width: 100%;
+height: 100%;
+object-fit: cover;
+border-radius: 24px;
 }
 
-.dow {
-  color: var(--muted);
+.app-btn {
+background: rgba(255, 255, 255, 0.3);
+backdrop-filter: blur(20px);
+border: 0.5px solid rgba(255,255,255,0.5);
+color: #1d1d1f;
+padding: 18px 28px;
+border-radius: 60px;
+font-size: 1.2rem;
+font-weight: 600;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 10px;
+box-shadow: 0 10px 20px -5px rgba(0,0,0,0.15);
 }
+body.theme-dark .app-btn { color: #ffffff; background: rgba(40,40,45,0.5); }
 
-.day.today {
-  background: rgba(110, 180, 255, 0.45);
+/* Modals */
+.settings-overlay {
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.2);
+backdrop-filter: blur(30px);
+display: flex;
+align-items: center;
+justify-content: center;
+z-index: 1000;
 }
-
-.day.has-event {
-  outline: 2px solid rgba(140, 230, 190, 0.8);
+.settings-card {
+background: rgba(255, 255, 255, 0.7);
+backdrop-filter: blur(60px);
+border: 0.5px solid rgba(255,255,255,0.6);
+border-radius: 48px;
+padding: 36px 40px;
+width: 750px;
+max-width: 90vw;
+max-height: 85vh;
+overflow-y: auto;
+color: #1d1d1f;
+box-shadow: 0 40px 80px rgba(0,0,0,0.2);
 }
-
-.event-list {
-  margin-top: 8px;
-  overflow: auto;
-  min-height: 0;
-  display: grid;
-  gap: 6px;
+body.theme-dark .settings-card { background: rgba(30,30,35,0.8); border-color: rgba(255,255,255,0.2); color: #ffffff; }
+.input-group {
+margin-bottom: 24px;
 }
-
-.event-item {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
-  padding: 7px;
+.input-group label {
+display: block;
+margin-bottom: 10px;
+font-weight: 600;
 }
-
-.event-actions {
-  display: flex;
-  gap: 6px;
+.input-group input, .input-group textarea, .input-group select {
+width: 100%;
+padding: 18px 22px;
+border-radius: 60px;
+border: 0.5px solid rgba(0,0,0,0.1);
+background: rgba(255,255,255,0.5);
+backdrop-filter: blur(10px);
+color: inherit;
+font-size: 1rem;
 }
-
-.clock-time {
-  margin-top: auto;
-  font-size: clamp(1.9rem, 4vw, 3.4rem);
-  font-weight: 700;
-}
-
-.clock-date {
-  font-size: 0.95rem;
-  color: var(--muted);
-}
-
-.slide-stage {
-  position: relative;
-  flex: 1;
-  border-radius: 12px;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.slide-stage img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: none;
-}
-
-.slide-empty {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  color: var(--muted);
-}
-
-.slide-controls {
-  margin-top: 8px;
-  justify-content: space-between;
-}
-
-.spotify-layout {
-  display: grid;
-  grid-template-columns: 96px 1fr;
-  gap: 10px;
-}
-
-.artwork {
-  width: 96px;
-  height: 96px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #3f8cff, #8f61ff);
-}
-
-.track-title {
-  font-weight: 700;
-}
-
-.track-artist {
-  color: var(--muted);
-  margin-bottom: 8px;
-}
-
-.btn,
-.file-pill,
-.tile-config-btn {
-  border: 0;
-  border-radius: 999px;
-  padding: 8px 12px;
-  font: inherit;
-  color: var(--text-color);
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.btn.secondary {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.btn.small {
-  padding: 6px 10px;
-  font-size: 0.8rem;
-}
-
-.btn.icon {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-}
-
-.toggle-wrap {
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-
-.file-pill input {
-  display: none;
-}
-
-.panel {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  width: min(300px, 60vw);
-  max-height: calc(100vh - 24px);
-  overflow: auto;
-  padding: 12px;
-  border-radius: var(--radius);
-  background: rgba(16, 19, 26, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: var(--shadow);
-  display: none;
-  z-index: 90;
-}
-
-.panel.open {
-  display: grid;
-  gap: 8px;
-}
-
-.panel label {
-  display: grid;
-  gap: 4px;
-  font-size: 0.82rem;
-  color: var(--muted);
-}
-
-.panel input[type="range"],
-.panel input[type="color"] {
-  width: 100%;
-}
-
-.modal {
-  border: 0;
-  border-radius: 14px;
-  padding: 0;
-  overflow: hidden;
-  color: var(--text-color);
-  background: rgba(15, 18, 25, 0.95);
-}
-
-.modal::backdrop {
-  background: rgba(0, 0, 0, 0.45);
-}
-
-.modal form {
-  display: grid;
-  gap: 8px;
-  padding: 14px;
-  min-width: min(420px, 84vw);
-}
-
-.modal input {
-  width: 100%;
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-color);
-}
-
-@media (orientation: portrait) {
-  body::before {
-    content: "Rotate tablet to landscape for kiosk dashboard.";
-    position: fixed;
-    inset: 0;
-    background: #0e1117;
-    display: grid;
-    place-items: center;
-    text-align: center;
-    z-index: 120;
-    font-size: 1.2rem;
-    padding: 20px;
-  }
-}
-  </style>
+.hidden { display: none !important; }
+.flex-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.color-row { display: flex; gap: 16px; align-items: center; }
+.color-row input[type="color"] { width: 80px; height: 55px; border-radius: 30px; }
+</style>
 </head>
-<body>
-<div class="app">
-  <div class="toolbar">
-    <div class="brand">Home Dashboard</div>
-    <button class="btn" id="editBtn">Bearbeiten</button>
-    <label class="file-label">Bilder hochladen <input id="imageInput" type="file" accept="image/*" multiple></label>
-    <button class="btn" id="settingsBtn">Einstellungen</button>
-    <button class="btn" id="addTileBtn">+ Kachel</button>
-    <div class="spacer"></div>
-    <button class="btn" id="resetBtn">Reset</button>
-  </div>
-  <div class="workspace"><div class="grid" id="grid"></div></div>
+<body class="theme-light">
+<div class="dashboard" id="dashboard">
+<div class="toolbar">
+<div class="toolbar-left">
+<div class="burger-menu" id="burgerMenuBtn">☰</div>
+<span class="dashboard-title">🏠 Liquid Dashboard</span>
+</div>
+<div class="toolbar-actions"></div>
+
+<div class="menu-dropdown" id="menuDropdown">
+<div class="menu-item" id="menuEditToggle">✎ Bearbeiten</div>
+<div class="menu-item" id="menuUploadImages">🖼️ Bilder hochladen</div>
+<div class="menu-item" id="menuOpenSettings">⚙️ Einstellungen</div>
+<div class="menu-item" id="menuAddTile">➕ Neue Kachel</div>
+<div class="menu-divider"></div>
+<div class="menu-item" id="menuReset">↻ Reset</div>
+</div>
 </div>
 
-<div class="settings" id="settingsPanel">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-    <strong style="font-size:18px">Einstellungen</strong>
-    <div class="spacer"></div>
-    <button class="btn" id="closeSettings">Schließen</button>
-  </div>
-  <div class="settings-grid">
-    <label>Stadt<input id="cityInput" placeholder="z. B. Hannover"></label>
-    <label>Slideshow Sekunden<input id="slideSecondsInput" type="number" min="3" max="300"></label>
-    <label>Spotify Embed URL<input id="spotifyInput" placeholder="https://open.spotify.com/embed/..."></label>
-    <label>YouTube Embed URL<input id="youtubeInput" placeholder="https://www.youtube.com/embed/..."></label>
-    <label>Termine (eine Zeile pro Termin: 2026-04-06 18:00 | Titel)<textarea id="eventsInput" rows="6"></textarea></label>
-    <label>Rezepte (eine Zeile pro Rezept: Titel | Zeit | Zutaten)<textarea id="recipesInput" rows="6"></textarea></label>
-  </div>
-  <div style="display:flex;gap:10px;margin-top:14px">
-    <button class="btn primary" id="saveSettingsBtn">Speichern</button>
-  </div>
+<div class="grid-container" id="tileGrid"></div>
+</div>
+
+<!-- Einstellungen Modal -->
+<div id="settingsModal" class="settings-overlay hidden">
+<div class="settings-card">
+<h2 style="margin-bottom:32px;">⚙️ Einstellungen</h2>
+<div class="input-group"><label>📍 Stadt</label><input type="text" id="settingsCity" value="Düsseldorf"></div>
+<div class="input-group"><label>⏱️ Slideshow (Sek)</label><input type="number" id="settingsSlideshowSec" value="6"></div>
+<div class="input-group"><label>🎵 Spotify</label><input type="text" id="settingsSpotify" placeholder="Link"></div>
+<div class="input-group"><label>▶️ YouTube</label><input type="text" id="settingsYoutube" placeholder="Link"></div>
+<div class="input-group"><label>🍳 Rezepte-URL</label><input type="text" id="settingsRecipeUrl"></div>
+<div class="input-group"><label>📋 Termine</label><textarea id="settingsAppointments" rows="3"></textarea></div>
+
+<div class="input-group">
+<label>🖼️ Dashboard-Hintergrund</label>
+<div class="flex-row"><button class="app-btn" id="uploadDashboardBgBtn">📸 Bild</button><button class="app-btn" id="removeDashboardBgBtn">🗑️</button></div>
+</div>
+<div class="input-group"><label>🎨 Hintergrundfarbe</label><div class="color-row"><input type="color" id="dashboardBgColor" value="#aaccdd"><input type="text" id="dashboardBgColorText"></div></div>
+
+<div class="input-group"><label>🎨 Theme</label><select id="settingsTheme"><option value="light">Hell</option><option value="dark">Dunkel</option><option value="midnight">Mitternacht</option><option value="forest">Wald</option><option value="rose">Rosé</option></select></div>
+<div class="input-group"><label>✏️ Schriftgröße</label><select id="settingsFontSize"><option value="medium">Mittel</option><option value="small">Klein</option><option value="large">Groß</option></select></div>
+<div class="input-group"><label>🔮 Kachel-Transparenz (global)</label><input type="range" id="tileOpacitySlider" min="0.2" max="1.0" step="0.05" value="0.6"><span id="tileOpacityValue">0.6</span></div>
+
+<div class="input-group"><label>🎨 Kachel-Standardfarbe</label><div class="color-row"><input type="color" id="globalAccentColor" value="#ffffff"><input type="text" id="globalAccentColorText"></div></div>
+<div class="input-group"><label>✏️ Standard Schriftfarbe</label><div class="color-row"><input type="color" id="globalTextColor" value="#1d1d1f"><input type="text" id="globalTextColorText"></div></div>
+
+<div class="flex-row"><button class="app-btn" id="saveSettingsBtn">💾 Speichern</button><button class="app-btn" id="closeSettingsBtn">Abbrechen</button></div>
+</div>
+</div>
+
+<!-- Kachel-Einstellungen Modal (jetzt mit Transparenz pro Kachel) -->
+<div id="tileSettingsModal" class="settings-overlay hidden">
+<div class="settings-card" style="width:550px;">
+<h2>🎨 Kachel anpassen</h2>
+<input type="hidden" id="currentTileId">
+<div class="input-group"><label>Titel</label><input type="text" id="tileTitle"></div>
+<div class="input-group"><label>Hintergrundfarbe</label><div class="color-row"><input type="color" id="tileColor"><input type="text" id="tileColorText"></div></div>
+<div class="input-group"><label>Hintergrundbild</label><div><button class="app-btn" id="uploadTileBgBtn">📸 Bild</button><button class="app-btn" id="removeTileBgBtn">🗑️</button></div></div>
+<div class="input-group"><label>🔮 Transparenz (Deckkraft)</label><input type="range" id="tileOpacity" min="0.1" max="1.0" step="0.05" value="0.6"><span id="tileOpacityVal">0.6</span></div>
+<div class="flex-row"><button class="app-btn" id="saveTileSettingsBtn">Speichern</button><button class="app-btn" id="closeTileSettingsBtn">Abbrechen</button></div>
+</div>
 </div>
 
 <script>
-const STORAGE_KEY = "dashboard-home-v2";
-  <main class="dashboard" id="dashboard" aria-label="Tablet dashboard">
-    <header class="dashboard-header">
-      <div>
-        <h1>Tablet Dashboard</h1>
-        <p class="subtitle">Landscape kiosk mode · touch ready</p>
-      </div>
-      <div class="header-actions">
-        <button id="editToggle" class="btn">Edit Mode</button>
-        <button id="themeBtn" class="btn secondary">Theme</button>
-      </div>
-    </header>
+(function(){
+"use strict";
 
-    <section class="grid" id="grid">
-      <article class="tile" id="tile-weather" data-tile="weather">
-        <div class="tile-toolbar">
-          <h2>Weather</h2>
-          <button class="tile-config-btn" data-open-config="weather" aria-label="Edit weather tile">⚙️</button>
-        </div>
-        <div class="weather-now">
-          <div class="weather-icon" id="weatherIcon">☀️</div>
-          <div>
-            <div class="weather-temp" id="weatherTemp">--°</div>
-            <div class="weather-desc" id="weatherDesc">Loading weather...</div>
-            <div class="weather-loc" id="weatherLocation">Detecting location...</div>
-          </div>
-        </div>
-        <div class="forecast" id="forecast"></div>
-      </article>
+// ---------- STATE ----------
+let tiles = [];
+let editMode = false;
+let nextTileId = 1000;
 
-      <article class="tile" id="tile-calendar" data-tile="calendar">
-        <div class="tile-toolbar">
-          <h2>Calendar</h2>
-          <button class="btn small" id="addEventBtn">Add Event</button>
-        </div>
-        <div class="calendar-head" id="calendarTitle"></div>
-        <div class="calendar-grid" id="calendarGrid"></div>
-        <div class="event-list" id="eventList"></div>
-      </article>
+const DEFAULT_TILES = [
+{ id: 1, type: 'clock', title: 'Uhr', colSpan: 2, rowSpan: 2, color: '#ffffff', bgImage: '', opacity: 0.6 },
+{ id: 2, type: 'weather', title: 'Wetter', colSpan: 2, rowSpan: 2, color: '#e8f0fe', bgImage: '', opacity: 0.6 },
+{ id: 3, type: 'calendar', title: 'Kalender', colSpan: 2, rowSpan: 2, color: '#f5e6f0', bgImage: '', opacity: 0.6 },
+{ id: 4, type: 'slideshow', title: 'Slideshow', colSpan: 2, rowSpan: 2, color: '#e6f0e6', bgImage: '', opacity: 0.6 },
+{ id: 5, type: 'appointments', title: 'Termine', colSpan: 2, rowSpan: 1, color: '#fff0e0', bgImage: '', opacity: 0.6 },
+{ id: 6, type: 'spotify', title: 'Spotify', colSpan: 2, rowSpan: 1, color: '#e0f0e0', bgImage: '', opacity: 0.6 },
+{ id: 7, type: 'youtube', title: 'YouTube', colSpan: 2, rowSpan: 1, color: '#f0e0e0', bgImage: '', opacity: 0.6 },
+{ id: 8, type: 'recipe', title: 'Rezepte', colSpan: 2, rowSpan: 1, color: '#e8e0f0', bgImage: '', opacity: 0.6 }
+];
 
-      <article class="tile" id="tile-clock" data-tile="clock">
-        <div class="tile-toolbar">
-          <h2>Clock</h2>
-          <label class="toggle-wrap">
-            <input type="checkbox" id="showDateToggle" checked />
-            <span>Show Date</span>
-          </label>
-        </div>
-        <div class="clock-time" id="clockTime">--:--:--</div>
-        <div class="clock-date" id="clockDate">--</div>
-        <p class="integration-note">Timezone fixed: Europe/Berlin.</p>
-      </article>
-
-      <article class="tile" id="tile-slideshow" data-tile="slideshow">
-        <div class="tile-toolbar">
-          <h2>Slideshow</h2>
-          <label class="file-pill">
-            Add Images
-            <input type="file" id="imageInput" accept="image/*" multiple />
-          </label>
-        </div>
-        <div class="slide-stage" id="slideStage">
-          <img id="slideImage" alt="Slideshow image" />
-          <div class="slide-empty" id="slideEmpty">No images selected yet.</div>
-        </div>
-        <div class="slide-controls">
-          <label>
-            Rotate (sec)
-            <input id="slideInterval" type="range" min="30" max="120" step="5" />
-          </label>
-          <span id="slideIntervalLabel"></span>
-        </div>
-      </article>
-
-      <article class="tile" id="tile-spotify" data-tile="spotify">
-        <div class="tile-toolbar">
-          <h2>Spotify</h2>
-          <button class="btn small" id="spotifyOpenBtn">Open</button>
-        </div>
-        <div class="spotify-layout">
-          <div class="artwork" id="spotifyArtwork" aria-label="Album artwork"></div>
-          <div>
-            <div class="track-title" id="spotifyTrack">Mock Track</div>
-            <div class="track-artist" id="spotifyArtist">Mock Artist</div>
-            <div class="spotify-controls">
-              <button class="btn icon" id="spotifyPrev">⏮</button>
-              <button class="btn icon" id="spotifyPlay">⏯</button>
-              <button class="btn icon" id="spotifyNext">⏭</button>
-              <button class="btn" id="spotifyPlaylist">Playlist</button>
-            </div>
-          </div>
-        </div>
-        <p class="integration-note">Spotify OAuth/API hooks are prepared in script.</p>
-      </article>
-    </section>
-  </main>
-
-  <aside class="panel" id="themePanel" aria-label="Theme panel">
-    <h3>Dashboard Customization</h3>
-    <label>Tile color <input type="color" id="tileColor" /></label>
-    <label>Text color <input type="color" id="textColor" /></label>
-    <label>Background color <input type="color" id="bgColor" /></label>
-    <label>Transparency <input type="range" id="tileAlpha" min="0.2" max="1" step="0.05" /></label>
-    <label>Font size <input type="range" id="fontScale" min="0.9" max="1.4" step="0.05" /></label>
-    <button class="btn" id="closeThemePanel">Close</button>
-  </aside>
-
-  <dialog id="eventModal" class="modal">
-    <form method="dialog" id="eventForm">
-      <h3 id="eventModalTitle">Add Event</h3>
-      <input type="hidden" id="eventId" />
-      <label>Title <input type="text" id="eventTitle" required /></label>
-      <label>Date <input type="date" id="eventDate" required /></label>
-      <label>Time <input type="time" id="eventTime" required /></label>
-      <div class="modal-actions">
-        <button value="cancel" class="btn secondary" type="button" id="cancelEventBtn">Cancel</button>
-        <button value="default" class="btn" type="submit">Save</button>
-      </div>
-    </form>
-  </dialog>
-
-  <script>
-const STORAGE_KEY = "kiosk-dashboard-v1";
-
-const defaultState = {
-  city:"Hannover",
-  coords:{lat:52.3759, lon:9.7320},
-  slideSeconds:10,
-  spotifyUrl:"https://open.spotify.com/embed/playlist/37i9dQZF1DX4WYpdgoIcn6?utm_source=generator",
-  youtubeUrl:"https://www.youtube.com/embed/jfKfPfyJRdk",
-  photos:[],
-  events:["2026-04-06 18:00 | Abendessen","2026-04-07 09:00 | Einkauf","2026-04-08 15:00 | Termin"],
-  recipes:["Pasta | 20 Min | Nudeln, Tomaten, Knoblauch","Omelett | 10 Min | Eier, Salz, Pfeffer","Salat | 8 Min | Gurke, Tomate, Feta"],
-  layout:[
-    {id:"clock",type:"clock",w:4,h:2,title:"Uhr"},
-    {id:"weather",type:"weather",w:4,h:2,title:"Wetter"},
-    {id:"calendar",type:"calendar",w:4,h:3,title:"Kalender"},
-    {id:"slideshow",type:"slideshow",w:4,h:3,title:"Slideshow"},
-    {id:"agenda",type:"agenda",w:4,h:3,title:"Termine"},
-    {id:"spotify",type:"spotify",w:4,h:3,title:"Spotify"},
-    {id:"youtube",type:"youtube",w:4,h:3,title:"YouTube"},
-    {id:"recipes",type:"recipes",w:4,h:3,title:"Rezepte"}
-  ]
-  editMode: false,
-  weather: {
-    locationName: "Berlin",
-    coords: null,
-    current: null,
-    forecast: [],
-    useMock: true
-  },
-  calendarEvents: [
-    { id: crypto.randomUUID(), title: "Family Dinner", date: "2026-04-10", time: "19:00" },
-    { id: crypto.randomUUID(), title: "Gym", date: "2026-04-11", time: "08:00" }
-  ],
-  slideshow: {
-    images: [],
-    intervalSec: 45,
-    index: 0
-  },
-  spotify: {
-    connected: false,
-    isPlaying: false,
-    currentIndex: 0,
-    tracks: [
-      { title: "Sunset Drive", artist: "Neon Coast" },
-      { title: "Ambient Focus", artist: "Cloud Atlas" },
-      { title: "Saturday Kitchen", artist: "Luma" }
-    ]
-  },
-  theme: {
-    bgColor: "#0f1218",
-    tileColor: "#212632",
-    tileAlpha: 0.72,
-    textColor: "#f5f7fc",
-    fontScale: 1
-  },
-  layout: {
-    weather: { col: 1, spanCol: 4, row: 1, spanRow: 4 },
-    calendar: { col: 5, spanCol: 5, row: 1, spanRow: 6 },
-    clock: { col: 10, spanCol: 3, row: 1, spanRow: 3 },
-    slideshow: { col: 1, spanCol: 6, row: 5, spanRow: 4 },
-    spotify: { col: 7, spanCol: 6, row: 7, spanRow: 2 }
-  },
-  tileStyle: {
-    weather: { color: "#212632" },
-    calendar: { color: "#212632" },
-    clock: { color: "#212632" },
-    slideshow: { color: "#212632" },
-    spotify: { color: "#212632" }
-  },
-  clock: {
-    showDate: true
-  }
-};
-function deepCopy(o){return JSON.parse(JSON.stringify(o))}
-function loadState(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return deepCopy(defaultState);
-    return Object.assign(deepCopy(defaultState), JSON.parse(raw));
-  }catch(e){ return deepCopy(defaultState); }
-}
-
-let state = loadState();
-const grid = document.getElementById("grid");
-const settingsPanel = document.getElementById("settingsPanel");
-let slideshowIndex = 0;
-let slideTimer = null;
-function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-function textToEmbedYoutube(v){
-  v=(v||"").trim(); if(!v) return defaultState.youtubeUrl;
-  if(v.includes("/embed/")) return v;
-  let m=v.match(/[?&]v=([^&]+)/)||v.match(/youtu\.be\/([^?&]+)/);
-  if(m&&m[1]) return "https://www.youtube.com/embed/"+m[1];
-  return v;
-}
-function textToEmbedSpotify(v){
-  v=(v||"").trim(); if(!v) return defaultState.spotifyUrl;
-  if(v.includes("/embed/")) return v;
-  return v.replace("open.spotify.com/","open.spotify.com/embed/");
-}
-function cycleTileSize(item){
-  const sizes=[{w:4,h:2},{w:4,h:3},{w:6,h:3},{w:6,h:4}];
-  const idx=sizes.findIndex(s=>s.w===item.w&&s.h===item.h);
-  const next=sizes[(idx+1)%sizes.length];
-  item.w=next.w; item.h=next.h;
-}
-function formatEvent(line){
-  const parts=(line||"").split("|").map(s=>s.trim());
-  return '<div class="agenda-item"><strong>'+(parts[1]||parts[0]||"Termin")+'</strong><div class="muted">'+(parts[0]||"")+'</div></div>';
-}
-function formatRecipe(line){
-  const p=(line||"").split("|").map(s=>s.trim());
-  return '<div class="recipe"><strong>'+(p[0]||"Rezept")+'</strong><div class="muted">'+(p[1]||"")+'</div><div>'+(p[2]||"")+'</div></div>';
-}
-function createCalendarHTML(){
-  const now=new Date(), year=now.getFullYear(), month=now.getMonth();
-  const first=new Date(year, month, 1), lastDate=new Date(year, month+1, 0).getDate();
-  const startDay=(first.getDay()+6)%7;
-  const monthTitle=now.toLocaleDateString("de-DE",{month:"long",year:"numeric"});
-  let html='<div class="calendar-month">'+monthTitle+'</div><div class="calendar-grid">';
-  ["Mo","Di","Mi","Do","Fr","Sa","So"].forEach(d=>html+='<div class="dow">'+d+'</div>');
-  for(let i=0;i<startDay;i++) html+='<div class="day empty"></div>';
-  for(let d=1;d<=lastDate;d++) html+='<div class="day '+(d===now.getDate()?"today":"")+'">'+d+'</div>';
-  html+='</div>'; return html;
-}
-function weatherCodeLabel(code){
-  const map={0:"Klar",1:"Überwiegend klar",2:"Teilweise bewölkt",3:"Bewölkt",45:"Nebel",48:"Raureifnebel",51:"Leichter Nieselregen",53:"Nieselregen",55:"Starker Nieselregen",61:"Leichter Regen",63:"Regen",65:"Starker Regen",71:"Leichter Schnee",73:"Schnee",75:"Starker Schneefall",80:"Regenschauer",81:"Starke Schauer",82:"Sehr starke Schauer",95:"Gewitter",96:"Gewitter mit Hagel",99:"Starkes Gewitter"};
-  return map[code]||"Aktuell";
-}
-async function loadWeather(){
-  const tempEl=document.getElementById("weatherTemp"), cityEl=document.getElementById("weatherCity"), descEl=document.getElementById("weatherDesc"), metaEl=document.getElementById("weatherMeta");
-  if(!tempEl||!cityEl||!descEl||!metaEl) return;
-  cityEl.textContent=state.city;
-  try{
-    const lat=state.coords.lat, lon=state.coords.lon;
-    const url='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=auto';
-    const res=await fetch(url); const data=await res.json();
-    tempEl.textContent=Math.round(data.current.temperature_2m)+'°';
-    descEl.textContent=weatherCodeLabel(data.current.weather_code);
-    metaEl.textContent='Gefühlt '+Math.round(data.current.apparent_temperature)+'° · Wind '+Math.round(data.current.wind_speed_10m)+' km/h';
-  }catch(e){
-    tempEl.textContent='--°'; descEl.textContent='Wetter konnte nicht geladen werden'; metaEl.textContent='';
-
-const dom = {
-  dashboard: document.getElementById("dashboard"),
-  grid: document.getElementById("grid"),
-  editToggle: document.getElementById("editToggle"),
-  themeBtn: document.getElementById("themeBtn"),
-  themePanel: document.getElementById("themePanel"),
-  closeThemePanel: document.getElementById("closeThemePanel"),
-  tileColor: document.getElementById("tileColor"),
-  textColor: document.getElementById("textColor"),
-  bgColor: document.getElementById("bgColor"),
-  tileAlpha: document.getElementById("tileAlpha"),
-  fontScale: document.getElementById("fontScale"),
-  weatherIcon: document.getElementById("weatherIcon"),
-  weatherTemp: document.getElementById("weatherTemp"),
-  weatherDesc: document.getElementById("weatherDesc"),
-  weatherLocation: document.getElementById("weatherLocation"),
-  forecast: document.getElementById("forecast"),
-  calendarTitle: document.getElementById("calendarTitle"),
-  calendarGrid: document.getElementById("calendarGrid"),
-  eventList: document.getElementById("eventList"),
-  addEventBtn: document.getElementById("addEventBtn"),
-  eventModal: document.getElementById("eventModal"),
-  eventForm: document.getElementById("eventForm"),
-  cancelEventBtn: document.getElementById("cancelEventBtn"),
-  eventModalTitle: document.getElementById("eventModalTitle"),
-  eventId: document.getElementById("eventId"),
-  eventTitle: document.getElementById("eventTitle"),
-  eventDate: document.getElementById("eventDate"),
-  eventTime: document.getElementById("eventTime"),
-  showDateToggle: document.getElementById("showDateToggle"),
-  clockTime: document.getElementById("clockTime"),
-  clockDate: document.getElementById("clockDate"),
-  imageInput: document.getElementById("imageInput"),
-  slideImage: document.getElementById("slideImage"),
-  slideEmpty: document.getElementById("slideEmpty"),
-  slideInterval: document.getElementById("slideInterval"),
-  slideIntervalLabel: document.getElementById("slideIntervalLabel"),
-  spotifyTrack: document.getElementById("spotifyTrack"),
-  spotifyArtist: document.getElementById("spotifyArtist"),
-  spotifyPlay: document.getElementById("spotifyPlay"),
-  spotifyPrev: document.getElementById("spotifyPrev"),
-  spotifyNext: document.getElementById("spotifyNext"),
-  spotifyOpenBtn: document.getElementById("spotifyOpenBtn"),
-  spotifyPlaylist: document.getElementById("spotifyPlaylist")
+let userConfig = {
+city: 'Düsseldorf', slideshowInterval: 6, spotifyUrl: '', youtubeUrl: '', recipeUrl: 'https://www.chefkoch.de/',
+appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
+globalAccent: '#ffffff', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium',
+tileOpacity: 0.6, dashboardBgImage: '', dashboardBgColor: '#aaccdd'
 };
 
-init();
+let uploadedImages = [];
+let weatherCache = null, lastWeatherFetch = 0;
+let currentEditingTileId = null;
+let resizeActive = false, currentResizeTile = null, startCol, startRow, startX, startY;
 
+// ---------- STORAGE ----------
+function loadFromStorage() {
+try {
+const savedTiles = localStorage.getItem('dash_tiles_v11');
+const savedConfig = localStorage.getItem('dash_config_v11');
+const savedImages = localStorage.getItem('dash_images_v11');
+if (savedTiles) tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
+else tiles = [...DEFAULT_TILES];
+if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
+if (savedImages) uploadedImages = JSON.parse(savedImages);
+if (!tiles.length) tiles = [...DEFAULT_TILES];
+} catch(e) { tiles = [...DEFAULT_TILES]; }
+ensureUniqueIds();
+applyAllSettings();
+}
+
+function saveToStorage() {
+try {
+localStorage.setItem('dash_tiles_v11', JSON.stringify(tiles));
+localStorage.setItem('dash_config_v11', JSON.stringify(userConfig));
+localStorage.setItem('dash_images_v11', JSON.stringify(uploadedImages));
+} catch(e) {}
+}
+
+function ensureUniqueIds() { tiles.forEach(t => { if (!t.id) t.id = ++nextTileId; }); }
+
+function resetToDefault() {
+tiles = DEFAULT_TILES.map(t => ({...t}));
+userConfig = { city: 'Düsseldorf', slideshowInterval: 6, spotifyUrl: '', youtubeUrl: '', recipeUrl: 'https://www.chefkoch.de/', appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting', globalAccent: '#ffffff', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium', tileOpacity: 0.6, dashboardBgImage: '', dashboardBgColor: '#aaccdd' };
+uploadedImages = [];
+applyAllSettings();
+saveToStorage();
+renderAll();
+}
+
+function applyAllSettings() {
+applyTheme(userConfig.theme);
+applyFontSize(userConfig.fontSize);
+applyDashboardBackground();
+}
+function applyTheme(theme) { document.body.className = `theme-${theme}`; userConfig.theme = theme; }
+function applyFontSize(size) { document.documentElement.style.fontSize = size === 'small' ? '14px' : (size === 'large' ? '18px' : '16px'); }
+function applyDashboardBackground() {
+const db = document.getElementById('dashboard');
+if (userConfig.dashboardBgImage) db.style.backgroundImage = `url('${userConfig.dashboardBgImage}')`;
+else { db.style.backgroundImage = 'none'; db.style.backgroundColor = userConfig.dashboardBgColor; }
+}
+
+function hexToRgba(hex, alpha) {
+const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+const gridEl = document.getElementById('tileGrid');
+
+function renderAll() {
+if (!gridEl) return;
+gridEl.innerHTML = '';
+tiles.forEach(tile => { gridEl.appendChild(createTileElement(tile)); });
+refreshDynamicContents();
+}
+
+function createTileElement(tile) {
+const div = document.createElement('div');
+div.className = `tile ${editMode ? 'edit-mode' : ''}`;
+div.dataset.id = tile.id;
+div.style.gridColumn = `span ${tile.colSpan || 2}`;
+div.style.gridRow = `span ${tile.rowSpan || 2}`;
+div.setAttribute('draggable', editMode);
+
+const bgColor = tile.color || userConfig.globalAccent;
+const opacity = tile.opacity !== undefined ? tile.opacity : userConfig.tileOpacity;
+if (tile.bgImage) {
+div.style.backgroundImage = `url('${tile.bgImage}')`;
+div.style.backgroundColor = 'transparent';
+} else {
+div.style.backgroundImage = 'none';
+div.style.backgroundColor = hexToRgba(bgColor, opacity);
+}
+div.style.color = userConfig.globalTextColor;
+
+const header = document.createElement('div'); header.className = 'tile-header';
+header.innerHTML = `<span>${tile.title || tile.type}</span>`;
+const controls = document.createElement('div'); controls.className = 'tile-controls';
+if (editMode) {
+controls.innerHTML = `<button class="icon-btn tile-settings-btn" data-id="${tile.id}">⚙️</button>
+<button class="icon-btn tile-delete-btn" data-id="${tile.id}">✕</button>`;
+}
+header.appendChild(controls); div.appendChild(header);
+
+const content = document.createElement('div'); content.className = 'tile-content';
+div.appendChild(content);
+fillTileContent(tile, content);
+
+// Resize Handle
+const handle = document.createElement('div'); handle.className = 'resize-handle';
+handle.innerHTML = '⤡'; handle.dataset.id = tile.id;
+handle.addEventListener('mousedown', startResize);
+handle.addEventListener('touchstart', startResize);
+div.appendChild(handle);
+
+div.addEventListener('dragstart', handleDragStart);
+div.addEventListener('dragover', handleDragOver);
+div.addEventListener('drop', handleDrop);
+div.addEventListener('dragend', handleDragEnd);
+
+return div;
+}
+
+// ---------- RESIZE (stufenlos in Grid-Einheiten) ----------
+function startResize(e) {
+if (!editMode) return;
+e.preventDefault();
+const handle = e.target.closest('.resize-handle');
+if (!handle) return;
+const tileId = Number(handle.dataset.id);
+currentResizeTile = tiles.find(t => t.id === tileId);
+if (!currentResizeTile) return;
+
+const tileEl = document.querySelector(`.tile[data-id="${tileId}"]`);
+const rect = tileEl.getBoundingClientRect();
+startCol = currentResizeTile.colSpan || 2;
+startRow = currentResizeTile.rowSpan || 2;
+startX = e.clientX || e.touches[0].clientX;
+startY = e.clientY || e.touches[0].clientY;
+
+resizeActive = true;
+document.addEventListener('mousemove', onResizeMove);
+document.addEventListener('touchmove', onResizeMove);
+document.addEventListener('mouseup', stopResize);
+document.addEventListener('touchend', stopResize);
+}
+
+function onResizeMove(e) {
+if (!resizeActive || !currentResizeTile) return;
+e.preventDefault();
+const clientX = e.clientX || e.touches[0].clientX;
+const clientY = e.clientY || e.touches[0].clientY;
+
+// Grid-Zellen-Größe schätzen (grob)
+const tileEl = document.querySelector(`.tile[data-id="${currentResizeTile.id}"]`);
+if (!tileEl) return;
+const gridContainer = document.getElementById('tileGrid');
+const containerRect = gridContainer.getBoundingClientRect();
+const colWidth = containerRect.width / 6; // 6 Spalten
+const rowHeight = 140; // ungefähr
+
+const deltaX = clientX - startX;
+const deltaY = clientY - startY;
+
+let newColSpan = Math.max(1, Math.min(6, Math.round(startCol + deltaX / colWidth)));
+let newRowSpan = Math.max(1, Math.min(6, Math.round(startRow + deltaY / rowHeight)));
+
+currentResizeTile.colSpan = newColSpan;
+currentResizeTile.rowSpan = newRowSpan;
+
+tileEl.style.gridColumn = `span ${newColSpan}`;
+tileEl.style.gridRow = `span ${newRowSpan}`;
+}
+
+function stopResize() {
+if (resizeActive && currentResizeTile) {
+saveToStorage();
+renderAll(); // neu rendern, um Layout zu fixieren
+}
+resizeActive = false;
+currentResizeTile = null;
+document.removeEventListener('mousemove', onResizeMove);
+document.removeEventListener('touchmove', onResizeMove);
+document.removeEventListener('mouseup', stopResize);
+document.removeEventListener('touchend', stopResize);
+}
+
+// ---------- INHALTE ----------
+function fillTileContent(tile, container) {
+const type = tile.type;
+if (type === 'clock') renderFlipClock(container);
+else if (type === 'weather') renderWeather(container);
+else if (type === 'calendar') renderCalendar(container);
+else if (type === 'slideshow') renderSlideshow(container);
+else if (type === 'appointments') renderAppointments(container);
+else if (type === 'spotify') renderSpotify(container);
+else if (type === 'youtube') renderYoutube(container);
+else if (type === 'recipe') renderRecipe(container);
+}
+function renderFlipClock(container) {
+const now = new Date();
+container.innerHTML = `<div class="flip-clock"><span class="flip-digit">${String(now.getHours()).padStart(2,'0')}</span><span>:</span><span class="flip-digit">${String(now.getMinutes()).padStart(2,'0')}</span></div><div class="clock-date">${now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'})}</div>`;
+}
+async function renderWeather(container) {
+const city = userConfig.city;
+container.innerHTML = `<div>🌤️</div>`;
+try {
+const useCache = (Date.now() - lastWeatherFetch < 600000) && weatherCache;
+let data;
+if (useCache) data = weatherCache;
+else {
+const res = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`);
+if (!res.ok) throw new Error();
+data = await res.json();
+weatherCache = data;
+lastWeatherFetch = Date.now();
+}
+const curr = data.current_condition[0];
+const forecast = data.weather;
+const icon = getWeatherIcon(curr.weatherCode);
+container.innerHTML = `<div style="display:flex;align-items:center;gap:10px;"><span class="weather-icon-large">${icon}</span><div><span style="font-size:2.8rem;">${curr.temp_C}°</span><span>${curr.weatherDesc[0].value}</span></div></div><div class="forecast-icons">${forecast.slice(0,5).map(d => `<div class="forecast-item">${getWeatherIcon(d.weatherCode)}<br>${d.maxtempC}°</div>`).join('')}</div>`;
+} catch(e) { container.innerHTML = `<div>🌥️ ${city}<br>15°C leicht bewölkt</div>`; }
+}
+function getWeatherIcon(c){ return c<200?'☀️':c<300?'🌦️':c<600?'🌧️':c<700?'❄️':'☁️'; }
+function renderCalendar(container) {
+const today = new Date(); const y = today.getFullYear(), m = today.getMonth();
+const firstDay = new Date(y, m, 1).getDay(); const days = new Date(y, m+1, 0).getDate();
+let html = `<div style="font-weight:500;">${today.toLocaleString('de',{month:'long'})} ${y}</div><div class="calendar-grid">`;
+['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d=> html+=`<div>${d}</div>`);
+let start = (firstDay===0)?6:firstDay-1;
+for(let i=0;i<start;i++) html+=`<div></div>`;
+for(let d=1; d<=days; d++){
+const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+const isToday = (d===today.getDate() && m===today.getMonth());
+const hasApp = userConfig.appointmentsText.split('\n').some(l=>l.startsWith(ds));
+html+=`<div class="cal-day ${isToday?'today':''} ${hasApp?'has-event':''}">${d}</div>`;
+}
+html+=`</div>`; container.innerHTML = html;
+}
+function renderSlideshow(container) {
+if (!uploadedImages.length) { container.innerHTML = `<div>📸 Bilder hochladen</div>`; return; }
+let idx = (parseInt(container.dataset.slideIndex)||0) % uploadedImages.length;
+container.innerHTML = `<img class="slideshow-img" src="${uploadedImages[idx]}">`;
+container.dataset.slideIndex = idx;
+}
+function renderAppointments(container) {
+const lines = userConfig.appointmentsText.split('\n').filter(l=>l.trim());
+container.innerHTML = lines.length ? lines.map(l=>`<div>📅 ${l}</div>`).join('') : '<div>Keine Termine</div>';
+}
+function renderSpotify(container) { container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${userConfig.spotifyUrl}','_blank')">🎵 Spotify öffnen</button></div>`; }
+function renderYoutube(container) { container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${userConfig.youtubeUrl}','_blank')">▶️ YouTube öffnen</button></div>`; }
+function renderRecipe(container) { container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${userConfig.recipeUrl}','_blank')">🍳 Rezepte öffnen</button></div>`; }
+
+function refreshDynamicContents() {
+document.querySelectorAll('.tile').forEach(el => {
+const id = Number(el.dataset.id);
+const tile = tiles.find(t=>t.id===id);
+if (tile) fillTileContent(tile, el.querySelector('.tile-content'));
+});
+}
+
+// Drag & Drop
+let dragSrc = null;
+function handleDragStart(e) { if(editMode){ dragSrc=this; this.classList.add('dragging'); } else e.preventDefault(); }
+function handleDragOver(e) { if(editMode) e.preventDefault(); }
+function handleDrop(e) {
+e.preventDefault();
+if(!editMode||!dragSrc) return;
+const target = this.closest('.tile');
+if(!target||dragSrc===target) return;
+const srcId = Number(dragSrc.dataset.id), targetId = Number(target.dataset.id);
+const srcIdx = tiles.findIndex(t=>t.id===srcId), tgtIdx = tiles.findIndex(t=>t.id===targetId);
+if(srcIdx>-1&&tgtIdx>-1){ [tiles[srcIdx], tiles[tgtIdx]] = [tiles[tgtIdx], tiles[srcIdx]]; saveToStorage(); renderAll(); }
+}
+function handleDragEnd(e) { this.classList.remove('dragging'); }
+
+function openTileSettings(tileId) {
+const tile = tiles.find(t=>t.id==tileId); if(!tile) return;
+currentEditingTileId = tileId;
+document.getElementById('currentTileId').value = tileId;
+document.getElementById('tileTitle').value = tile.title || '';
+document.getElementById('tileColor').value = tile.color || userConfig.globalAccent;
+document.getElementById('tileColorText').value = tile.color || userConfig.globalAccent;
+document.getElementById('tileOpacity').value = tile.opacity !== undefined ? tile.opacity : userConfig.tileOpacity;
+document.getElementById('tileOpacityVal').textContent = document.getElementById('tileOpacity').value;
+document.getElementById('tileSettingsModal').classList.remove('hidden');
+}
+
+// ---------- INIT ----------
 function init() {
-  applyTheme();
-  applyLayout();
-  wireThemeControls();
-  wireCalendar();
-  wireClock();
-  wireSlideshow();
-  wireSpotify();
-  wireEditMode();
-  renderCalendar();
-  tickClock();
-  setInterval(tickClock, 1000);
-  renderSpotify();
-  refreshWeather();
+loadFromStorage();
+renderAll();
+
+const burgerBtn = document.getElementById('burgerMenuBtn'), menuDropdown = document.getElementById('menuDropdown');
+burgerBtn.addEventListener('click', (e) => { e.stopPropagation(); menuDropdown.classList.toggle('show'); });
+document.addEventListener('click', () => menuDropdown.classList.remove('show'));
+menuDropdown.addEventListener('click', (e) => e.stopPropagation());
+
+document.getElementById('menuEditToggle').onclick = ()=>{ editMode=!editMode; menuDropdown.classList.remove('show'); renderAll(); };
+document.getElementById('menuUploadImages').onclick = ()=>{
+menuDropdown.classList.remove('show');
+const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.multiple=true;
+inp.onchange = e => { Array.from(e.target.files).forEach(f=>{ const r=new FileReader(); r.onload=ev=>{ uploadedImages.push(ev.target.result); saveToStorage(); renderAll(); }; r.readAsDataURL(f); }); };
+inp.click();
+};
+document.getElementById('menuOpenSettings').onclick = ()=>{
+menuDropdown.classList.remove('show');
+document.getElementById('settingsCity').value = userConfig.city;
+document.getElementById('settingsSlideshowSec').value = userConfig.slideshowInterval;
+document.getElementById('settingsSpotify').value = userConfig.spotifyUrl;
+document.getElementById('settingsYoutube').value = userConfig.youtubeUrl;
+document.getElementById('settingsRecipeUrl').value = userConfig.recipeUrl;
+document.getElementById('settingsAppointments').value = userConfig.appointmentsText;
+document.getElementById('globalAccentColor').value = userConfig.globalAccent;
+document.getElementById('globalAccentColorText').value = userConfig.globalAccent;
+document.getElementById('globalTextColor').value = userConfig.globalTextColor;
+document.getElementById('globalTextColorText').value = userConfig.globalTextColor;
+document.getElementById('settingsTheme').value = userConfig.theme;
+document.getElementById('settingsFontSize').value = userConfig.fontSize;
+document.getElementById('tileOpacitySlider').value = userConfig.tileOpacity;
+document.getElementById('tileOpacityValue').textContent = userConfig.tileOpacity;
+document.getElementById('dashboardBgColor').value = userConfig.dashboardBgColor;
+document.getElementById('dashboardBgColorText').value = userConfig.dashboardBgColor;
+document.getElementById('settingsModal').classList.remove('hidden');
+};
+document.getElementById('menuAddTile').onclick = ()=>{
+tiles.push({ id: ++nextTileId, type: 'clock', title: 'Neue Uhr', colSpan:2, rowSpan:2, color: userConfig.globalAccent, bgImage: '', opacity: userConfig.tileOpacity });
+saveToStorage(); renderAll(); menuDropdown.classList.remove('show');
+};
+document.getElementById('menuReset').onclick = ()=>{ if(confirm('Reset?')) resetToDefault(); menuDropdown.classList.remove('show'); };
+
+document.getElementById('tileOpacitySlider').addEventListener('input', e => document.getElementById('tileOpacityValue').textContent = e.target.value);
+document.getElementById('tileOpacity').addEventListener('input', e => document.getElementById('tileOpacityVal').textContent = e.target.value);
+
+document.getElementById('uploadDashboardBgBtn').onclick = ()=>{
+const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
+inp.onchange = e => { const f=e.target.files[0]; if(f){ const r=new FileReader(); r.onload=ev=>{ userConfig.dashboardBgImage = ev.target.result; applyDashboardBackground(); }; r.readAsDataURL(f); } };
+inp.click();
+};
+document.getElementById('removeDashboardBgBtn').onclick = ()=>{ userConfig.dashboardBgImage = ''; applyDashboardBackground(); };
+
+// Color syncs
+const accentPicker = document.getElementById('globalAccentColor'), accentText = document.getElementById('globalAccentColorText');
+const textPicker = document.getElementById('globalTextColor'), textText = document.getElementById('globalTextColorText');
+const dashboardColor = document.getElementById('dashboardBgColor'), dashboardText = document.getElementById('dashboardBgColorText');
+const tileColorPicker = document.getElementById('tileColor'), tileColorText = document.getElementById('tileColorText');
+accentPicker.addEventListener('input', ()=> accentText.value = accentPicker.value);
+accentText.addEventListener('input', ()=> accentPicker.value = accentText.value);
+textPicker.addEventListener('input', ()=> textText.value = textPicker.value);
+textText.addEventListener('input', ()=> textPicker.value = textText.value);
+dashboardColor.addEventListener('input', ()=> dashboardText.value = dashboardColor.value);
+dashboardText.addEventListener('input', ()=> dashboardColor.value = dashboardText.value);
+tileColorPicker.addEventListener('input', ()=> tileColorText.value = tileColorPicker.value);
+tileColorText.addEventListener('input', ()=> tileColorPicker.value = tileColorText.value);
+
+document.getElementById('closeSettingsBtn').onclick = ()=> document.getElementById('settingsModal').classList.add('hidden');
+document.getElementById('saveSettingsBtn').onclick = ()=>{
+userConfig.city = document.getElementById('settingsCity').value;
+userConfig.slideshowInterval = parseInt(document.getElementById('settingsSlideshowSec').value)||6;
+userConfig.spotifyUrl = document.getElementById('settingsSpotify').value;
+userConfig.youtubeUrl = document.getElementById('settingsYoutube').value;
+userConfig.recipeUrl = document.getElementById('settingsRecipeUrl').value;
+userConfig.appointmentsText = document.getElementById('settingsAppointments').value;
+userConfig.globalAccent = document.getElementById('globalAccentColor').value;
+userConfig.globalTextColor = document.getElementById('globalTextColor').value;
+userConfig.theme = document.getElementById('settingsTheme').value;
+userConfig.fontSize = document.getElementById('settingsFontSize').value;
+userConfig.tileOpacity = parseFloat(document.getElementById('tileOpacitySlider').value);
+userConfig.dashboardBgColor = document.getElementById('dashboardBgColor').value;
+applyAllSettings();
+saveToStorage();
+renderAll();
+document.getElementById('settingsModal').classList.add('hidden');
+};
+
+document.getElementById('closeTileSettingsBtn').onclick = ()=> document.getElementById('tileSettingsModal').classList.add('hidden');
+document.getElementById('saveTileSettingsBtn').onclick = ()=>{
+const tileId = parseInt(document.getElementById('currentTileId').value);
+const tile = tiles.find(t=>t.id===tileId);
+if(tile){
+tile.title = document.getElementById('tileTitle').value;
+tile.color = document.getElementById('tileColor').value;
+tile.opacity = parseFloat(document.getElementById('tileOpacity').value);
 }
+saveToStorage(); renderAll(); document.getElementById('tileSettingsModal').classList.add('hidden');
+};
+document.getElementById('uploadTileBgBtn').onclick = ()=>{
+const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
+inp.onchange = e => { const f=e.target.files[0]; if(f){ const r=new FileReader(); r.onload=ev=>{ const tileId=parseInt(document.getElementById('currentTileId').value); const tile=tiles.find(t=>t.id===tileId); if(tile){ tile.bgImage=ev.target.result; saveToStorage(); renderAll(); } }; r.readAsDataURL(f); } };
+inp.click();
+};
+document.getElementById('removeTileBgBtn').onclick = ()=>{
+const tileId = parseInt(document.getElementById('currentTileId').value);
+const tile = tiles.find(t=>t.id===tileId); if(tile){ tile.bgImage=''; saveToStorage(); renderAll(); }
+};
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return structuredClone(defaultState);
-    return mergeDeep(structuredClone(defaultState), JSON.parse(raw));
-  } catch {
-    return structuredClone(defaultState);
-  }
-}
-async function geocodeCity(city){
-  try{
-    const res=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&language=de&format=json');
-    const data=await res.json();
-    if(data&&data.results&&data.results[0]){
-      const r=data.results[0];
-      state.coords={lat:r.latitude, lon:r.longitude};
-      state.city=r.name; saveState();
-
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
-function mergeDeep(target, source) {
-  for (const key of Object.keys(source || {})) {
-    if (source[key] && typeof source[key] === "object" && !Array.isArray(source[key])) {
-      target[key] = mergeDeep(target[key] || {}, source[key]);
-    } else {
-      target[key] = source[key];
-    }
-  }catch(e){}
-}
-function updateClock(){
-  const t=document.getElementById("clockTime"), d=document.getElementById("clockDate");
-  if(!t||!d) return;
-  const now=new Date();
-  t.textContent=now.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
-  d.textContent=now.toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
-}
-setInterval(updateClock,1000);
-function renderTileBody(item, body){
-  if(item.type==="clock"){ body.innerHTML='<div class="clock-time" id="clockTime">--:--</div><div class="clock-date" id="clockDate">--</div>'; return; }
-  if(item.type==="weather"){ body.innerHTML='<div class="weather-city" id="weatherCity">'+state.city+'</div><div class="weather-temp" id="weatherTemp">--°</div><div class="muted" id="weatherDesc">Lade Wetter...</div><div class="muted" id="weatherMeta"></div>'; loadWeather(); return; }
-  if(item.type==="calendar"){ body.innerHTML=createCalendarHTML(); return; }
-  if(item.type==="slideshow"){
-    const current=state.photos.length ? state.photos[slideshowIndex % state.photos.length] : null;
-    body.innerHTML='<div class="slideshow-tile">'+(current ? '<img id="slideImage" src="'+current+'" alt="Slideshow">' : '<div class="slide-empty">Noch keine Bilder hochgeladen</div>')+'</div><div class="slidestrip">'+(state.photos||[]).slice(0,3).map(src=>'<img src="'+src+'" alt="">').join("")+'</div>';
-    return;
-  }
-  if(item.type==="agenda"){ body.innerHTML=state.events.length ? '<div class="agenda">'+state.events.map(formatEvent).join("")+'</div>' : '<div class="muted">Keine Termine eingetragen</div>'; return; }
-  if(item.type==="spotify"){ body.innerHTML='<iframe src="'+state.spotifyUrl+'" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>'; return; }
-  if(item.type==="youtube"){ body.innerHTML='<iframe src="'+state.youtubeUrl+'" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>'; return; }
-  if(item.type==="recipes"){ body.innerHTML=state.recipes.length ? '<div class="recipes">'+state.recipes.map(formatRecipe).join("")+'</div>' : '<div class="muted">Keine Rezepte eingetragen</div>'; return; }
-  body.innerHTML='<div class="muted">Leere Kachel</div>';
-}
-function bindDrag(tile){
-  tile.addEventListener("dragstart",e=>{ tile.classList.add("dragging"); e.dataTransfer.setData("text/plain", tile.dataset.id); });
-  tile.addEventListener("dragend",()=>tile.classList.remove("dragging"));
-  tile.addEventListener("dragover",e=>{ if(!document.body.classList.contains("edit-mode")) return; e.preventDefault(); tile.classList.add("drop-target"); });
-  tile.addEventListener("dragleave",()=>tile.classList.remove("drop-target"));
-  tile.addEventListener("drop",e=>{
-    if(!document.body.classList.contains("edit-mode")) return;
-    e.preventDefault(); tile.classList.remove("drop-target");
-    const fromId=e.dataTransfer.getData("text/plain"), toId=tile.dataset.id;
-    if(!fromId||fromId===toId) return;
-    const fromIndex=state.layout.findIndex(t=>t.id===fromId), toIndex=state.layout.findIndex(t=>t.id===toId);
-    const moved=state.layout.splice(fromIndex,1)[0];
-    state.layout.splice(toIndex,0,moved);
-    saveState(); render();
-  return target;
-}
-
-function applyTheme() {
-  document.documentElement.style.setProperty("--bg-color", state.theme.bgColor);
-  document.documentElement.style.setProperty("--text-color", state.theme.textColor);
-  document.documentElement.style.setProperty("--tile-alpha", String(state.theme.tileAlpha));
-  document.documentElement.style.setProperty("--font-scale", String(state.theme.fontScale));
-  document.documentElement.style.setProperty("--tile-rgb", hexToRgbCsv(state.theme.tileColor));
-
-  dom.tileColor.value = state.theme.tileColor;
-  dom.textColor.value = state.theme.textColor;
-  dom.bgColor.value = state.theme.bgColor;
-  dom.tileAlpha.value = String(state.theme.tileAlpha);
-  dom.fontScale.value = String(state.theme.fontScale);
-
-  document.querySelectorAll(".tile").forEach((tile) => {
-    const tileName = tile.dataset.tile;
-    const custom = state.tileStyle[tileName]?.color;
-    if (custom) {
-      tile.style.background = `rgba(${hexToRgbCsv(custom)}, ${state.theme.tileAlpha})`;
-    }
-  });
-}
-
-function wireThemeControls() {
-  dom.themeBtn.addEventListener("click", () => dom.themePanel.classList.add("open"));
-  dom.closeThemePanel.addEventListener("click", () => dom.themePanel.classList.remove("open"));
-
-  dom.tileColor.addEventListener("input", () => {
-    state.theme.tileColor = dom.tileColor.value;
-    Object.keys(state.tileStyle).forEach((key) => {
-      state.tileStyle[key].color = dom.tileColor.value;
-    });
-    applyTheme();
-    saveState();
-  });
-
-  dom.textColor.addEventListener("input", () => {
-    state.theme.textColor = dom.textColor.value;
-    applyTheme();
-    saveState();
-  });
-
-  dom.bgColor.addEventListener("input", () => {
-    state.theme.bgColor = dom.bgColor.value;
-    applyTheme();
-    saveState();
-  });
-
-  dom.tileAlpha.addEventListener("input", () => {
-    state.theme.tileAlpha = Number(dom.tileAlpha.value);
-    applyTheme();
-    saveState();
-  });
-
-  dom.fontScale.addEventListener("input", () => {
-    state.theme.fontScale = Number(dom.fontScale.value);
-    applyTheme();
-    saveState();
-  });
-
-  document.querySelectorAll("[data-open-config]").forEach((btn) => {
-    btn.addEventListener("click", (event) => {
-      const tileName = event.currentTarget.dataset.openConfig;
-      const picked = prompt("Set tile color (#RRGGBB)", state.tileStyle[tileName]?.color || "#212632");
-      if (picked && /^#([0-9a-fA-F]{6})$/.test(picked)) {
-        state.tileStyle[tileName].color = picked;
-        saveState();
-        applyTheme();
-      }
-    });
-  });
-}
-
-function applyLayout() {
-  for (const [tileName, placement] of Object.entries(state.layout)) {
-    const tile = document.getElementById(`tile-${tileName}`);
-    if (!tile) continue;
-    tile.style.gridColumn = `${placement.col} / span ${placement.spanCol}`;
-    tile.style.gridRow = `${placement.row} / span ${placement.spanRow}`;
-  }
-}
-
-function wireEditMode() {
-  dom.editToggle.addEventListener("click", () => {
-    state.editMode = !state.editMode;
-    dom.editToggle.textContent = state.editMode ? "Exit Edit" : "Edit Mode";
-    document.querySelectorAll(".tile").forEach((tile) => {
-      tile.classList.toggle("editing", state.editMode);
-      tile.draggable = state.editMode;
-      tile.style.resize = state.editMode ? "both" : "none";
-      tile.style.overflow = state.editMode ? "auto" : "hidden";
-    });
-    saveState();
-  });
-
-  document.querySelectorAll(".tile").forEach((tile) => {
-    tile.addEventListener("dragstart", (event) => {
-      if (!state.editMode) return;
-      event.dataTransfer.setData("text/plain", tile.dataset.tile);
-    });
-
-    tile.addEventListener("dragover", (event) => {
-      if (state.editMode) event.preventDefault();
-    });
-
-    tile.addEventListener("drop", (event) => {
-      if (!state.editMode) return;
-      event.preventDefault();
-      const from = event.dataTransfer.getData("text/plain");
-      const to = tile.dataset.tile;
-      if (!from || from === to) return;
-      const fromLayout = state.layout[from];
-      state.layout[from] = state.layout[to];
-      state.layout[to] = fromLayout;
-      applyLayout();
-      saveState();
-    });
-
-    tile.addEventListener("pointerup", () => {
-      if (!state.editMode) return;
-      const style = window.getComputedStyle(tile);
-      const colStart = Number(style.gridColumnStart);
-      const rowStart = Number(style.gridRowStart);
-      const colEnd = style.gridColumnEnd;
-      const rowEnd = style.gridRowEnd;
-      const spanCol = Number(String(colEnd).replace("span ", "")) || state.layout[tile.dataset.tile].spanCol;
-      const spanRow = Number(String(rowEnd).replace("span ", "")) || state.layout[tile.dataset.tile].spanRow;
-      state.layout[tile.dataset.tile] = { col: colStart, spanCol, row: rowStart, spanRow };
-      saveState();
-    });
-  });
-}
-function render(){
-  grid.innerHTML="";
-  state.layout.forEach(item=>{
-    const tile=document.createElement("div");
-    tile.className="tile"; tile.draggable=true; tile.dataset.id=item.id;
-    tile.style.gridColumn='span '+item.w; tile.style.gridRow='span '+item.h;
-    tile.innerHTML='<div class="tile-inner"><div class="tile-header"><div class="label">'+(item.title||item.type)+'</div><div class="tile-tools"><button class="icon-btn resize-btn" title="Größe ändern">⤢</button><button class="icon-btn delete-btn" title="Löschen">×</button></div></div><div class="tile-body" style="display:flex;flex-direction:column;gap:10px;min-height:0;flex:1"></div></div>';
-    renderTileBody(item, tile.querySelector(".tile-body"));
-    tile.querySelector(".resize-btn").addEventListener("click",e=>{ e.stopPropagation(); cycleTileSize(item); saveState(); render(); });
-    tile.querySelector(".delete-btn").addEventListener("click",e=>{ e.stopPropagation(); state.layout=state.layout.filter(t=>t.id!==item.id); saveState(); render(); });
-    bindDrag(tile);
-    grid.appendChild(tile);
-
-async function refreshWeather() {
-  const mock = {
-    icon: "⛅",
-    temp: 18,
-    desc: "Partly cloudy",
-    location: "Berlin",
-    forecast: [
-      { day: "Fri", icon: "🌤", min: 12, max: 20 },
-      { day: "Sat", icon: "🌦", min: 10, max: 16 },
-      { day: "Sun", icon: "☁️", min: 11, max: 17 },
-      { day: "Mon", icon: "🌧", min: 9, max: 14 },
-      { day: "Tue", icon: "☀️", min: 10, max: 19 }
-    ]
-  };
-
-  try {
-    const position = await getCurrentPosition();
-    state.weather.coords = {
-      lat: position.coords.latitude,
-      lon: position.coords.longitude
-    };
-
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${state.weather.coords.lat}&longitude=${state.weather.coords.lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto`;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("Weather API unavailable");
-    const data = await response.json();
-
-    state.weather.useMock = false;
-    state.weather.current = {
-      temp: Math.round(data.current.temperature_2m),
-      code: data.current.weather_code
-    };
-
-    state.weather.forecast = data.daily.time.slice(0, 5).map((day, idx) => {
-      const date = new Date(day);
-      const code = data.daily.weather_code[idx];
-      return {
-        day: date.toLocaleDateString("en-US", { weekday: "short" }),
-        icon: weatherCodeToIcon(code),
-        min: Math.round(data.daily.temperature_2m_min[idx]),
-        max: Math.round(data.daily.temperature_2m_max[idx])
-      };
-    });
-
-    dom.weatherIcon.textContent = weatherCodeToIcon(state.weather.current.code);
-    dom.weatherTemp.textContent = `${state.weather.current.temp}°`;
-    dom.weatherDesc.textContent = weatherCodeToText(state.weather.current.code);
-    dom.weatherLocation.textContent = `Lat ${state.weather.coords.lat.toFixed(2)}, Lon ${state.weather.coords.lon.toFixed(2)}`;
-    renderForecast(state.weather.forecast);
-    saveState();
-  } catch {
-    state.weather.useMock = true;
-    dom.weatherIcon.textContent = mock.icon;
-    dom.weatherTemp.textContent = `${mock.temp}°`;
-    dom.weatherDesc.textContent = `${mock.desc} (offline fallback)`;
-    dom.weatherLocation.textContent = mock.location;
-    renderForecast(mock.forecast);
-  }
-}
-
-function renderForecast(items) {
-  dom.forecast.innerHTML = "";
-  items.forEach((item) => {
-    const div = document.createElement("div");
-    div.className = "forecast-day";
-    div.innerHTML = `<strong>${item.day}</strong><br>${item.icon}<br>${item.min}°/${item.max}°`;
-    dom.forecast.appendChild(div);
-  });
-}
-
-function getCurrentPosition() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error("Geolocation not supported"));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
-      timeout: 7000,
-      enableHighAccuracy: true
-    });
-  });
-  updateClock();
-}
-function startSlideshow(){
-  if(slideTimer) clearInterval(slideTimer);
-  slideTimer=setInterval(()=>{
-    if(!state.photos.length) return;
-    slideshowIndex=(slideshowIndex+1)%state.photos.length;
-    const img=document.getElementById("slideImage");
-    if(img) img.src=state.photos[slideshowIndex];
-  }, Math.max(3, Number(state.slideSeconds||10))*1000);
-}
-function readFile(file){
-  return new Promise((resolve,reject)=>{
-    const reader=new FileReader();
-    reader.onload=()=>resolve(reader.result);
-    reader.onerror=reject;
-}
-
-function weatherCodeToIcon(code) {
-  if ([0].includes(code)) return "☀️";
-  if ([1, 2].includes(code)) return "🌤";
-  if ([3].includes(code)) return "☁️";
-  if ([45, 48].includes(code)) return "🌫";
-  if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return "🌧";
-  if ([71, 73, 75].includes(code)) return "❄️";
-  if ([95, 96, 99].includes(code)) return "⛈";
-  return "⛅";
-}
-
-function weatherCodeToText(code) {
-  if ([0].includes(code)) return "Clear";
-  if ([1, 2].includes(code)) return "Partly cloudy";
-  if ([3].includes(code)) return "Cloudy";
-  if ([45, 48].includes(code)) return "Fog";
-  if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return "Rain";
-  if ([71, 73, 75].includes(code)) return "Snow";
-  if ([95, 96, 99].includes(code)) return "Thunderstorm";
-  return "Weather";
-}
-
-function wireCalendar() {
-  dom.addEventBtn.addEventListener("click", () => openEventModal());
-  dom.cancelEventBtn.addEventListener("click", () => dom.eventModal.close());
-
-  dom.eventForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const payload = {
-      id: dom.eventId.value || crypto.randomUUID(),
-      title: dom.eventTitle.value.trim(),
-      date: dom.eventDate.value,
-      time: dom.eventTime.value
-    };
-
-    const existingIndex = state.calendarEvents.findIndex((item) => item.id === payload.id);
-    if (existingIndex >= 0) {
-      state.calendarEvents[existingIndex] = payload;
-    } else {
-      state.calendarEvents.push(payload);
-    }
-
-    state.calendarEvents.sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
-    saveState();
-    renderCalendar();
-    dom.eventModal.close();
-  });
-}
-
-function openEventModal(eventData = null) {
-  dom.eventModalTitle.textContent = eventData ? "Edit Event" : "Add Event";
-  dom.eventId.value = eventData?.id || "";
-  dom.eventTitle.value = eventData?.title || "";
-  dom.eventDate.value = eventData?.date || new Date().toISOString().slice(0, 10);
-  dom.eventTime.value = eventData?.time || "09:00";
-  dom.eventModal.showModal();
-}
-
-function renderCalendar() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const startOffset = (firstDay.getDay() + 6) % 7;
-
-  dom.calendarTitle.textContent = firstDay.toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric"
-  });
-
-  dom.calendarGrid.innerHTML = "";
-  ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach((d) => {
-    const label = document.createElement("div");
-    label.className = "dow";
-    label.textContent = d;
-    dom.calendarGrid.appendChild(label);
-  });
-
-  for (let i = 0; i < startOffset; i += 1) {
-    const empty = document.createElement("div");
-    empty.className = "day";
-    dom.calendarGrid.appendChild(empty);
-  }
-
-  for (let day = 1; day <= daysInMonth; day += 1) {
-    const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    const hasEvent = state.calendarEvents.some((event) => event.date === date);
-    const cell = document.createElement("div");
-    cell.className = `day ${hasEvent ? "has-event" : ""} ${day === now.getDate() ? "today" : ""}`;
-    cell.textContent = String(day);
-    dom.calendarGrid.appendChild(cell);
-  }
-
-  dom.eventList.innerHTML = "";
-  state.calendarEvents.forEach((eventItem) => {
-    const row = document.createElement("div");
-    row.className = "event-item";
-    row.innerHTML = `
-      <div>
-        <strong>${escapeHtml(eventItem.title)}</strong><br>
-        <span>${eventItem.date} ${eventItem.time}</span>
-      </div>
-      <div class="event-actions">
-        <button class="btn small" data-edit-event="${eventItem.id}">Edit</button>
-        <button class="btn small secondary" data-delete-event="${eventItem.id}">Del</button>
-      </div>
-    `;
-    dom.eventList.appendChild(row);
-  });
-
-  dom.eventList.querySelectorAll("[data-edit-event]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.editEvent;
-      const found = state.calendarEvents.find((item) => item.id === id);
-      if (found) openEventModal(found);
-    });
-  });
-
-  dom.eventList.querySelectorAll("[data-delete-event]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.deleteEvent;
-      state.calendarEvents = state.calendarEvents.filter((item) => item.id !== id);
-      saveState();
-      renderCalendar();
-    });
-  });
-}
-
-function wireClock() {
-  dom.showDateToggle.checked = state.clock.showDate;
-  dom.showDateToggle.addEventListener("change", () => {
-    state.clock.showDate = dom.showDateToggle.checked;
-    saveState();
-    tickClock();
-  });
-}
-
-function tickClock() {
-  const now = new Date();
-  const timeText = now.toLocaleTimeString("de-DE", {
-    timeZone: "Europe/Berlin",
-    hour12: false
-  });
-
-  const dateText = now.toLocaleDateString("de-DE", {
-    timeZone: "Europe/Berlin",
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric"
-  });
-
-  dom.clockTime.textContent = timeText;
-  dom.clockDate.textContent = state.clock.showDate ? dateText : "";
-}
-
-function wireSlideshow() {
-  dom.slideInterval.value = String(state.slideshow.intervalSec);
-  dom.slideIntervalLabel.textContent = `${state.slideshow.intervalSec}s`;
-
-  dom.slideInterval.addEventListener("input", () => {
-    state.slideshow.intervalSec = Number(dom.slideInterval.value);
-    dom.slideIntervalLabel.textContent = `${state.slideshow.intervalSec}s`;
-    saveState();
-    startSlideshow();
-  });
-
-  dom.imageInput.addEventListener("change", async (event) => {
-    const files = Array.from(event.target.files || []);
-    if (!files.length) return;
-
-    const converted = await Promise.all(files.map(fileToDataUrl));
-    state.slideshow.images.push(...converted);
-    state.slideshow.index = 0;
-    saveState();
-    renderSlideshow();
-    startSlideshow();
-  });
-
-  renderSlideshow();
-  startSlideshow();
-}
-
-function renderSlideshow() {
-  const images = state.slideshow.images;
-  if (!images.length) {
-    dom.slideImage.style.display = "none";
-    dom.slideEmpty.style.display = "grid";
-    return;
-  }
-
-  state.slideshow.index %= images.length;
-  dom.slideImage.src = images[state.slideshow.index];
-  dom.slideImage.style.display = "block";
-  dom.slideEmpty.style.display = "none";
-}
-
-function startSlideshow() {
-  clearInterval(slideTimer);
-  if (state.slideshow.images.length < 2) return;
-  slideTimer = setInterval(() => {
-    state.slideshow.index = (state.slideshow.index + 1) % state.slideshow.images.length;
-    renderSlideshow();
-    saveState();
-  }, state.slideshow.intervalSec * 1000);
-}
-
-function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-document.getElementById("editBtn").addEventListener("click",()=>document.body.classList.toggle("edit-mode"));
-document.getElementById("settingsBtn").addEventListener("click",()=>{
-  document.getElementById("cityInput").value=state.city||"";
-  document.getElementById("slideSecondsInput").value=state.slideSeconds||10;
-  document.getElementById("spotifyInput").value=state.spotifyUrl||"";
-  document.getElementById("youtubeInput").value=state.youtubeUrl||"";
-  document.getElementById("eventsInput").value=(state.events||[]).join("\n");
-  document.getElementById("recipesInput").value=(state.recipes||[]).join("\n");
-  settingsPanel.classList.add("open");
+gridEl.addEventListener('click', e => {
+const btn = e.target.closest('button'); if(!btn) return;
+const id = btn.dataset.id;
+if(btn.classList.contains('tile-settings-btn')) openTileSettings(id);
+else if(btn.classList.contains('tile-delete-btn')) { tiles = tiles.filter(t=>t.id!=id); saveToStorage(); renderAll(); }
 });
-document.getElementById("closeSettings").addEventListener("click",()=>settingsPanel.classList.remove("open"));
-document.getElementById("saveSettingsBtn").addEventListener("click", async ()=>{
-  const newCity=document.getElementById("cityInput").value.trim();
-  state.slideSeconds=Math.max(3, Number(document.getElementById("slideSecondsInput").value||10));
-  state.spotifyUrl=textToEmbedSpotify(document.getElementById("spotifyInput").value.trim());
-  state.youtubeUrl=textToEmbedYoutube(document.getElementById("youtubeInput").value.trim());
-  state.events=document.getElementById("eventsInput").value.split("\n").map(s=>s.trim()).filter(Boolean);
-  state.recipes=document.getElementById("recipesInput").value.split("\n").map(s=>s.trim()).filter(Boolean);
-  if(newCity && newCity!==state.city){ state.city=newCity; await geocodeCity(newCity); }
-  saveState(); settingsPanel.classList.remove("open"); render(); startSlideshow();
-});
-document.getElementById("resetBtn").addEventListener("click",()=>{ localStorage.removeItem(STORAGE_KEY); location.reload(); });
-document.getElementById("imageInput").addEventListener("change", async e=>{
-  const files=Array.from(e.target.files||[]);
-  for(const file of files){ state.photos.push(await readFile(file)); }
-  saveState(); render(); startSlideshow();
-});
-document.getElementById("addTileBtn").addEventListener("click",()=>{
-  const options=[{type:"clock",title:"Uhr"},{type:"weather",title:"Wetter"},{type:"calendar",title:"Kalender"},{type:"slideshow",title:"Slideshow"},{type:"agenda",title:"Termine"},{type:"spotify",title:"Spotify"},{type:"youtube",title:"YouTube"},{type:"recipes",title:"Rezepte"}];
-  const next=options[state.layout.length % options.length];
-  state.layout.push({id:next.type+"-"+Date.now(), type:next.type, title:next.title, w:4, h:3});
-  saveState(); render();
-});
-if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{})); }
-render(); startSlideshow();
+
+setInterval(() => {
+document.querySelectorAll('.tile').forEach(el => { const t = tiles.find(tt=>tt.id==el.dataset.id); if(t&&t.type==='clock') renderFlipClock(el.querySelector('.tile-content')); });
+}, 1000);
+setInterval(() => {
+document.querySelectorAll('.tile').forEach(el => { const t = tiles.find(tt=>tt.id==el.dataset.id); if(t&&t.type==='slideshow'&&uploadedImages.length){ const cont=el.querySelector('.tile-content'); let idx=(parseInt(cont.dataset.slideIndex||0)+1)%uploadedImages.length; cont.dataset.slideIndex=idx; cont.innerHTML=`<img class="slideshow-img" src="${uploadedImages[idx]}">`; } });
+}, userConfig.slideshowInterval*1000);
+}
+
+window.onload = init;
+})();
 </script>
-
-function wireSpotify() {
-  dom.spotifyPlay.addEventListener("click", () => {
-    state.spotify.isPlaying = !state.spotify.isPlaying;
-    renderSpotify();
-    saveState();
-  });
-
-  dom.spotifyPrev.addEventListener("click", () => {
-    state.spotify.currentIndex =
-      (state.spotify.currentIndex - 1 + state.spotify.tracks.length) % state.spotify.tracks.length;
-    renderSpotify();
-    saveState();
-  });
-
-  dom.spotifyNext.addEventListener("click", () => {
-    state.spotify.currentIndex = (state.spotify.currentIndex + 1) % state.spotify.tracks.length;
-    renderSpotify();
-    saveState();
-  });
-
-  dom.spotifyOpenBtn.addEventListener("click", () => {
-    window.open("https://open.spotify.com", "_blank", "noopener");
-  });
-
-  dom.spotifyPlaylist.addEventListener("click", () => {
-    window.open("https://open.spotify.com/collection/playlists", "_blank", "noopener");
-  });
-}
-
-function renderSpotify() {
-  const track = state.spotify.tracks[state.spotify.currentIndex];
-  dom.spotifyTrack.textContent = track.title;
-  dom.spotifyArtist.textContent = track.artist;
-  dom.spotifyPlay.textContent = state.spotify.isPlaying ? "⏸" : "▶";
-}
-
-function hexToRgbCsv(hex) {
-  const cleaned = hex.replace("#", "");
-  const bigint = parseInt(cleaned, 16);
-  const r = (bigint >> 16) & 255;
-  const g = (bigint >> 8) & 255;
-  const b = bigint & 255;
-  return `${r}, ${g}, ${b}`;
-}
-
-function escapeHtml(text) {
-  return text
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-  </script>
 </body>
 </html>
+```
