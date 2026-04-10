@@ -156,74 +156,6 @@ backdrop-filter: blur(10px);
 -webkit-backdrop-filter: blur(10px);
 }
 
-/* ===== TOOLBAR ===== */
-.toolbar {
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 8px 8px 20px 8px;
-flex-shrink: 0;
-position: relative;
-z-index: 5;
-}
-
-.toolbar-left {
-display: flex;
-align-items: center;
-gap: 20px;
-}
-
-.burger-menu {
-background: var(--glass-bg);
-backdrop-filter: blur(20px);
--webkit-backdrop-filter: blur(20px);
-border: 1px solid var(--glass-border);
-border-radius: 20px;
-color: var(--text-primary);
-width: 52px;
-height: 52px;
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 1.8rem;
-cursor: pointer;
-box-shadow: var(--shadow-light), inset 0 1px 2px var(--glass-highlight);
-transition: all 0.2s;
-}
-
-/* Titel entfernt – kein .dashboard-title mehr */
-
-.menu-dropdown {
-position: absolute;
-top: 75px;
-left: 24px;
-background: var(--menu-bg);
-backdrop-filter: blur(40px);
--webkit-backdrop-filter: blur(40px);
-border: 1px solid var(--glass-border);
-border-radius: 28px;
-padding: 12px 8px;
-min-width: 240px;
-box-shadow: var(--shadow-heavy);
-z-index: 100;
-display: none;
-}
-.menu-dropdown.show { display: block; }
-.menu-item {
-padding: 14px 20px;
-color: var(--text-primary);
-font-size: 1.1rem;
-font-weight: 500;
-cursor: pointer;
-border-radius: 18px;
-transition: all 0.15s;
-display: flex;
-align-items: center;
-gap: 12px;
-}
-.menu-item:hover { background: var(--glass-highlight); }
-.menu-divider { height: 1px; background: var(--glass-border); margin: 8px 0; opacity: 0.5; }
-
 /* ===== CRYSTAL GRID ===== */
 .grid-container {
 display: grid;
@@ -333,6 +265,60 @@ z-index: 3;
 border: 1px solid var(--glass-border);
 opacity: 0.9;
 }
+
+/* Burger-Menü in der Uhr-Kachel */
+.burger-menu-wrapper {
+position: relative;
+display: inline-block;
+}
+.burger-menu {
+background: var(--glass-bg);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border: 1px solid var(--glass-border);
+border-radius: 16px;
+color: var(--text-primary);
+width: 44px;
+height: 44px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 1.6rem;
+cursor: pointer;
+box-shadow: var(--shadow-light), inset 0 1px 2px var(--glass-highlight);
+transition: all 0.2s;
+}
+
+.menu-dropdown {
+position: absolute;
+top: 55px;
+right: 0;
+background: var(--menu-bg);
+backdrop-filter: blur(40px);
+-webkit-backdrop-filter: blur(40px);
+border: 1px solid var(--glass-border);
+border-radius: 28px;
+padding: 12px 8px;
+min-width: 240px;
+box-shadow: var(--shadow-heavy);
+z-index: 100;
+display: none;
+}
+.menu-dropdown.show { display: block; }
+.menu-item {
+padding: 14px 20px;
+color: var(--text-primary);
+font-size: 1.1rem;
+font-weight: 500;
+cursor: pointer;
+border-radius: 18px;
+transition: all 0.15s;
+display: flex;
+align-items: center;
+gap: 12px;
+}
+.menu-item:hover { background: var(--glass-highlight); }
+.menu-divider { height: 1px; background: var(--glass-border); margin: 8px 0; opacity: 0.5; }
 
 /* ===== WIDGET STYLES ===== */
 .flip-clock {
@@ -466,22 +452,7 @@ font-size: 1rem;
 </head>
 <body class="theme-ios18">
 <div class="dashboard" id="dashboard">
-<div class="toolbar">
-<div class="toolbar-left">
-<div class="burger-menu" id="burgerMenuBtn">☰</div>
-<!-- Titel entfernt -->
-</div>
-<div class="toolbar-actions"></div>
-
-<div class="menu-dropdown" id="menuDropdown">
-<div class="menu-item" id="menuEditToggle">✎ Bearbeiten</div>
-<div class="menu-item" id="menuUploadImages">🖼️ Bilder hochladen</div>
-<div class="menu-item" id="menuOpenSettings">⚙️ Einstellungen</div>
-<div class="menu-item" id="menuAddTile">➕ Neue Kachel</div>
-<div class="menu-divider"></div>
-<div class="menu-item" id="menuReset">↻ Reset</div>
-</div>
-</div>
+<!-- Keine separate Toolbar mehr -->
 
 <div class="grid-container" id="tileGrid"></div>
 </div>
@@ -558,7 +529,7 @@ font-size: 1rem;
 (function(){
 "use strict";
 
-// ---------- STATE (unverändert) ----------
+// ---------- STATE ----------
 let tiles = [];
 let editMode = false;
 let nextTileId = 1000;
@@ -585,12 +556,12 @@ let uploadedImages = [];
 let weatherCache = null, lastWeatherFetch = 0;
 let currentEditingTileId = null;
 
-// ---------- STORAGE (unverändert) ----------
+// ---------- STORAGE ----------
 function loadFromStorage() {
 try {
-const savedTiles = localStorage.getItem('crystal_tiles_v1');
-const savedConfig = localStorage.getItem('crystal_config_v1');
-const savedImages = localStorage.getItem('crystal_images_v1');
+const savedTiles = localStorage.getItem('crystal_tiles_v2');
+const savedConfig = localStorage.getItem('crystal_config_v2');
+const savedImages = localStorage.getItem('crystal_images_v2');
 if (savedTiles) tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
 else tiles = [...DEFAULT_TILES];
 if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
@@ -603,9 +574,9 @@ applyAllSettings();
 
 function saveToStorage() {
 try {
-localStorage.setItem('crystal_tiles_v1', JSON.stringify(tiles));
-localStorage.setItem('crystal_config_v1', JSON.stringify(userConfig));
-localStorage.setItem('crystal_images_v1', JSON.stringify(uploadedImages));
+localStorage.setItem('crystal_tiles_v2', JSON.stringify(tiles));
+localStorage.setItem('crystal_config_v2', JSON.stringify(userConfig));
+localStorage.setItem('crystal_images_v2', JSON.stringify(uploadedImages));
 } catch(e) {}
 }
 
@@ -673,13 +644,48 @@ div.style.backgroundColor = hexToRgba(bgColor, opacity);
 div.style.color = userConfig.globalTextColor;
 
 const header = document.createElement('div'); header.className = 'tile-header';
-header.innerHTML = `<span>${tile.title || tile.type}</span>`;
+
+// Titel + ggf. Burger-Menü nur für die Uhr-Kachel (id 1)
+const titleSpan = document.createElement('span');
+titleSpan.textContent = tile.title || tile.type;
+header.appendChild(titleSpan);
+
+if (tile.id === 1) {
+// Burger-Menü in der Uhr-Kachel einbauen
+const burgerWrapper = document.createElement('div');
+burgerWrapper.className = 'burger-menu-wrapper';
+burgerWrapper.style.marginLeft = 'auto';
+const burgerBtn = document.createElement('div');
+burgerBtn.className = 'burger-menu';
+burgerBtn.id = 'burgerMenuBtn';
+burgerBtn.textContent = '☰';
+burgerWrapper.appendChild(burgerBtn);
+
+const menuDropdown = document.createElement('div');
+menuDropdown.className = 'menu-dropdown';
+menuDropdown.id = 'menuDropdown';
+menuDropdown.innerHTML = `
+<div class="menu-item" id="menuEditToggle">✎ Bearbeiten</div>
+<div class="menu-item" id="menuUploadImages">🖼️ Bilder hochladen</div>
+<div class="menu-item" id="menuOpenSettings">⚙️ Einstellungen</div>
+<div class="menu-item" id="menuAddTile">➕ Neue Kachel</div>
+<div class="menu-divider"></div>
+<div class="menu-item" id="menuReset">↻ Reset</div>
+`;
+burgerWrapper.appendChild(menuDropdown);
+header.appendChild(burgerWrapper);
+
+// Event Listener später
+setTimeout(() => attachBurgerEvents(burgerBtn, menuDropdown), 0);
+}
+
 const controls = document.createElement('div'); controls.className = 'tile-controls';
 if (editMode) {
 controls.innerHTML = `<button class="icon-btn tile-settings-btn" data-id="${tile.id}">⚙️</button>
 <button class="icon-btn tile-delete-btn" data-id="${tile.id}">✕</button>`;
 }
-header.appendChild(controls); div.appendChild(header);
+header.appendChild(controls);
+div.appendChild(header);
 
 const content = document.createElement('div'); content.className = 'tile-content';
 div.appendChild(content);
@@ -695,6 +701,54 @@ div.addEventListener('drop', handleDrop);
 div.addEventListener('dragend', handleDragEnd);
 
 return div;
+}
+
+let burgerMenuBtn, menuDropdown;
+function attachBurgerEvents(btn, dropdown) {
+burgerMenuBtn = btn;
+menuDropdown = dropdown;
+btn.addEventListener('click', (e) => {
+e.stopPropagation();
+menuDropdown.classList.toggle('show');
+});
+document.addEventListener('click', () => {
+menuDropdown.classList.remove('show');
+});
+menuDropdown.addEventListener('click', (e) => e.stopPropagation());
+
+// Menü-Aktionen
+document.getElementById('menuEditToggle').onclick = () => { editMode = !editMode; menuDropdown.classList.remove('show'); renderAll(); };
+document.getElementById('menuUploadImages').onclick = () => {
+menuDropdown.classList.remove('show');
+const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.multiple=true;
+inp.onchange = e => { Array.from(e.target.files).forEach(f=>{ const r=new FileReader(); r.onload=ev=>{ uploadedImages.push(ev.target.result); saveToStorage(); renderAll(); }; r.readAsDataURL(f); }); };
+inp.click();
+};
+document.getElementById('menuOpenSettings').onclick = () => {
+menuDropdown.classList.remove('show');
+document.getElementById('settingsCity').value = userConfig.city;
+document.getElementById('settingsSlideshowSec').value = userConfig.slideshowInterval;
+document.getElementById('settingsSpotify').value = userConfig.spotifyUrl;
+document.getElementById('settingsYoutube').value = userConfig.youtubeUrl;
+document.getElementById('settingsRecipeUrl').value = userConfig.recipeUrl;
+document.getElementById('settingsAppointments').value = userConfig.appointmentsText;
+document.getElementById('globalAccentColor').value = userConfig.globalAccent;
+document.getElementById('globalAccentColorText').value = userConfig.globalAccent;
+document.getElementById('globalTextColor').value = userConfig.globalTextColor;
+document.getElementById('globalTextColorText').value = userConfig.globalTextColor;
+document.getElementById('settingsTheme').value = userConfig.theme;
+document.getElementById('settingsFontSize').value = userConfig.fontSize;
+document.getElementById('tileOpacitySlider').value = userConfig.tileOpacity;
+document.getElementById('tileOpacityValue').textContent = userConfig.tileOpacity;
+document.getElementById('dashboardBgColor').value = userConfig.dashboardBgColor;
+document.getElementById('dashboardBgColorText').value = userConfig.dashboardBgColor;
+document.getElementById('settingsModal').classList.remove('hidden');
+};
+document.getElementById('menuAddTile').onclick = () => {
+tiles.push({ id: ++nextTileId, type: 'clock', title: 'Neue Uhr', colSpan:2, rowSpan:2, color: userConfig.globalAccent, bgImage: '', opacity: userConfig.tileOpacity });
+saveToStorage(); renderAll(); menuDropdown.classList.remove('show');
+};
+document.getElementById('menuReset').onclick = () => { if(confirm('Reset?')) resetToDefault(); menuDropdown.classList.remove('show'); };
 }
 
 // ---------- INHALTE (unverändert) ----------
@@ -771,7 +825,7 @@ if (tile) fillTileContent(tile, el.querySelector('.tile-content'));
 });
 }
 
-// Drag & Drop (unverändert)
+// Drag & Drop
 let dragSrc = null;
 function handleDragStart(e) { if(editMode){ dragSrc=this; this.classList.add('dragging'); } else e.preventDefault(); }
 function handleDragOver(e) { if(editMode) e.preventDefault(); }
@@ -804,44 +858,7 @@ function init() {
 loadFromStorage();
 renderAll();
 
-const burgerBtn = document.getElementById('burgerMenuBtn'), menuDropdown = document.getElementById('menuDropdown');
-burgerBtn.addEventListener('click', (e) => { e.stopPropagation(); menuDropdown.classList.toggle('show'); });
-document.addEventListener('click', () => menuDropdown.classList.remove('show'));
-menuDropdown.addEventListener('click', (e) => e.stopPropagation());
-
-document.getElementById('menuEditToggle').onclick = ()=>{ editMode=!editMode; menuDropdown.classList.remove('show'); renderAll(); };
-document.getElementById('menuUploadImages').onclick = ()=>{
-menuDropdown.classList.remove('show');
-const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.multiple=true;
-inp.onchange = e => { Array.from(e.target.files).forEach(f=>{ const r=new FileReader(); r.onload=ev=>{ uploadedImages.push(ev.target.result); saveToStorage(); renderAll(); }; r.readAsDataURL(f); }); };
-inp.click();
-};
-document.getElementById('menuOpenSettings').onclick = ()=>{
-menuDropdown.classList.remove('show');
-document.getElementById('settingsCity').value = userConfig.city;
-document.getElementById('settingsSlideshowSec').value = userConfig.slideshowInterval;
-document.getElementById('settingsSpotify').value = userConfig.spotifyUrl;
-document.getElementById('settingsYoutube').value = userConfig.youtubeUrl;
-document.getElementById('settingsRecipeUrl').value = userConfig.recipeUrl;
-document.getElementById('settingsAppointments').value = userConfig.appointmentsText;
-document.getElementById('globalAccentColor').value = userConfig.globalAccent;
-document.getElementById('globalAccentColorText').value = userConfig.globalAccent;
-document.getElementById('globalTextColor').value = userConfig.globalTextColor;
-document.getElementById('globalTextColorText').value = userConfig.globalTextColor;
-document.getElementById('settingsTheme').value = userConfig.theme;
-document.getElementById('settingsFontSize').value = userConfig.fontSize;
-document.getElementById('tileOpacitySlider').value = userConfig.tileOpacity;
-document.getElementById('tileOpacityValue').textContent = userConfig.tileOpacity;
-document.getElementById('dashboardBgColor').value = userConfig.dashboardBgColor;
-document.getElementById('dashboardBgColorText').value = userConfig.dashboardBgColor;
-document.getElementById('settingsModal').classList.remove('hidden');
-};
-document.getElementById('menuAddTile').onclick = ()=>{
-tiles.push({ id: ++nextTileId, type: 'clock', title: 'Neue Uhr', colSpan:2, rowSpan:2, color: userConfig.globalAccent, bgImage: '', opacity: userConfig.tileOpacity });
-saveToStorage(); renderAll(); menuDropdown.classList.remove('show');
-};
-document.getElementById('menuReset').onclick = ()=>{ if(confirm('Reset?')) resetToDefault(); menuDropdown.classList.remove('show'); };
-
+// Slider etc.
 document.getElementById('tileOpacitySlider').addEventListener('input', e => document.getElementById('tileOpacityValue').textContent = e.target.value);
 document.getElementById('tileOpacity').addEventListener('input', e => document.getElementById('tileOpacityVal').textContent = e.target.value);
 
