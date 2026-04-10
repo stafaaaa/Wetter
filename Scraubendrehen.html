@@ -927,4 +927,524 @@ window.onload = init;
 })();
 </script>
 </body>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Schrauben-Spaß für Zwei</title>
+<style>
+body {
+margin: 0;
+min-height: 100vh;
+background: linear-gradient(145deg, #2b3a4a 0%, #1d2a35 100%);
+display: flex;
+justify-content: center;
+align-items: center;
+font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+touch-action: none; /* Verhindert Scrollen beim Ziehen */
+padding: 12px;
+box-sizing: border-box;
+}
+.game-container {
+background: #3a4c5c;
+border-radius: 48px;
+padding: 24px 20px 30px;
+box-shadow: 0 20px 30px rgba(0,0,0,0.6), inset 0 0 0 2px #5e7a8f;
+max-width: 700px;
+width: 100%;
+border-bottom: 8px solid #1a262e;
+}
+h2 {
+text-align: center;
+margin: 0 0 15px 0;
+color: #f2e9d0;
+text-shadow: 3px 3px 0 #1e2a32;
+font-weight: 600;
+letter-spacing: 2px;
+font-size: 2.1rem;
+word-break: break-word;
+}
+.score-area {
+display: flex;
+justify-content: space-between;
+color: #ffd78a;
+font-weight: bold;
+font-size: 1.6rem;
+padding: 0 10px 15px;
+text-shadow: 2px 2px 0 #1e2a32;
+}
+/* Das Brett mit den Löchern */
+.hole-board {
+display: flex;
+flex-wrap: wrap;
+justify-content: center;
+gap: 25px 30px;
+background: #4f6b7e;
+padding: 30px 20px;
+border-radius: 60px 60px 30px 30px;
+margin-bottom: 30px;
+box-shadow: inset 0 5px 8px #1a262e, 0 8px 0 #1e2a32;
+border-bottom: 3px solid #7895aa;
+min-height: 130px;
+}
+.hole {
+width: 100px;
+height: 100px;
+background: #232f38;
+border-radius: 50%;
+box-shadow: inset 0 8px 5px rgba(0,0,0,0.7), 0 0 0 6px #627b8b;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: box-shadow 0.1s;
+touch-action: none;
+}
+/* Die Schraubenkopf-Darstellung */
+.screw {
+width: 70px;
+height: 70px;
+border-radius: 50%;
+background: #ccc;
+box-shadow: 0 5px 0 #5a3e1f, 0 0 0 5px #b0b0b0, inset 0 -5px 0 rgba(0,0,0,0.2);
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 2.4rem;
+font-weight: bold;
+color: rgba(0,0,0,0.3);
+text-shadow: 1px 1px 0 white;
+touch-action: none;
+cursor: grab;
+user-select: none;
+transition: transform 0.05s;
+}
+.screw:active {
+cursor: grabbing;
+transform: scale(0.97);
+}
+/* Farben der Schrauben */
+.screw.red { background: #e15554; box-shadow: 0 5px 0 #852b2a, 0 0 0 5px #f58f8e, inset 0 -5px 0 rgba(0,0,0,0.2); }
+.screw.blue { background: #3b82c4; box-shadow: 0 5px 0 #1e4463, 0 0 0 5px #7daeec, inset 0 -5px 0 rgba(0,0,0,0.2); }
+.screw.green { background: #5eae4e; box-shadow: 0 5px 0 #2c6022, 0 0 0 5px #9bde8a, inset 0 -5px 0 rgba(0,0,0,0.2); }
+.screw.yellow { background: #f7c548; box-shadow: 0 5px 0 #a67c21, 0 0 0 5px #ffe18a, inset 0 -5px 0 rgba(0,0,0,0.2); }
+.screw.purple { background: #9f6eb0; box-shadow: 0 5px 0 #5f3e6b, 0 0 0 5px #d2b0e0, inset 0 -5px 0 rgba(0,0,0,0.2); }
+
+/* Die Vorratsleiste unten */
+.screw-stock {
+display: flex;
+flex-wrap: wrap;
+justify-content: center;
+gap: 20px 25px;
+background: #364954;
+padding: 25px 15px;
+border-radius: 40px;
+box-shadow: inset 0 3px 6px #121b21, 0 8px 0 #1e2a32;
+border-bottom: 3px solid #5f7b8c;
+margin-bottom: 15px;
+min-height: 110px;
+}
+.stock-item {
+width: 95px;
+height: 95px;
+display: flex;
+justify-content: center;
+align-items: center;
+touch-action: none;
+}
+.message {
+text-align: center;
+color: #ffeabf;
+font-size: 1.3rem;
+font-weight: bold;
+min-height: 2.8rem;
+margin: 20px 0 10px;
+text-shadow: 2px 2px 0 #1a262e;
+}
+.button-row {
+display: flex;
+justify-content: center;
+gap: 20px;
+}
+.btn {
+background: #f3d37c;
+border: none;
+color: #1e2a32;
+font-weight: bold;
+font-size: 1.5rem;
+padding: 14px 28px;
+border-radius: 50px;
+box-shadow: 0 6px 0 #a08139, 0 2px 8px black;
+cursor: pointer;
+transition: 0.05s linear;
+border-bottom: 3px solid #ebc35c;
+text-transform: uppercase;
+letter-spacing: 2px;
+touch-action: manipulation;
+flex: 0 1 auto;
+}
+.btn:active {
+transform: translateY(4px);
+box-shadow: 0 2px 0 #a08139, 0 2px 6px black;
+}
+/* Für Touch: größere klickbare Bereiche */
+.screw, .btn { -webkit-tap-highlight-color: transparent; }
+</style>
+</head>
+<body>
+<div class="game-container">
+<h2>🔩 SCHRAUB-DUO 🔩</h2>
+<div class="score-area">
+<span>👫 Paar-Punkte</span>
+<span id="scoreDisplay">0</span>
+</div>
+
+<!-- Löcher-Bereich -->
+<div id="holeBoard" class="hole-board"></div>
+
+<!-- Nachricht (z.B. "Super!") -->
+<div id="messageBox" class="message">✨ Zieht die Schraube ins farbige Loch ✨</div>
+
+<!-- Schrauben-Vorrat (dragbar) -->
+<div id="screwStock" class="screw-stock"></div>
+
+<div class="button-row">
+<button class="btn" id="resetBtn">🔄 Neues Spiel</button>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+// ---------- SPIEL KONFIGURATION ----------
+const COLORS = ['red', 'blue', 'green', 'yellow', 'purple'];
+// Paare: jedes Loch erwartet genau eine Farbe
+let targetColors = []; // z.B. ['red', 'blue', 'green']
+let screwsRemaining = []; // Liste der noch zu ziehenden Schrauben-Farben
+let score = 0;
+let currentDraggedScrew = null; // DOM-Element, das gerade gezogen wird
+let dragOffsetX = 0, dragOffsetY = 0;
+let isDragging = false;
+
+// DOM Elemente
+const holeBoard = document.getElementById('holeBoard');
+const screwStock = document.getElementById('screwStock');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const messageBox = document.getElementById('messageBox');
+const resetBtn = document.getElementById('resetBtn');
+
+// ---------- HILFSFUNKTIONEN ----------
+function shuffleArray(arr) {
+for (let i = arr.length - 1; i > 0; i--) {
+const j = Math.floor(Math.random() * (i + 1));
+[arr[i], arr[j]] = [arr[j], arr[i]];
+}
+return arr;
+}
+
+// Neues Level / Neustart
+function initGame() {
+// Zufällige Loch-Anzahl zwischen 3 und 5
+const holeCount = Math.floor(Math.random() * 3) + 3; // 3,4,5
+// Farben für Löcher festlegen (jede Farbe kommt vor)
+let holeColors = [];
+for (let i = 0; i < holeCount; i++) {
+holeColors.push(COLORS[i % COLORS.length]);
+}
+targetColors = shuffleArray(holeColors);
+
+// Schrauben-Vorrat: genau die gleichen Farben, aber zufällige Reihenfolge
+screwsRemaining = shuffleArray([...targetColors]);
+
+score = 0;
+updateScore();
+messageBox.textContent = '✨ Viel Spaß! ✨';
+
+renderBoard();
+renderStock();
+}
+
+// Punkte aktualisieren
+function updateScore() {
+scoreDisplay.textContent = score;
+}
+
+// Löcher-Brett zeichnen
+function renderBoard() {
+holeBoard.innerHTML = '';
+targetColors.forEach((color, index) => {
+const holeDiv = document.createElement('div');
+holeDiv.className = 'hole';
+holeDiv.dataset.color = color;
+holeDiv.dataset.index = index;
+
+// Event-Listener für Drop (Touch und Maus)
+holeDiv.addEventListener('dragover', (e) => e.preventDefault());
+holeDiv.addEventListener('drop', handleDrop);
+
+holeBoard.appendChild(holeDiv);
+});
+}
+
+// Schrauben-Vorrat rendern
+function renderStock() {
+screwStock.innerHTML = '';
+if (screwsRemaining.length === 0) {
+// Gewonnen!
+messageBox.textContent = '🎉 GESCHAFFT! IHR SEID EIN TOLLES TEAM! 🎉';
+// Zeige trotzdem leeren Stock, aber vielleicht Platzhalter? Nur Nachricht.
+const emptyMsg = document.createElement('div');
+emptyMsg.style.color = '#ffeabf';
+emptyMsg.style.padding = '20px';
+emptyMsg.style.fontSize = '1.5rem';
+emptyMsg.textContent = '🏆 Alle Schrauben sortiert! 🏆';
+screwStock.appendChild(emptyMsg);
+return;
+}
+
+screwsRemaining.forEach((color, idx) => {
+const container = document.createElement('div');
+container.className = 'stock-item';
+
+const screw = document.createElement('div');
+screw.className = `screw ${color}`;
+screw.textContent = '🔩';
+screw.setAttribute('draggable', 'false'); // wir nutzen custom touch handling
+screw.dataset.color = color;
+screw.dataset.index = idx;
+
+// Touch- und Maus-Events für Ziehen
+screw.addEventListener('touchstart', handleDragStart, {passive: false});
+screw.addEventListener('touchmove', handleDragMove, {passive: false});
+screw.addEventListener('touchend', handleDragEnd);
+screw.addEventListener('touchcancel', handleDragEnd);
+
+screw.addEventListener('mousedown', handleDragStart);
+// Mausbewegungen global
+
+container.appendChild(screw);
+screwStock.appendChild(container);
+});
+}
+
+// ---------- DRAG & DROP (Touch + Maus) ----------
+function handleDragStart(e) {
+e.preventDefault(); // Verhindert Scrollen / Kontextmenü
+if (isDragging) return;
+
+const screw = e.currentTarget;
+// Prüfen ob Schraube noch existiert (nicht bereits gedroppt)
+if (!screw.parentNode || !screw.parentNode.parentNode) return;
+
+currentDraggedScrew = screw;
+
+// Berechne Offset: wo im Element wurde berührt?
+let clientX, clientY;
+if (e.type === 'touchstart') {
+clientX = e.touches[0].clientX;
+clientY = e.touches[0].clientY;
+} else {
+clientX = e.clientX;
+clientY = e.clientY;
+}
+
+const rect = screw.getBoundingClientRect();
+dragOffsetX = clientX - rect.left;
+dragOffsetY = clientY - rect.top;
+
+// Styling: ghost Effekt
+screw.style.position = 'fixed';
+screw.style.zIndex = '9999';
+screw.style.width = rect.width + 'px';
+screw.style.height = rect.height + 'px';
+screw.style.left = (clientX - dragOffsetX) + 'px';
+screw.style.top = (clientY - dragOffsetY) + 'px';
+screw.style.margin = '0';
+screw.style.pointerEvents = 'none';
+screw.style.opacity = '0.9';
+screw.style.transition = 'none';
+
+isDragging = true;
+
+// Globale Listener für Maus (falls Maus benutzt wird)
+window.addEventListener('mousemove', handleDragMove);
+window.addEventListener('mouseup', handleDragEnd);
+}
+
+function handleDragMove(e) {
+if (!isDragging || !currentDraggedScrew) return;
+e.preventDefault();
+
+let clientX, clientY;
+if (e.type === 'touchmove') {
+clientX = e.touches[0].clientX;
+clientY = e.touches[0].clientY;
+} else {
+clientX = e.clientX;
+clientY = e.clientY;
+}
+
+// Position aktualisieren
+currentDraggedScrew.style.left = (clientX - dragOffsetX) + 'px';
+currentDraggedScrew.style.top = (clientY - dragOffsetY) + 'px';
+}
+
+function handleDragEnd(e) {
+if (!isDragging || !currentDraggedScrew) {
+cleanUpDrag();
+return;
+}
+e.preventDefault();
+
+// Endposition ermitteln
+let clientX, clientY;
+if (e.type === 'touchend' && e.changedTouches) {
+clientX = e.changedTouches[0].clientX;
+clientY = e.changedTouches[0].clientY;
+} else if (e.type === 'mouseup') {
+clientX = e.clientX;
+clientY = e.clientY;
+} else {
+// Fallback: letzte bekannte Position?
+const rect = currentDraggedScrew.getBoundingClientRect();
+clientX = rect.left + rect.width/2;
+clientY = rect.top + rect.height/2;
+}
+
+// Prüfen, über welchem Loch wir losgelassen haben
+const holes = document.querySelectorAll('.hole');
+let droppedHole = null;
+for (let hole of holes) {
+const rect = hole.getBoundingClientRect();
+if (clientX >= rect.left && clientX <= rect.right &&
+clientY >= rect.top && clientY <= rect.bottom) {
+droppedHole = hole;
+break;
+}
+}
+
+const screwColor = currentDraggedScrew.dataset.color;
+const screwIndex = parseInt(currentDraggedScrew.dataset.index);
+
+// Reset dragging element style
+resetDraggedElementStyle();
+
+let success = false;
+if (droppedHole) {
+const holeColor = droppedHole.dataset.color;
+if (holeColor === screwColor) {
+// RICHTIGES LOCH!
+success = true;
+
+// Aus dem Array entfernen
+const colorIdx = screwsRemaining.indexOf(screwColor);
+if (colorIdx !== -1) {
+screwsRemaining.splice(colorIdx, 1);
+}
+
+// Loch als "gefüllt" markieren: wir entfernen das Loch und ersetzen es durch Schraube?
+// Für einfacheres Gameplay: Loch wird durch Schraube ersetzt
+const holeParent = droppedHole.parentNode;
+const newFilled = document.createElement('div');
+newFilled.className = 'hole';
+newFilled.style.background = '#4a392b';
+newFilled.style.boxShadow = 'inset 0 8px 5px #1e140e, 0 0 0 6px #7a8f9c';
+const filledScrew = document.createElement('div');
+filledScrew.className = `screw ${screwColor}`;
+filledScrew.textContent = '✔️';
+filledScrew.style.boxShadow = `0 3px 0 #3a2a1c, 0 0 0 5px #bba88c, inset 0 -3px 0 rgba(0,0,0,0.3)`;
+filledScrew.style.cursor = 'default';
+newFilled.appendChild(filledScrew);
+holeParent.replaceChild(newFilled, droppedHole);
+
+// Brett-Löcher Array updaten: entferne das gelöste Loch aus targetColors
+const holeIndex = parseInt(droppedHole.dataset.index);
+if (!isNaN(holeIndex)) {
+targetColors.splice(holeIndex, 1);
+}
+
+// Punkte erhöhen
+score += 10;
+updateScore();
+messageBox.textContent = '✅ Perfekt! Weiter so!';
+
+// Brett neu rendern (falls noch Löcher da) - einfacher: neu aufbauen
+renderBoard();
+} else {
+messageBox.textContent = '❌ Falsche Farbe! Versucht es nochmal.';
+}
+} else {
+messageBox.textContent = '↩ Kein Loch getroffen. Nochmal probieren.';
+}
+
+// Immer den Stock neu rendern (entweder eine Schraube weniger oder unverändert)
+renderStock();
+
+// Prüfen ob gewonnen
+if (screwsRemaining.length === 0) {
+messageBox.textContent = '🏆 IHR HABT GEWONNEN! Super Teamwork! 🏆';
+}
+
+// Cleanup
+cleanUpDrag();
+
+// Falls erfolgreich und Spiel noch nicht zu Ende, evtl kleines Lob
+if (success && screwsRemaining.length > 0) {
+// Alles gut
+}
+}
+
+function resetDraggedElementStyle() {
+if (currentDraggedScrew) {
+currentDraggedScrew.style.position = '';
+currentDraggedScrew.style.zIndex = '';
+currentDraggedScrew.style.left = '';
+currentDraggedScrew.style.top = '';
+currentDraggedScrew.style.width = '';
+currentDraggedScrew.style.height = '';
+currentDraggedScrew.style.margin = '';
+currentDraggedScrew.style.pointerEvents = '';
+currentDraggedScrew.style.opacity = '';
+currentDraggedScrew.style.transition = '';
+}
+}
+
+function cleanUpDrag() {
+if (currentDraggedScrew) {
+resetDraggedElementStyle();
+currentDraggedScrew = null;
+}
+isDragging = false;
+window.removeEventListener('mousemove', handleDragMove);
+window.removeEventListener('mouseup', handleDragEnd);
+}
+
+// Standard-Drop-Handler für das native drop-Event (als Fallback)
+function handleDrop(e) {
+e.preventDefault();
+// Wird normalerweise nicht benötigt, da wir touch-events nutzen.
+}
+
+// Touch-Ereignisse für Brett verhindern Scrollen
+holeBoard.addEventListener('touchmove', (e) => e.preventDefault(), {passive: false});
+screwStock.addEventListener('touchmove', (e) => e.preventDefault(), {passive: false});
+
+// Reset-Button
+resetBtn.addEventListener('click', () => {
+initGame();
+});
+
+// Initial starten
+initGame();
+
+// Verhindert, dass beim Ziehen das Kontextmenü erscheint
+document.addEventListener('contextmenu', (e) => {
+if (e.target.closest('.screw')) e.preventDefault();
+});
+
+})();
+</script>
+</body>
 </html>
+
