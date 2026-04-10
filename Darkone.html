@@ -136,7 +136,7 @@ padding: 4px;
 z-index: 2;
 }
 
-/* Kachel mit Resize-Handle */
+/* Kachel */
 .tile {
 backdrop-filter: blur(30px);
 -webkit-backdrop-filter: blur(30px);
@@ -220,31 +220,19 @@ position: relative;
 z-index: 2;
 }
 
-/* Resize Handle */
-.resize-handle {
+/* Größen-Indikator */
+.size-badge {
 position: absolute;
 bottom: 12px;
-right: 12px;
-width: 36px;
-height: 36px;
-background: rgba(255,255,255,0.4);
-backdrop-filter: blur(8px);
-border-radius: 12px;
-display: flex;
-align-items: center;
-justify-content: center;
-cursor: nwse-resize;
-z-index: 10;
-border: 0.5px solid rgba(255,255,255,0.6);
-color: #1d1d1f;
-font-size: 1.5rem;
-opacity: 0;
-transition: opacity 0.2s;
-pointer-events: none;
-}
-.tile.edit-mode .resize-handle {
-opacity: 1;
-pointer-events: auto;
+left: 12px;
+background: rgba(0,0,0,0.2);
+backdrop-filter: blur(4px);
+padding: 4px 12px;
+border-radius: 30px;
+font-size: 0.8rem;
+color: white;
+z-index: 3;
+opacity: 0.6;
 }
 
 .flip-clock {
@@ -377,6 +365,10 @@ font-size: 1rem;
 .flex-row { display: flex; gap: 16px; flex-wrap: wrap; }
 .color-row { display: flex; gap: 16px; align-items: center; }
 .color-row input[type="color"] { width: 80px; height: 55px; border-radius: 30px; }
+
+/* Huawei Theme Styles */
+body.theme-huawei-light { --tile-glow: 0 20px 40px rgba(0,0,0,0.08); }
+body.theme-huawei-dark { --tile-glow: 0 20px 40px rgba(0,0,0,0.5); }
 </style>
 </head>
 <body class="theme-light">
@@ -418,7 +410,24 @@ font-size: 1rem;
 </div>
 <div class="input-group"><label>🎨 Hintergrundfarbe</label><div class="color-row"><input type="color" id="dashboardBgColor" value="#aaccdd"><input type="text" id="dashboardBgColorText"></div></div>
 
-<div class="input-group"><label>🎨 Theme</label><select id="settingsTheme"><option value="light">Hell</option><option value="dark">Dunkel</option><option value="midnight">Mitternacht</option><option value="forest">Wald</option><option value="rose">Rosé</option></select></div>
+<div class="input-group">
+<label>🎨 Theme</label>
+<select id="settingsTheme">
+<optgroup label="Apple Style">
+<option value="light">Apple Hell</option>
+<option value="dark">Apple Dunkel</option>
+<option value="midnight">Apple Mitternacht</option>
+<option value="forest">Apple Wald</option>
+<option value="rose">Apple Rosé</option>
+</optgroup>
+<optgroup label="Huawei HarmonyOS">
+<option value="huawei-light">Huawei Light (HarmonyOS)</option>
+<option value="huawei-dark">Huawei Dark</option>
+<option value="huawei-emerald">Huawei Emerald</option>
+<option value="huawei-sunrise">Huawei Sunrise</option>
+</optgroup>
+</select>
+</div>
 <div class="input-group"><label>✏️ Schriftgröße</label><select id="settingsFontSize"><option value="medium">Mittel</option><option value="small">Klein</option><option value="large">Groß</option></select></div>
 <div class="input-group"><label>🔮 Kachel-Transparenz (global)</label><input type="range" id="tileOpacitySlider" min="0.2" max="1.0" step="0.05" value="0.6"><span id="tileOpacityValue">0.6</span></div>
 
@@ -429,7 +438,7 @@ font-size: 1rem;
 </div>
 </div>
 
-<!-- Kachel-Einstellungen Modal (jetzt mit Transparenz pro Kachel) -->
+<!-- Kachel-Einstellungen Modal -->
 <div id="tileSettingsModal" class="settings-overlay hidden">
 <div class="settings-card" style="width:550px;">
 <h2>🎨 Kachel anpassen</h2>
@@ -437,7 +446,17 @@ font-size: 1rem;
 <div class="input-group"><label>Titel</label><input type="text" id="tileTitle"></div>
 <div class="input-group"><label>Hintergrundfarbe</label><div class="color-row"><input type="color" id="tileColor"><input type="text" id="tileColorText"></div></div>
 <div class="input-group"><label>Hintergrundbild</label><div><button class="app-btn" id="uploadTileBgBtn">📸 Bild</button><button class="app-btn" id="removeTileBgBtn">🗑️</button></div></div>
-<div class="input-group"><label>🔮 Transparenz (Deckkraft)</label><input type="range" id="tileOpacity" min="0.1" max="1.0" step="0.05" value="0.6"><span id="tileOpacityVal">0.6</span></div>
+<div class="input-group"><label>🔮 Transparenz</label><input type="range" id="tileOpacity" min="0.1" max="1.0" step="0.05" value="0.6"><span id="tileOpacityVal">0.6</span></div>
+<div class="input-group">
+<label>📐 Größe</label>
+<select id="tileSizeSelect">
+<option value="1,1">Klein (1x1)</option>
+<option value="2,2">Mittel (2x2)</option>
+<option value="3,3">Groß (3x3)</option>
+<option value="2,1">Breit (2x1)</option>
+<option value="3,2">Extra (3x2)</option>
+</select>
+</div>
 <div class="flex-row"><button class="app-btn" id="saveTileSettingsBtn">Speichern</button><button class="app-btn" id="closeTileSettingsBtn">Abbrechen</button></div>
 </div>
 </div>
@@ -472,14 +491,26 @@ tileOpacity: 0.6, dashboardBgImage: '', dashboardBgColor: '#aaccdd'
 let uploadedImages = [];
 let weatherCache = null, lastWeatherFetch = 0;
 let currentEditingTileId = null;
-let resizeActive = false, currentResizeTile = null, startCol, startRow, startX, startY;
+
+// ---------- Huawei Theme Mapping ----------
+const themeMap = {
+'light': { body: 'theme-light', bg: '#f5f5f7', tile: 'rgba(255,255,255,0.4)' },
+'dark': { body: 'theme-dark', bg: '#1c1c1e', tile: 'rgba(40,40,45,0.5)' },
+'midnight': { body: 'theme-midnight', bg: '#0b0b10', tile: 'rgba(20,20,30,0.5)' },
+'forest': { body: 'theme-forest', bg: '#e5f0e5', tile: 'rgba(220,240,220,0.4)' },
+'rose': { body: 'theme-rose', bg: '#f5eef0', tile: 'rgba(250,240,242,0.5)' },
+'huawei-light': { body: 'theme-huawei-light', bg: '#f0f4f8', tile: 'rgba(255,255,255,0.5)' },
+'huawei-dark': { body: 'theme-huawei-dark', bg: '#12161a', tile: 'rgba(25,30,35,0.6)' },
+'huawei-emerald': { body: 'theme-huawei-emerald', bg: '#d4e6d4', tile: 'rgba(180,220,180,0.4)' },
+'huawei-sunrise': { body: 'theme-huawei-sunrise', bg: '#fce4d6', tile: 'rgba(255,220,200,0.4)' }
+};
 
 // ---------- STORAGE ----------
 function loadFromStorage() {
 try {
-const savedTiles = localStorage.getItem('dash_tiles_v11');
-const savedConfig = localStorage.getItem('dash_config_v11');
-const savedImages = localStorage.getItem('dash_images_v11');
+const savedTiles = localStorage.getItem('dash_tiles_v12');
+const savedConfig = localStorage.getItem('dash_config_v12');
+const savedImages = localStorage.getItem('dash_images_v12');
 if (savedTiles) tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
 else tiles = [...DEFAULT_TILES];
 if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
@@ -492,9 +523,9 @@ applyAllSettings();
 
 function saveToStorage() {
 try {
-localStorage.setItem('dash_tiles_v11', JSON.stringify(tiles));
-localStorage.setItem('dash_config_v11', JSON.stringify(userConfig));
-localStorage.setItem('dash_images_v11', JSON.stringify(uploadedImages));
+localStorage.setItem('dash_tiles_v12', JSON.stringify(tiles));
+localStorage.setItem('dash_config_v12', JSON.stringify(userConfig));
+localStorage.setItem('dash_images_v12', JSON.stringify(uploadedImages));
 } catch(e) {}
 }
 
@@ -514,7 +545,10 @@ applyTheme(userConfig.theme);
 applyFontSize(userConfig.fontSize);
 applyDashboardBackground();
 }
-function applyTheme(theme) { document.body.className = `theme-${theme}`; userConfig.theme = theme; }
+function applyTheme(theme) {
+document.body.className = themeMap[theme]?.body || 'theme-light';
+userConfig.theme = theme;
+}
 function applyFontSize(size) { document.documentElement.style.fontSize = size === 'small' ? '14px' : (size === 'large' ? '18px' : '16px'); }
 function applyDashboardBackground() {
 const db = document.getElementById('dashboard');
@@ -568,12 +602,10 @@ const content = document.createElement('div'); content.className = 'tile-content
 div.appendChild(content);
 fillTileContent(tile, content);
 
-// Resize Handle
-const handle = document.createElement('div'); handle.className = 'resize-handle';
-handle.innerHTML = '⤡'; handle.dataset.id = tile.id;
-handle.addEventListener('mousedown', startResize);
-handle.addEventListener('touchstart', startResize);
-div.appendChild(handle);
+// Größen-Badge
+const badge = document.createElement('div'); badge.className = 'size-badge';
+badge.textContent = `${tile.colSpan}x${tile.rowSpan}`;
+div.appendChild(badge);
 
 div.addEventListener('dragstart', handleDragStart);
 div.addEventListener('dragover', handleDragOver);
@@ -581,70 +613,6 @@ div.addEventListener('drop', handleDrop);
 div.addEventListener('dragend', handleDragEnd);
 
 return div;
-}
-
-// ---------- RESIZE (stufenlos in Grid-Einheiten) ----------
-function startResize(e) {
-if (!editMode) return;
-e.preventDefault();
-const handle = e.target.closest('.resize-handle');
-if (!handle) return;
-const tileId = Number(handle.dataset.id);
-currentResizeTile = tiles.find(t => t.id === tileId);
-if (!currentResizeTile) return;
-
-const tileEl = document.querySelector(`.tile[data-id="${tileId}"]`);
-const rect = tileEl.getBoundingClientRect();
-startCol = currentResizeTile.colSpan || 2;
-startRow = currentResizeTile.rowSpan || 2;
-startX = e.clientX || e.touches[0].clientX;
-startY = e.clientY || e.touches[0].clientY;
-
-resizeActive = true;
-document.addEventListener('mousemove', onResizeMove);
-document.addEventListener('touchmove', onResizeMove);
-document.addEventListener('mouseup', stopResize);
-document.addEventListener('touchend', stopResize);
-}
-
-function onResizeMove(e) {
-if (!resizeActive || !currentResizeTile) return;
-e.preventDefault();
-const clientX = e.clientX || e.touches[0].clientX;
-const clientY = e.clientY || e.touches[0].clientY;
-
-// Grid-Zellen-Größe schätzen (grob)
-const tileEl = document.querySelector(`.tile[data-id="${currentResizeTile.id}"]`);
-if (!tileEl) return;
-const gridContainer = document.getElementById('tileGrid');
-const containerRect = gridContainer.getBoundingClientRect();
-const colWidth = containerRect.width / 6; // 6 Spalten
-const rowHeight = 140; // ungefähr
-
-const deltaX = clientX - startX;
-const deltaY = clientY - startY;
-
-let newColSpan = Math.max(1, Math.min(6, Math.round(startCol + deltaX / colWidth)));
-let newRowSpan = Math.max(1, Math.min(6, Math.round(startRow + deltaY / rowHeight)));
-
-currentResizeTile.colSpan = newColSpan;
-currentResizeTile.rowSpan = newRowSpan;
-
-tileEl.style.gridColumn = `span ${newColSpan}`;
-tileEl.style.gridRow = `span ${newRowSpan}`;
-}
-
-function stopResize() {
-if (resizeActive && currentResizeTile) {
-saveToStorage();
-renderAll(); // neu rendern, um Layout zu fixieren
-}
-resizeActive = false;
-currentResizeTile = null;
-document.removeEventListener('mousemove', onResizeMove);
-document.removeEventListener('touchmove', onResizeMove);
-document.removeEventListener('mouseup', stopResize);
-document.removeEventListener('touchend', stopResize);
 }
 
 // ---------- INHALTE ----------
@@ -745,6 +713,7 @@ document.getElementById('tileColor').value = tile.color || userConfig.globalAcce
 document.getElementById('tileColorText').value = tile.color || userConfig.globalAccent;
 document.getElementById('tileOpacity').value = tile.opacity !== undefined ? tile.opacity : userConfig.tileOpacity;
 document.getElementById('tileOpacityVal').textContent = document.getElementById('tileOpacity').value;
+document.getElementById('tileSizeSelect').value = `${tile.colSpan},${tile.rowSpan}`;
 document.getElementById('tileSettingsModal').classList.remove('hidden');
 }
 
@@ -843,6 +812,8 @@ if(tile){
 tile.title = document.getElementById('tileTitle').value;
 tile.color = document.getElementById('tileColor').value;
 tile.opacity = parseFloat(document.getElementById('tileOpacity').value);
+const [col, row] = document.getElementById('tileSizeSelect').value.split(',').map(Number);
+tile.colSpan = col; tile.rowSpan = row;
 }
 saveToStorage(); renderAll(); document.getElementById('tileSettingsModal').classList.add('hidden');
 };
