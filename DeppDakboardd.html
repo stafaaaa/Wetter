@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Home Dashboard · Tablet</title>
+<style>
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+font-family: system-ui, -apple-system, 'Helvetica Neue', 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+min-height: 100vh;
+background: radial-gradient(circle at 20% 30%, #1a1a2e, #0a0a15);
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 0;
+margin: 0;
+transition: background 0.3s ease;
+}
+
+/* Theme-Variablen */
+body.theme-dark {
+--bg-gradient-start: #1a1a2e;
+--bg-gradient-end: #0a0a15;
+--dashboard-bg: rgba(10, 15, 25, 0.4);
+--tile-border: rgba(220, 240, 255, 0.14);
+--text-primary: #ffffff;
+}
+body.theme-light {
+--bg-gradient-start: #e8eef5;
+--bg-gradient-end: #c0ccda;
+--dashboard-bg: rgba(255, 255, 255, 0.25);
+--tile-border: rgba(60, 70, 90, 0.2);
+--text-primary: #1c1c2a;
+}
+body.theme-midnight {
+--bg-gradient-start: #0f172a;
+--bg-gradient-end: #020617;
+--dashboard-bg: rgba(15, 23, 42, 0.5);
+--tile-border: rgba(100, 150, 255, 0.15);
+--text-primary: #e0e7ff;
+}
+body.theme-forest {
+--bg-gradient-start: #1a3a2a;
+--bg-gradient-end: #0a1a10;
+--dashboard-bg: rgba(10, 25, 15, 0.4);
+--tile-border: rgba(150, 220, 150, 0.15);
+--text-primary: #e2f0e2;
+}
+body.theme-rosegold {
+--bg-gradient-start: #3a2a2a;
+--bg-gradient-end: #1a1010;
+--dashboard-bg: rgba(40, 20, 20, 0.4);
+--tile-border: rgba(255, 200, 200, 0.15);
+--text-primary: #ffe0e0;
+}
+
+body {
+background: radial-gradient(circle at 20% 30%, var(--bg-gradient-start, #1a1a2e), var(--bg-gradient-end, #0a0a15));
+}
+
+.dashboard {
+width: 100vw;
+height: 100vh;
+background: var(--dashboard-bg, rgba(10, 15, 25, 0.4));
+backdrop-filter: blur(28px) saturate(180%);
+-webkit-backdrop-filter: blur(28px) saturate(180%);
+display: flex;
+flex-direction: column;
+padding: 16px 20px 20px 20px;
+overflow: hidden;
+transition: background 0.3s;
+}
+
+/* Toolbar */
+.toolbar {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 8px 12px 16px 12px;
+flex-shrink: 0;
+position: relative;
+}
+
+.toolbar-left {
+display: flex;
+align-items: center;
+gap: 16px;
+}
+
+.burger-menu {
+background: rgba(30, 40, 60, 0.7);
+backdrop-filter: blur(12px);
+border: 1px solid rgba(255, 255, 255, 0.15);
+color: white;
+width: 48px;
+height: 48px;
+border-radius: 16px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 1.8rem;
+cursor: pointer;
+box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+transition: all 0.2s;
+}
+
+.dashboard-title {
+font-size: 1.8rem;
+font-weight: 600;
+letter-spacing: -0.02em;
+color: var(--text-primary, white);
+text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.menu-dropdown {
+position: absolute;
+top: 70px;
+left: 20px;
+background: rgba(20, 30, 45, 0.95);
+backdrop-filter: blur(30px);
+border: 1px solid rgba(255, 255, 255, 0.15);
+border-radius: 24px;
+padding: 12px 8px;
+min-width: 220px;
+box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+z-index: 100;
+display: none;
+}
+.menu-dropdown.show { display: block; }
+.menu-item {
+padding: 14px 20px;
+color: white;
+font-size: 1.1rem;
+font-weight: 500;
+cursor: pointer;
+border-radius: 16px;
+transition: all 0.15s;
+display: flex;
+align-items: center;
+gap: 12px;
+}
+.menu-item:hover { background: rgba(80, 110, 160, 0.5); }
+.menu-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0; }
+
+/* Grid */
+.grid-container {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+grid-auto-rows: minmax(200px, 1fr);
+gap: 18px;
+flex: 1;
+overflow-y: auto;
+padding: 4px;
+}
+
+.tile {
+backdrop-filter: blur(18px);
+-webkit-backdrop-filter: blur(18px);
+border: 1px solid var(--tile-border, rgba(220, 240, 255, 0.14));
+border-radius: 28px;
+padding: 20px 22px;
+box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+position: relative;
+transition: all 0.2s ease;
+min-height: 200px;
+background-size: cover;
+background-position: center;
+color: var(--text-primary, white);
+}
+.tile::before {
+content: "";
+position: absolute;
+top: 0; left: 0; right: 0; bottom: 0;
+background: inherit;
+background-size: cover;
+background-position: center;
+filter: brightness(0.7);
+z-index: 0;
+}
+.tile::after {
+content: "";
+position: absolute;
+top: 0; left: 0; right: 0; bottom: 0;
+background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+pointer-events: none;
+z-index: 1;
+}
+.tile.edit-mode {
+border: 3px dashed rgba(160, 200, 255, 0.7);
+cursor: grab;
+}
+
+.tile-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 16px;
+font-weight: 600;
+font-size: 1.3rem;
+text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+position: relative;
+z-index: 2;
+}
+.tile-controls { display: flex; gap: 8px; }
+.icon-btn {
+background: rgba(0, 0, 0, 0.35);
+backdrop-filter: blur(4px);
+border: 0.5px solid rgba(255,255,255,0.2);
+color: inherit;
+font-size: 1.3rem;
+cursor: pointer;
+width: 40px;
+height: 40px;
+border-radius: 40px;
+display: flex;
+align-items: center;
+justify-content: center;
+box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.tile-content {
+flex: 1;
+display: flex;
+flex-direction: column;
+overflow: auto;
+scrollbar-width: thin;
+position: relative;
+z-index: 2;
+text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+
+/* FlipClock */
+.flip-clock {
+display: flex;
+gap: 8px;
+font-size: 4.5rem;
+font-weight: 300;
+line-height: 1.1;
+}
+.flip-digit {
+background: rgba(0, 0, 0, 0.4);
+backdrop-filter: blur(8px);
+padding: 12px 18px;
+border-radius: 20px;
+box-shadow: inset 0 2px 8px rgba(0,0,0,0.5), 0 8px 16px rgba(0,0,0,0.3);
+border-bottom: 3px solid rgba(255,255,200,0.3);
+}
+
+/* Wetter Animationen */
+.weather-icon-large {
+font-size: 4rem;
+filter: drop-shadow(0 6px 10px rgba(0,0,0,0.4));
+animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+0% { transform: translateY(0px); }
+50% { transform: translateY(-5px); }
+100% { transform: translateY(0px); }
+}
+.forecast-item {
+background: rgba(0,0,0,0.3);
+backdrop-filter: blur(8px);
+border-radius: 20px;
+padding: 8px 12px;
+text-align: center;
+animation: softPulse 3s infinite;
+}
+@keyframes softPulse {
+0% { opacity: 0.9; }
+50% { opacity: 1; }
+100% { opacity: 0.9; }
+}
+
+.calendar-grid {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+gap: 6px;
+margin-top: 8px;
+}
+.cal-day {
+padding: 10px 0;
+border-radius: 16px;
+background: rgba(0,0,0,0.2);
+}
+.today {
+background: rgba(0, 122, 255, 0.7);
+box-shadow: 0 0 15px #0077ff66;
+}
+.has-event::after {
+content: "•";
+color: #ffbb5e;
+font-size: 20px;
+line-height: 0;
+}
+
+.slideshow-img {
+width: 100%;
+height: 100%;
+object-fit: cover;
+border-radius: 20px;
+}
+
+.app-btn {
+background: rgba(255, 255, 255, 0.2);
+backdrop-filter: blur(12px);
+border: 1px solid rgba(255, 255, 255, 0.3);
+color: inherit;
+padding: 16px 24px;
+border-radius: 20px;
+font-size: 1.2rem;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.2s;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 10px;
+box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+/* Modals */
+.settings-overlay {
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.6);
+backdrop-filter: blur(20px);
+display: flex;
+align-items: center;
+justify-content: center;
+z-index: 1000;
+}
+.settings-card {
+background: rgba(15, 25, 40, 0.95);
+backdrop-filter: blur(40px);
+border: 1px solid rgba(255,255,255,0.15);
+border-radius: 36px;
+padding: 30px 36px;
+width: 700px;
+max-width: 90vw;
+max-height: 85vh;
+overflow-y: auto;
+color: white;
+box-shadow: 0 40px 70px #00000080;
+}
+.input-group {
+margin-bottom: 22px;
+}
+.input-group label {
+display: block;
+margin-bottom: 8px;
+font-weight: 500;
+}
+.input-group input, .input-group textarea, .input-group select {
+width: 100%;
+padding: 16px 20px;
+border-radius: 24px;
+border: 1px solid rgba(255,255,255,0.2);
+background: rgba(0,0,0,0.4);
+color: white;
+font-size: 1rem;
+}
+.hidden { display: none !important; }
+.flex-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.color-row { display: flex; gap: 12px; align-items: center; }
+.color-row input[type="color"] { width: 70px; height: 50px; }
+</style>
+</head>
+<body class="theme-dark">
+<div class="dashboard" id="dashboard">
+<div class="toolbar">
+<div class="toolbar-left">
+<div class="burger-menu" id="burgerMenuBtn">☰</div>
+<span class="dashboard-title">🏠 Home Dashboard</span>
+</div>
+<div class="toolbar-actions"></div>
+
+<div class="menu-dropdown" id="menuDropdown">
+<div class="menu-item" id="menuEditToggle">✎ Bearbeiten</div>
+<div class="menu-item" id="menuUploadImages">🖼️ Bilder hochladen</div>
+<div class="menu-item" id="menuOpenSettings">⚙️ Einstellungen</div>
+<div class="menu-item" id="menuAddTile">➕ Neue Kachel</div>
+<div class="menu-divider"></div>
+<div class="menu-item" id="menuReset">↻ Reset</div>
+</div>
+</div>
+
+<div class="grid-container" id="tileGrid"></div>
+</div>
+
+<!-- Einstellungen Modal -->
+<div id="settingsModal" class="settings-overlay hidden">
+<div class="settings-card">
+<h2 style="margin-bottom:28px;">⚙️ Einstellungen</h2>
+
+<div class="input-group">
+<label>📍 Stadt</label>
+<input type="text" id="settingsCity" placeholder="Düsseldorf" value="Düsseldorf">
+</div>
+
+<div class="input-group">
+<label>⏱️ Slideshow-Intervall (Sekunden)</label>
+<input type="number" id="settingsSlideshowSec" min="3" max="60" value="6">
+</div>
+
+<div class="input-group">
+<label>🎵 Spotify Link</label>
+<input type="text" id="settingsSpotify" placeholder="https://open.spotify.com/track/...">
+<small>Normaler Link – öffnet die App</small>
+</div>
+
+<div class="input-group">
+<label>▶️ YouTube Link</label>
+<input type="text" id="settingsYoutube" placeholder="https://www.youtube.com/watch?v=...">
+<small>Normaler Link – öffnet die App</small>
+</div>
+
+<div class="input-group">
+<label>🍳 Rezepte-URL</label>
+<input type="text" id="settingsRecipeUrl" placeholder="https://www.chefkoch.de/...">
+</div>
+
+<div class="input-group">
+<label>📋 Termine (pro Zeile: JJJJ-MM-TT HH:MM | Text)</label>
+<textarea id="settingsAppointments" rows="4"></textarea>
+</div>
+
+<div class="input-group">
+<label>🎨 Theme</label>
+<select id="settingsTheme">
+<option value="dark">Dunkelblau (Standard)</option>
+<option value="light">Hell &amp; Klar</option>
+<option value="midnight">Mitternacht</option>
+<option value="forest">Waldgrün</option>
+<option value="rosegold">Roségold</option>
+</select>
+</div>
+
+<div class="input-group">
+<label>✏️ Schriftgröße</label>
+<select id="settingsFontSize">
+<option value="medium">Mittel</option>
+<option value="small">Klein</option>
+<option value="large">Groß</option>
+</select>
+</div>
+
+<div class="input-group">
+<label>🎨 Standard Kachel-Hintergrundfarbe</label>
+<div class="color-row">
+<input type="color" id="globalAccentColor" value="#1a3a5a">
+<input type="text" id="globalAccentColorText" placeholder="#1a3a5a" value="#1a3a5a">
+</div>
+</div>
+
+<div class="input-group">
+<label>✏️ Standard Schriftfarbe</label>
+<div class="color-row">
+<input type="color" id="globalTextColor" value="#ffffff">
+<input type="text" id="globalTextColorText" placeholder="#ffffff" value="#ffffff">
+</div>
+</div>
+
+<div class="flex-row">
+<button class="app-btn" id="saveSettingsBtn">💾 Speichern</button>
+<button class="app-btn" id="closeSettingsBtn" style="background:rgba(100,100,100,0.3);">Abbrechen</button>
+</div>
+</div>
+</div>
+
+<!-- Kachel-Einstellungen Modal -->
+<div id="tileSettingsModal" class="settings-overlay hidden">
+<div class="settings-card" style="width:500px;">
+<h2>🎨 Kachel anpassen</h2>
+<input type="hidden" id="currentTileId">
+<div class="input-group">
+<label>Kachel-Titel</label>
+<input type="text" id="tileTitle" placeholder="Titel">
+</div>
+<div class="input-group">
+<label>Hintergrundfarbe</label>
+<div class="color-row">
+<input type="color" id="tileColor" value="#1a3a5a">
+<input type="text" id="tileColorText">
+</div>
+</div>
+<div class="input-group">
+<label>Hintergrundbild</label>
+<div class="bg-upload-row">
+<button class="app-btn" id="uploadTileBgBtn">📸 Bild wählen</button>
+<button class="app-btn" id="removeTileBgBtn" style="background:rgba(150,50,50,0.5);">🗑️ Entfernen</button>
+</div>
+</div>
+<div class="flex-row">
+<button class="app-btn" id="saveTileSettingsBtn">Speichern</button>
+<button class="app-btn" id="closeTileSettingsBtn" style="background:rgba(100,100,100,0.3);">Abbrechen</button>
+</div>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+// ---------- STATE ----------
+let tiles = [];
+let editMode = false;
+let nextTileId = 1000;
+
+const DEFAULT_TILES = [
+{ id: 1, type: 'clock', title: 'Uhr', colSpan: 1, rowSpan: 1, color: '#1a3a5a', bgImage: '' },
+{ id: 2, type: 'weather', title: 'Wetter', colSpan: 1, rowSpan: 1, color: '#2a4a6a', bgImage: '' },
+{ id: 3, type: 'calendar', title: 'Kalender', colSpan: 1, rowSpan: 1, color: '#3a2a5a', bgImage: '' },
+{ id: 4, type: 'slideshow', title: 'Slideshow', colSpan: 1, rowSpan: 1, color: '#2a5a4a', bgImage: '' },
+{ id: 5, type: 'appointments', title: 'Termine', colSpan: 1, rowSpan: 1, color: '#5a3a2a', bgImage: '' },
+{ id: 6, type: 'spotify', title: 'Spotify', colSpan: 1, rowSpan: 1, color: '#1a5a3a', bgImage: '' },
+{ id: 7, type: 'youtube', title: 'YouTube', colSpan: 1, rowSpan: 1, color: '#5a1a1a', bgImage: '' },
+{ id: 8, type: 'recipe', title: 'Rezepte', colSpan: 1, rowSpan: 1, color: '#4a3a5a', bgImage: '' }
+];
+
+let userConfig = {
+city: 'Düsseldorf',
+slideshowInterval: 6,
+spotifyUrl: '',
+youtubeUrl: '',
+recipeUrl: 'https://www.chefkoch.de/',
+appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
+globalAccent: '#1a3a5a',
+globalTextColor: '#ffffff',
+theme: 'dark',
+fontSize: 'medium'
+};
+
+let uploadedImages = [];
+let weatherCache = null;
+let lastWeatherFetch = 0;
+let currentEditingTileId = null;
+
+// ---------- STORAGE ----------
+function loadFromStorage() {
+try {
+const savedTiles = localStorage.getItem('dash_tiles_v7');
+const savedConfig = localStorage.getItem('dash_config_v7');
+const savedImages = localStorage.getItem('dash_images_v7');
+if (savedTiles) tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
+else tiles = [...DEFAULT_TILES];
+if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
+if (savedImages) uploadedImages = JSON.parse(savedImages);
+if (!tiles.length) tiles = [...DEFAULT_TILES];
+} catch(e) { tiles = [...DEFAULT_TILES]; }
+ensureUniqueIds();
+applyTheme(userConfig.theme);
+applyFontSize(userConfig.fontSize);
+}
+
+function saveToStorage() {
+try {
+localStorage.setItem('dash_tiles_v7', JSON.stringify(tiles));
+localStorage.setItem('dash_config_v7', JSON.stringify(userConfig));
+localStorage.setItem('dash_images_v7', JSON.stringify(uploadedImages));
+} catch(e) {}
+}
+
+function ensureUniqueIds() {
+tiles.forEach(t => { if (!t.id) t.id = ++nextTileId; });
+}
+
+function resetToDefault() {
+tiles = DEFAULT_TILES.map(t => ({...t}));
+userConfig = {
+city: 'Düsseldorf', slideshowInterval: 6, spotifyUrl: '', youtubeUrl: '',
+recipeUrl: 'https://www.chefkoch.de/', appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
+globalAccent: '#1a3a5a', globalTextColor: '#ffffff', theme: 'dark', fontSize: 'medium'
+};
+uploadedImages = [];
+applyTheme('dark');
+applyFontSize('medium');
+saveToStorage();
+renderAll();
+}
+
+// ---------- THEME & STYLE ----------
+function applyTheme(theme) {
+document.body.className = `theme-${theme}`;
+userConfig.theme = theme;
+}
+function applyFontSize(size) {
+const root = document.documentElement;
+if (size === 'small') root.style.fontSize = '14px';
+else if (size === 'large') root.style.fontSize = '18px';
+else root.style.fontSize = '16px';
+userConfig.fontSize = size;
+}
+
+const gridEl = document.getElementById('tileGrid');
+
+function renderAll() {
+if (!gridEl) return;
+gridEl.innerHTML = '';
+tiles.forEach(tile => {
+const tileDiv = createTileElement(tile);
+gridEl.appendChild(tileDiv);
+});
+updateGridStyles();
+refreshDynamicContents();
+}
+
+function createTileElement(tile) {
+const div = document.createElement('div');
+div.className = `tile ${editMode ? 'edit-mode' : ''}`;
+div.dataset.id = tile.id;
+div.style.gridColumn = `span ${tile.colSpan || 1}`;
+div.style.gridRow = `span ${tile.rowSpan || 1}`;
+div.setAttribute('draggable', editMode);
+
+const bgColor = tile.color || userConfig.globalAccent;
+if (tile.bgImage) {
+div.style.backgroundImage = `url('${tile.bgImage}')`;
+div.style.backgroundColor = 'transparent';
+} else {
+div.style.backgroundColor = bgColor;
+div.style.backgroundImage = 'none';
+}
+div.style.color = userConfig.globalTextColor;
+
+const header = document.createElement('div');
+header.className = 'tile-header';
+header.innerHTML = `<span>${tile.title || tile.type}</span>`;
+
+const controls = document.createElement('div');
+controls.className = 'tile-controls';
+if (editMode) {
+controls.innerHTML = `
+<button class="icon-btn tile-settings-btn" data-id="${tile.id}">⚙️</button>
+<button class="icon-btn tile-size-btn" data-id="${tile.id}">🔲</button>
+<button class="icon-btn tile-delete-btn" data-id="${tile.id}">✕</button>
+`;
+}
+header.appendChild(controls);
+div.appendChild(header);
+
+const content = document.createElement('div');
+content.className = 'tile-content';
+content.id = `content-${tile.id}`;
+div.appendChild(content);
+
+fillTileContent(tile, content);
+
+div.addEventListener('dragstart', handleDragStart);
+div.addEventListener('dragover', handleDragOver);
+div.addEventListener('drop', handleDrop);
+div.addEventListener('dragend', handleDragEnd);
+
+return div;
+}
+
+function fillTileContent(tile, container) {
+const type = tile.type;
+if (type === 'clock') renderFlipClock(container);
+else if (type === 'weather') renderWeather(container);
+else if (type === 'calendar') renderCalendar(container);
+else if (type === 'slideshow') renderSlideshow(container);
+else if (type === 'appointments') renderAppointments(container);
+else if (type === 'spotify') renderSpotify(container);
+else if (type === 'youtube') renderYoutube(container);
+else if (type === 'recipe') renderRecipe(container);
+}
+
+function renderFlipClock(container) {
+const now = new Date();
+container.innerHTML = `
+<div class="flip-clock">
+<span class="flip-digit">${String(now.getHours()).padStart(2,'0')}</span><span>:</span>
+<span class="flip-digit">${String(now.getMinutes()).padStart(2,'0')}</span>
+</div>
+<div style="font-size:1.4rem; margin-top:12px;">${now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'})}</div>
+`;
+}
+
+async function renderWeather(container) {
+const city = userConfig.city || 'Düsseldorf';
+container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;">🌤️</div>`;
+try {
+const useCache = (Date.now() - lastWeatherFetch < 600000) && weatherCache;
+let data;
+if (useCache) data = weatherCache;
+else {
+const res = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`);
+if (!res.ok) throw new Error();
+data = await res.json();
+weatherCache = data;
+lastWeatherFetch = Date.now();
+}
+const curr = data.current_condition[0];
+const forecast = data.weather;
+const icon = getWeatherIcon(curr.weatherCode);
+container.innerHTML = `
+<div style="display:flex; align-items:center; gap:10px;">
+<span class="weather-icon-large">${icon}</span>
+<div>
+<span style="font-size:2.8rem;">${curr.temp_C}°</span>
+<span>${curr.weatherDesc[0].value}</span>
+</div>
+</div>
+<div class="forecast-icons">
+${forecast.slice(0,5).map(d => `
+<div class="forecast-item">
+${getWeatherIcon(d.weatherCode)}<br>
+${d.maxtempC}°
+</div>
+`).join('')}
+</div>
+`;
+} catch(e) {
+container.innerHTML = `
+<div style="display:flex; align-items:center; gap:10px;">
+<span class="weather-icon-large">🌥️</span>
+<div>
+<span style="font-size:2.8rem;">15°C</span>
+<span>leicht bewölkt</span>
+</div>
+</div>
+<div style="margin-top:12px;">📍 ${city}</div>
+`;
+}
+}
+
+function getWeatherIcon(code) {
+if (code < 200) return '☀️';
+if (code < 300) return '🌦️';
+if (code < 600) return '🌧️';
+if (code < 700) return '❄️';
+return '☁️';
+}
+
+function renderCalendar(container) {
+const today = new Date();
+const year = today.getFullYear(), month = today.getMonth();
+const firstDay = new Date(year, month, 1).getDay();
+const daysInMonth = new Date(year, month+1, 0).getDate();
+let html = `<div style="font-weight:500; margin-bottom:10px; font-size:1.1rem;">${today.toLocaleString('de',{month:'long'})} ${year}</div><div class="calendar-grid">`;
+['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => html += `<div style="opacity:0.7">${d}</div>`);
+let start = (firstDay===0)?6:firstDay-1;
+for (let i=0;i<start;i++) html+=`<div></div>`;
+for (let d=1; d<=daysInMonth; d++) {
+const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+const isToday = (d===today.getDate() && month===today.getMonth());
+const hasApp = userConfig.appointmentsText.split('\n').some(l=>l.startsWith(dateStr));
+html += `<div class="cal-day ${isToday?'today':''} ${hasApp?'has-event':''}">${d}</div>`;
+}
+html += `</div>`;
+container.innerHTML = html;
+}
+
+function renderSlideshow(container) {
+if (!uploadedImages.length) {
+container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;">📸 Bilder hochladen</div>`;
+return;
+}
+let idx = (parseInt(container.dataset.slideIndex)||0) % uploadedImages.length;
+container.innerHTML = `<img class="slideshow-img" src="${uploadedImages[idx]}" alt="slide">`;
+container.dataset.slideIndex = idx;
+}
+
+function renderAppointments(container) {
+const lines = userConfig.appointmentsText.split('\n').filter(l=>l.trim());
+container.innerHTML = lines.length ? lines.map(l=>`<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.2);">📅 ${l}</div>`).join('') : '<div>Keine Termine</div>';
+}
+
+function renderSpotify(container) {
+const url = userConfig.spotifyUrl || '';
+container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${url}','_blank')">🎵 Spotify öffnen</button></div>`;
+}
+function renderYoutube(container) {
+const url = userConfig.youtubeUrl || '';
+container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${url}','_blank')">▶️ YouTube öffnen</button></div>`;
+}
+function renderRecipe(container) {
+const url = userConfig.recipeUrl || 'https://www.chefkoch.de/';
+container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${url}','_blank')">🍳 Rezepte öffnen</button></div>`;
+}
+
+function refreshDynamicContents() {
+document.querySelectorAll('.tile').forEach(el => {
+const id = Number(el.dataset.id);
+const tile = tiles.find(t=>t.id===id);
+if (tile) fillTileContent(tile, el.querySelector('.tile-content'));
+});
+}
+function updateGridStyles() {
+tiles.forEach(t => {
+const el = document.querySelector(`.tile[data-id="${t.id}"]`);
+if (el) { el.style.gridColumn = `span ${t.colSpan||1}`; el.style.gridRow = `span ${t.rowSpan||1}`; }
+});
+}
+
+// Drag & Drop
+let dragSrc = null;
+function handleDragStart(e) { if(editMode){ dragSrc=this; this.classList.add('dragging'); } else e.preventDefault(); }
+function handleDragOver(e) { if(editMode) e.preventDefault(); }
+function handleDrop(e) {
+e.preventDefault();
+if(!editMode||!dragSrc) return;
+const target = this.closest('.tile');
+if(!target||dragSrc===target) return;
+const srcId = Number(dragSrc.dataset.id), targetId = Number(target.dataset.id);
+const srcIdx = tiles.findIndex(t=>t.id===srcId), tgtIdx = tiles.findIndex(t=>t.id===targetId);
+if(srcIdx>-1&&tgtIdx>-1){ [tiles[srcIdx], tiles[tgtIdx]] = [tiles[tgtIdx], tiles[srcIdx]]; saveToStorage(); renderAll(); }
+}
+function handleDragEnd(e) { this.classList.remove('dragging'); }
+
+function openTileSettings(tileId) {
+const tile = tiles.find(t=>t.id==tileId); if(!tile) return;
+currentEditingTileId = tileId;
+document.getElementById('currentTileId').value = tileId;
+document.getElementById('tileTitle').value = tile.title || '';
+document.getElementById('tileColor').value = tile.color || userConfig.globalAccent;
+document.getElementById('tileColorText').value = tile.color || userConfig.globalAccent;
+document.getElementById('tileSettingsModal').classList.remove('hidden');
+}
+
+// ---------- INIT ----------
+function init() {
+loadFromStorage();
+renderAll();
+
+const burgerBtn = document.getElementById('burgerMenuBtn');
+const menuDropdown = document.getElementById('menuDropdown');
+burgerBtn.addEventListener('click', (e) => { e.stopPropagation(); menuDropdown.classList.toggle('show'); });
+document.addEventListener('click', () => menuDropdown.classList.remove('show'));
+menuDropdown.addEventListener('click', (e) => e.stopPropagation());
+
+document.getElementById('menuEditToggle').onclick = () => {
+editMode = !editMode;
+menuDropdown.classList.remove('show');
+renderAll();
+};
+document.getElementById('menuUploadImages').onclick = () => {
+menuDropdown.classList.remove('show');
+const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.multiple=true;
+inp.onchange = e => { Array.from(e.target.files).forEach(f=>{ const r=new FileReader(); r.onload=ev=>{ uploadedImages.push(ev.target.result); saveToStorage(); renderAll(); }; r.readAsDataURL(f); }); };
+inp.click();
+};
+document.getElementById('menuOpenSettings').onclick = () => {
+menuDropdown.classList.remove('show');
+document.getElementById('settingsCity').value = userConfig.city;
+document.getElementById('settingsSlideshowSec').value = userConfig.slideshowInterval;
+document.getElementById('settingsSpotify').value = userConfig.spotifyUrl;
+document.getElementById('settingsYoutube').value = userConfig.youtubeUrl;
+document.getElementById('settingsRecipeUrl').value = userConfig.recipeUrl;
+document.getElementById('settingsAppointments').value = userConfig.appointmentsText;
+document.getElementById('globalAccentColor').value = userConfig.globalAccent;
+document.getElementById('globalAccentColorText').value = userConfig.globalAccent;
+document.getElementById('globalTextColor').value = userConfig.globalTextColor;
+document.getElementById('globalTextColorText').value = userConfig.globalTextColor;
+document.getElementById('settingsTheme').value = userConfig.theme;
+document.getElementById('settingsFontSize').value = userConfig.fontSize;
+document.getElementById('settingsModal').classList.remove('hidden');
+};
+document.getElementById('menuAddTile').onclick = () => {
+menuDropdown.classList.remove('show');
+tiles.push({ id: ++nextTileId, type: 'clock', title: 'Neue Uhr', colSpan:1, rowSpan:1, color: userConfig.globalAccent, bgImage: '' });
+saveToStorage(); renderAll();
+};
+document.getElementById('menuReset').onclick = () => { menuDropdown.classList.remove('show'); if(confirm('Reset?')) resetToDefault(); };
+
+// Color sync
+const accentPicker = document.getElementById('globalAccentColor'), accentText = document.getElementById('globalAccentColorText');
+const textPicker = document.getElementById('globalTextColor'), textText = document.getElementById('globalTextColorText');
+const tileColorPicker = document.getElementById('tileColor'), tileColorText = document.getElementById('tileColorText');
+accentPicker.addEventListener('input', ()=> accentText.value = accentPicker.value);
+accentText.addEventListener('input', ()=> accentPicker.value = accentText.value);
+textPicker.addEventListener('input', ()=> textText.value = textPicker.value);
+textText.addEventListener('input', ()=> textPicker.value = textText.value);
+tileColorPicker.addEventListener('input', ()=> tileColorText.value = tileColorPicker.value);
+tileColorText.addEventListener('input', ()=> tileColorPicker.value = tileColorText.value);
+
+document.getElementById('closeSettingsBtn').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
+document.getElementById('saveSettingsBtn').onclick = () => {
+userConfig.city = document.getElementById('settingsCity').value;
+userConfig.slideshowInterval = parseInt(document.getElementById('settingsSlideshowSec').value)||6;
+userConfig.spotifyUrl = document.getElementById('settingsSpotify').value;
+userConfig.youtubeUrl = document.getElementById('settingsYoutube').value;
+userConfig.recipeUrl = document.getElementById('settingsRecipeUrl').value;
+userConfig.appointmentsText = document.getElementById('settingsAppointments').value;
+userConfig.globalAccent = document.getElementById('globalAccentColor').value;
+userConfig.globalTextColor = document.getElementById('globalTextColor').value;
+const newTheme = document.getElementById('settingsTheme').value;
+const newFontSize = document.getElementById('settingsFontSize').value;
+applyTheme(newTheme);
+applyFontSize(newFontSize);
+saveToStorage();
+renderAll();
+document.getElementById('settingsModal').classList.add('hidden');
+};
+
+document.getElementById('closeTileSettingsBtn').onclick = () => document.getElementById('tileSettingsModal').classList.add('hidden');
+document.getElementById('saveTileSettingsBtn').onclick = () => {
+const tileId = parseInt(document.getElementById('currentTileId').value);
+const tile = tiles.find(t=>t.id===tileId);
+if(tile){ tile.title = document.getElementById('tileTitle').value; tile.color = document.getElementById('tileColor').value; }
+saveToStorage(); renderAll(); document.getElementById('tileSettingsModal').classList.add('hidden');
+};
+document.getElementById('uploadTileBgBtn').onclick = () => {
+const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
+inp.onchange = e => { const f=e.target.files[0]; if(f){ const r=new FileReader(); r.onload=ev=>{ const tileId=parseInt(document.getElementById('currentTileId').value); const tile=tiles.find(t=>t.id===tileId); if(tile){ tile.bgImage=ev.target.result; saveToStorage(); renderAll(); } }; r.readAsDataURL(f); } };
+inp.click();
+};
+document.getElementById('removeTileBgBtn').onclick = () => {
+const tileId = parseInt(document.getElementById('currentTileId').value);
+const tile = tiles.find(t=>t.id===tileId); if(tile){ tile.bgImage=''; saveToStorage(); renderAll(); }
+};
+
+gridEl.addEventListener('click', e => {
+const btn = e.target.closest('button'); if(!btn) return;
+const id = btn.dataset.id;
+if(btn.classList.contains('tile-settings-btn')) openTileSettings(id);
+else if(btn.classList.contains('tile-delete-btn')) { tiles = tiles.filter(t=>t.id!=id); saveToStorage(); renderAll(); }
+else if(btn.classList.contains('tile-size-btn')) { const tile = tiles.find(t=>t.id==id); if(tile){ tile.colSpan = tile.colSpan===2?1:2; tile.rowSpan = tile.rowSpan===2?1:2; saveToStorage(); renderAll(); } }
+});
+
+setInterval(() => {
+document.querySelectorAll('.tile').forEach(el => { const t = tiles.find(tt=>tt.id==el.dataset.id); if(t&&t.type==='clock') renderFlipClock(el.querySelector('.tile-content')); });
+}, 1000);
+setInterval(() => {
+document.querySelectorAll('.tile').forEach(el => { const t = tiles.find(tt=>tt.id==el.dataset.id); if(t&&t.type==='slideshow'&&uploadedImages.length){ const cont=el.querySelector('.tile-content'); let idx=(parseInt(cont.dataset.slideIndex||0)+1)%uploadedImages.length; cont.dataset.slideIndex=idx; cont.innerHTML=`<img class="slideshow-img" src="${uploadedImages[idx]}" alt="slide">`; } });
+}, userConfig.slideshowInterval*1000);
+}
+
+window.onload = init;
+})();
+</script>
+</body>
+</html>
