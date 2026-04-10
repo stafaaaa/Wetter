@@ -20,7 +20,104 @@ justify-content: center;
 padding: 0;
 margin: 0;
 transition: background 0.3s ease;
-background: #aaccdd;
+}
+
+/* ========== THEMES (CSS VARIABLEN) ========== */
+body.theme-light {
+--bg-color: #f5f5f7;
+--text-primary: #1d1d1f;
+--tile-bg: rgba(255, 255, 255, 0.45);
+--tile-border: rgba(0, 0, 0, 0.06);
+--shadow: 0 30px 50px -15px rgba(0,0,0,0.15);
+--header-glow: 0 2px 10px rgba(255,255,255,0.5);
+--menu-bg: rgba(255, 255, 255, 0.7);
+--input-bg: rgba(255,255,255,0.5);
+}
+body.theme-dark {
+--bg-color: #1c1c1e;
+--text-primary: #ffffff;
+--tile-bg: rgba(40, 40, 45, 0.55);
+--tile-border: rgba(255, 255, 255, 0.08);
+--shadow: 0 30px 50px -15px rgba(0,0,0,0.5);
+--header-glow: 0 2px 10px rgba(0,0,0,0.3);
+--menu-bg: rgba(30, 30, 35, 0.8);
+--input-bg: rgba(20,20,25,0.6);
+}
+body.theme-midnight {
+--bg-color: #0b0b10;
+--text-primary: #e5e5ff;
+--tile-bg: rgba(20, 20, 30, 0.55);
+--tile-border: rgba(100, 150, 255, 0.15);
+--shadow: 0 30px 50px -15px rgba(0,0,0,0.6);
+--header-glow: 0 2px 10px rgba(0,0,0,0.3);
+--menu-bg: rgba(20, 20, 30, 0.9);
+--input-bg: rgba(20,20,25,0.6);
+}
+body.theme-forest {
+--bg-color: #e5f0e5;
+--text-primary: #1d2a1d;
+--tile-bg: rgba(220, 240, 220, 0.45);
+--tile-border: rgba(40, 80, 40, 0.1);
+--shadow: 0 30px 50px -15px rgba(0,0,0,0.1);
+--header-glow: 0 2px 10px rgba(255,255,255,0.3);
+--menu-bg: rgba(240, 250, 240, 0.8);
+--input-bg: rgba(255,255,255,0.5);
+}
+body.theme-rose {
+--bg-color: #f5eef0;
+--text-primary: #2a1a1e;
+--tile-bg: rgba(250, 240, 242, 0.5);
+--tile-border: rgba(150, 60, 80, 0.1);
+--shadow: 0 30px 50px -15px rgba(0,0,0,0.1);
+--header-glow: 0 2px 10px rgba(255,255,255,0.3);
+--menu-bg: rgba(255, 245, 245, 0.8);
+--input-bg: rgba(255,255,255,0.5);
+}
+/* Huawei Themes */
+body.theme-huawei-light {
+--bg-color: #f0f4f8;
+--text-primary: #1a1a1a;
+--tile-bg: rgba(255, 255, 255, 0.5);
+--tile-border: rgba(0,0,0,0.05);
+--shadow: 0 20px 40px rgba(0,0,0,0.08);
+--header-glow: 0 2px 10px rgba(255,255,255,0.4);
+--menu-bg: rgba(255,255,255,0.75);
+--input-bg: rgba(255,255,255,0.5);
+}
+body.theme-huawei-dark {
+--bg-color: #12161a;
+--text-primary: #e0e0e0;
+--tile-bg: rgba(25, 30, 35, 0.6);
+--tile-border: rgba(255,255,255,0.1);
+--shadow: 0 20px 40px rgba(0,0,0,0.5);
+--header-glow: 0 2px 10px rgba(0,0,0,0.3);
+--menu-bg: rgba(25, 30, 35, 0.9);
+--input-bg: rgba(20,20,25,0.6);
+}
+body.theme-huawei-emerald {
+--bg-color: #d4e6d4;
+--text-primary: #1a2a1a;
+--tile-bg: rgba(180, 220, 180, 0.45);
+--tile-border: rgba(40, 100, 40, 0.1);
+--shadow: 0 20px 40px rgba(0,0,0,0.08);
+--header-glow: 0 2px 10px rgba(255,255,255,0.3);
+--menu-bg: rgba(220, 240, 220, 0.8);
+--input-bg: rgba(255,255,255,0.5);
+}
+body.theme-huawei-sunrise {
+--bg-color: #fce4d6;
+--text-primary: #2a1a10;
+--tile-bg: rgba(255, 220, 200, 0.45);
+--tile-border: rgba(180, 100, 60, 0.1);
+--shadow: 0 20px 40px rgba(0,0,0,0.08);
+--header-glow: 0 2px 10px rgba(255,255,255,0.3);
+--menu-bg: rgba(255, 235, 220, 0.8);
+--input-bg: rgba(255,255,255,0.5);
+}
+
+body {
+background: var(--bg-color);
+color: var(--text-primary);
 }
 
 .dashboard {
@@ -34,9 +131,9 @@ padding: 20px 24px 24px 24px;
 overflow: hidden;
 background-size: cover;
 background-position: center;
-transition: background 0.3s;
 position: relative;
 }
+/* Overlay für Hintergrundbild abdunkeln/aufhellen optional */
 .dashboard::before {
 content: "";
 position: absolute;
@@ -44,7 +141,7 @@ top: 0; left: 0; right: 0; bottom: 0;
 background: inherit;
 background-size: cover;
 background-position: center;
-filter: brightness(1.1) saturate(1.2);
+filter: brightness(1.05) saturate(1.1);
 z-index: -1;
 }
 
@@ -65,11 +162,10 @@ gap: 20px;
 }
 
 .burger-menu {
-background: rgba(255, 255, 255, 0.25);
+background: rgba(128, 128, 140, 0.2);
 backdrop-filter: blur(20px);
--webkit-backdrop-filter: blur(20px);
-border: 0.5px solid rgba(255, 255, 255, 0.4);
-color: #1d1d1f;
+border: 0.5px solid rgba(255, 255, 255, 0.2);
+color: var(--text-primary);
 width: 52px;
 height: 52px;
 border-radius: 18px;
@@ -78,40 +174,36 @@ align-items: center;
 justify-content: center;
 font-size: 1.8rem;
 cursor: pointer;
-box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 transition: all 0.2s;
 }
-body.theme-dark .burger-menu { color: #ffffff; background: rgba(40,40,45,0.5); }
 
 .dashboard-title {
 font-size: 2rem;
 font-weight: 600;
 letter-spacing: -0.02em;
-color: #1d1d1f;
-text-shadow: 0 2px 10px rgba(255,255,255,0.5);
+color: var(--text-primary);
+text-shadow: var(--header-glow);
 }
-body.theme-dark .dashboard-title { color: #ffffff; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
 
 .menu-dropdown {
 position: absolute;
 top: 75px;
 left: 24px;
-background: rgba(255, 255, 255, 0.7);
+background: var(--menu-bg);
 backdrop-filter: blur(50px);
--webkit-backdrop-filter: blur(50px);
-border: 0.5px solid rgba(255,255,255,0.6);
+border: 0.5px solid rgba(255,255,255,0.4);
 border-radius: 24px;
 padding: 12px 8px;
 min-width: 240px;
-box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+box-shadow: var(--shadow);
 z-index: 100;
 display: none;
 }
-body.theme-dark .menu-dropdown { background: rgba(30,30,35,0.8); border-color: rgba(255,255,255,0.2); }
 .menu-dropdown.show { display: block; }
 .menu-item {
 padding: 14px 20px;
-color: #1d1d1f;
+color: var(--text-primary);
 font-size: 1.1rem;
 font-weight: 500;
 cursor: pointer;
@@ -121,9 +213,8 @@ display: flex;
 align-items: center;
 gap: 12px;
 }
-body.theme-dark .menu-item { color: #ffffff; }
 .menu-item:hover { background: rgba(120, 120, 140, 0.15); }
-.menu-divider { height: 1px; background: rgba(0,0,0,0.1); margin: 8px 0; }
+.menu-divider { height: 1px; background: rgba(128,128,140,0.2); margin: 8px 0; }
 
 .grid-container {
 display: grid;
@@ -136,34 +227,34 @@ padding: 4px;
 z-index: 2;
 }
 
-/* Kachel */
+/* Kachel – ohne störende Linien */
 .tile {
 backdrop-filter: blur(30px);
 -webkit-backdrop-filter: blur(30px);
-border: 1px solid rgba(255, 255, 255, 0.3);
+border: 1px solid var(--tile-border);
 border-radius: 36px;
 padding: 22px 24px;
-box-shadow: 0 30px 50px -15px rgba(0,0,0,0.2), 0 10px 20px -5px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.6);
+box-shadow: var(--shadow), inset 0 0 0 1px rgba(255,255,255,0.15);
 display: flex;
 flex-direction: column;
 overflow: hidden;
 position: relative;
-transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+transition: all 0.3s;
 background-size: cover;
 background-position: center;
-color: #1d1d1f;
+color: var(--text-primary);
 transform: perspective(2000px) rotateX(2deg) rotateY(0.5deg) translateZ(5px);
 transform-style: preserve-3d;
-background-color: rgba(255, 255, 255, 0.4);
+background-color: var(--tile-bg);
 }
 .tile:hover {
 transform: perspective(2000px) rotateX(1deg) rotateY(1deg) translateZ(12px);
-box-shadow: 0 40px 70px -15px rgba(0,0,0,0.25), 0 15px 25px -8px rgba(0,0,0,0.15);
 }
 .tile.edit-mode {
-border: 3px dashed rgba(0, 122, 255, 0.6);
+border: 2px dashed rgba(0, 122, 255, 0.7);
 cursor: grab;
 }
+/* Entferne das ::after, das eventuell die Linie verursacht hat */
 .tile::before {
 content: "";
 position: absolute;
@@ -171,16 +262,8 @@ top: 0; left: 0; right: 0; bottom: 0;
 background: inherit;
 background-size: cover;
 background-position: center;
-filter: brightness(1.05);
+filter: brightness(1.02);
 z-index: 0;
-}
-.tile::after {
-content: "";
-position: absolute;
-top: 0; left: 0; right: 0; bottom: 0;
-background: linear-gradient(145deg, rgba(255,255,255,0.3) 0%, transparent 60%);
-pointer-events: none;
-z-index: 1;
 }
 
 .tile-header {
@@ -195,10 +278,10 @@ z-index: 2;
 }
 .tile-controls { display: flex; gap: 10px; }
 .icon-btn {
-background: rgba(255, 255, 255, 0.3);
+background: rgba(128, 128, 140, 0.2);
 backdrop-filter: blur(10px);
-border: 0.5px solid rgba(255,255,255,0.5);
-color: #1d1d1f;
+border: 0.5px solid rgba(255,255,255,0.3);
+color: var(--text-primary);
 font-size: 1.3rem;
 cursor: pointer;
 width: 44px;
@@ -209,7 +292,6 @@ align-items: center;
 justify-content: center;
 box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
-body.theme-dark .icon-btn { color: #ffffff; background: rgba(40,40,45,0.5); }
 
 .tile-content {
 flex: 1;
@@ -220,19 +302,18 @@ position: relative;
 z-index: 2;
 }
 
-/* Größen-Indikator */
 .size-badge {
 position: absolute;
 bottom: 12px;
 left: 12px;
-background: rgba(0,0,0,0.2);
+background: rgba(0,0,0,0.15);
 backdrop-filter: blur(4px);
 padding: 4px 12px;
 border-radius: 30px;
 font-size: 0.8rem;
-color: white;
+color: var(--text-primary);
 z-index: 3;
-opacity: 0.6;
+opacity: 0.7;
 }
 
 .flip-clock {
@@ -243,7 +324,7 @@ font-weight: 300;
 line-height: 1.1;
 }
 .flip-digit {
-background: rgba(255, 255, 255, 0.3);
+background: rgba(128, 128, 140, 0.15);
 backdrop-filter: blur(8px);
 padding: 12px 18px;
 border-radius: 24px;
@@ -262,13 +343,11 @@ animation: float 5s ease-in-out infinite;
 100% { transform: translateY(0px); }
 }
 .forecast-item {
-background: rgba(255, 255, 255, 0.2);
+background: rgba(128, 128, 140, 0.1);
 backdrop-filter: blur(10px);
 border-radius: 24px;
 padding: 10px 14px;
 text-align: center;
-animation: softPulse 4s infinite;
-box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
 }
 
 .calendar-grid {
@@ -280,12 +359,11 @@ margin-top: 8px;
 .cal-day {
 padding: 12px 0;
 border-radius: 20px;
-background: rgba(255, 255, 255, 0.15);
+background: rgba(128, 128, 140, 0.1);
 }
 .today {
 background: rgba(0, 122, 255, 0.3);
 font-weight: bold;
-box-shadow: 0 0 0 2px rgba(0,122,255,0.3);
 }
 .has-event::after {
 content: "•";
@@ -301,10 +379,10 @@ border-radius: 24px;
 }
 
 .app-btn {
-background: rgba(255, 255, 255, 0.3);
+background: rgba(128, 128, 140, 0.2);
 backdrop-filter: blur(20px);
-border: 0.5px solid rgba(255,255,255,0.5);
-color: #1d1d1f;
+border: 0.5px solid rgba(255,255,255,0.3);
+color: var(--text-primary);
 padding: 18px 28px;
 border-radius: 60px;
 font-size: 1.2rem;
@@ -316,9 +394,7 @@ justify-content: center;
 gap: 10px;
 box-shadow: 0 10px 20px -5px rgba(0,0,0,0.15);
 }
-body.theme-dark .app-btn { color: #ffffff; background: rgba(40,40,45,0.5); }
 
-/* Modals */
 .settings-overlay {
 position: fixed;
 inset: 0;
@@ -330,19 +406,18 @@ justify-content: center;
 z-index: 1000;
 }
 .settings-card {
-background: rgba(255, 255, 255, 0.7);
+background: var(--menu-bg);
 backdrop-filter: blur(60px);
-border: 0.5px solid rgba(255,255,255,0.6);
+border: 0.5px solid rgba(255,255,255,0.4);
 border-radius: 48px;
 padding: 36px 40px;
 width: 750px;
 max-width: 90vw;
 max-height: 85vh;
 overflow-y: auto;
-color: #1d1d1f;
-box-shadow: 0 40px 80px rgba(0,0,0,0.2);
+color: var(--text-primary);
+box-shadow: var(--shadow);
 }
-body.theme-dark .settings-card { background: rgba(30,30,35,0.8); border-color: rgba(255,255,255,0.2); color: #ffffff; }
 .input-group {
 margin-bottom: 24px;
 }
@@ -355,20 +430,16 @@ font-weight: 600;
 width: 100%;
 padding: 18px 22px;
 border-radius: 60px;
-border: 0.5px solid rgba(0,0,0,0.1);
-background: rgba(255,255,255,0.5);
+border: 0.5px solid rgba(128,128,140,0.2);
+background: var(--input-bg);
 backdrop-filter: blur(10px);
-color: inherit;
+color: var(--text-primary);
 font-size: 1rem;
 }
 .hidden { display: none !important; }
 .flex-row { display: flex; gap: 16px; flex-wrap: wrap; }
 .color-row { display: flex; gap: 16px; align-items: center; }
 .color-row input[type="color"] { width: 80px; height: 55px; border-radius: 30px; }
-
-/* Huawei Theme Styles */
-body.theme-huawei-light { --tile-glow: 0 20px 40px rgba(0,0,0,0.08); }
-body.theme-huawei-dark { --tile-glow: 0 20px 40px rgba(0,0,0,0.5); }
 </style>
 </head>
 <body class="theme-light">
@@ -399,16 +470,16 @@ body.theme-huawei-dark { --tile-glow: 0 20px 40px rgba(0,0,0,0.5); }
 <h2 style="margin-bottom:32px;">⚙️ Einstellungen</h2>
 <div class="input-group"><label>📍 Stadt</label><input type="text" id="settingsCity" value="Düsseldorf"></div>
 <div class="input-group"><label>⏱️ Slideshow (Sek)</label><input type="number" id="settingsSlideshowSec" value="6"></div>
-<div class="input-group"><label>🎵 Spotify</label><input type="text" id="settingsSpotify" placeholder="Link"></div>
-<div class="input-group"><label>▶️ YouTube</label><input type="text" id="settingsYoutube" placeholder="Link"></div>
-<div class="input-group"><label>🍳 Rezepte-URL</label><input type="text" id="settingsRecipeUrl"></div>
-<div class="input-group"><label>📋 Termine</label><textarea id="settingsAppointments" rows="3"></textarea></div>
+<div class="input-group"><label>🎵 Spotify Link</label><input type="text" id="settingsSpotify" placeholder="https://open.spotify.com/..."></div>
+<div class="input-group"><label>▶️ YouTube Link</label><input type="text" id="settingsYoutube" placeholder="https://youtube.com/..."></div>
+<div class="input-group"><label>🍳 Rezepte-URL</label><input type="text" id="settingsRecipeUrl" placeholder="https://..."></div>
+<div class="input-group"><label>📋 Termine</label><textarea id="settingsAppointments" rows="3" placeholder="2026-04-10 09:00 | Arzttermin"></textarea></div>
 
 <div class="input-group">
-<label>🖼️ Dashboard-Hintergrund</label>
-<div class="flex-row"><button class="app-btn" id="uploadDashboardBgBtn">📸 Bild</button><button class="app-btn" id="removeDashboardBgBtn">🗑️</button></div>
+<label>🖼️ Dashboard-Hintergrundbild</label>
+<div class="flex-row"><button class="app-btn" id="uploadDashboardBgBtn">📸 Bild wählen</button><button class="app-btn" id="removeDashboardBgBtn">🗑️ Entfernen</button></div>
 </div>
-<div class="input-group"><label>🎨 Hintergrundfarbe</label><div class="color-row"><input type="color" id="dashboardBgColor" value="#aaccdd"><input type="text" id="dashboardBgColorText"></div></div>
+<div class="input-group"><label>🎨 Hintergrundfarbe (wenn kein Bild)</label><div class="color-row"><input type="color" id="dashboardBgColor" value="#aaccdd"><input type="text" id="dashboardBgColorText"></div></div>
 
 <div class="input-group">
 <label>🎨 Theme</label>
@@ -421,7 +492,7 @@ body.theme-huawei-dark { --tile-glow: 0 20px 40px rgba(0,0,0,0.5); }
 <option value="rose">Apple Rosé</option>
 </optgroup>
 <optgroup label="Huawei HarmonyOS">
-<option value="huawei-light">Huawei Light (HarmonyOS)</option>
+<option value="huawei-light">Huawei Light</option>
 <option value="huawei-dark">Huawei Dark</option>
 <option value="huawei-emerald">Huawei Emerald</option>
 <option value="huawei-sunrise">Huawei Sunrise</option>
@@ -445,7 +516,7 @@ body.theme-huawei-dark { --tile-glow: 0 20px 40px rgba(0,0,0,0.5); }
 <input type="hidden" id="currentTileId">
 <div class="input-group"><label>Titel</label><input type="text" id="tileTitle"></div>
 <div class="input-group"><label>Hintergrundfarbe</label><div class="color-row"><input type="color" id="tileColor"><input type="text" id="tileColorText"></div></div>
-<div class="input-group"><label>Hintergrundbild</label><div><button class="app-btn" id="uploadTileBgBtn">📸 Bild</button><button class="app-btn" id="removeTileBgBtn">🗑️</button></div></div>
+<div class="input-group"><label>Hintergrundbild</label><div class="flex-row"><button class="app-btn" id="uploadTileBgBtn">📸 Bild</button><button class="app-btn" id="removeTileBgBtn">🗑️</button></div></div>
 <div class="input-group"><label>🔮 Transparenz</label><input type="range" id="tileOpacity" min="0.1" max="1.0" step="0.05" value="0.6"><span id="tileOpacityVal">0.6</span></div>
 <div class="input-group">
 <label>📐 Größe</label>
@@ -492,25 +563,12 @@ let uploadedImages = [];
 let weatherCache = null, lastWeatherFetch = 0;
 let currentEditingTileId = null;
 
-// ---------- Huawei Theme Mapping ----------
-const themeMap = {
-'light': { body: 'theme-light', bg: '#f5f5f7', tile: 'rgba(255,255,255,0.4)' },
-'dark': { body: 'theme-dark', bg: '#1c1c1e', tile: 'rgba(40,40,45,0.5)' },
-'midnight': { body: 'theme-midnight', bg: '#0b0b10', tile: 'rgba(20,20,30,0.5)' },
-'forest': { body: 'theme-forest', bg: '#e5f0e5', tile: 'rgba(220,240,220,0.4)' },
-'rose': { body: 'theme-rose', bg: '#f5eef0', tile: 'rgba(250,240,242,0.5)' },
-'huawei-light': { body: 'theme-huawei-light', bg: '#f0f4f8', tile: 'rgba(255,255,255,0.5)' },
-'huawei-dark': { body: 'theme-huawei-dark', bg: '#12161a', tile: 'rgba(25,30,35,0.6)' },
-'huawei-emerald': { body: 'theme-huawei-emerald', bg: '#d4e6d4', tile: 'rgba(180,220,180,0.4)' },
-'huawei-sunrise': { body: 'theme-huawei-sunrise', bg: '#fce4d6', tile: 'rgba(255,220,200,0.4)' }
-};
-
 // ---------- STORAGE ----------
 function loadFromStorage() {
 try {
-const savedTiles = localStorage.getItem('dash_tiles_v12');
-const savedConfig = localStorage.getItem('dash_config_v12');
-const savedImages = localStorage.getItem('dash_images_v12');
+const savedTiles = localStorage.getItem('dash_tiles_v13');
+const savedConfig = localStorage.getItem('dash_config_v13');
+const savedImages = localStorage.getItem('dash_images_v13');
 if (savedTiles) tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
 else tiles = [...DEFAULT_TILES];
 if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
@@ -523,9 +581,9 @@ applyAllSettings();
 
 function saveToStorage() {
 try {
-localStorage.setItem('dash_tiles_v12', JSON.stringify(tiles));
-localStorage.setItem('dash_config_v12', JSON.stringify(userConfig));
-localStorage.setItem('dash_images_v12', JSON.stringify(uploadedImages));
+localStorage.setItem('dash_tiles_v13', JSON.stringify(tiles));
+localStorage.setItem('dash_config_v13', JSON.stringify(userConfig));
+localStorage.setItem('dash_images_v13', JSON.stringify(uploadedImages));
 } catch(e) {}
 }
 
@@ -546,14 +604,22 @@ applyFontSize(userConfig.fontSize);
 applyDashboardBackground();
 }
 function applyTheme(theme) {
-document.body.className = themeMap[theme]?.body || 'theme-light';
+document.body.className = `theme-${theme}`;
 userConfig.theme = theme;
 }
-function applyFontSize(size) { document.documentElement.style.fontSize = size === 'small' ? '14px' : (size === 'large' ? '18px' : '16px'); }
+function applyFontSize(size) {
+document.documentElement.style.fontSize = size === 'small' ? '14px' : (size === 'large' ? '18px' : '16px');
+userConfig.fontSize = size;
+}
 function applyDashboardBackground() {
 const db = document.getElementById('dashboard');
-if (userConfig.dashboardBgImage) db.style.backgroundImage = `url('${userConfig.dashboardBgImage}')`;
-else { db.style.backgroundImage = 'none'; db.style.backgroundColor = userConfig.dashboardBgColor; }
+if (userConfig.dashboardBgImage) {
+db.style.backgroundImage = `url('${userConfig.dashboardBgImage}')`;
+db.style.backgroundColor = 'transparent';
+} else {
+db.style.backgroundImage = 'none';
+db.style.backgroundColor = userConfig.dashboardBgColor;
+}
 }
 
 function hexToRgba(hex, alpha) {
@@ -602,7 +668,6 @@ const content = document.createElement('div'); content.className = 'tile-content
 div.appendChild(content);
 fillTileContent(tile, content);
 
-// Größen-Badge
 const badge = document.createElement('div'); badge.className = 'size-badge';
 badge.textContent = `${tile.colSpan}x${tile.rowSpan}`;
 div.appendChild(badge);
@@ -633,7 +698,7 @@ container.innerHTML = `<div class="flip-clock"><span class="flip-digit">${String
 }
 async function renderWeather(container) {
 const city = userConfig.city;
-container.innerHTML = `<div>🌤️</div>`;
+container.innerHTML = `<div>🌤️ Wetter lädt…</div>`;
 try {
 const useCache = (Date.now() - lastWeatherFetch < 600000) && weatherCache;
 let data;
@@ -675,7 +740,7 @@ container.dataset.slideIndex = idx;
 }
 function renderAppointments(container) {
 const lines = userConfig.appointmentsText.split('\n').filter(l=>l.trim());
-container.innerHTML = lines.length ? lines.map(l=>`<div>📅 ${l}</div>`).join('') : '<div>Keine Termine</div>';
+container.innerHTML = lines.length ? lines.map(l=>`<div style="padding:6px 0;">📅 ${l}</div>`).join('') : '<div>Keine Termine</div>';
 }
 function renderSpotify(container) { container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${userConfig.spotifyUrl}','_blank')">🎵 Spotify öffnen</button></div>`; }
 function renderYoutube(container) { container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${userConfig.youtubeUrl}','_blank')">▶️ YouTube öffnen</button></div>`; }
@@ -765,10 +830,10 @@ document.getElementById('tileOpacity').addEventListener('input', e => document.g
 
 document.getElementById('uploadDashboardBgBtn').onclick = ()=>{
 const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
-inp.onchange = e => { const f=e.target.files[0]; if(f){ const r=new FileReader(); r.onload=ev=>{ userConfig.dashboardBgImage = ev.target.result; applyDashboardBackground(); }; r.readAsDataURL(f); } };
+inp.onchange = e => { const f=e.target.files[0]; if(f){ const r=new FileReader(); r.onload=ev=>{ userConfig.dashboardBgImage = ev.target.result; applyDashboardBackground(); saveToStorage(); }; r.readAsDataURL(f); } };
 inp.click();
 };
-document.getElementById('removeDashboardBgBtn').onclick = ()=>{ userConfig.dashboardBgImage = ''; applyDashboardBackground(); };
+document.getElementById('removeDashboardBgBtn').onclick = ()=>{ userConfig.dashboardBgImage = ''; applyDashboardBackground(); saveToStorage(); };
 
 // Color syncs
 const accentPicker = document.getElementById('globalAccentColor'), accentText = document.getElementById('globalAccentColorText');
