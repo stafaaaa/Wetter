@@ -1,1450 +1,758 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Luxury Crystal Dashboard</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Screwdom-like Puzzle</title>
 <style>
-* {
-margin: 0;
-padding: 0;
-box-sizing: border-box;
-font-family: system-ui, -apple-system, 'Helvetica Neue', 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+:root{
+--bg1:#0f172a;
+--bg2:#111827;
+--panel:#1f2937cc;
+--line:#ffffff18;
+--text:#f8fafc;
+--muted:#cbd5e1;
+--accent:#60a5fa;
+--danger:#fb7185;
+--ok:#34d399;
+--gold:#fbbf24;
 }
-
-:focus { outline: none !important; }
-button, input, select, textarea, .burger-menu, .icon-btn, .app-btn {
-outline: none !important;
--webkit-tap-highlight-color: transparent;
+*{box-sizing:border-box}
+body{
+margin:0;
+font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+color:var(--text);
+background:
+radial-gradient(circle at top left,#1d4ed8 0%,transparent 28%),
+radial-gradient(circle at bottom right,#7c3aed 0%,transparent 24%),
+linear-gradient(160deg,var(--bg1),var(--bg2));
+min-height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:14px;
 }
-
-body {
-min-height: 100vh;
-display: flex;
-align-items: center;
-justify-content: center;
-margin: 0;
-transition: background 0.5s ease;
+.app{
+width:min(100%,980px);
+display:grid;
+grid-template-columns: 1fr 280px;
+gap:14px;
 }
-
-/* ===== THEMES ===== */
-body.theme-ios18 {
---bg-image: url('https://images.pexels.com/photos/2835562/pexels-photo-2835562.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
---bg-overlay: linear-gradient(145deg, rgba(10, 20, 50, 0.6) 0%, rgba(100, 30, 80, 0.5) 100%);
---text-primary: #ffffff;
---glass-bg: rgba(20, 30, 50, 0.25);
---glass-border: rgba(210, 230, 255, 0.5);
---glass-highlight: rgba(255, 255, 255, 0.25);
---shadow-heavy: 0 30px 40px -15px rgba(0, 0, 0, 0.5), 0 10px 20px -5px rgba(0, 0, 0, 0.3);
---shadow-light: 0 15px 25px -10px rgba(0, 0, 0, 0.3);
---accent-glow: rgba(100, 180, 255, 0.6);
---menu-bg: rgba(15, 25, 40, 0.5);
---input-bg: rgba(255, 255, 255, 0.1);
-}
-body.theme-cyberpunk {
---bg-image: url('https://images.pexels.com/photos/316093/pexels-photo-316093.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
---bg-overlay: linear-gradient(145deg, rgba(0, 20, 40, 0.7) 0%, rgba(60, 0, 60, 0.6) 100%);
---text-primary: #e0f0ff;
---glass-bg: rgba(10, 20, 40, 0.3);
---glass-border: rgba(0, 255, 255, 0.4);
---glass-highlight: rgba(0, 255, 255, 0.15);
---shadow-heavy: 0 30px 40px -15px #000000cc, 0 10px 20px -5px #00000080;
---accent-glow: rgba(0, 255, 255, 0.5);
---menu-bg: rgba(0, 20, 40, 0.7);
---input-bg: rgba(0, 0, 0, 0.3);
-}
-body.theme-emerald {
---bg-image: url('https://images.pexels.com/photos/957024/forest-moss-trees-bark-957024.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
---bg-overlay: linear-gradient(145deg, rgba(0, 40, 20, 0.6) 0%, rgba(0, 70, 50, 0.7) 100%);
---text-primary: #e2ffe2;
---glass-bg: rgba(0, 40, 30, 0.25);
---glass-border: rgba(100, 255, 150, 0.4);
---glass-highlight: rgba(200, 255, 200, 0.2);
---shadow-heavy: 0 30px 40px -15px #001a0acc;
---accent-glow: rgba(0, 255, 100, 0.4);
---menu-bg: rgba(0, 30, 20, 0.6);
---input-bg: rgba(0, 0, 0, 0.2);
-}
-body.theme-warm {
---bg-image: url('https://images.pexels.com/photos/1647976/pexels-photo-1647976.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
---bg-overlay: linear-gradient(145deg, rgba(80, 20, 0, 0.5) 0%, rgba(120, 40, 20, 0.6) 100%);
---text-primary: #fff5e6;
---glass-bg: rgba(60, 30, 20, 0.25);
---glass-border: rgba(255, 180, 100, 0.5);
---glass-highlight: rgba(255, 220, 150, 0.2);
---shadow-heavy: 0 30px 40px -15px #2a0a00cc;
---accent-glow: rgba(255, 150, 50, 0.5);
---menu-bg: rgba(50, 20, 10, 0.6);
---input-bg: rgba(0, 0, 0, 0.2);
-}
-body.theme-monochrome {
---bg-image: url('https://images.pexels.com/photos/2387873/pexels-photo-2387873.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
---bg-overlay: linear-gradient(145deg, rgba(20, 20, 30, 0.6) 0%, rgba(40, 40, 50, 0.7) 100%);
---text-primary: #f0f0f5;
---glass-bg: rgba(30, 30, 40, 0.3);
---glass-border: rgba(200, 200, 220, 0.3);
---glass-highlight: rgba(255, 255, 255, 0.15);
---shadow-heavy: 0 30px 40px -15px #000000b3;
---accent-glow: rgba(180, 180, 220, 0.3);
---menu-bg: rgba(20, 20, 30, 0.7);
---input-bg: rgba(0, 0, 0, 0.3);
-}
-body.theme-harmony {
---bg-image: url('https://images.pexels.com/photos/3225517/pexels-photo-3225517.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
---bg-overlay: linear-gradient(145deg, rgba(0, 40, 60, 0.5) 0%, rgba(40, 80, 20, 0.6) 100%);
---text-primary: #f0ffe0;
---glass-bg: rgba(20, 50, 40, 0.25);
---glass-border: rgba(100, 220, 200, 0.4);
---glass-highlight: rgba(200, 255, 200, 0.2);
---shadow-heavy: 0 30px 40px -15px #001a1acc;
---accent-glow: rgba(0, 200, 180, 0.5);
---menu-bg: rgba(10, 40, 30, 0.6);
---input-bg: rgba(0, 0, 0, 0.2);
-}
-body.theme-liquid {
---bg-image: url('https://images.pexels.com/photos/255379/pexels-photo-255379.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
---bg-overlay: linear-gradient(145deg, rgba(30, 30, 70, 0.4) 0%, rgba(70, 40, 80, 0.5) 100%);
---text-primary: #ffffff;
---glass-bg: rgba(255, 255, 255, 0.08);
---glass-border: rgba(255, 255, 255, 0.3);
---glass-highlight: rgba(255, 255, 255, 0.15);
---shadow-heavy: 0 30px 40px -15px #00000080, 0 10px 20px -5px #0000004d;
---accent-glow: rgba(150, 200, 255, 0.4);
---menu-bg: rgba(20, 20, 40, 0.5);
---input-bg: rgba(255, 255, 255, 0.1);
-}
-
-body {
-background-image: var(--bg-image);
-background-size: cover;
-background-position: center;
-background-attachment: fixed;
-position: relative;
-color: var(--text-primary);
-}
-body::before {
-content: "";
-position: fixed;
-top: 0; left: 0; right: 0; bottom: 0;
-background: var(--bg-overlay);
-backdrop-filter: blur(8px) saturate(150%);
--webkit-backdrop-filter: blur(8px) saturate(150%);
-z-index: -1;
-}
-
-.dashboard {
-width: 100vw;
-height: 100vh;
-display: flex;
-flex-direction: column;
-padding: 20px 24px 24px 24px;
-overflow: hidden;
-position: relative;
+.card{
+background:var(--panel);
 backdrop-filter: blur(10px);
--webkit-backdrop-filter: blur(10px);
+border:1px solid var(--line);
+border-radius:22px;
+box-shadow:0 20px 60px rgba(0,0,0,.35);
+}
+.left{
+padding:14px;
+}
+.right{
+padding:14px;
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+.topbar{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+margin-bottom:12px;
+padding:8px 4px 0;
+}
+.title{
+font-size:clamp(20px,2.3vw,30px);
+font-weight:800;
+letter-spacing:.2px;
+}
+.sub{
+font-size:13px;
+color:var(--muted);
+}
+.buttons{
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+button{
+border:0;
+cursor:pointer;
+border-radius:14px;
+padding:10px 14px;
+font-weight:700;
+color:white;
+background:linear-gradient(180deg,#3b82f6,#2563eb);
+box-shadow:0 8px 20px rgba(37,99,235,.28);
+}
+button.secondary{
+background:linear-gradient(180deg,#475569,#334155);
+box-shadow:none;
+}
+button:active{transform:translateY(1px)}
+.boardWrap{
+position:relative;
+overflow:hidden;
+border-radius:24px;
+border:1px solid var(--line);
+background:
+linear-gradient(180deg,#0b1220aa,#0b1220cc),
+linear-gradient(90deg,#ffffff08 1px,transparent 1px),
+linear-gradient(#ffffff08 1px,transparent 1px);
+background-size:auto, 70px 70px, 70px 70px;
+min-height:620px;
+}
+#board{
+position:relative;
+width:100%;
+aspect-ratio: 1 / 1;
+min-height:620px;
 }
 
-.grid-container {
-display: grid;
-grid-template-columns: repeat(6, 1fr);
-grid-auto-rows: minmax(140px, auto);
-gap: 22px;
-flex: 1;
-overflow-y: auto;
-padding: 4px;
-z-index: 2;
+.hole{
+position:absolute;
+width:44px;
+height:44px;
+border-radius:50%;
+transform:translate(-50%,-50%);
+background:
+radial-gradient(circle at 35% 35%, #263244 0 22%, #111827 23% 64%, #020617 65% 100%);
+box-shadow:
+inset 0 2px 6px rgba(255,255,255,.06),
+inset 0 -5px 12px rgba(0,0,0,.45),
+0 0 0 2px rgba(255,255,255,.04);
+z-index:1;
+}
+.hole.free::after{
+content:"+";
+position:absolute;
+inset:0;
+display:grid;
+place-items:center;
+color:#94a3b8;
+font-weight:900;
+font-size:22px;
+opacity:.8;
+}
+.hole.highlight{
+outline:3px solid rgba(96,165,250,.65);
+box-shadow:0 0 0 8px rgba(96,165,250,.14);
 }
 
-.tile {
-backdrop-filter: blur(30px) saturate(180%);
--webkit-backdrop-filter: blur(30px) saturate(180%);
-background: var(--glass-bg);
-border: 1px solid var(--glass-border);
-border-radius: 38px;
-padding: 24px 26px;
-box-shadow: var(--shadow-heavy),
-inset 0 0 0 1px var(--glass-highlight),
-inset 0 -2px 4px rgba(0,0,0,0.1);
-display: flex;
-flex-direction: column;
-position: relative;
-transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1);
-color: var(--text-primary);
-transform: perspective(1800px) rotateX(1.5deg) rotateY(0.5deg) translateZ(8px);
-transform-style: preserve-3d;
+.plate{
+position:absolute;
+border-radius:22px;
+border:1px solid rgba(255,255,255,.12);
+box-shadow:
+0 18px 32px rgba(0,0,0,.28),
+inset 0 1px 0 rgba(255,255,255,.08);
+transition:transform .25s ease, opacity .25s ease, filter .25s ease;
+z-index:2;
 }
-.tile[data-id="1"] {
-overflow: visible !important;
+.plate.floating{
+animation: floatUp .32s ease forwards;
+pointer-events:none;
 }
-.tile:hover {
-transform: perspective(1800px) rotateX(1deg) rotateY(1deg) translateZ(18px);
-box-shadow: 0 40px 60px -15px #000000cc, inset 0 0 0 1px var(--glass-highlight);
-border-color: rgba(255,255,255,0.6);
-}
-.tile.edit-mode {
-border: 2px dashed var(--accent-glow);
-cursor: grab;
-box-shadow: 0 0 25px var(--accent-glow);
-}
-.tile::after {
-content: "";
-position: absolute;
-top: 0; left: 0; right: 0; bottom: 0;
-background: linear-gradient(145deg, var(--glass-highlight) 0%, transparent 60%);
-pointer-events: none;
-z-index: 1;
-border-radius: 38px;
+@keyframes floatUp{
+0%{transform:translateY(0) scale(1);opacity:1}
+100%{transform:translateY(-18px) scale(1.04);opacity:0}
 }
 
-.tile-header {
-display: flex;
-justify-content: space-between;
-align-items: center;
-margin-bottom: 18px;
-font-weight: 600;
-font-size: 1.35rem;
-position: relative;
-z-index: 2;
-text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+.screw{
+position:absolute;
+width:50px;
+height:50px;
+transform:translate(-50%,-50%);
+border-radius:50%;
+border:0;
+cursor:pointer;
+z-index:4;
+background:
+radial-gradient(circle at 35% 30%, #ffffff 0%, #d8dee9 22%, #9aa6b2 54%, #6b7280 76%, #4b5563 100%);
+box-shadow:
+0 7px 14px rgba(0,0,0,.4),
+inset 0 3px 5px rgba(255,255,255,.55),
+inset 0 -4px 6px rgba(0,0,0,.2);
+transition:transform .12s ease, filter .18s ease, box-shadow .18s ease;
 }
-.tile-controls { display: flex; gap: 10px; }
-.icon-btn {
-background: var(--glass-bg);
-backdrop-filter: blur(15px);
-border: 1px solid var(--glass-border);
-color: var(--text-primary);
-font-size: 1.3rem;
-cursor: pointer;
-width: 44px;
-height: 44px;
-border-radius: 44px;
-display: flex;
-align-items: center;
-justify-content: center;
-box-shadow: var(--shadow-light), inset 0 1px 2px var(--glass-highlight);
+.screw:hover{filter:brightness(1.05)}
+.screw:active{transform:translate(-50%,-50%) scale(.96)}
+.screw::before,
+.screw::after{
+content:"";
+position:absolute;
+left:50%;
+top:50%;
+width:24px;
+height:4px;
+border-radius:3px;
+background:#1f2937;
+transform:translate(-50%,-50%);
+box-shadow:0 1px 1px rgba(255,255,255,.08);
 }
-.icon-btn:hover { background: var(--glass-highlight); }
-
-.tile-content {
-flex: 1;
-display: flex;
-flex-direction: column;
-overflow: auto;
-position: relative;
-z-index: 2;
-}
-
-.size-badge {
-position: absolute;
-bottom: 16px;
-left: 16px;
-background: var(--glass-bg);
-backdrop-filter: blur(10px);
-padding: 6px 14px;
-border-radius: 40px;
-font-size: 0.8rem;
-color: var(--text-primary);
-z-index: 3;
-border: 1px solid var(--glass-border);
-opacity: 0.9;
+.screw::after{transform:translate(-50%,-50%) rotate(90deg)}
+.screw.blocked{
+filter:grayscale(.25) brightness(.78);
+box-shadow:
+0 0 0 3px rgba(251,113,133,.18),
+0 7px 14px rgba(0,0,0,.38);
 }
 
-/* ===== BURGER MENÜ (absolut, über der Kachel) ===== */
-.burger-menu-wrapper {
-position: absolute;
-top: 20px;
-right: 20px;
-z-index: 50;
+.trayTitle, .panelTitle{
+font-size:14px;
+font-weight:800;
+color:#e2e8f0;
+letter-spacing:.2px;
+margin-bottom:8px;
 }
-.burger-menu {
-background: var(--menu-btn-bg, #1e2a3a);
-backdrop-filter: none;
-border: 1px solid var(--glass-border);
-border-radius: 16px;
-color: var(--text-primary);
-width: 48px;
-height: 48px;
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 1.8rem;
-cursor: pointer;
-box-shadow: var(--shadow-heavy);
-transition: all 0.2s;
+.tray{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
 }
-.burger-menu:hover {
-filter: brightness(1.1);
+.slot{
+height:72px;
+border-radius:18px;
+border:1px dashed rgba(255,255,255,.16);
+background:rgba(255,255,255,.04);
+position:relative;
+overflow:hidden;
+display:grid;
+place-items:center;
+}
+.slot.filled{
+border-style:solid;
+background:rgba(52,211,153,.10);
+border-color:rgba(52,211,153,.3);
+}
+.slot .miniScrew{
+width:38px;
+height:38px;
+border-radius:50%;
+background:
+radial-gradient(circle at 35% 30%, #ffffff 0%, #d8dee9 22%, #9aa6b2 54%, #6b7280 76%, #4b5563 100%);
+position:relative;
+box-shadow:0 6px 12px rgba(0,0,0,.28);
+}
+.slot .miniScrew::before,
+.slot .miniScrew::after{
+content:"";
+position:absolute;
+left:50%;
+top:50%;
+width:18px;
+height:3px;
+border-radius:3px;
+background:#1f2937;
+transform:translate(-50%,-50%);
+}
+.slot .miniScrew::after{transform:translate(-50%,-50%) rotate(90deg)}
+
+.infoBox{
+padding:14px;
+border-radius:18px;
+background:rgba(255,255,255,.05);
+border:1px solid var(--line);
+}
+.status{
+min-height:52px;
+font-size:14px;
+line-height:1.4;
+color:#e5e7eb;
+}
+.status .bad{color:#fda4af;font-weight:700}
+.status .good{color:#86efac;font-weight:700}
+.status .accent{color:#93c5fd;font-weight:700}
+.legend{
+font-size:13px;
+color:var(--muted);
+line-height:1.5;
+}
+.pillRow{
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+.pill{
+padding:8px 10px;
+border-radius:999px;
+font-size:12px;
+font-weight:700;
+background:rgba(255,255,255,.06);
+border:1px solid var(--line);
+color:#e2e8f0;
+}
+.win{
+position:absolute;
+inset:0;
+background:rgba(2,6,23,.72);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:10;
+border-radius:24px;
+backdrop-filter: blur(4px);
+}
+.win.show{display:flex}
+.winCard{
+width:min(92%,420px);
+text-align:center;
+padding:24px;
+border-radius:24px;
+border:1px solid rgba(255,255,255,.15);
+background:linear-gradient(180deg,rgba(30,41,59,.96),rgba(15,23,42,.96));
+box-shadow:0 20px 70px rgba(0,0,0,.45);
+}
+.winCard h2{
+margin:0 0 10px;
+font-size:28px;
+}
+.winCard p{
+color:#cbd5e1;
+margin:0 0 18px;
 }
 
-.menu-dropdown {
-position: absolute;
-top: 60px;
-right: 0;
-background: var(--menu-bg);
-backdrop-filter: blur(40px);
--webkit-backdrop-filter: blur(40px);
-border: 1px solid var(--glass-border);
-border-radius: 28px;
-padding: 12px 8px;
-min-width: 240px;
-box-shadow: var(--shadow-heavy);
-z-index: 100;
-display: none;
+@media (max-width: 900px){
+.app{grid-template-columns:1fr}
+.boardWrap,#board{min-height:540px}
 }
-.menu-dropdown.show { display: block; }
-.menu-item {
-padding: 14px 20px;
-color: var(--text-primary);
-font-size: 1.1rem;
-font-weight: 500;
-cursor: pointer;
-border-radius: 18px;
-transition: all 0.15s;
-display: flex;
-align-items: center;
-gap: 12px;
+@media (max-width: 560px){
+.boardWrap,#board{min-height:420px}
+.screw{width:44px;height:44px}
+.hole{width:38px;height:38px}
+.tray{grid-template-columns:repeat(3,1fr)}
+button{padding:9px 12px}
 }
-.menu-item:hover { background: var(--glass-highlight); }
-.menu-divider { height: 1px; background: var(--glass-border); margin: 8px 0; opacity: 0.5; }
-
-/* ===== WIDGET STYLES ===== */
-.flip-clock {
-display: flex;
-gap: 10px;
-font-size: 4.8rem !important;
-font-weight: 300;
-line-height: 1;
-}
-.flip-digit {
-background: rgba(0,0,0,0.15);
-backdrop-filter: blur(10px);
-padding: 14px 20px;
-border-radius: 26px;
-box-shadow: inset 0 2px 8px rgba(0,0,0,0.2), 0 8px 20px rgba(0,0,0,0.3), inset 0 1px 2px var(--glass-highlight);
-border-bottom: 2px solid var(--glass-border);
-}
-
-.weather-icon-large {
-font-size: 4rem;
-filter: drop-shadow(0 10px 15px rgba(0,0,0,0.4));
-animation: float 5s ease-in-out infinite;
-}
-@keyframes float {
-0% { transform: translateY(0px); }
-50% { transform: translateY(-10px); }
-100% { transform: translateY(0px); }
-}
-.forecast-item {
-background: var(--glass-bg);
-backdrop-filter: blur(15px);
-border-radius: 28px;
-padding: 12px 16px;
-text-align: center;
-border: 1px solid var(--glass-border);
-}
-
-.calendar-grid {
-display: grid;
-grid-template-columns: repeat(7, 1fr);
-gap: 6px;
-margin-top: 8px;
-}
-.cal-day {
-padding: 12px 0;
-border-radius: 22px;
-background: var(--glass-bg);
-backdrop-filter: blur(5px);
-}
-.today {
-background: var(--accent-glow);
-font-weight: bold;
-color: white;
-box-shadow: 0 0 20px var(--accent-glow);
-}
-.has-event::after {
-content: "•";
-color: #ffbb33;
-font-size: 24px;
-line-height: 0;
-}
-
-.slideshow-img {
-width: 100%;
-height: 100%;
-object-fit: cover;
-border-radius: 26px;
-box-shadow: inset 0 0 0 1px var(--glass-border);
-}
-
-.app-btn {
-background: var(--glass-bg);
-backdrop-filter: blur(20px);
-border: 1px solid var(--glass-border);
-color: var(--text-primary);
-padding: 18px 28px;
-border-radius: 60px;
-font-size: 1.2rem;
-font-weight: 600;
-cursor: pointer;
-display: flex;
-align-items: center;
-justify-content: center;
-gap: 12px;
-box-shadow: var(--shadow-light), inset 0 1px 2px var(--glass-highlight);
-}
-.app-btn:hover { background: var(--glass-highlight); }
-
-/* ===== MODALS ===== */
-.settings-overlay {
-position: fixed;
-inset: 0;
-background: rgba(0,0,0,0.3);
-backdrop-filter: blur(30px);
-display: flex;
-align-items: center;
-justify-content: center;
-z-index: 1000;
-}
-.settings-card {
-background: var(--menu-bg);
-backdrop-filter: blur(50px);
-border: 1px solid var(--glass-border);
-border-radius: 52px;
-padding: 36px 40px;
-width: 750px;
-max-width: 90vw;
-max-height: 85vh;
-overflow-y: auto;
-color: var(--text-primary);
-box-shadow: var(--shadow-heavy), inset 0 0 0 1px var(--glass-highlight);
-}
-.input-group { margin-bottom: 24px; }
-.input-group label { display: block; margin-bottom: 10px; font-weight: 600; opacity: 0.9; }
-.input-group input, .input-group textarea, .input-group select {
-width: 100%;
-padding: 18px 22px;
-border-radius: 60px;
-border: 1px solid var(--glass-border);
-background: var(--input-bg);
-backdrop-filter: blur(15px);
-color: var(--text-primary);
-font-size: 1rem;
-}
-.hidden { display: none !important; }
-.flex-row { display: flex; gap: 16px; flex-wrap: wrap; }
-.color-row { display: flex; gap: 16px; align-items: center; }
-.color-row input[type="color"] { width: 80px; height: 55px; border-radius: 30px; }
-</style>
-</head>
-<body class="theme-ios18">
-<div class="dashboard" id="dashboard">
-<div class="grid-container" id="tileGrid"></div>
-</div>
-
-<!-- Einstellungen Modal -->
-<div id="settingsModal" class="settings-overlay hidden">
-<div class="settings-card">
-<h2 style="margin-bottom:32px;">⚙️ Einstellungen</h2>
-<div class="input-group"><label>📍 Stadt</label><input type="text" id="settingsCity" value="Düsseldorf"></div>
-<div class="input-group"><label>⏱️ Slideshow (Sek)</label><input type="number" id="settingsSlideshowSec" value="6"></div>
-<div class="input-group"><label>🎵 Spotify Link</label><input type="text" id="settingsSpotify" placeholder="https://open.spotify.com/..."></div>
-<div class="input-group"><label>▶️ YouTube Link</label><input type="text" id="settingsYoutube" placeholder="https://youtube.com/..."></div>
-<div class="input-group"><label>🍳 Rezepte-URL</label><input type="text" id="settingsRecipeUrl" placeholder="https://..."></div>
-<div class="input-group"><label>📋 Termine</label><textarea id="settingsAppointments" rows="3" placeholder="2026-04-10 09:00 | Arzttermin"></textarea></div>
-
-<div class="input-group">
-<label>🖼️ Dashboard-Hintergrundbild</label>
-<div class="flex-row"><button class="app-btn" id="uploadDashboardBgBtn">📸 Bild wählen</button><button class="app-btn" id="removeDashboardBgBtn">🗑️ Entfernen</button></div>
-</div>
-<div class="input-group"><label>🎨 Hintergrundfarbe (Overlay)</label><div class="color-row"><input type="color" id="dashboardBgColor" value="#1a2b4a"><input type="text" id="dashboardBgColorText"></div></div>
-
-<div class="input-group">
-<label>🎨 Theme</label>
-<select id="settingsTheme">
-<optgroup label="Cinematic Crystal">
-<option value="ios18">🌈 iOS 18 (Vibrant)</option>
-<option value="liquid">💧 Liquid Glass</option>
-</optgroup>
-<optgroup label="Luxury Moods">
-<option value="cyberpunk">🌃 Cyberpunk Noir</option>
-<option value="emerald">🌿 Deep Emerald</option>
-<option value="warm">🔥 Warm Amber</option>
-<option value="monochrome">⚫ Monochrome Luxe</option>
-</optgroup>
-<optgroup label="Harmony">
-<option value="harmony">🌸 HarmonyOS</option>
-</optgroup>
-</select>
-</div>
-<div class="input-group"><label>✏️ Schriftgröße</label><select id="settingsFontSize"><option value="medium">Mittel</option><option value="small">Klein</option><option value="large">Groß</option></select></div>
-<div class="input-group"><label>🔮 Kachel-Transparenz</label><input type="range" id="tileOpacitySlider" min="0.1" max="0.8" step="0.05" value="0.3"><span id="tileOpacityValue">0.3</span></div>
-
-<div class="input-group"><label>🎨 Kachel-Akzent</label><div class="color-row"><input type="color" id="globalAccentColor" value="#4a7db5"><input type="text" id="globalAccentColorText"></div></div>
-<div class="input-group"><label>✏️ Schriftfarbe</label><div class="color-row"><input type="color" id="globalTextColor" value="#ffffff"><input type="text" id="globalTextColorText"></div></div>
-<div class="input-group"><label>🎨 Menü-Button Farbe</label><div class="color-row"><input type="color" id="menuBtnColor" value="#1e2a3a"><input type="text" id="menuBtnColorText"></div></div>
-
-<div class="flex-row"><button class="app-btn" id="saveSettingsBtn">💾 Speichern</button><button class="app-btn" id="closeSettingsBtn">Abbrechen</button></div>
-</div>
-</div>
-
-<!-- Kachel-Einstellungen Modal -->
-<div id="tileSettingsModal" class="settings-overlay hidden">
-<div class="settings-card" style="width:550px;">
-<h2>🎨 Kachel anpassen</h2>
-<input type="hidden" id="currentTileId">
-<div class="input-group"><label>Titel</label><input type="text" id="tileTitle"></div>
-<div class="input-group"><label>Hintergrundfarbe</label><div class="color-row"><input type="color" id="tileColor"><input type="text" id="tileColorText"></div></div>
-<div class="input-group"><label>Hintergrundbild</label><div class="flex-row"><button class="app-btn" id="uploadTileBgBtn">📸 Bild</button><button class="app-btn" id="removeTileBgBtn">🗑️</button></div></div>
-<div class="input-group"><label>🔮 Transparenz</label><input type="range" id="tileOpacity" min="0.1" max="1.0" step="0.05" value="0.6"><span id="tileOpacityVal">0.6</span></div>
-<div class="input-group">
-<label>📐 Größe</label>
-<select id="tileSizeSelect">
-<option value="1,1">Klein (1x1)</option>
-<option value="2,2">Mittel (2x2)</option>
-<option value="3,3">Groß (3x3)</option>
-<option value="2,1">Breit (2x1)</option>
-<option value="3,2">Extra (3x2)</option>
-</select>
-</div>
-<div class="flex-row"><button class="app-btn" id="saveTileSettingsBtn">Speichern</button><button class="app-btn" id="closeTileSettingsBtn">Abbrechen</button></div>
-</div>
-</div>
-
-<script>
-(function(){
-"use strict";
-
-// ---------- STATE ----------
-let tiles = [];
-let editMode = false;
-let nextTileId = 1000;
-
-const DEFAULT_TILES = [
-{ id: 1, type: 'clock', title: 'Uhr', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3 },
-{ id: 2, type: 'weather', title: 'Wetter', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3 },
-{ id: 3, type: 'calendar', title: 'Kalender', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3 },
-{ id: 4, type: 'slideshow', title: 'Slideshow', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3 },
-{ id: 5, type: 'appointments', title: 'Termine', colSpan: 2, rowSpan: 1, color: '#4a7db5', bgImage: '', opacity: 0.3 },
-{ id: 6, type: 'spotify', title: 'Spotify', colSpan: 2, rowSpan: 1, color: '#4a7db5', bgImage: '', opacity: 0.3 },
-{ id: 7, type: 'youtube', title: 'YouTube', colSpan: 2, rowSpan: 1, color: '#4a7db5', bgImage: '', opacity: 0.3 },
-{ id: 8, type: 'recipe', title: 'Rezepte', colSpan: 2, rowSpan: 1, color: '#4a7db5', bgImage: '', opacity: 0.3 }
-];
-
-let userConfig = {
-city: 'Düsseldorf', slideshowInterval: 6, spotifyUrl: '', youtubeUrl: '', recipeUrl: 'https://www.chefkoch.de/',
-appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
-globalAccent: '#4a7db5', globalTextColor: '#ffffff', theme: 'ios18', fontSize: 'medium',
-tileOpacity: 0.3, dashboardBgImage: '', dashboardBgColor: '#1a2b4a',
-menuBtnColor: '#1e2a3a'
-};
-
-let uploadedImages = [];
-let weatherCache = null, lastWeatherFetch = 0;
-let currentEditingTileId = null;
-
-// ---------- STORAGE ----------
-function loadFromStorage() {
-try {
-const savedTiles = localStorage.getItem('crystal_tiles_v3');
-const savedConfig = localStorage.getItem('crystal_config_v3');
-const savedImages = localStorage.getItem('crystal_images_v3');
-if (savedTiles) tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
-else tiles = [...DEFAULT_TILES];
-if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
-if (savedImages) uploadedImages = JSON.parse(savedImages);
-if (!tiles.length) tiles = [...DEFAULT_TILES];
-} catch(e) { tiles = [...DEFAULT_TILES]; }
-ensureUniqueIds();
-applyAllSettings();
-}
-
-function saveToStorage() {
-try {
-localStorage.setItem('crystal_tiles_v3', JSON.stringify(tiles));
-localStorage.setItem('crystal_config_v3', JSON.stringify(userConfig));
-localStorage.setItem('crystal_images_v3', JSON.stringify(uploadedImages));
-} catch(e) {}
-}
-
-function ensureUniqueIds() { tiles.forEach(t => { if (!t.id) t.id = ++nextTileId; }); }
-
-function resetToDefault() {
-tiles = DEFAULT_TILES.map(t => ({...t}));
-userConfig = { city: 'Düsseldorf', slideshowInterval: 6, spotifyUrl: '', youtubeUrl: '', recipeUrl: 'https://www.chefkoch.de/', appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting', globalAccent: '#4a7db5', globalTextColor: '#ffffff', theme: 'ios18', fontSize: 'medium', tileOpacity: 0.3, dashboardBgImage: '', dashboardBgColor: '#1a2b4a', menuBtnColor: '#1e2a3a' };
-uploadedImages = [];
-applyAllSettings();
-saveToStorage();
-renderAll();
-}
-
-function applyAllSettings() {
-applyTheme(userConfig.theme);
-applyFontSize(userConfig.fontSize);
-applyDashboardBackground();
-document.documentElement.style.setProperty('--menu-btn-bg', userConfig.menuBtnColor);
-}
-function applyTheme(theme) {
-document.body.className = `theme-${theme}`;
-userConfig.theme = theme;
-}
-function applyFontSize(size) {
-document.documentElement.style.fontSize = size === 'small' ? '14px' : (size === 'large' ? '18px' : '16px');
-}
-function applyDashboardBackground() {
-const db = document.getElementById('dashboard');
-if (userConfig.dashboardBgImage) {
-db.style.setProperty('--bg-image', `url('${userConfig.dashboardBgImage}')`);
-}
-}
-
-function hexToRgba(hex, alpha) {
-const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-const gridEl = document.getElementById('tileGrid');
-
-function renderAll() {
-if (!gridEl) return;
-gridEl.innerHTML = '';
-tiles.forEach(tile => { gridEl.appendChild(createTileElement(tile)); });
-refreshDynamicContents();
-attachBurgerMenu();
-}
-
-function createTileElement(tile) {
-const div = document.createElement('div');
-div.className = `tile ${editMode ? 'edit-mode' : ''}`;
-div.dataset.id = tile.id;
-div.style.gridColumn = `span ${tile.colSpan || 2}`;
-div.style.gridRow = `span ${tile.rowSpan || 2}`;
-div.setAttribute('draggable', editMode);
-
-const bgColor = tile.color || userConfig.globalAccent;
-const opacity = tile.opacity !== undefined ? tile.opacity : userConfig.tileOpacity;
-if (tile.bgImage) {
-div.style.backgroundImage = `url('${tile.bgImage}')`;
-div.style.backgroundColor = 'transparent';
-} else {
-div.style.backgroundImage = 'none';
-div.style.backgroundColor = hexToRgba(bgColor, opacity);
-}
-div.style.color = userConfig.globalTextColor;
-
-const header = document.createElement('div'); header.className = 'tile-header';
-const titleSpan = document.createElement('span');
-titleSpan.textContent = tile.title || tile.type;
-header.appendChild(titleSpan);
-
-const controls = document.createElement('div'); controls.className = 'tile-controls';
-if (editMode) {
-controls.innerHTML = `<button class="icon-btn tile-settings-btn" data-id="${tile.id}">⚙️</button>
-<button class="icon-btn tile-delete-btn" data-id="${tile.id}">✕</button>`;
-}
-header.appendChild(controls);
-div.appendChild(header);
-
-const content = document.createElement('div'); content.className = 'tile-content';
-div.appendChild(content);
-fillTileContent(tile, content);
-
-const badge = document.createElement('div'); badge.className = 'size-badge';
-badge.textContent = `${tile.colSpan}x${tile.rowSpan}`;
-div.appendChild(badge);
-
-div.addEventListener('dragstart', handleDragStart);
-div.addEventListener('dragover', handleDragOver);
-div.addEventListener('drop', handleDrop);
-div.addEventListener('dragend', handleDragEnd);
-
-return div;
-}
-
-function attachBurgerMenu() {
-const clockTile = document.querySelector('.tile[data-id="1"]');
-if (!clockTile) return;
-
-let wrapper = clockTile.querySelector('.burger-menu-wrapper');
-if (!wrapper) {
-wrapper = document.createElement('div');
-wrapper.className = 'burger-menu-wrapper';
-clockTile.appendChild(wrapper);
-}
-wrapper.innerHTML = `
-<div class="burger-menu" id="burgerMenuBtn" style="background: ${userConfig.menuBtnColor};">☰</div>
-<div class="menu-dropdown" id="menuDropdown">
-<div class="menu-item" id="menuEditToggle">✎ Bearbeiten</div>
-<div class="menu-item" id="menuUploadImages">🖼️ Bilder hochladen</div>
-<div class="menu-item" id="menuOpenSettings">⚙️ Einstellungen</div>
-<div class="menu-item" id="menuAddTile">➕ Neue Kachel</div>
-<div class="menu-divider"></div>
-<div class="menu-item" id="menuReset">↻ Reset</div>
-</div>
-`;
-
-const burgerBtn = document.getElementById('burgerMenuBtn');
-const menuDropdown = document.getElementById('menuDropdown');
-burgerBtn.addEventListener('click', (e) => {
-e.stopPropagation();
-menuDropdown.classList.toggle('show');
-});
-document.addEventListener('click', (e) => {
-if (!burgerBtn.contains(e.target) && !menuDropdown.contains(e.target)) {
-menuDropdown.classList.remove('show');
-}
-});
-
-document.getElementById('menuEditToggle').onclick = () => { editMode = !editMode; menuDropdown.classList.remove('show'); renderAll(); };
-document.getElementById('menuUploadImages').onclick = () => {
-menuDropdown.classList.remove('show');
-const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.multiple=true;
-inp.onchange = e => { Array.from(e.target.files).forEach(f=>{ const r=new FileReader(); r.onload=ev=>{ uploadedImages.push(ev.target.result); saveToStorage(); renderAll(); }; r.readAsDataURL(f); }); };
-inp.click();
-};
-document.getElementById('menuOpenSettings').onclick = () => {
-menuDropdown.classList.remove('show');
-document.getElementById('settingsCity').value = userConfig.city;
-document.getElementById('settingsSlideshowSec').value = userConfig.slideshowInterval;
-document.getElementById('settingsSpotify').value = userConfig.spotifyUrl;
-document.getElementById('settingsYoutube').value = userConfig.youtubeUrl;
-document.getElementById('settingsRecipeUrl').value = userConfig.recipeUrl;
-document.getElementById('settingsAppointments').value = userConfig.appointmentsText;
-document.getElementById('globalAccentColor').value = userConfig.globalAccent;
-document.getElementById('globalAccentColorText').value = userConfig.globalAccent;
-document.getElementById('globalTextColor').value = userConfig.globalTextColor;
-document.getElementById('globalTextColorText').value = userConfig.globalTextColor;
-document.getElementById('settingsTheme').value = userConfig.theme;
-document.getElementById('settingsFontSize').value = userConfig.fontSize;
-document.getElementById('tileOpacitySlider').value = userConfig.tileOpacity;
-document.getElementById('tileOpacityValue').textContent = userConfig.tileOpacity;
-document.getElementById('dashboardBgColor').value = userConfig.dashboardBgColor;
-document.getElementById('dashboardBgColorText').value = userConfig.dashboardBgColor;
-document.getElementById('menuBtnColor').value = userConfig.menuBtnColor;
-document.getElementById('menuBtnColorText').value = userConfig.menuBtnColor;
-document.getElementById('settingsModal').classList.remove('hidden');
-};
-document.getElementById('menuAddTile').onclick = () => {
-tiles.push({ id: ++nextTileId, type: 'clock', title: 'Neue Uhr', colSpan:2, rowSpan:2, color: userConfig.globalAccent, bgImage: '', opacity: userConfig.tileOpacity });
-saveToStorage(); renderAll(); menuDropdown.classList.remove('show');
-};
-document.getElementById('menuReset').onclick = () => { if(confirm('Reset?')) resetToDefault(); menuDropdown.classList.remove('show'); };
-}
-
-// ---------- INHALTE ----------
-function fillTileContent(tile, container) {
-const type = tile.type;
-if (type === 'clock') renderFlipClock(container);
-else if (type === 'weather') renderWeather(container);
-else if (type === 'calendar') renderCalendar(container);
-else if (type === 'slideshow') renderSlideshow(container);
-else if (type === 'appointments') renderAppointments(container);
-else if (type === 'spotify') renderSpotify(container);
-else if (type === 'youtube') renderYoutube(container);
-else if (type === 'recipe') renderRecipe(container);
-}
-function renderFlipClock(container) {
-const now = new Date();
-container.innerHTML = `<div class="flip-clock"><span class="flip-digit">${String(now.getHours()).padStart(2,'0')}</span><span>:</span><span class="flip-digit">${String(now.getMinutes()).padStart(2,'0')}</span></div><div style="margin-top:12px; font-size:1.3rem;">${now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'})}</div>`;
-}
-async function renderWeather(container) {
-const city = userConfig.city;
-container.innerHTML = `<div>🌤️</div>`;
-try {
-const useCache = (Date.now() - lastWeatherFetch < 600000) && weatherCache;
-let data;
-if (useCache) data = weatherCache;
-else {
-const res = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`);
-if (!res.ok) throw new Error();
-data = await res.json();
-weatherCache = data;
-lastWeatherFetch = Date.now();
-}
-const curr = data.current_condition[0];
-const forecast = data.weather;
-const icon = getWeatherIcon(curr.weatherCode);
-container.innerHTML = `<div style="display:flex;align-items:center;gap:10px;"><span class="weather-icon-large">${icon}</span><div><span style="font-size:2.8rem;">${curr.temp_C}°</span><span>${curr.weatherDesc[0].value}</span></div></div><div class="forecast-icons">${forecast.slice(0,5).map(d => `<div class="forecast-item">${getWeatherIcon(d.weatherCode)}<br>${d.maxtempC}°</div>`).join('')}</div>`;
-} catch(e) { container.innerHTML = `<div>🌥️ ${city}<br>15°C</div>`; }
-}
-function getWeatherIcon(c){ return c<200?'☀️':c<300?'🌦️':c<600?'🌧️':c<700?'❄️':'☁️'; }
-function renderCalendar(container) {
-const today = new Date(); const y = today.getFullYear(), m = today.getMonth();
-const firstDay = new Date(y, m, 1).getDay(); const days = new Date(y, m+1, 0).getDate();
-let html = `<div style="font-weight:500; margin-bottom:8px;">${today.toLocaleString('de',{month:'long'})} ${y}</div><div class="calendar-grid">`;
-['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d=> html+=`<div>${d}</div>`);
-let start = (firstDay===0)?6:firstDay-1;
-for(let i=0;i<start;i++) html+=`<div></div>`;
-for(let d=1; d<=days; d++){
-const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-const isToday = (d===today.getDate() && m===today.getMonth());
-const hasApp = userConfig.appointmentsText.split('\n').some(l=>l.startsWith(ds));
-html+=`<div class="cal-day ${isToday?'today':''} ${hasApp?'has-event':''}">${d}</div>`;
-}
-html+=`</div>`; container.innerHTML = html;
-}
-function renderSlideshow(container) {
-if (!uploadedImages.length) { container.innerHTML = `<div>📸</div>`; return; }
-let idx = (parseInt(container.dataset.slideIndex)||0) % uploadedImages.length;
-container.innerHTML = `<img class="slideshow-img" src="${uploadedImages[idx]}">`;
-container.dataset.slideIndex = idx;
-}
-function renderAppointments(container) {
-const lines = userConfig.appointmentsText.split('\n').filter(l=>l.trim());
-container.innerHTML = lines.length ? lines.map(l=>`<div style="padding:6px 0;">📅 ${l}</div>`).join('') : '<div>Keine Termine</div>';
-}
-function renderSpotify(container) { container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${userConfig.spotifyUrl}','_blank')">🎵 Spotify öffnen</button></div>`; }
-function renderYoutube(container) { container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${userConfig.youtubeUrl}','_blank')">▶️ YouTube öffnen</button></div>`; }
-function renderRecipe(container) { container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${userConfig.recipeUrl}','_blank')">🍳 Rezepte öffnen</button></div>`; }
-
-function refreshDynamicContents() {
-document.querySelectorAll('.tile').forEach(el => {
-const id = Number(el.dataset.id);
-const tile = tiles.find(t=>t.id===id);
-if (tile) fillTileContent(tile, el.querySelector('.tile-content'));
-});
-}
-
-// Drag & Drop
-let dragSrc = null;
-function handleDragStart(e) { if(editMode){ dragSrc=this; this.classList.add('dragging'); } else e.preventDefault(); }
-function handleDragOver(e) { if(editMode) e.preventDefault(); }
-function handleDrop(e) {
-e.preventDefault();
-if(!editMode||!dragSrc) return;
-const target = this.closest('.tile');
-if(!target||dragSrc===target) return;
-const srcId = Number(dragSrc.dataset.id), targetId = Number(target.dataset.id);
-const srcIdx = tiles.findIndex(t=>t.id===srcId), tgtIdx = tiles.findIndex(t=>t.id===targetId);
-if(srcIdx>-1&&tgtIdx>-1){ [tiles[srcIdx], tiles[tgtIdx]] = [tiles[tgtIdx], tiles[srcIdx]]; saveToStorage(); renderAll(); }
-}
-function handleDragEnd(e) { this.classList.remove('dragging'); }
-
-function openTileSettings(tileId) {
-const tile = tiles.find(t=>t.id==tileId); if(!tile) return;
-currentEditingTileId = tileId;
-document.getElementById('currentTileId').value = tileId;
-document.getElementById('tileTitle').value = tile.title || '';
-document.getElementById('tileColor').value = tile.color || userConfig.globalAccent;
-document.getElementById('tileColorText').value = tile.color || userConfig.globalAccent;
-document.getElementById('tileOpacity').value = tile.opacity !== undefined ? tile.opacity : userConfig.tileOpacity;
-document.getElementById('tileOpacityVal').textContent = document.getElementById('tileOpacity').value;
-document.getElementById('tileSizeSelect').value = `${tile.colSpan},${tile.rowSpan}`;
-document.getElementById('tileSettingsModal').classList.remove('hidden');
-}
-
-// ---------- INIT ----------
-function init() {
-loadFromStorage();
-renderAll();
-
-document.getElementById('tileOpacitySlider').addEventListener('input', e => document.getElementById('tileOpacityValue').textContent = e.target.value);
-document.getElementById('tileOpacity').addEventListener('input', e => document.getElementById('tileOpacityVal').textContent = e.target.value);
-
-document.getElementById('uploadDashboardBgBtn').onclick = ()=>{
-const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
-inp.onchange = e => { const f=e.target.files[0]; if(f){ const r=new FileReader(); r.onload=ev=>{ userConfig.dashboardBgImage = ev.target.result; applyDashboardBackground(); saveToStorage(); }; r.readAsDataURL(f); } };
-inp.click();
-};
-document.getElementById('removeDashboardBgBtn').onclick = ()=>{ userConfig.dashboardBgImage = ''; applyDashboardBackground(); saveToStorage(); };
-
-// Color syncs
-const accentPicker = document.getElementById('globalAccentColor'), accentText = document.getElementById('globalAccentColorText');
-const textPicker = document.getElementById('globalTextColor'), textText = document.getElementById('globalTextColorText');
-const dashboardColor = document.getElementById('dashboardBgColor'), dashboardText = document.getElementById('dashboardBgColorText');
-const tileColorPicker = document.getElementById('tileColor'), tileColorText = document.getElementById('tileColorText');
-const menuColorPicker = document.getElementById('menuBtnColor'), menuColorText = document.getElementById('menuBtnColorText');
-accentPicker.addEventListener('input', ()=> accentText.value = accentPicker.value);
-accentText.addEventListener('input', ()=> accentPicker.value = accentText.value);
-textPicker.addEventListener('input', ()=> textText.value = textPicker.value);
-textText.addEventListener('input', ()=> textPicker.value = textText.value);
-dashboardColor.addEventListener('input', ()=> dashboardText.value = dashboardColor.value);
-dashboardText.addEventListener('input', ()=> dashboardColor.value = dashboardText.value);
-tileColorPicker.addEventListener('input', ()=> tileColorText.value = tileColorPicker.value);
-tileColorText.addEventListener('input', ()=> tileColorPicker.value = tileColorText.value);
-menuColorPicker.addEventListener('input', ()=> menuColorText.value = menuColorPicker.value);
-menuColorText.addEventListener('input', ()=> menuColorPicker.value = menuColorText.value);
-
-document.getElementById('closeSettingsBtn').onclick = ()=> document.getElementById('settingsModal').classList.add('hidden');
-document.getElementById('saveSettingsBtn').onclick = ()=>{
-userConfig.city = document.getElementById('settingsCity').value;
-userConfig.slideshowInterval = parseInt(document.getElementById('settingsSlideshowSec').value)||6;
-userConfig.spotifyUrl = document.getElementById('settingsSpotify').value;
-userConfig.youtubeUrl = document.getElementById('settingsYoutube').value;
-userConfig.recipeUrl = document.getElementById('settingsRecipeUrl').value;
-userConfig.appointmentsText = document.getElementById('settingsAppointments').value;
-userConfig.globalAccent = document.getElementById('globalAccentColor').value;
-userConfig.globalTextColor = document.getElementById('globalTextColor').value;
-userConfig.theme = document.getElementById('settingsTheme').value;
-userConfig.fontSize = document.getElementById('settingsFontSize').value;
-userConfig.tileOpacity = parseFloat(document.getElementById('tileOpacitySlider').value);
-userConfig.dashboardBgColor = document.getElementById('dashboardBgColor').value;
-userConfig.menuBtnColor = document.getElementById('menuBtnColor').value;
-applyAllSettings();
-saveToStorage();
-renderAll();
-document.getElementById('settingsModal').classList.add('hidden');
-};
-
-document.getElementById('closeTileSettingsBtn').onclick = ()=> document.getElementById('tileSettingsModal').classList.add('hidden');
-document.getElementById('saveTileSettingsBtn').onclick = ()=>{
-const tileId = parseInt(document.getElementById('currentTileId').value);
-const tile = tiles.find(t=>t.id===tileId);
-if(tile){
-tile.title = document.getElementById('tileTitle').value;
-tile.color = document.getElementById('tileColor').value;
-tile.opacity = parseFloat(document.getElementById('tileOpacity').value);
-const [col, row] = document.getElementById('tileSizeSelect').value.split(',').map(Number);
-tile.colSpan = col; tile.rowSpan = row;
-}
-saveToStorage(); renderAll(); document.getElementById('tileSettingsModal').classList.add('hidden');
-};
-document.getElementById('uploadTileBgBtn').onclick = ()=>{
-const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
-inp.onchange = e => { const f=e.target.files[0]; if(f){ const r=new FileReader(); r.onload=ev=>{ const tileId=parseInt(document.getElementById('currentTileId').value); const tile=tiles.find(t=>t.id===tileId); if(tile){ tile.bgImage=ev.target.result; saveToStorage(); renderAll(); } }; r.readAsDataURL(f); } };
-inp.click();
-};
-document.getElementById('removeTileBgBtn').onclick = ()=>{
-const tileId = parseInt(document.getElementById('currentTileId').value);
-const tile = tiles.find(t=>t.id===tileId); if(tile){ tile.bgImage=''; saveToStorage(); renderAll(); }
-};
-
-gridEl.addEventListener('click', e => {
-const btn = e.target.closest('button'); if(!btn) return;
-const id = btn.dataset.id;
-if(btn.classList.contains('tile-settings-btn')) openTileSettings(id);
-else if(btn.classList.contains('tile-delete-btn')) { tiles = tiles.filter(t=>t.id!=id); saveToStorage(); renderAll(); }
-});
-
-setInterval(() => {
-document.querySelectorAll('.tile').forEach(el => { const t = tiles.find(tt=>tt.id==el.dataset.id); if(t&&t.type==='clock') renderFlipClock(el.querySelector('.tile-content')); });
-}, 1000);
-setInterval(() => {
-document.querySelectorAll('.tile').forEach(el => { const t = tiles.find(tt=>tt.id==el.dataset.id); if(t&&t.type==='slideshow'&&uploadedImages.length){ const cont=el.querySelector('.tile-content'); let idx=(parseInt(cont.dataset.slideIndex||0)+1)%uploadedImages.length; cont.dataset.slideIndex=idx; cont.innerHTML=`<img class="slideshow-img" src="${uploadedImages[idx]}">`; } });
-}, userConfig.slideshowInterval*1000);
-}
-
-window.onload = init;
-})();
-</script>
-</body>
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Schrauben-Spaß für Zwei</title>
-<style>
-body {
-margin: 0;
-min-height: 100vh;
-background: linear-gradient(145deg, #2b3a4a 0%, #1d2a35 100%);
-display: flex;
-justify-content: center;
-align-items: center;
-font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
-touch-action: none; /* Verhindert Scrollen beim Ziehen */
-padding: 12px;
-box-sizing: border-box;
-}
-.game-container {
-background: #3a4c5c;
-border-radius: 48px;
-padding: 24px 20px 30px;
-box-shadow: 0 20px 30px rgba(0,0,0,0.6), inset 0 0 0 2px #5e7a8f;
-max-width: 700px;
-width: 100%;
-border-bottom: 8px solid #1a262e;
-}
-h2 {
-text-align: center;
-margin: 0 0 15px 0;
-color: #f2e9d0;
-text-shadow: 3px 3px 0 #1e2a32;
-font-weight: 600;
-letter-spacing: 2px;
-font-size: 2.1rem;
-word-break: break-word;
-}
-.score-area {
-display: flex;
-justify-content: space-between;
-color: #ffd78a;
-font-weight: bold;
-font-size: 1.6rem;
-padding: 0 10px 15px;
-text-shadow: 2px 2px 0 #1e2a32;
-}
-/* Das Brett mit den Löchern */
-.hole-board {
-display: flex;
-flex-wrap: wrap;
-justify-content: center;
-gap: 25px 30px;
-background: #4f6b7e;
-padding: 30px 20px;
-border-radius: 60px 60px 30px 30px;
-margin-bottom: 30px;
-box-shadow: inset 0 5px 8px #1a262e, 0 8px 0 #1e2a32;
-border-bottom: 3px solid #7895aa;
-min-height: 130px;
-}
-.hole {
-width: 100px;
-height: 100px;
-background: #232f38;
-border-radius: 50%;
-box-shadow: inset 0 8px 5px rgba(0,0,0,0.7), 0 0 0 6px #627b8b;
-display: flex;
-align-items: center;
-justify-content: center;
-transition: box-shadow 0.1s;
-touch-action: none;
-}
-/* Die Schraubenkopf-Darstellung */
-.screw {
-width: 70px;
-height: 70px;
-border-radius: 50%;
-background: #ccc;
-box-shadow: 0 5px 0 #5a3e1f, 0 0 0 5px #b0b0b0, inset 0 -5px 0 rgba(0,0,0,0.2);
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 2.4rem;
-font-weight: bold;
-color: rgba(0,0,0,0.3);
-text-shadow: 1px 1px 0 white;
-touch-action: none;
-cursor: grab;
-user-select: none;
-transition: transform 0.05s;
-}
-.screw:active {
-cursor: grabbing;
-transform: scale(0.97);
-}
-/* Farben der Schrauben */
-.screw.red { background: #e15554; box-shadow: 0 5px 0 #852b2a, 0 0 0 5px #f58f8e, inset 0 -5px 0 rgba(0,0,0,0.2); }
-.screw.blue { background: #3b82c4; box-shadow: 0 5px 0 #1e4463, 0 0 0 5px #7daeec, inset 0 -5px 0 rgba(0,0,0,0.2); }
-.screw.green { background: #5eae4e; box-shadow: 0 5px 0 #2c6022, 0 0 0 5px #9bde8a, inset 0 -5px 0 rgba(0,0,0,0.2); }
-.screw.yellow { background: #f7c548; box-shadow: 0 5px 0 #a67c21, 0 0 0 5px #ffe18a, inset 0 -5px 0 rgba(0,0,0,0.2); }
-.screw.purple { background: #9f6eb0; box-shadow: 0 5px 0 #5f3e6b, 0 0 0 5px #d2b0e0, inset 0 -5px 0 rgba(0,0,0,0.2); }
-
-/* Die Vorratsleiste unten */
-.screw-stock {
-display: flex;
-flex-wrap: wrap;
-justify-content: center;
-gap: 20px 25px;
-background: #364954;
-padding: 25px 15px;
-border-radius: 40px;
-box-shadow: inset 0 3px 6px #121b21, 0 8px 0 #1e2a32;
-border-bottom: 3px solid #5f7b8c;
-margin-bottom: 15px;
-min-height: 110px;
-}
-.stock-item {
-width: 95px;
-height: 95px;
-display: flex;
-justify-content: center;
-align-items: center;
-touch-action: none;
-}
-.message {
-text-align: center;
-color: #ffeabf;
-font-size: 1.3rem;
-font-weight: bold;
-min-height: 2.8rem;
-margin: 20px 0 10px;
-text-shadow: 2px 2px 0 #1a262e;
-}
-.button-row {
-display: flex;
-justify-content: center;
-gap: 20px;
-}
-.btn {
-background: #f3d37c;
-border: none;
-color: #1e2a32;
-font-weight: bold;
-font-size: 1.5rem;
-padding: 14px 28px;
-border-radius: 50px;
-box-shadow: 0 6px 0 #a08139, 0 2px 8px black;
-cursor: pointer;
-transition: 0.05s linear;
-border-bottom: 3px solid #ebc35c;
-text-transform: uppercase;
-letter-spacing: 2px;
-touch-action: manipulation;
-flex: 0 1 auto;
-}
-.btn:active {
-transform: translateY(4px);
-box-shadow: 0 2px 0 #a08139, 0 2px 6px black;
-}
-/* Für Touch: größere klickbare Bereiche */
-.screw, .btn { -webkit-tap-highlight-color: transparent; }
 </style>
 </head>
 <body>
-<div class="game-container">
-<h2>🔩 SCHRAUB-DUO 🔩</h2>
-<div class="score-area">
-<span>👫 Paar-Punkte</span>
-<span id="scoreDisplay">0</span>
+<div class="app">
+<div class="left card">
+<div class="topbar">
+<div>
+<div class="title">Screw Puzzle</div>
+<div class="sub">Schrauben entfernen, in freie Löcher setzen, Platten lösen</div>
+</div>
+<div class="buttons">
+<button id="restartBtn" class="secondary">Neu starten</button>
+<button id="nextBtn">Nächstes Level</button>
+</div>
 </div>
 
-<!-- Löcher-Bereich -->
-<div id="holeBoard" class="hole-board"></div>
+<div class="boardWrap">
+<div id="board"></div>
+<div class="win" id="win">
+<div class="winCard">
+<h2>Level geschafft</h2>
+<p>Alle Platten wurden gelöst.</p>
+<button id="winNext">Weiter</button>
+</div>
+</div>
+</div>
+</div>
 
-<!-- Nachricht (z.B. "Super!") -->
-<div id="messageBox" class="message">✨ Zieht die Schraube ins farbige Loch ✨</div>
+<div class="right card">
+<div class="infoBox">
+<div class="panelTitle">Status</div>
+<div class="status" id="status">Lade Level…</div>
+</div>
 
-<!-- Schrauben-Vorrat (dragbar) -->
-<div id="screwStock" class="screw-stock"></div>
+<div class="infoBox">
+<div class="panelTitle">Freie Löcher</div>
+<div class="pillRow" id="holesInfo"></div>
+</div>
 
-<div class="button-row">
-<button class="btn" id="resetBtn">🔄 Neues Spiel</button>
+<div class="infoBox">
+<div class="trayTitle">Ablage für entfernte Schrauben</div>
+<div class="tray" id="tray"></div>
+</div>
+
+<div class="infoBox">
+<div class="panelTitle">Hinweis</div>
+<div class="legend">
+Eine Schraube kann nur entfernt werden, wenn darunter keine andere Platte mehr liegt.
+Nach dem Entfernen musst du sie in ein freies Loch setzen. Wenn eine Platte keine Schrauben mehr hat, verschwindet sie.
+</div>
+</div>
 </div>
 </div>
 
 <script>
-(function(){
-"use strict";
+(() => {
+const boardEl = document.getElementById("board");
+const trayEl = document.getElementById("tray");
+const statusEl = document.getElementById("status");
+const holesInfoEl = document.getElementById("holesInfo");
+const winEl = document.getElementById("win");
+const restartBtn = document.getElementById("restartBtn");
+const nextBtn = document.getElementById("nextBtn");
+const winNext = document.getElementById("winNext");
 
-// ---------- SPIEL KONFIGURATION ----------
-const COLORS = ['red', 'blue', 'green', 'yellow', 'purple'];
-// Paare: jedes Loch erwartet genau eine Farbe
-let targetColors = []; // z.B. ['red', 'blue', 'green']
-let screwsRemaining = []; // Liste der noch zu ziehenden Schrauben-Farben
-let score = 0;
-let currentDraggedScrew = null; // DOM-Element, das gerade gezogen wird
-let dragOffsetX = 0, dragOffsetY = 0;
-let isDragging = false;
-
-// DOM Elemente
-const holeBoard = document.getElementById('holeBoard');
-const screwStock = document.getElementById('screwStock');
-const scoreDisplay = document.getElementById('scoreDisplay');
-const messageBox = document.getElementById('messageBox');
-const resetBtn = document.getElementById('resetBtn');
-
-// ---------- HILFSFUNKTIONEN ----------
-function shuffleArray(arr) {
-for (let i = arr.length - 1; i > 0; i--) {
-const j = Math.floor(Math.random() * (i + 1));
-[arr[i], arr[j]] = [arr[j], arr[i]];
+const LEVELS = [
+{
+traySize: 3,
+holes: [
+{id:"h1", x:18, y:18}, {id:"h2", x:50, y:18}, {id:"h3", x:82, y:18},
+{id:"h4", x:18, y:82}, {id:"h5", x:50, y:82}, {id:"h6", x:82, y:82}
+],
+freeHoles: ["h2", "h5"],
+plates: [
+{id:"A", x:12, y:10, w:34, h:50, z:1, color:"#f59e0b", screws:["a1","a2"]},
+{id:"B", x:34, y:30, w:36, h:48, z:2, color:"#06b6d4", screws:["b1","b2"]},
+{id:"C", x:56, y:16, w:28, h:40, z:3, color:"#8b5cf6", screws:["c1","c2"]}
+],
+screws: [
+{id:"a1", holeId:"h1", plateId:"A"},
+{id:"a2", holeId:"h4", plateId:"A"},
+{id:"b1", holeId:"h2", plateId:"B"},
+{id:"b2", holeId:"h5", plateId:"B"},
+{id:"c1", holeId:"h3", plateId:"C"},
+{id:"c2", holeId:"h6", plateId:"C"}
+]
+},
+{
+traySize: 3,
+holes: [
+{id:"h1", x:16, y:18}, {id:"h2", x:38, y:18}, {id:"h3", x:60, y:18}, {id:"h4", x:82, y:18},
+{id:"h5", x:16, y:50}, {id:"h6", x:38, y:50}, {id:"h7", x:60, y:50}, {id:"h8", x:82, y:50},
+{id:"h9", x:16, y:82}, {id:"h10", x:38, y:82}, {id:"h11", x:60, y:82}, {id:"h12", x:82, y:82}
+],
+freeHoles: ["h4", "h10"],
+plates: [
+{id:"A", x:10, y:14, w:42, h:30, z:1, color:"#22c55e", screws:["a1","a2"]},
+{id:"B", x:26, y:38, w:42, h:30, z:2, color:"#ef4444", screws:["b1","b2"]},
+{id:"C", x:48, y:14, w:36, h:30, z:3, color:"#3b82f6", screws:["c1","c2"]},
+{id:"D", x:50, y:54, w:30, h:24, z:4, color:"#eab308", screws:["d1","d2"]}
+],
+screws: [
+{id:"a1", holeId:"h1", plateId:"A"},
+{id:"a2", holeId:"h6", plateId:"A"},
+{id:"b1", holeId:"h5", plateId:"B"},
+{id:"b2", holeId:"h10", plateId:"B"},
+{id:"c1", holeId:"h3", plateId:"C"},
+{id:"c2", holeId:"h8", plateId:"C"},
+{id:"d1", holeId:"h7", plateId:"D"},
+{id:"d2", holeId:"h11", plateId:"D"}
+]
+},
+{
+traySize: 4,
+holes: [
+{id:"h1",x:16,y:16},{id:"h2",x:34,y:16},{id:"h3",x:52,y:16},{id:"h4",x:70,y:16},{id:"h5",x:88,y:16},
+{id:"h6",x:16,y:38},{id:"h7",x:34,y:38},{id:"h8",x:52,y:38},{id:"h9",x:70,y:38},{id:"h10",x:88,y:38},
+{id:"h11",x:16,y:60},{id:"h12",x:34,y:60},{id:"h13",x:52,y:60},{id:"h14",x:70,y:60},{id:"h15",x:88,y:60},
+{id:"h16",x:16,y:82},{id:"h17",x:34,y:82},{id:"h18",x:52,y:82},{id:"h19",x:70,y:82},{id:"h20",x:88,y:82}
+],
+freeHoles:["h5","h16","h19"],
+plates:[
+{id:"A",x:10,y:10,w:30,h:28,z:1,color:"#14b8a6",screws:["a1","a2"]},
+{id:"B",x:30,y:26,w:34,h:26,z:2,color:"#f97316",screws:["b1","b2"]},
+{id:"C",x:52,y:10,w:30,h:28,z:3,color:"#6366f1",screws:["c1","c2"]},
+{id:"D",x:12,y:52,w:32,h:24,z:2,color:"#ec4899",screws:["d1","d2"]},
+{id:"E",x:48,y:50,w:34,h:26,z:4,color:"#84cc16",screws:["e1","e2"]}
+],
+screws:[
+{id:"a1",holeId:"h1",plateId:"A"},
+{id:"a2",holeId:"h7",plateId:"A"},
+{id:"b1",holeId:"h7",plateId:"B"},
+{id:"b2",holeId:"h13",plateId:"B"},
+{id:"c1",holeId:"h4",plateId:"C"},
+{id:"c2",holeId:"h9",plateId:"C"},
+{id:"d1",holeId:"h11",plateId:"D"},
+{id:"d2",holeId:"h17",plateId:"D"},
+{id:"e1",holeId:"h14",plateId:"E"},
+{id:"e2",holeId:"h18",plateId:"E"}
+]
 }
-return arr;
+];
+
+let levelIndex = 0;
+let state = null;
+
+function clone(obj){
+return JSON.parse(JSON.stringify(obj));
 }
 
-// Neues Level / Neustart
-function initGame() {
-// Zufällige Loch-Anzahl zwischen 3 und 5
-const holeCount = Math.floor(Math.random() * 3) + 3; // 3,4,5
-// Farben für Löcher festlegen (jede Farbe kommt vor)
-let holeColors = [];
-for (let i = 0; i < holeCount; i++) {
-holeColors.push(COLORS[i % COLORS.length]);
-}
-targetColors = shuffleArray(holeColors);
+function loadLevel(index){
+levelIndex = (index + LEVELS.length) % LEVELS.length;
+const L = clone(LEVELS[levelIndex]);
 
-// Schrauben-Vorrat: genau die gleichen Farben, aber zufällige Reihenfolge
-screwsRemaining = shuffleArray([...targetColors]);
+state = {
+holes: L.holes.map(h => ({...h, occupiedBy:null, free:L.freeHoles.includes(h.id)})),
+plates: L.plates.map(p => ({...p, removed:false})),
+screws: L.screws.map(s => ({...s, removed:false, stored:false})),
+tray: Array.from({length:L.traySize}, (_,i) => ({id:i, screwId:null}))
+};
 
-score = 0;
-updateScore();
-messageBox.textContent = '✨ Viel Spaß! ✨';
-
-renderBoard();
-renderStock();
-}
-
-// Punkte aktualisieren
-function updateScore() {
-scoreDisplay.textContent = score;
-}
-
-// Löcher-Brett zeichnen
-function renderBoard() {
-holeBoard.innerHTML = '';
-targetColors.forEach((color, index) => {
-const holeDiv = document.createElement('div');
-holeDiv.className = 'hole';
-holeDiv.dataset.color = color;
-holeDiv.dataset.index = index;
-
-// Event-Listener für Drop (Touch und Maus)
-holeDiv.addEventListener('dragover', (e) => e.preventDefault());
-holeDiv.addEventListener('drop', handleDrop);
-
-holeBoard.appendChild(holeDiv);
+// occupy holes with screws
+state.screws.forEach(s => {
+const hole = getHole(s.holeId);
+if (hole) hole.occupiedBy = s.id;
 });
+
+render();
+setStatus(`Level <span class="accent">${levelIndex + 1}</span>. Entferne zuerst die Schrauben, die oben frei liegen.`);
+winEl.classList.remove("show");
 }
 
-// Schrauben-Vorrat rendern
-function renderStock() {
-screwStock.innerHTML = '';
-if (screwsRemaining.length === 0) {
-// Gewonnen!
-messageBox.textContent = '🎉 GESCHAFFT! IHR SEID EIN TOLLES TEAM! 🎉';
-// Zeige trotzdem leeren Stock, aber vielleicht Platzhalter? Nur Nachricht.
-const emptyMsg = document.createElement('div');
-emptyMsg.style.color = '#ffeabf';
-emptyMsg.style.padding = '20px';
-emptyMsg.style.fontSize = '1.5rem';
-emptyMsg.textContent = '🏆 Alle Schrauben sortiert! 🏆';
-screwStock.appendChild(emptyMsg);
+function getHole(id){ return state.holes.find(h => h.id === id); }
+function getScrew(id){ return state.screws.find(s => s.id === id); }
+function getPlate(id){ return state.plates.find(p => p.id === id); }
+
+function topPlateAtHole(holeId){
+const mounted = state.screws.filter(s => !s.removed && s.holeId === holeId);
+if (!mounted.length) return null;
+let top = null;
+for (const ms of mounted){
+const p = getPlate(ms.plateId);
+if (p && !p.removed && (!top || p.z > top.z)) top = p;
+}
+return top;
+}
+
+function isScrewRemovable(screwId){
+const s = getScrew(screwId);
+if (!s || s.removed) return false;
+const top = topPlateAtHole(s.holeId);
+return top && top.id === s.plateId;
+}
+
+function availableFreeHole(excludeHoleId = null){
+return state.holes.find(h => h.free && !h.occupiedBy && h.id !== excludeHoleId) || null;
+}
+
+function removeScrew(screwId){
+const s = getScrew(screwId);
+if (!s || s.removed) return;
+
+if (!isScrewRemovable(screwId)){
+flashBlocked(screwId);
+setStatus(`<span class="bad">Blockiert.</span> Über dieser Schraube liegt noch eine andere Platte.`);
 return;
 }
 
-screwsRemaining.forEach((color, idx) => {
-const container = document.createElement('div');
-container.className = 'stock-item';
-
-const screw = document.createElement('div');
-screw.className = `screw ${color}`;
-screw.textContent = '🔩';
-screw.setAttribute('draggable', 'false'); // wir nutzen custom touch handling
-screw.dataset.color = color;
-screw.dataset.index = idx;
-
-// Touch- und Maus-Events für Ziehen
-screw.addEventListener('touchstart', handleDragStart, {passive: false});
-screw.addEventListener('touchmove', handleDragMove, {passive: false});
-screw.addEventListener('touchend', handleDragEnd);
-screw.addEventListener('touchcancel', handleDragEnd);
-
-screw.addEventListener('mousedown', handleDragStart);
-// Mausbewegungen global
-
-container.appendChild(screw);
-screwStock.appendChild(container);
-});
-}
-
-// ---------- DRAG & DROP (Touch + Maus) ----------
-function handleDragStart(e) {
-e.preventDefault(); // Verhindert Scrollen / Kontextmenü
-if (isDragging) return;
-
-const screw = e.currentTarget;
-// Prüfen ob Schraube noch existiert (nicht bereits gedroppt)
-if (!screw.parentNode || !screw.parentNode.parentNode) return;
-
-currentDraggedScrew = screw;
-
-// Berechne Offset: wo im Element wurde berührt?
-let clientX, clientY;
-if (e.type === 'touchstart') {
-clientX = e.touches[0].clientX;
-clientY = e.touches[0].clientY;
-} else {
-clientX = e.clientX;
-clientY = e.clientY;
-}
-
-const rect = screw.getBoundingClientRect();
-dragOffsetX = clientX - rect.left;
-dragOffsetY = clientY - rect.top;
-
-// Styling: ghost Effekt
-screw.style.position = 'fixed';
-screw.style.zIndex = '9999';
-screw.style.width = rect.width + 'px';
-screw.style.height = rect.height + 'px';
-screw.style.left = (clientX - dragOffsetX) + 'px';
-screw.style.top = (clientY - dragOffsetY) + 'px';
-screw.style.margin = '0';
-screw.style.pointerEvents = 'none';
-screw.style.opacity = '0.9';
-screw.style.transition = 'none';
-
-isDragging = true;
-
-// Globale Listener für Maus (falls Maus benutzt wird)
-window.addEventListener('mousemove', handleDragMove);
-window.addEventListener('mouseup', handleDragEnd);
-}
-
-function handleDragMove(e) {
-if (!isDragging || !currentDraggedScrew) return;
-e.preventDefault();
-
-let clientX, clientY;
-if (e.type === 'touchmove') {
-clientX = e.touches[0].clientX;
-clientY = e.touches[0].clientY;
-} else {
-clientX = e.clientX;
-clientY = e.clientY;
-}
-
-// Position aktualisieren
-currentDraggedScrew.style.left = (clientX - dragOffsetX) + 'px';
-currentDraggedScrew.style.top = (clientY - dragOffsetY) + 'px';
-}
-
-function handleDragEnd(e) {
-if (!isDragging || !currentDraggedScrew) {
-cleanUpDrag();
+const traySlot = state.tray.find(t => !t.screwId);
+if (!traySlot){
+setStatus(`<span class="bad">Ablage voll.</span> Kein Platz für weitere entfernte Schrauben.`);
 return;
 }
-e.preventDefault();
 
-// Endposition ermitteln
-let clientX, clientY;
-if (e.type === 'touchend' && e.changedTouches) {
-clientX = e.changedTouches[0].clientX;
-clientY = e.changedTouches[0].clientY;
-} else if (e.type === 'mouseup') {
-clientX = e.clientX;
-clientY = e.clientY;
+const oldHole = getHole(s.holeId);
+if (oldHole) oldHole.occupiedBy = null;
+
+s.removed = true;
+s.stored = true;
+traySlot.screwId = s.id;
+
+const freeHole = availableFreeHole();
+if (freeHole){
+highlightHole(freeHole.id);
+setStatus(`Schraube entfernt. Setze sie jetzt in ein <span class="accent">freies Loch</span>.`);
 } else {
-// Fallback: letzte bekannte Position?
-const rect = currentDraggedScrew.getBoundingClientRect();
-clientX = rect.left + rect.width/2;
-clientY = rect.top + rect.height/2;
+setStatus(`<span class="bad">Kein freies Loch verfügbar.</span> Du musst erst eine Platte lösen.`);
 }
 
-// Prüfen, über welchem Loch wir losgelassen haben
-const holes = document.querySelectorAll('.hole');
-let droppedHole = null;
-for (let hole of holes) {
-const rect = hole.getBoundingClientRect();
-if (clientX >= rect.left && clientX <= rect.right &&
-clientY >= rect.top && clientY <= rect.bottom) {
-droppedHole = hole;
-break;
+cleanupReleasedPlates();
+render();
+checkWin();
+}
+
+function moveStoredScrewToHole(screwId, holeId){
+const s = getScrew(screwId);
+const hole = getHole(holeId);
+if (!s || !hole || !s.stored) return;
+if (!hole.free || hole.occupiedBy){
+setStatus(`<span class="bad">Dieses Loch ist nicht frei.</span>`);
+return;
+}
+
+const slot = state.tray.find(t => t.screwId === s.id);
+if (slot) slot.screwId = null;
+
+s.stored = false;
+s.removed = false;
+s.holeId = hole.id;
+hole.occupiedBy = s.id;
+
+setStatus(`Schraube eingesetzt. Prüfe jetzt die nächsten freien Schrauben.`);
+render();
+cleanupReleasedPlates();
+render();
+checkWin();
+}
+
+function cleanupReleasedPlates(){
+let changed = false;
+
+state.plates.forEach(p => {
+if (p.removed) return;
+const mounted = state.screws.filter(s => !s.removed && s.plateId === p.id);
+if (mounted.length === 0){
+p.removed = true;
+animatePlateOut(p.id);
+changed = true;
+}
+});
+
+if (changed){
+const stillFree = availableFreeHole();
+if (stillFree){
+setStatus(`<span class="good">Platte gelöst.</span> Neue Wege sind frei.`);
+}
+}
+}
+
+function checkWin(){
+const left = state.plates.filter(p => !p.removed).length;
+if (left === 0){
+winEl.classList.add("show");
+setStatus(`<span class="good">Alles gelöst.</span> Das Level ist geschafft.`);
 }
 }
 
-const screwColor = currentDraggedScrew.dataset.color;
-const screwIndex = parseInt(currentDraggedScrew.dataset.index);
-
-// Reset dragging element style
-resetDraggedElementStyle();
-
-let success = false;
-if (droppedHole) {
-const holeColor = droppedHole.dataset.color;
-if (holeColor === screwColor) {
-// RICHTIGES LOCH!
-success = true;
-
-// Aus dem Array entfernen
-const colorIdx = screwsRemaining.indexOf(screwColor);
-if (colorIdx !== -1) {
-screwsRemaining.splice(colorIdx, 1);
+function animatePlateOut(plateId){
+const el = boardEl.querySelector(`.plate[data-id="${plateId}"]`);
+if (el){
+el.classList.add("floating");
+setTimeout(() => render(), 240);
+}
 }
 
-// Loch als "gefüllt" markieren: wir entfernen das Loch und ersetzen es durch Schraube?
-// Für einfacheres Gameplay: Loch wird durch Schraube ersetzt
-const holeParent = droppedHole.parentNode;
-const newFilled = document.createElement('div');
-newFilled.className = 'hole';
-newFilled.style.background = '#4a392b';
-newFilled.style.boxShadow = 'inset 0 8px 5px #1e140e, 0 0 0 6px #7a8f9c';
-const filledScrew = document.createElement('div');
-filledScrew.className = `screw ${screwColor}`;
-filledScrew.textContent = '✔️';
-filledScrew.style.boxShadow = `0 3px 0 #3a2a1c, 0 0 0 5px #bba88c, inset 0 -3px 0 rgba(0,0,0,0.3)`;
-filledScrew.style.cursor = 'default';
-newFilled.appendChild(filledScrew);
-holeParent.replaceChild(newFilled, droppedHole);
-
-// Brett-Löcher Array updaten: entferne das gelöste Loch aus targetColors
-const holeIndex = parseInt(droppedHole.dataset.index);
-if (!isNaN(holeIndex)) {
-targetColors.splice(holeIndex, 1);
+function setStatus(html){
+statusEl.innerHTML = html;
 }
 
-// Punkte erhöhen
-score += 10;
-updateScore();
-messageBox.textContent = '✅ Perfekt! Weiter so!';
+function highlightHole(holeId){
+requestAnimationFrame(() => {
+boardEl.querySelectorAll('.hole').forEach(h => h.classList.remove('highlight'));
+const holeEl = boardEl.querySelector(`.hole[data-id="${holeId}"]`);
+if (holeEl) holeEl.classList.add('highlight');
+});
+}
 
-// Brett neu rendern (falls noch Löcher da) - einfacher: neu aufbauen
+function flashBlocked(screwId){
+const el = boardEl.querySelector(`.screw[data-id="${screwId}"]`);
+if (!el) return;
+el.animate([
+{ transform: 'translate(-50%,-50%) translateX(0)' },
+{ transform: 'translate(-50%,-50%) translateX(-5px)' },
+{ transform: 'translate(-50%,-50%) translateX(5px)' },
+{ transform: 'translate(-50%,-50%) translateX(0)' }
+], { duration: 220, iterations: 1 });
+}
+
+function renderBoard(){
+boardEl.innerHTML = "";
+
+const platesSorted = [...state.plates].sort((a,b) => a.z - b.z);
+platesSorted.forEach(p => {
+if (p.removed) return;
+const plate = document.createElement("div");
+plate.className = "plate";
+plate.dataset.id = p.id;
+plate.style.left = p.x + "%";
+plate.style.top = p.y + "%";
+plate.style.width = p.w + "%";
+plate.style.height = p.h + "%";
+plate.style.background = `linear-gradient(160deg, ${shade(p.color, 24)}, ${p.color})`;
+plate.style.zIndex = 2 + p.z;
+boardEl.appendChild(plate);
+});
+
+state.holes.forEach(h => {
+const hole = document.createElement("div");
+hole.className = "hole" + (h.free && !h.occupiedBy ? " free" : "");
+hole.dataset.id = h.id;
+hole.style.left = h.x + "%";
+hole.style.top = h.y + "%";
+hole.style.zIndex = 1;
+hole.onclick = () => {
+const stored = state.screws.find(s => s.stored);
+if (stored && h.free && !h.occupiedBy){
+moveStoredScrewToHole(stored.id, h.id);
+}
+};
+boardEl.appendChild(hole);
+});
+
+state.screws.forEach(s => {
+if (s.removed) return;
+const hole = getHole(s.holeId);
+if (!hole) return;
+const screw = document.createElement("button");
+screw.className = "screw";
+screw.dataset.id = s.id;
+if (!isScrewRemovable(s.id)) screw.classList.add("blocked");
+screw.style.left = hole.x + "%";
+screw.style.top = hole.y + "%";
+screw.style.zIndex = 20 + (getPlate(s.plateId)?.z || 0);
+screw.onclick = (e) => {
+e.stopPropagation();
+removeScrew(s.id);
+};
+boardEl.appendChild(screw);
+});
+}
+
+function renderTray(){
+trayEl.innerHTML = "";
+state.tray.forEach(slotData => {
+const slot = document.createElement("div");
+slot.className = "slot" + (slotData.screwId ? " filled" : "");
+if (slotData.screwId){
+const m = document.createElement("div");
+m.className = "miniScrew";
+slot.appendChild(m);
+}
+trayEl.appendChild(slot);
+});
+}
+
+function renderHolesInfo(){
+holesInfoEl.innerHTML = "";
+const free = state.holes.filter(h => h.free && !h.occupiedBy).length;
+const total = state.holes.filter(h => h.free).length;
+const leftPlates = state.plates.filter(p => !p.removed).length;
+const stored = state.screws.filter(s => s.stored).length;
+
+[
+`Level ${levelIndex + 1}`,
+`${free}/${total} freie Löcher`,
+`${leftPlates} Platten übrig`,
+`${stored} Schraube in Ablage`
+].forEach(t => {
+const pill = document.createElement("div");
+pill.className = "pill";
+pill.textContent = t;
+holesInfoEl.appendChild(pill);
+});
+}
+
+function render(){
 renderBoard();
-} else {
-messageBox.textContent = '❌ Falsche Farbe! Versucht es nochmal.';
-}
-} else {
-messageBox.textContent = '↩ Kein Loch getroffen. Nochmal probieren.';
+renderTray();
+renderHolesInfo();
 }
 
-// Immer den Stock neu rendern (entweder eine Schraube weniger oder unverändert)
-renderStock();
-
-// Prüfen ob gewonnen
-if (screwsRemaining.length === 0) {
-messageBox.textContent = '🏆 IHR HABT GEWONNEN! Super Teamwork! 🏆';
+function shade(hex, amt){
+const c = hex.replace('#','');
+const num = parseInt(c,16);
+let r = (num >> 16) + amt;
+let g = ((num >> 8) & 0x00FF) + amt;
+let b = (num & 0x0000FF) + amt;
+r = Math.max(Math.min(255,r),0);
+g = Math.max(Math.min(255,g),0);
+b = Math.max(Math.min(255,b),0);
+return "#" + (r<<16 | g<<8 | b).toString(16).padStart(6,'0');
 }
 
-// Cleanup
-cleanUpDrag();
+restartBtn.onclick = () => loadLevel(levelIndex);
+nextBtn.onclick = () => loadLevel(levelIndex + 1);
+winNext.onclick = () => loadLevel(levelIndex + 1);
 
-// Falls erfolgreich und Spiel noch nicht zu Ende, evtl kleines Lob
-if (success && screwsRemaining.length > 0) {
-// Alles gut
-}
-}
-
-function resetDraggedElementStyle() {
-if (currentDraggedScrew) {
-currentDraggedScrew.style.position = '';
-currentDraggedScrew.style.zIndex = '';
-currentDraggedScrew.style.left = '';
-currentDraggedScrew.style.top = '';
-currentDraggedScrew.style.width = '';
-currentDraggedScrew.style.height = '';
-currentDraggedScrew.style.margin = '';
-currentDraggedScrew.style.pointerEvents = '';
-currentDraggedScrew.style.opacity = '';
-currentDraggedScrew.style.transition = '';
-}
-}
-
-function cleanUpDrag() {
-if (currentDraggedScrew) {
-resetDraggedElementStyle();
-currentDraggedScrew = null;
-}
-isDragging = false;
-window.removeEventListener('mousemove', handleDragMove);
-window.removeEventListener('mouseup', handleDragEnd);
-}
-
-// Standard-Drop-Handler für das native drop-Event (als Fallback)
-function handleDrop(e) {
-e.preventDefault();
-// Wird normalerweise nicht benötigt, da wir touch-events nutzen.
-}
-
-// Touch-Ereignisse für Brett verhindern Scrollen
-holeBoard.addEventListener('touchmove', (e) => e.preventDefault(), {passive: false});
-screwStock.addEventListener('touchmove', (e) => e.preventDefault(), {passive: false});
-
-// Reset-Button
-resetBtn.addEventListener('click', () => {
-initGame();
-});
-
-// Initial starten
-initGame();
-
-// Verhindert, dass beim Ziehen das Kontextmenü erscheint
-document.addEventListener('contextmenu', (e) => {
-if (e.target.closest('.screw')) e.preventDefault();
-});
-
+loadLevel(0);
 })();
 </script>
 </body>
 </html>
-
