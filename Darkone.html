@@ -19,104 +19,95 @@ align-items: center;
 justify-content: center;
 padding: 0;
 margin: 0;
-transition: background 0.3s ease;
+transition: background 0.4s ease, color 0.2s ease;
 }
 
-/* ========== THEMES (CSS VARIABLEN) ========== */
-body.theme-light {
---bg-color: #f5f5f7;
---text-primary: #1d1d1f;
---tile-bg: rgba(255, 255, 255, 0.45);
---tile-border: rgba(0, 0, 0, 0.06);
---shadow: 0 30px 50px -15px rgba(0,0,0,0.15);
---header-glow: 0 2px 10px rgba(255,255,255,0.5);
+/* ========== 1. iOS 18 THEME (Apple's vibrant two-tone style) ========== */
+body.theme-ios18 {
+--bg-gradient: linear-gradient(145deg, #fbc2eb 0%, #a6c1ee 100%);
+--text-primary: #1c1c1e;
+--tile-bg: rgba(255, 255, 255, 0.4);
+--tile-border: rgba(255, 255, 255, 0.5);
+--shadow: 0 30px 40px -15px rgba(0,0,0,0.2);
 --menu-bg: rgba(255, 255, 255, 0.7);
---input-bg: rgba(255,255,255,0.5);
+--input-bg: rgba(255, 255, 255, 0.6);
+--accent-color: #5e5ce6;
 }
-body.theme-dark {
---bg-color: #1c1c1e;
---text-primary: #ffffff;
---tile-bg: rgba(40, 40, 45, 0.55);
---tile-border: rgba(255, 255, 255, 0.08);
---shadow: 0 30px 50px -15px rgba(0,0,0,0.5);
---header-glow: 0 2px 10px rgba(0,0,0,0.3);
---menu-bg: rgba(30, 30, 35, 0.8);
---input-bg: rgba(20,20,25,0.6);
+
+/* ========== 2. DARK MODE CYBERPUNK (High saturation neons) ========== */
+body.theme-cyberpunk {
+--bg-gradient: linear-gradient(145deg, #020617 0%, #0f172a 100%);
+--text-primary: #e2e8f0;
+--tile-bg: rgba(15, 23, 42, 0.5);
+--tile-border: rgba(34, 211, 238, 0.4);
+--shadow: 0 30px 40px -15px rgba(0,0,0,0.6);
+--menu-bg: rgba(15, 23, 42, 0.8);
+--input-bg: rgba(15, 23, 42, 0.6);
+--accent-color: #22d3ee;
 }
-body.theme-midnight {
---bg-color: #0b0b10;
---text-primary: #e5e5ff;
---tile-bg: rgba(20, 20, 30, 0.55);
---tile-border: rgba(100, 150, 255, 0.15);
---shadow: 0 30px 50px -15px rgba(0,0,0,0.6);
---header-glow: 0 2px 10px rgba(0,0,0,0.3);
---menu-bg: rgba(20, 20, 30, 0.9);
---input-bg: rgba(20,20,25,0.6);
+
+/* ========== 3. CORPORATE EMERALD (Deep greens with mint highlights) ========== */
+body.theme-emerald {
+--bg-gradient: linear-gradient(145deg, #052e16 0%, #14532d 100%);
+--text-primary: #ecfdf5;
+--tile-bg: rgba(6, 78, 59, 0.5);
+--tile-border: rgba(34, 197, 94, 0.3);
+--shadow: 0 30px 40px -15px rgba(0,0,0,0.5);
+--menu-bg: rgba(5, 46, 22, 0.8);
+--input-bg: rgba(5, 46, 22, 0.6);
+--accent-color: #22c55e;
 }
-body.theme-forest {
---bg-color: #e5f0e5;
---text-primary: #1d2a1d;
---tile-bg: rgba(220, 240, 220, 0.45);
---tile-border: rgba(40, 80, 40, 0.1);
---shadow: 0 30px 50px -15px rgba(0,0,0,0.1);
---header-glow: 0 2px 10px rgba(255,255,255,0.3);
---menu-bg: rgba(240, 250, 240, 0.8);
---input-bg: rgba(255,255,255,0.5);
+
+/* ========== 4. WARM ANALYTICS (Inviting orange/red scale) ========== */
+body.theme-warm {
+--bg-gradient: linear-gradient(145deg, #fff7ed 0%, #ffedd5 100%);
+--text-primary: #431407;
+--tile-bg: rgba(255, 247, 237, 0.5);
+--tile-border: rgba(249, 115, 22, 0.4);
+--shadow: 0 30px 40px -15px rgba(0,0,0,0.15);
+--menu-bg: rgba(255, 247, 237, 0.8);
+--input-bg: rgba(255, 247, 237, 0.6);
+--accent-color: #f97316;
 }
-body.theme-rose {
---bg-color: #f5eef0;
---text-primary: #2a1a1e;
---tile-bg: rgba(250, 240, 242, 0.5);
---tile-border: rgba(150, 60, 80, 0.1);
---shadow: 0 30px 50px -15px rgba(0,0,0,0.1);
---header-glow: 0 2px 10px rgba(255,255,255,0.3);
---menu-bg: rgba(255, 245, 245, 0.8);
---input-bg: rgba(255,255,255,0.5);
-}
-/* Huawei Themes */
-body.theme-huawei-light {
---bg-color: #f0f4f8;
---text-primary: #1a1a1a;
+
+/* ========== 5. MONOCHROME PRO (Neutral scale for wireframing) ========== */
+body.theme-monochrome {
+--bg-gradient: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+--text-primary: #0f172a;
 --tile-bg: rgba(255, 255, 255, 0.5);
---tile-border: rgba(0,0,0,0.05);
---shadow: 0 20px 40px rgba(0,0,0,0.08);
---header-glow: 0 2px 10px rgba(255,255,255,0.4);
---menu-bg: rgba(255,255,255,0.75);
---input-bg: rgba(255,255,255,0.5);
+--tile-border: rgba(71, 85, 105, 0.2);
+--shadow: 0 30px 40px -15px rgba(0,0,0,0.1);
+--menu-bg: rgba(255, 255, 255, 0.8);
+--input-bg: rgba(255, 255, 255, 0.6);
+--accent-color: #475569;
 }
-body.theme-huawei-dark {
---bg-color: #12161a;
---text-primary: #e0e0e0;
---tile-bg: rgba(25, 30, 35, 0.6);
---tile-border: rgba(255,255,255,0.1);
---shadow: 0 20px 40px rgba(0,0,0,0.5);
---header-glow: 0 2px 10px rgba(0,0,0,0.3);
---menu-bg: rgba(25, 30, 35, 0.9);
---input-bg: rgba(20,20,25,0.6);
+
+/* ========== 6. HUAWEI HARMONYOS (Vibrant, gradient-rich) ========== */
+body.theme-harmony {
+--bg-gradient: linear-gradient(145deg, #e0f2fe 0%, #d9f99d 100%);
+--text-primary: #1e293b;
+--tile-bg: rgba(255, 255, 255, 0.4);
+--tile-border: rgba(14, 165, 233, 0.4);
+--shadow: 0 30px 40px -15px rgba(0,0,0,0.15);
+--menu-bg: rgba(255, 255, 255, 0.7);
+--input-bg: rgba(255, 255, 255, 0.5);
+--accent-color: #0ea5e9;
 }
-body.theme-huawei-emerald {
---bg-color: #d4e6d4;
---text-primary: #1a2a1a;
---tile-bg: rgba(180, 220, 180, 0.45);
---tile-border: rgba(40, 100, 40, 0.1);
---shadow: 0 20px 40px rgba(0,0,0,0.08);
---header-glow: 0 2px 10px rgba(255,255,255,0.3);
---menu-bg: rgba(220, 240, 220, 0.8);
---input-bg: rgba(255,255,255,0.5);
-}
-body.theme-huawei-sunrise {
---bg-color: #fce4d6;
---text-primary: #2a1a10;
---tile-bg: rgba(255, 220, 200, 0.45);
---tile-border: rgba(180, 100, 60, 0.1);
---shadow: 0 20px 40px rgba(0,0,0,0.08);
---header-glow: 0 2px 10px rgba(255,255,255,0.3);
---menu-bg: rgba(255, 235, 220, 0.8);
---input-bg: rgba(255,255,255,0.5);
+
+/* ========== 7. LIQUID GLASS (Apple's iOS 26 design language) ========== */
+body.theme-liquid {
+--bg-gradient: linear-gradient(145deg, #f5f5f7 0%, #d1d1d6 100%);
+--text-primary: #1d1d1f;
+--tile-bg: rgba(255, 255, 255, 0.35);
+--tile-border: rgba(255, 255, 255, 0.6);
+--shadow: 0 30px 40px -15px rgba(0,0,0,0.2);
+--menu-bg: rgba(255, 255, 255, 0.7);
+--input-bg: rgba(255, 255, 255, 0.5);
+--accent-color: #0077ed;
 }
 
 body {
-background: var(--bg-color);
+background: var(--bg-gradient);
 color: var(--text-primary);
 }
 
@@ -133,7 +124,6 @@ background-size: cover;
 background-position: center;
 position: relative;
 }
-/* Overlay für Hintergrundbild abdunkeln/aufhellen optional */
 .dashboard::before {
 content: "";
 position: absolute;
@@ -162,9 +152,9 @@ gap: 20px;
 }
 
 .burger-menu {
-background: rgba(128, 128, 140, 0.2);
+background: var(--tile-bg);
 backdrop-filter: blur(20px);
-border: 0.5px solid rgba(255, 255, 255, 0.2);
+border: 0.5px solid var(--tile-border);
 color: var(--text-primary);
 width: 52px;
 height: 52px;
@@ -174,7 +164,7 @@ align-items: center;
 justify-content: center;
 font-size: 1.8rem;
 cursor: pointer;
-box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+box-shadow: var(--shadow);
 transition: all 0.2s;
 }
 
@@ -183,7 +173,6 @@ font-size: 2rem;
 font-weight: 600;
 letter-spacing: -0.02em;
 color: var(--text-primary);
-text-shadow: var(--header-glow);
 }
 
 .menu-dropdown {
@@ -192,7 +181,7 @@ top: 75px;
 left: 24px;
 background: var(--menu-bg);
 backdrop-filter: blur(50px);
-border: 0.5px solid rgba(255,255,255,0.4);
+border: 0.5px solid var(--tile-border);
 border-radius: 24px;
 padding: 12px 8px;
 min-width: 240px;
@@ -213,8 +202,8 @@ display: flex;
 align-items: center;
 gap: 12px;
 }
-.menu-item:hover { background: rgba(120, 120, 140, 0.15); }
-.menu-divider { height: 1px; background: rgba(128,128,140,0.2); margin: 8px 0; }
+.menu-item:hover { background: var(--tile-bg); }
+.menu-divider { height: 1px; background: var(--tile-border); margin: 8px 0; }
 
 .grid-container {
 display: grid;
@@ -227,7 +216,6 @@ padding: 4px;
 z-index: 2;
 }
 
-/* Kachel – ohne störende Linien */
 .tile {
 backdrop-filter: blur(30px);
 -webkit-backdrop-filter: blur(30px);
@@ -251,10 +239,9 @@ background-color: var(--tile-bg);
 transform: perspective(2000px) rotateX(1deg) rotateY(1deg) translateZ(12px);
 }
 .tile.edit-mode {
-border: 2px dashed rgba(0, 122, 255, 0.7);
+border: 2px dashed var(--accent-color);
 cursor: grab;
 }
-/* Entferne das ::after, das eventuell die Linie verursacht hat */
 .tile::before {
 content: "";
 position: absolute;
@@ -278,9 +265,9 @@ z-index: 2;
 }
 .tile-controls { display: flex; gap: 10px; }
 .icon-btn {
-background: rgba(128, 128, 140, 0.2);
+background: var(--tile-bg);
 backdrop-filter: blur(10px);
-border: 0.5px solid rgba(255,255,255,0.3);
+border: 0.5px solid var(--tile-border);
 color: var(--text-primary);
 font-size: 1.3rem;
 cursor: pointer;
@@ -290,7 +277,7 @@ border-radius: 44px;
 display: flex;
 align-items: center;
 justify-content: center;
-box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+box-shadow: var(--shadow);
 }
 
 .tile-content {
@@ -306,14 +293,14 @@ z-index: 2;
 position: absolute;
 bottom: 12px;
 left: 12px;
-background: rgba(0,0,0,0.15);
+background: var(--tile-bg);
 backdrop-filter: blur(4px);
 padding: 4px 12px;
 border-radius: 30px;
 font-size: 0.8rem;
 color: var(--text-primary);
 z-index: 3;
-opacity: 0.7;
+opacity: 0.8;
 }
 
 .flip-clock {
@@ -324,12 +311,12 @@ font-weight: 300;
 line-height: 1.1;
 }
 .flip-digit {
-background: rgba(128, 128, 140, 0.15);
+background: var(--tile-bg);
 backdrop-filter: blur(8px);
 padding: 12px 18px;
 border-radius: 24px;
 box-shadow: inset 0 2px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.1);
-border-bottom: 2px solid rgba(255,255,255,0.5);
+border-bottom: 2px solid var(--tile-border);
 }
 
 .weather-icon-large {
@@ -343,7 +330,7 @@ animation: float 5s ease-in-out infinite;
 100% { transform: translateY(0px); }
 }
 .forecast-item {
-background: rgba(128, 128, 140, 0.1);
+background: var(--tile-bg);
 backdrop-filter: blur(10px);
 border-radius: 24px;
 padding: 10px 14px;
@@ -359,11 +346,12 @@ margin-top: 8px;
 .cal-day {
 padding: 12px 0;
 border-radius: 20px;
-background: rgba(128, 128, 140, 0.1);
+background: var(--tile-bg);
 }
 .today {
-background: rgba(0, 122, 255, 0.3);
+background: var(--accent-color);
 font-weight: bold;
+color: white;
 }
 .has-event::after {
 content: "•";
@@ -379,9 +367,9 @@ border-radius: 24px;
 }
 
 .app-btn {
-background: rgba(128, 128, 140, 0.2);
+background: var(--tile-bg);
 backdrop-filter: blur(20px);
-border: 0.5px solid rgba(255,255,255,0.3);
+border: 0.5px solid var(--tile-border);
 color: var(--text-primary);
 padding: 18px 28px;
 border-radius: 60px;
@@ -392,7 +380,7 @@ display: flex;
 align-items: center;
 justify-content: center;
 gap: 10px;
-box-shadow: 0 10px 20px -5px rgba(0,0,0,0.15);
+box-shadow: var(--shadow);
 }
 
 .settings-overlay {
@@ -408,7 +396,7 @@ z-index: 1000;
 .settings-card {
 background: var(--menu-bg);
 backdrop-filter: blur(60px);
-border: 0.5px solid rgba(255,255,255,0.4);
+border: 0.5px solid var(--tile-border);
 border-radius: 48px;
 padding: 36px 40px;
 width: 750px;
@@ -430,7 +418,7 @@ font-weight: 600;
 width: 100%;
 padding: 18px 22px;
 border-radius: 60px;
-border: 0.5px solid rgba(128,128,140,0.2);
+border: 0.5px solid var(--tile-border);
 background: var(--input-bg);
 backdrop-filter: blur(10px);
 color: var(--text-primary);
@@ -442,12 +430,12 @@ font-size: 1rem;
 .color-row input[type="color"] { width: 80px; height: 55px; border-radius: 30px; }
 </style>
 </head>
-<body class="theme-light">
+<body class="theme-ios18">
 <div class="dashboard" id="dashboard">
 <div class="toolbar">
 <div class="toolbar-left">
 <div class="burger-menu" id="burgerMenuBtn">☰</div>
-<span class="dashboard-title">🏠 Liquid Dashboard</span>
+<span class="dashboard-title">🏠 Home Dashboard</span>
 </div>
 <div class="toolbar-actions"></div>
 
@@ -484,18 +472,18 @@ font-size: 1rem;
 <div class="input-group">
 <label>🎨 Theme</label>
 <select id="settingsTheme">
-<optgroup label="Apple Style">
-<option value="light">Apple Hell</option>
-<option value="dark">Apple Dunkel</option>
-<option value="midnight">Apple Mitternacht</option>
-<option value="forest">Apple Wald</option>
-<option value="rose">Apple Rosé</option>
+<optgroup label="Apple iOS 18">
+<option value="ios18">🌈 iOS 18 (Vibrant)</option>
+<option value="liquid">💧 Liquid Glass (iOS 26)</option>
+</optgroup>
+<optgroup label="Modern Dashboard">
+<option value="cyberpunk">🌃 Cyberpunk</option>
+<option value="emerald">🌿 Corporate Emerald</option>
+<option value="warm">🔥 Warm Analytics</option>
+<option value="monochrome">⚫ Monochrome Pro</option>
 </optgroup>
 <optgroup label="Huawei HarmonyOS">
-<option value="huawei-light">Huawei Light</option>
-<option value="huawei-dark">Huawei Dark</option>
-<option value="huawei-emerald">Huawei Emerald</option>
-<option value="huawei-sunrise">Huawei Sunrise</option>
+<option value="harmony">🌸 HarmonyOS</option>
 </optgroup>
 </select>
 </div>
@@ -555,7 +543,7 @@ const DEFAULT_TILES = [
 let userConfig = {
 city: 'Düsseldorf', slideshowInterval: 6, spotifyUrl: '', youtubeUrl: '', recipeUrl: 'https://www.chefkoch.de/',
 appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
-globalAccent: '#ffffff', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium',
+globalAccent: '#ffffff', globalTextColor: '#1d1d1f', theme: 'ios18', fontSize: 'medium',
 tileOpacity: 0.6, dashboardBgImage: '', dashboardBgColor: '#aaccdd'
 };
 
@@ -566,9 +554,9 @@ let currentEditingTileId = null;
 // ---------- STORAGE ----------
 function loadFromStorage() {
 try {
-const savedTiles = localStorage.getItem('dash_tiles_v13');
-const savedConfig = localStorage.getItem('dash_config_v13');
-const savedImages = localStorage.getItem('dash_images_v13');
+const savedTiles = localStorage.getItem('dash_tiles_v14');
+const savedConfig = localStorage.getItem('dash_config_v14');
+const savedImages = localStorage.getItem('dash_images_v14');
 if (savedTiles) tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
 else tiles = [...DEFAULT_TILES];
 if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
@@ -581,9 +569,9 @@ applyAllSettings();
 
 function saveToStorage() {
 try {
-localStorage.setItem('dash_tiles_v13', JSON.stringify(tiles));
-localStorage.setItem('dash_config_v13', JSON.stringify(userConfig));
-localStorage.setItem('dash_images_v13', JSON.stringify(uploadedImages));
+localStorage.setItem('dash_tiles_v14', JSON.stringify(tiles));
+localStorage.setItem('dash_config_v14', JSON.stringify(userConfig));
+localStorage.setItem('dash_images_v14', JSON.stringify(uploadedImages));
 } catch(e) {}
 }
 
@@ -591,7 +579,7 @@ function ensureUniqueIds() { tiles.forEach(t => { if (!t.id) t.id = ++nextTileId
 
 function resetToDefault() {
 tiles = DEFAULT_TILES.map(t => ({...t}));
-userConfig = { city: 'Düsseldorf', slideshowInterval: 6, spotifyUrl: '', youtubeUrl: '', recipeUrl: 'https://www.chefkoch.de/', appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting', globalAccent: '#ffffff', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium', tileOpacity: 0.6, dashboardBgImage: '', dashboardBgColor: '#aaccdd' };
+userConfig = { city: 'Düsseldorf', slideshowInterval: 6, spotifyUrl: '', youtubeUrl: '', recipeUrl: 'https://www.chefkoch.de/', appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting', globalAccent: '#ffffff', globalTextColor: '#1d1d1f', theme: 'ios18', fontSize: 'medium', tileOpacity: 0.6, dashboardBgImage: '', dashboardBgColor: '#aaccdd' };
 uploadedImages = [];
 applyAllSettings();
 saveToStorage();
