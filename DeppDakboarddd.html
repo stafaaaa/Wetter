@@ -14,7 +14,7 @@ font-family: system-ui, -apple-system, 'Helvetica Neue', 'SF Pro Display', 'Sego
 
 body {
 min-height: 100vh;
-background: radial-gradient(circle at 20% 30%, #1a1a2e, #0a0a15);
+background: #f5f5f7;
 display: flex;
 align-items: center;
 justify-content: center;
@@ -23,58 +23,62 @@ margin: 0;
 transition: background 0.3s ease;
 }
 
-/* Theme-Variablen */
-body.theme-dark {
---bg-gradient-start: #1a1a2e;
---bg-gradient-end: #0a0a15;
---dashboard-bg: rgba(10, 15, 25, 0.4);
---tile-border: rgba(220, 240, 255, 0.14);
+/* Apple-inspirierte Themes */
+body.theme-apple-light {
+--bg-gradient-start: #f5f5f7;
+--bg-gradient-end: #e8e8ed;
+--dashboard-bg: rgba(255, 255, 255, 0.5);
+--tile-border: rgba(0, 0, 0, 0.06);
+--text-primary: #1d1d1f;
+--shadow-color: rgba(0, 0, 0, 0.15);
+}
+body.theme-apple-dark {
+--bg-gradient-start: #1c1c1e;
+--bg-gradient-end: #101012;
+--dashboard-bg: rgba(28, 28, 30, 0.6);
+--tile-border: rgba(255, 255, 255, 0.08);
 --text-primary: #ffffff;
+--shadow-color: rgba(0, 0, 0, 0.5);
 }
-body.theme-light {
---bg-gradient-start: #e8eef5;
---bg-gradient-end: #c0ccda;
---dashboard-bg: rgba(255, 255, 255, 0.25);
---tile-border: rgba(60, 70, 90, 0.2);
---text-primary: #1c1c2a;
-}
-body.theme-midnight {
---bg-gradient-start: #0f172a;
---bg-gradient-end: #020617;
---dashboard-bg: rgba(15, 23, 42, 0.5);
+body.theme-apple-midnight {
+--bg-gradient-start: #0b0b10;
+--bg-gradient-end: #1a1a24;
+--dashboard-bg: rgba(20, 20, 30, 0.5);
 --tile-border: rgba(100, 150, 255, 0.15);
---text-primary: #e0e7ff;
+--text-primary: #e5e5ff;
+--shadow-color: rgba(0, 0, 0, 0.6);
 }
-body.theme-forest {
---bg-gradient-start: #1a3a2a;
---bg-gradient-end: #0a1a10;
---dashboard-bg: rgba(10, 25, 15, 0.4);
---tile-border: rgba(150, 220, 150, 0.15);
---text-primary: #e2f0e2;
+body.theme-apple-forest {
+--bg-gradient-start: #e5f0e5;
+--bg-gradient-end: #c5d5c5;
+--dashboard-bg: rgba(220, 240, 220, 0.4);
+--tile-border: rgba(40, 80, 40, 0.1);
+--text-primary: #1d2a1d;
+--shadow-color: rgba(0, 0, 0, 0.1);
 }
-body.theme-rosegold {
---bg-gradient-start: #3a2a2a;
---bg-gradient-end: #1a1010;
---dashboard-bg: rgba(40, 20, 20, 0.4);
---tile-border: rgba(255, 200, 200, 0.15);
---text-primary: #ffe0e0;
+body.theme-apple-rose {
+--bg-gradient-start: #f5eef0;
+--bg-gradient-end: #e5d5d8;
+--dashboard-bg: rgba(250, 240, 242, 0.5);
+--tile-border: rgba(150, 60, 80, 0.1);
+--text-primary: #2a1a1e;
+--shadow-color: rgba(0, 0, 0, 0.1);
 }
 
 body {
-background: radial-gradient(circle at 20% 30%, var(--bg-gradient-start, #1a1a2e), var(--bg-gradient-end, #0a0a15));
+background: radial-gradient(circle at 20% 30%, var(--bg-gradient-start, #f5f5f7), var(--bg-gradient-end, #e8e8ed));
 }
 
 .dashboard {
 width: 100vw;
 height: 100vh;
-background: var(--dashboard-bg, rgba(10, 15, 25, 0.4));
-backdrop-filter: blur(28px) saturate(180%);
--webkit-backdrop-filter: blur(28px) saturate(180%);
+background: var(--dashboard-bg, rgba(255, 255, 255, 0.5));
+backdrop-filter: blur(40px) saturate(200%);
+-webkit-backdrop-filter: blur(40px) saturate(200%);
 display: flex;
 flex-direction: column;
-padding: 16px 20px 20px 20px;
+padding: 20px 24px 24px 24px;
 overflow: hidden;
-transition: background 0.3s;
 }
 
 /* Toolbar */
@@ -82,7 +86,7 @@ transition: background 0.3s;
 display: flex;
 align-items: center;
 justify-content: space-between;
-padding: 8px 12px 16px 12px;
+padding: 8px 8px 20px 8px;
 flex-shrink: 0;
 position: relative;
 }
@@ -90,52 +94,58 @@ position: relative;
 .toolbar-left {
 display: flex;
 align-items: center;
-gap: 16px;
+gap: 20px;
 }
 
 .burger-menu {
-background: rgba(30, 40, 60, 0.7);
-backdrop-filter: blur(12px);
-border: 1px solid rgba(255, 255, 255, 0.15);
-color: white;
-width: 48px;
-height: 48px;
-border-radius: 16px;
+background: rgba(128, 128, 140, 0.2);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border: 0.5px solid rgba(255, 255, 255, 0.2);
+color: var(--text-primary);
+width: 52px;
+height: 52px;
+border-radius: 18px;
 display: flex;
 align-items: center;
 justify-content: center;
 font-size: 1.8rem;
 cursor: pointer;
-box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+box-shadow: 0 8px 20px var(--shadow-color), 0 2px 4px rgba(0,0,0,0.05);
 transition: all 0.2s;
 }
 
 .dashboard-title {
-font-size: 1.8rem;
+font-size: 2rem;
 font-weight: 600;
 letter-spacing: -0.02em;
-color: var(--text-primary, white);
-text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+color: var(--text-primary);
 }
 
 .menu-dropdown {
 position: absolute;
-top: 70px;
-left: 20px;
-background: rgba(20, 30, 45, 0.95);
-backdrop-filter: blur(30px);
-border: 1px solid rgba(255, 255, 255, 0.15);
+top: 75px;
+left: 24px;
+background: rgba(240, 240, 245, 0.9);
+backdrop-filter: blur(40px);
+-webkit-backdrop-filter: blur(40px);
+border: 0.5px solid rgba(0, 0, 0, 0.1);
 border-radius: 24px;
 padding: 12px 8px;
-min-width: 220px;
-box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+min-width: 240px;
+box-shadow: 0 20px 40px rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.05);
 z-index: 100;
 display: none;
+}
+body.theme-apple-dark .menu-dropdown,
+body.theme-apple-midnight .menu-dropdown {
+background: rgba(40, 40, 45, 0.9);
+border-color: rgba(255,255,255,0.1);
 }
 .menu-dropdown.show { display: block; }
 .menu-item {
 padding: 14px 20px;
-color: white;
+color: var(--text-primary);
 font-size: 1.1rem;
 font-weight: 500;
 cursor: pointer;
@@ -145,36 +155,47 @@ display: flex;
 align-items: center;
 gap: 12px;
 }
-.menu-item:hover { background: rgba(80, 110, 160, 0.5); }
-.menu-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0; }
+.menu-item:hover { background: rgba(120, 120, 140, 0.15); }
+.menu-divider { height: 1px; background: rgba(0,0,0,0.1); margin: 8px 0; }
+body.theme-apple-dark .menu-divider,
+body.theme-apple-midnight .menu-divider { background: rgba(255,255,255,0.1); }
 
 /* Grid */
 .grid-container {
 display: grid;
 grid-template-columns: repeat(4, 1fr);
-grid-auto-rows: minmax(200px, 1fr);
-gap: 18px;
+grid-auto-rows: minmax(220px, 1fr);
+gap: 22px;
 flex: 1;
 overflow-y: auto;
 padding: 4px;
 }
 
+/* Kachel – extremer 3D-Effekt, schwebend */
 .tile {
-backdrop-filter: blur(18px);
--webkit-backdrop-filter: blur(18px);
-border: 1px solid var(--tile-border, rgba(220, 240, 255, 0.14));
-border-radius: 28px;
-padding: 20px 22px;
-box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+backdrop-filter: blur(30px);
+-webkit-backdrop-filter: blur(30px);
+border: 1px solid var(--tile-border);
+border-radius: 36px;
+padding: 22px 24px;
+box-shadow: 0 30px 50px -15px var(--shadow-color),
+0 10px 20px -5px rgba(0,0,0,0.1),
+inset 0 0 0 1px rgba(255,255,255,0.5);
 display: flex;
 flex-direction: column;
 overflow: hidden;
 position: relative;
-transition: all 0.2s ease;
-min-height: 200px;
+transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+min-height: 220px;
 background-size: cover;
 background-position: center;
-color: var(--text-primary, white);
+color: var(--text-primary);
+transform: perspective(2000px) rotateX(2deg) rotateY(0.5deg) translateZ(5px);
+transform-style: preserve-3d;
+}
+.tile:hover {
+transform: perspective(2000px) rotateX(1deg) rotateY(1deg) translateZ(12px);
+box-shadow: 0 40px 70px -15px var(--shadow-color), 0 15px 25px -8px rgba(0,0,0,0.2);
 }
 .tile::before {
 content: "";
@@ -183,19 +204,19 @@ top: 0; left: 0; right: 0; bottom: 0;
 background: inherit;
 background-size: cover;
 background-position: center;
-filter: brightness(0.7);
+filter: brightness(0.9);
 z-index: 0;
 }
 .tile::after {
 content: "";
 position: absolute;
 top: 0; left: 0; right: 0; bottom: 0;
-background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+background: linear-gradient(145deg, rgba(255,255,255,0.3) 0%, transparent 60%);
 pointer-events: none;
 z-index: 1;
 }
 .tile.edit-mode {
-border: 3px dashed rgba(160, 200, 255, 0.7);
+border: 3px dashed rgba(0, 122, 255, 0.6);
 cursor: grab;
 }
 
@@ -203,28 +224,33 @@ cursor: grab;
 display: flex;
 justify-content: space-between;
 align-items: center;
-margin-bottom: 16px;
+margin-bottom: 18px;
 font-weight: 600;
 font-size: 1.3rem;
-text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+letter-spacing: -0.01em;
 position: relative;
 z-index: 2;
 }
-.tile-controls { display: flex; gap: 8px; }
+.tile-controls { display: flex; gap: 10px; }
 .icon-btn {
-background: rgba(0, 0, 0, 0.35);
-backdrop-filter: blur(4px);
-border: 0.5px solid rgba(255,255,255,0.2);
-color: inherit;
+background: rgba(128, 128, 140, 0.2);
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+border: 0.5px solid rgba(255,255,255,0.3);
+color: var(--text-primary);
 font-size: 1.3rem;
 cursor: pointer;
-width: 40px;
-height: 40px;
-border-radius: 40px;
+width: 44px;
+height: 44px;
+border-radius: 44px;
 display: flex;
 align-items: center;
 justify-content: center;
-box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+transition: 0.15s;
+}
+.icon-btn:hover {
+background: rgba(100, 100, 120, 0.3);
 }
 
 .tile-content {
@@ -235,10 +261,9 @@ overflow: auto;
 scrollbar-width: thin;
 position: relative;
 z-index: 2;
-text-shadow: 0 2px 6px rgba(0,0,0,0.5);
 }
 
-/* FlipClock – feste Größe, unbeeinflusst von globaler Schriftgröße */
+/* FlipClock – unverändert */
 .flip-clock {
 display: flex;
 gap: 8px;
@@ -247,41 +272,43 @@ font-weight: 300;
 line-height: 1.1;
 }
 .flip-digit {
-background: rgba(0, 0, 0, 0.4);
+background: rgba(128, 128, 140, 0.15);
 backdrop-filter: blur(8px);
 padding: 12px 18px;
-border-radius: 20px;
-box-shadow: inset 0 2px 8px rgba(0,0,0,0.5), 0 8px 16px rgba(0,0,0,0.3);
-border-bottom: 3px solid rgba(255,255,200,0.3);
+border-radius: 24px;
+box-shadow: inset 0 2px 8px rgba(0,0,0,0.05), 0 8px 16px rgba(0,0,0,0.1);
+border-bottom: 2px solid rgba(255,255,255,0.5);
 }
 .clock-date {
 font-size: 1.4rem;
 margin-top: 12px;
+opacity: 0.8;
 }
 
-/* Wetter Animationen */
+/* Wetter Animation */
 .weather-icon-large {
 font-size: 4rem;
-filter: drop-shadow(0 6px 10px rgba(0,0,0,0.4));
-animation: float 4s ease-in-out infinite;
+filter: drop-shadow(0 8px 12px rgba(0,0,0,0.1));
+animation: float 5s ease-in-out infinite;
 }
 @keyframes float {
 0% { transform: translateY(0px); }
-50% { transform: translateY(-5px); }
+50% { transform: translateY(-8px); }
 100% { transform: translateY(0px); }
 }
 .forecast-item {
-background: rgba(0,0,0,0.3);
-backdrop-filter: blur(8px);
-border-radius: 20px;
-padding: 8px 12px;
+background: rgba(128, 128, 140, 0.1);
+backdrop-filter: blur(10px);
+border-radius: 24px;
+padding: 10px 14px;
 text-align: center;
-animation: softPulse 3s infinite;
+animation: softPulse 4s infinite;
+box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
 }
 @keyframes softPulse {
-0% { opacity: 0.9; }
+0% { opacity: 0.8; }
 50% { opacity: 1; }
-100% { opacity: 0.9; }
+100% { opacity: 0.8; }
 }
 
 .calendar-grid {
@@ -291,18 +318,19 @@ gap: 6px;
 margin-top: 8px;
 }
 .cal-day {
-padding: 10px 0;
-border-radius: 16px;
-background: rgba(0,0,0,0.2);
+padding: 12px 0;
+border-radius: 20px;
+background: rgba(128, 128, 140, 0.08);
 }
 .today {
-background: rgba(0, 122, 255, 0.7);
-box-shadow: 0 0 15px #0077ff66;
+background: rgba(0, 122, 255, 0.25);
+font-weight: bold;
+box-shadow: 0 0 0 2px rgba(0,122,255,0.3);
 }
 .has-event::after {
 content: "•";
-color: #ffbb5e;
-font-size: 20px;
+color: #ff9500;
+font-size: 22px;
 line-height: 0;
 }
 
@@ -310,16 +338,16 @@ line-height: 0;
 width: 100%;
 height: 100%;
 object-fit: cover;
-border-radius: 20px;
+border-radius: 24px;
 }
 
 .app-btn {
-background: rgba(255, 255, 255, 0.2);
-backdrop-filter: blur(12px);
-border: 1px solid rgba(255, 255, 255, 0.3);
-color: inherit;
-padding: 16px 24px;
-border-radius: 20px;
+background: rgba(128, 128, 140, 0.15);
+backdrop-filter: blur(20px);
+border: 0.5px solid rgba(255,255,255,0.3);
+color: var(--text-primary);
+padding: 18px 28px;
+border-radius: 60px;
 font-size: 1.2rem;
 font-weight: 600;
 cursor: pointer;
@@ -328,57 +356,74 @@ display: flex;
 align-items: center;
 justify-content: center;
 gap: 10px;
-box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+box-shadow: 0 10px 20px -5px rgba(0,0,0,0.15);
+}
+.app-btn:hover {
+background: rgba(100, 100, 120, 0.25);
+transform: scale(0.98);
 }
 
 /* Modals */
 .settings-overlay {
 position: fixed;
 inset: 0;
-background: rgba(0,0,0,0.6);
-backdrop-filter: blur(20px);
+background: rgba(0,0,0,0.3);
+backdrop-filter: blur(30px);
 display: flex;
 align-items: center;
 justify-content: center;
 z-index: 1000;
 }
 .settings-card {
-background: rgba(15, 25, 40, 0.95);
-backdrop-filter: blur(40px);
-border: 1px solid rgba(255,255,255,0.15);
-border-radius: 36px;
-padding: 30px 36px;
-width: 700px;
+background: rgba(240, 240, 245, 0.9);
+backdrop-filter: blur(50px);
+border: 0.5px solid rgba(0,0,0,0.1);
+border-radius: 48px;
+padding: 36px 40px;
+width: 720px;
 max-width: 90vw;
 max-height: 85vh;
 overflow-y: auto;
-color: white;
-box-shadow: 0 40px 70px #00000080;
+color: #1d1d1f;
+box-shadow: 0 40px 80px rgba(0,0,0,0.2);
+}
+body.theme-apple-dark .settings-card,
+body.theme-apple-midnight .settings-card {
+background: rgba(40, 40, 45, 0.9);
+border-color: rgba(255,255,255,0.1);
+color: #ffffff;
 }
 .input-group {
-margin-bottom: 22px;
+margin-bottom: 24px;
 }
 .input-group label {
 display: block;
-margin-bottom: 8px;
-font-weight: 500;
+margin-bottom: 10px;
+font-weight: 600;
+font-size: 1rem;
 }
 .input-group input, .input-group textarea, .input-group select {
 width: 100%;
-padding: 16px 20px;
-border-radius: 24px;
-border: 1px solid rgba(255,255,255,0.2);
-background: rgba(0,0,0,0.4);
-color: white;
+padding: 18px 22px;
+border-radius: 60px;
+border: 0.5px solid rgba(0,0,0,0.1);
+background: rgba(255,255,255,0.5);
+backdrop-filter: blur(10px);
+color: inherit;
 font-size: 1rem;
 }
+body.theme-apple-dark .input-group input,
+body.theme-apple-midnight .input-group input {
+background: rgba(20,20,25,0.6);
+border-color: rgba(255,255,255,0.1);
+}
 .hidden { display: none !important; }
-.flex-row { display: flex; gap: 14px; flex-wrap: wrap; }
-.color-row { display: flex; gap: 12px; align-items: center; }
-.color-row input[type="color"] { width: 70px; height: 50px; }
+.flex-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.color-row { display: flex; gap: 16px; align-items: center; }
+.color-row input[type="color"] { width: 80px; height: 55px; padding: 4px; border-radius: 30px; }
 </style>
 </head>
-<body class="theme-dark">
+<body class="theme-apple-light">
 <div class="dashboard" id="dashboard">
 <div class="toolbar">
 <div class="toolbar-left">
@@ -403,7 +448,7 @@ font-size: 1rem;
 <!-- Einstellungen Modal -->
 <div id="settingsModal" class="settings-overlay hidden">
 <div class="settings-card">
-<h2 style="margin-bottom:28px;">⚙️ Einstellungen</h2>
+<h2 style="margin-bottom:32px; font-weight:600;">⚙️ Einstellungen</h2>
 
 <div class="input-group">
 <label>📍 Stadt</label>
@@ -418,13 +463,13 @@ font-size: 1rem;
 <div class="input-group">
 <label>🎵 Spotify Link</label>
 <input type="text" id="settingsSpotify" placeholder="https://open.spotify.com/track/...">
-<small>Normaler Link – öffnet die App</small>
+<small>Öffnet die App</small>
 </div>
 
 <div class="input-group">
 <label>▶️ YouTube Link</label>
 <input type="text" id="settingsYoutube" placeholder="https://www.youtube.com/watch?v=...">
-<small>Normaler Link – öffnet die App</small>
+<small>Öffnet die App</small>
 </div>
 
 <div class="input-group">
@@ -440,16 +485,16 @@ font-size: 1rem;
 <div class="input-group">
 <label>🎨 Theme</label>
 <select id="settingsTheme">
-<option value="dark">Dunkelblau (Standard)</option>
-<option value="light">Hell &amp; Klar</option>
-<option value="midnight">Mitternacht</option>
-<option value="forest">Waldgrün</option>
-<option value="rosegold">Roségold</option>
+<option value="apple-light">Apple Hell</option>
+<option value="apple-dark">Apple Dunkel</option>
+<option value="apple-midnight">Apple Mitternacht</option>
+<option value="apple-forest">Apple Wald</option>
+<option value="apple-rose">Apple Rosé</option>
 </select>
 </div>
 
 <div class="input-group">
-<label>✏️ Schriftgröße (für Texte, nicht für die Uhr)</label>
+<label>✏️ Schriftgröße (Texte)</label>
 <select id="settingsFontSize">
 <option value="medium">Mittel</option>
 <option value="small">Klein</option>
@@ -458,41 +503,41 @@ font-size: 1rem;
 </div>
 
 <div class="input-group">
-<label>🎨 Standard Kachel-Hintergrundfarbe</label>
+<label>🎨 Standard Kachelfarbe</label>
 <div class="color-row">
-<input type="color" id="globalAccentColor" value="#1a3a5a">
-<input type="text" id="globalAccentColorText" placeholder="#1a3a5a" value="#1a3a5a">
+<input type="color" id="globalAccentColor" value="#ffffff">
+<input type="text" id="globalAccentColorText" value="#ffffff">
 </div>
 </div>
 
 <div class="input-group">
 <label>✏️ Standard Schriftfarbe</label>
 <div class="color-row">
-<input type="color" id="globalTextColor" value="#ffffff">
-<input type="text" id="globalTextColorText" placeholder="#ffffff" value="#ffffff">
+<input type="color" id="globalTextColor" value="#1d1d1f">
+<input type="text" id="globalTextColorText" value="#1d1d1f">
 </div>
 </div>
 
 <div class="flex-row">
 <button class="app-btn" id="saveSettingsBtn">💾 Speichern</button>
-<button class="app-btn" id="closeSettingsBtn" style="background:rgba(100,100,100,0.3);">Abbrechen</button>
+<button class="app-btn" id="closeSettingsBtn" style="background:rgba(128,128,140,0.2);">Abbrechen</button>
 </div>
 </div>
 </div>
 
-<!-- Kachel-Einstellungen Modal (unverändert) -->
+<!-- Kachel-Einstellungen Modal -->
 <div id="tileSettingsModal" class="settings-overlay hidden">
-<div class="settings-card" style="width:500px;">
+<div class="settings-card" style="width:550px;">
 <h2>🎨 Kachel anpassen</h2>
 <input type="hidden" id="currentTileId">
 <div class="input-group">
-<label>Kachel-Titel</label>
+<label>Titel</label>
 <input type="text" id="tileTitle" placeholder="Titel">
 </div>
 <div class="input-group">
 <label>Hintergrundfarbe</label>
 <div class="color-row">
-<input type="color" id="tileColor" value="#1a3a5a">
+<input type="color" id="tileColor" value="#ffffff">
 <input type="text" id="tileColorText">
 </div>
 </div>
@@ -500,12 +545,12 @@ font-size: 1rem;
 <label>Hintergrundbild</label>
 <div class="bg-upload-row">
 <button class="app-btn" id="uploadTileBgBtn">📸 Bild wählen</button>
-<button class="app-btn" id="removeTileBgBtn" style="background:rgba(150,50,50,0.5);">🗑️ Entfernen</button>
+<button class="app-btn" id="removeTileBgBtn" style="background:rgba(200,80,80,0.2);">🗑️ Entfernen</button>
 </div>
 </div>
 <div class="flex-row">
 <button class="app-btn" id="saveTileSettingsBtn">Speichern</button>
-<button class="app-btn" id="closeTileSettingsBtn" style="background:rgba(100,100,100,0.3);">Abbrechen</button>
+<button class="app-btn" id="closeTileSettingsBtn" style="background:rgba(128,128,140,0.2);">Abbrechen</button>
 </div>
 </div>
 </div>
@@ -520,14 +565,14 @@ let editMode = false;
 let nextTileId = 1000;
 
 const DEFAULT_TILES = [
-{ id: 1, type: 'clock', title: 'Uhr', colSpan: 1, rowSpan: 1, color: '#1a3a5a', bgImage: '' },
-{ id: 2, type: 'weather', title: 'Wetter', colSpan: 1, rowSpan: 1, color: '#2a4a6a', bgImage: '' },
-{ id: 3, type: 'calendar', title: 'Kalender', colSpan: 1, rowSpan: 1, color: '#3a2a5a', bgImage: '' },
-{ id: 4, type: 'slideshow', title: 'Slideshow', colSpan: 1, rowSpan: 1, color: '#2a5a4a', bgImage: '' },
-{ id: 5, type: 'appointments', title: 'Termine', colSpan: 1, rowSpan: 1, color: '#5a3a2a', bgImage: '' },
-{ id: 6, type: 'spotify', title: 'Spotify', colSpan: 1, rowSpan: 1, color: '#1a5a3a', bgImage: '' },
-{ id: 7, type: 'youtube', title: 'YouTube', colSpan: 1, rowSpan: 1, color: '#5a1a1a', bgImage: '' },
-{ id: 8, type: 'recipe', title: 'Rezepte', colSpan: 1, rowSpan: 1, color: '#4a3a5a', bgImage: '' }
+{ id: 1, type: 'clock', title: 'Uhr', colSpan: 1, rowSpan: 1, color: '#ffffff', bgImage: '' },
+{ id: 2, type: 'weather', title: 'Wetter', colSpan: 1, rowSpan: 1, color: '#e8f0fe', bgImage: '' },
+{ id: 3, type: 'calendar', title: 'Kalender', colSpan: 1, rowSpan: 1, color: '#f5e6f0', bgImage: '' },
+{ id: 4, type: 'slideshow', title: 'Slideshow', colSpan: 1, rowSpan: 1, color: '#e6f0e6', bgImage: '' },
+{ id: 5, type: 'appointments', title: 'Termine', colSpan: 1, rowSpan: 1, color: '#fff0e0', bgImage: '' },
+{ id: 6, type: 'spotify', title: 'Spotify', colSpan: 1, rowSpan: 1, color: '#e0f0e0', bgImage: '' },
+{ id: 7, type: 'youtube', title: 'YouTube', colSpan: 1, rowSpan: 1, color: '#f0e0e0', bgImage: '' },
+{ id: 8, type: 'recipe', title: 'Rezepte', colSpan: 1, rowSpan: 1, color: '#e8e0f0', bgImage: '' }
 ];
 
 let userConfig = {
@@ -537,9 +582,9 @@ spotifyUrl: '',
 youtubeUrl: '',
 recipeUrl: 'https://www.chefkoch.de/',
 appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
-globalAccent: '#1a3a5a',
-globalTextColor: '#ffffff',
-theme: 'dark',
+globalAccent: '#ffffff',
+globalTextColor: '#1d1d1f',
+theme: 'apple-light',
 fontSize: 'medium'
 };
 
@@ -548,12 +593,12 @@ let weatherCache = null;
 let lastWeatherFetch = 0;
 let currentEditingTileId = null;
 
-// ---------- STORAGE ----------
+// Storage
 function loadFromStorage() {
 try {
-const savedTiles = localStorage.getItem('dash_tiles_v8');
-const savedConfig = localStorage.getItem('dash_config_v8');
-const savedImages = localStorage.getItem('dash_images_v8');
+const savedTiles = localStorage.getItem('dash_tiles_v9');
+const savedConfig = localStorage.getItem('dash_config_v9');
+const savedImages = localStorage.getItem('dash_images_v9');
 if (savedTiles) tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
 else tiles = [...DEFAULT_TILES];
 if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
@@ -567,9 +612,9 @@ applyFontSize(userConfig.fontSize);
 
 function saveToStorage() {
 try {
-localStorage.setItem('dash_tiles_v8', JSON.stringify(tiles));
-localStorage.setItem('dash_config_v8', JSON.stringify(userConfig));
-localStorage.setItem('dash_images_v8', JSON.stringify(uploadedImages));
+localStorage.setItem('dash_tiles_v9', JSON.stringify(tiles));
+localStorage.setItem('dash_config_v9', JSON.stringify(userConfig));
+localStorage.setItem('dash_images_v9', JSON.stringify(uploadedImages));
 } catch(e) {}
 }
 
@@ -582,10 +627,10 @@ tiles = DEFAULT_TILES.map(t => ({...t}));
 userConfig = {
 city: 'Düsseldorf', slideshowInterval: 6, spotifyUrl: '', youtubeUrl: '',
 recipeUrl: 'https://www.chefkoch.de/', appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
-globalAccent: '#1a3a5a', globalTextColor: '#ffffff', theme: 'dark', fontSize: 'medium'
+globalAccent: '#ffffff', globalTextColor: '#1d1d1f', theme: 'apple-light', fontSize: 'medium'
 };
 uploadedImages = [];
-applyTheme('dark');
+applyTheme('apple-light');
 applyFontSize('medium');
 saveToStorage();
 renderAll();
@@ -775,7 +820,7 @@ container.dataset.slideIndex = idx;
 
 function renderAppointments(container) {
 const lines = userConfig.appointmentsText.split('\n').filter(l=>l.trim());
-container.innerHTML = lines.length ? lines.map(l=>`<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.2);">📅 ${l}</div>`).join('') : '<div>Keine Termine</div>';
+container.innerHTML = lines.length ? lines.map(l=>`<div style="padding:10px 0;border-bottom:1px solid rgba(128,128,140,0.2);">📅 ${l}</div>`).join('') : '<div>Keine Termine</div>';
 }
 
 function renderSpotify(container) {
@@ -841,11 +886,7 @@ burgerBtn.addEventListener('click', (e) => { e.stopPropagation(); menuDropdown.c
 document.addEventListener('click', () => menuDropdown.classList.remove('show'));
 menuDropdown.addEventListener('click', (e) => e.stopPropagation());
 
-document.getElementById('menuEditToggle').onclick = () => {
-editMode = !editMode;
-menuDropdown.classList.remove('show');
-renderAll();
-};
+document.getElementById('menuEditToggle').onclick = () => { editMode = !editMode; menuDropdown.classList.remove('show'); renderAll(); };
 document.getElementById('menuUploadImages').onclick = () => {
 menuDropdown.classList.remove('show');
 const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.multiple=true;
