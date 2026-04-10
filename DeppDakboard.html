@@ -14,48 +14,65 @@ font-family: system-ui, -apple-system, 'Helvetica Neue', 'SF Pro Display', 'Sego
 
 body {
 min-height: 100vh;
-background: radial-gradient(circle at 20% 30%, #2a3a4a, #0f1620);
+background: radial-gradient(circle at 20% 30%, #1a1a2e, #0a0a15);
 display: flex;
 align-items: center;
 justify-content: center;
-padding: 18px 22px;
+padding: 0;
+margin: 0;
 }
 
 .dashboard {
-width: 100%;
-max-width: 1366px;
-height: 100%;
-min-height: 860px;
-background: rgba(18, 28, 40, 0.45);
+width: 100vw;
+height: 100vh;
+background: rgba(10, 15, 25, 0.4);
 backdrop-filter: blur(28px) saturate(180%);
 -webkit-backdrop-filter: blur(28px) saturate(180%);
-border-radius: 48px;
-border: 1px solid rgba(220, 240, 255, 0.12);
-box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-padding: 24px 28px 30px 28px;
 display: flex;
 flex-direction: column;
+padding: 16px 20px 20px 20px;
+overflow: hidden;
 }
 
+/* Toolbar mit Burger-Menü */
 .toolbar {
 display: flex;
 align-items: center;
 justify-content: space-between;
-padding: 6px 8px 20px 8px;
-flex-wrap: wrap;
-gap: 12px;
-border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-margin-bottom: 24px;
+padding: 8px 12px 16px 12px;
+flex-shrink: 0;
+position: relative;
 }
 
 .toolbar-left {
 display: flex;
 align-items: center;
-gap: 18px;
+gap: 16px;
+}
+
+.burger-menu {
+background: rgba(30, 40, 60, 0.7);
+backdrop-filter: blur(12px);
+border: 1px solid rgba(255, 255, 255, 0.15);
+color: white;
+width: 48px;
+height: 48px;
+border-radius: 16px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 1.8rem;
+cursor: pointer;
+box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+transition: all 0.2s;
+}
+
+.burger-menu:hover {
+background: rgba(60, 80, 120, 0.8);
 }
 
 .dashboard-title {
-font-size: 2rem;
+font-size: 1.8rem;
 font-weight: 600;
 letter-spacing: -0.02em;
 color: rgba(255, 255, 255, 0.95);
@@ -65,76 +82,103 @@ text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 .toolbar-actions {
 display: flex;
 gap: 10px;
-flex-wrap: wrap;
 }
 
-.btn {
-background: rgba(35, 45, 65, 0.65);
-backdrop-filter: blur(12px);
--webkit-backdrop-filter: blur(12px);
+/* Burger-Menü Dropdown */
+.menu-dropdown {
+position: absolute;
+top: 70px;
+left: 20px;
+background: rgba(20, 30, 45, 0.95);
+backdrop-filter: blur(30px);
 border: 1px solid rgba(255, 255, 255, 0.15);
-color: #f5f9ff;
-padding: 10px 20px;
-border-radius: 40px;
-font-size: 1rem;
+border-radius: 24px;
+padding: 12px 8px;
+min-width: 220px;
+box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+z-index: 100;
+display: none;
+}
+
+.menu-dropdown.show {
+display: block;
+}
+
+.menu-item {
+padding: 14px 20px;
+color: white;
+font-size: 1.1rem;
 font-weight: 500;
-box-shadow: 0 10px 18px -6px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.08);
 cursor: pointer;
-transition: all 0.2s;
-display: inline-flex;
+border-radius: 16px;
+transition: all 0.15s;
+display: flex;
 align-items: center;
-gap: 6px;
-white-space: nowrap;
+gap: 12px;
 }
 
-.btn:hover {
-background: rgba(70, 90, 130, 0.7);
-border-color: rgba(255, 255, 255, 0.3);
-transform: translateY(-1px);
-box-shadow: 0 14px 22px -8px rgba(0, 0, 0, 0.5);
+.menu-item:hover {
+background: rgba(80, 110, 160, 0.5);
 }
 
-.btn-warning {
-background: rgba(120, 50, 50, 0.5);
+.menu-divider {
+height: 1px;
+background: rgba(255,255,255,0.1);
+margin: 8px 0;
 }
 
+/* Grid - Größere Kacheln für Tablet */
 .grid-container {
 display: grid;
 grid-template-columns: repeat(4, 1fr);
-grid-auto-rows: 190px;
-gap: 20px;
+grid-auto-rows: minmax(200px, 1fr);
+gap: 18px;
 flex: 1;
+overflow-y: auto;
+padding: 4px;
 }
 
 .tile {
 backdrop-filter: blur(18px);
 -webkit-backdrop-filter: blur(18px);
 border: 1px solid rgba(220, 240, 255, 0.14);
-border-radius: 32px;
-padding: 18px 20px;
-box-shadow: 0 25px 35px -12px rgba(0, 0, 0, 0.5),
-inset 0 0 0 1px rgba(255, 255, 255, 0.03),
-inset 0 -2px 0 rgba(0,0,0,0.2);
-color: #f0f6ff;
+border-radius: 28px;
+padding: 20px 22px;
+box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.5),
+inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 display: flex;
 flex-direction: column;
 overflow: hidden;
 position: relative;
 transition: all 0.2s ease;
-transform: perspective(1200px) rotateX(0.8deg);
+min-height: 200px;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+}
+
+.tile::before {
+content: "";
+position: absolute;
+top: 0; left: 0; right: 0; bottom: 0;
+background: inherit;
+background-size: cover;
+background-position: center;
+filter: brightness(0.7);
+z-index: 0;
 }
 
 .tile::after {
 content: "";
 position: absolute;
-top: 0; left: 0; right: 0; height: 40%;
-background: linear-gradient(to bottom, rgba(255,255,255,0.15), transparent);
-border-radius: 32px 32px 0 0;
+top: 0; left: 0; right: 0; bottom: 0;
+background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
 pointer-events: none;
+z-index: 1;
 }
 
 .tile.edit-mode {
-border: 2px dashed rgba(160, 200, 255, 0.6);
+border: 3px dashed rgba(160, 200, 255, 0.7);
 cursor: grab;
 }
 
@@ -142,10 +186,10 @@ cursor: grab;
 display: flex;
 justify-content: space-between;
 align-items: center;
-margin-bottom: 12px;
+margin-bottom: 16px;
 font-weight: 600;
-color: #cddef5;
-text-shadow: 0 2px 3px rgba(0,0,0,0.2);
+font-size: 1.2rem;
+text-shadow: 0 2px 8px rgba(0,0,0,0.5);
 position: relative;
 z-index: 2;
 }
@@ -156,25 +200,25 @@ gap: 8px;
 }
 
 .icon-btn {
-background: rgba(0, 0, 0, 0.25);
+background: rgba(0, 0, 0, 0.35);
 backdrop-filter: blur(4px);
-border: 0.5px solid rgba(255,255,255,0.15);
-color: #eef3ff;
-font-size: 1.4rem;
+border: 0.5px solid rgba(255,255,255,0.2);
+color: white;
+font-size: 1.3rem;
 cursor: pointer;
-width: 36px;
-height: 36px;
-border-radius: 36px;
+width: 40px;
+height: 40px;
+border-radius: 40px;
 display: flex;
 align-items: center;
 justify-content: center;
-box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), 0 4px 6px rgba(0,0,0,0.2);
+box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 transition: 0.15s;
 }
 
 .icon-btn:hover {
-background: rgba(80, 110, 160, 0.5);
-color: white;
+background: rgba(80, 110, 160, 0.6);
+transform: scale(0.95);
 }
 
 .tile-content {
@@ -185,69 +229,71 @@ overflow: auto;
 scrollbar-width: thin;
 position: relative;
 z-index: 2;
+color: white;
+text-shadow: 0 2px 6px rgba(0,0,0,0.5);
 }
 
 .flip-clock {
 display: flex;
-gap: 6px;
-font-size: 3.8rem;
+gap: 8px;
+font-size: 4rem;
 font-weight: 300;
 line-height: 1.1;
 }
 
 .flip-digit {
-background: rgba(10, 20, 30, 0.5);
-backdrop-filter: blur(4px);
-padding: 8px 12px;
-border-radius: 18px;
-box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 8px 12px rgba(0,0,0,0.2);
-border-bottom: 2px solid rgba(255,255,240,0.2);
+background: rgba(0, 0, 0, 0.4);
+backdrop-filter: blur(8px);
+padding: 12px 18px;
+border-radius: 20px;
+box-shadow: inset 0 2px 8px rgba(0,0,0,0.5), 0 8px 16px rgba(0,0,0,0.3);
+border-bottom: 3px solid rgba(255,255,200,0.3);
 }
 
 .weather-icon-large {
 font-size: 3.5rem;
-filter: drop-shadow(0 6px 8px rgba(0,0,0,0.3));
+filter: drop-shadow(0 6px 10px rgba(0,0,0,0.4));
 }
 
 .forecast-icons {
 display: flex;
-margin-top: 10px;
-gap: 8px;
+margin-top: 12px;
+gap: 10px;
 }
 
 .forecast-item {
-background: rgba(255,255,255,0.04);
-border-radius: 24px;
-padding: 6px 10px;
+background: rgba(0,0,0,0.3);
+backdrop-filter: blur(8px);
+border-radius: 20px;
+padding: 8px 12px;
 text-align: center;
-backdrop-filter: blur(4px);
-box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
 }
 
 .calendar-grid {
 display: grid;
 grid-template-columns: repeat(7, 1fr);
-gap: 5px;
+gap: 6px;
 text-align: center;
-margin-top: 5px;
+margin-top: 8px;
 }
 
 .cal-day {
-padding: 8px 0;
-border-radius: 20px;
-background: rgba(0,0,0,0.1);
+padding: 10px 0;
+border-radius: 16px;
+background: rgba(0,0,0,0.2);
+backdrop-filter: blur(4px);
 }
 
 .today {
-background: rgba(0, 122, 255, 0.6);
+background: rgba(0, 122, 255, 0.7);
 font-weight: bold;
-box-shadow: 0 0 10px #0077ff55;
+box-shadow: 0 0 15px #0077ff66;
 }
 
 .has-event::after {
 content: "•";
 color: #ffbb5e;
-font-size: 18px;
+font-size: 20px;
 line-height: 0;
 }
 
@@ -255,36 +301,40 @@ line-height: 0;
 width: 100%;
 height: 100%;
 object-fit: cover;
-border-radius: 22px;
-box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1), 0 8px 12px rgba(0,0,0,0.3);
-}
-
-iframe {
 border-radius: 20px;
-background: #0f1a24;
-width: 100%;
-height: 100%;
-border: none;
-box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
 }
 
-.external-link-btn {
+.app-btn {
+background: rgba(255, 255, 255, 0.2);
+backdrop-filter: blur(12px);
+border: 1px solid rgba(255, 255, 255, 0.3);
+color: white;
+padding: 16px 24px;
+border-radius: 20px;
+font-size: 1.2rem;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.2s;
+text-align: center;
+text-decoration: none;
 display: flex;
 align-items: center;
 justify-content: center;
-height: 100%;
+gap: 10px;
+box-shadow: 0 8px 20px rgba(0,0,0,0.3);
 }
 
-.external-link-btn .btn {
-padding: 16px 24px;
-font-size: 1.2rem;
+.app-btn:hover {
+background: rgba(255, 255, 255, 0.3);
+transform: scale(0.98);
 }
 
+/* Einstellungen Modal */
 .settings-overlay {
 position: fixed;
 inset: 0;
-background: rgba(0,0,0,0.5);
-backdrop-filter: blur(16px);
+background: rgba(0,0,0,0.6);
+backdrop-filter: blur(20px);
 display: flex;
 align-items: center;
 justify-content: center;
@@ -292,63 +342,84 @@ z-index: 1000;
 }
 
 .settings-card {
-background: rgba(18, 28, 42, 0.9);
-backdrop-filter: blur(30px);
+background: rgba(15, 25, 40, 0.95);
+backdrop-filter: blur(40px);
 border: 1px solid rgba(255,255,255,0.15);
-border-radius: 40px;
+border-radius: 36px;
 padding: 30px 36px;
-width: 580px;
+width: 650px;
 max-width: 90vw;
-max-height: 80vh;
+max-height: 85vh;
 overflow-y: auto;
 color: white;
-box-shadow: 0 30px 50px #00000055;
+box-shadow: 0 40px 70px #00000080;
+}
+
+.settings-card h2 {
+margin-bottom: 28px;
+font-size: 1.8rem;
 }
 
 .input-group {
-margin-bottom: 20px;
+margin-bottom: 22px;
 }
 
 .input-group label {
 display: block;
-margin-bottom: 6px;
+margin-bottom: 8px;
 font-weight: 500;
+font-size: 1rem;
 }
 
-.input-group input, .input-group textarea, .input-group select {
+.input-group input, .input-group textarea {
 width: 100%;
-padding: 14px 18px;
-border-radius: 30px;
+padding: 16px 20px;
+border-radius: 24px;
 border: 1px solid rgba(255,255,255,0.2);
-background: rgba(0,0,0,0.3);
+background: rgba(0,0,0,0.4);
 color: white;
 font-size: 1rem;
-backdrop-filter: blur(5px);
+backdrop-filter: blur(8px);
 }
 
 .input-group small {
 display: block;
-margin-top: 6px;
+margin-top: 8px;
 opacity: 0.7;
-font-size: 0.85rem;
+font-size: 0.9rem;
 }
 
 .hidden { display: none !important; }
-.flex-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.flex-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.color-row { display: flex; gap: 12px; align-items: center; }
+.color-row input[type="color"] { width: 70px; height: 50px; padding: 4px; }
+.color-row input[type="text"] { flex: 1; }
+
+.bg-upload-row {
+display: flex;
+gap: 10px;
+margin-top: 8px;
+}
 </style>
 </head>
 <body>
 <div class="dashboard" id="dashboard">
+<!-- Toolbar mit Burger-Menü -->
 <div class="toolbar">
 <div class="toolbar-left">
+<div class="burger-menu" id="burgerMenuBtn">☰</div>
 <span class="dashboard-title">🏠 Home Dashboard</span>
 </div>
-<div class="toolbar-actions">
-<button class="btn" id="editToggleBtn">✎ Bearbeiten</button>
-<button class="btn" id="uploadImagesBtn">🖼️ Bilder</button>
-<button class="btn" id="openSettingsBtn">⚙️ Einstellungen</button>
-<button class="btn" id="addTileBtn">➕ Kachel</button>
-<button class="btn btn-warning" id="resetBtn">↻ Reset</button>
+<div class="toolbar-actions"></div>
+
+<!-- Burger-Menü Dropdown -->
+<div class="menu-dropdown" id="menuDropdown">
+<div class="menu-item" id="menuEditToggle">✎ Bearbeiten</div>
+<div class="menu-item" id="menuUploadImages">🖼️ Bilder hochladen</div>
+<div class="menu-item" id="menuOpenSettings">⚙️ Einstellungen</div>
+<div class="menu-item" id="menuAddTile">➕ Neue Kachel</div>
+<div class="menu-divider"></div>
+<div class="menu-item" id="menuReset">↻ Reset</div>
 </div>
 </div>
 
@@ -358,7 +429,7 @@ font-size: 0.85rem;
 <!-- Einstellungen Modal -->
 <div id="settingsModal" class="settings-overlay hidden">
 <div class="settings-card">
-<h2 style="margin-bottom:28px;">⚙️ Einstellungen</h2>
+<h2>⚙️ Einstellungen</h2>
 
 <div class="input-group">
 <label>📍 Stadt</label>
@@ -371,15 +442,15 @@ font-size: 0.85rem;
 </div>
 
 <div class="input-group">
-<label>🎵 Spotify Embed URL</label>
-<input type="text" id="settingsSpotify" placeholder="https://open.spotify.com/embed/track/...">
-<small>Nutze die "Einbetten"-Option in Spotify (⋯ → Teilen → Einbetten)</small>
+<label>🎵 Spotify Link</label>
+<input type="text" id="settingsSpotify" placeholder="https://open.spotify.com/track/...">
+<small>Normaler Spotify-Link – öffnet die App</small>
 </div>
 
 <div class="input-group">
-<label>▶️ YouTube URL</label>
+<label>▶️ YouTube Link</label>
 <input type="text" id="settingsYoutube" placeholder="https://www.youtube.com/watch?v=...">
-<small>Normale YouTube-URL oder Embed-URL möglich</small>
+<small>Normaler YouTube-Link – öffnet die App</small>
 </div>
 
 <div class="input-group">
@@ -393,14 +464,59 @@ font-size: 0.85rem;
 </div>
 
 <div class="input-group">
-<label>🎨 Kachel-Grundfarbe</label>
+<label>🎨 Standard Kachel-Hintergrundfarbe</label>
+<div class="color-row">
 <input type="color" id="globalAccentColor" value="#1a3a5a">
-<small>Diese Farbe wird für alle Kacheln verwendet</small>
+<input type="text" id="globalAccentColorText" placeholder="#1a3a5a" value="#1a3a5a">
+</div>
+</div>
+
+<div class="input-group">
+<label>✏️ Standard Schriftfarbe</label>
+<div class="color-row">
+<input type="color" id="globalTextColor" value="#ffffff">
+<input type="text" id="globalTextColorText" placeholder="#ffffff" value="#ffffff">
+</div>
 </div>
 
 <div class="flex-row">
-<button class="btn" id="saveSettingsBtn">💾 Speichern</button>
-<button class="btn" id="closeSettingsBtn">Abbrechen</button>
+<button class="app-btn" id="saveSettingsBtn" style="padding:14px 24px;">💾 Speichern</button>
+<button class="app-btn" id="closeSettingsBtn" style="padding:14px 24px; background:rgba(100,100,100,0.3);">Abbrechen</button>
+</div>
+</div>
+</div>
+
+<!-- Kachel-Einstellungen Modal -->
+<div id="tileSettingsModal" class="settings-overlay hidden">
+<div class="settings-card" style="width:500px;">
+<h2>🎨 Kachel anpassen</h2>
+<input type="hidden" id="currentTileId">
+
+<div class="input-group">
+<label>Kachel-Titel</label>
+<input type="text" id="tileTitle" placeholder="Titel">
+</div>
+
+<div class="input-group">
+<label>Hintergrundfarbe</label>
+<div class="color-row">
+<input type="color" id="tileColor" value="#1a3a5a">
+<input type="text" id="tileColorText" placeholder="#1a3a5a">
+</div>
+</div>
+
+<div class="input-group">
+<label>Hintergrundbild</label>
+<div class="bg-upload-row">
+<button class="app-btn" id="uploadTileBgBtn" style="padding:12px;">📸 Bild wählen</button>
+<button class="app-btn" id="removeTileBgBtn" style="padding:12px; background:rgba(150,50,50,0.5);">🗑️ Entfernen</button>
+</div>
+<small>Bild wird als Hintergrund verwendet</small>
+</div>
+
+<div class="flex-row">
+<button class="app-btn" id="saveTileSettingsBtn" style="padding:14px 24px;">Speichern</button>
+<button class="app-btn" id="closeTileSettingsBtn" style="padding:14px 24px; background:rgba(100,100,100,0.3);">Abbrechen</button>
 </div>
 </div>
 </div>
@@ -409,54 +525,32 @@ font-size: 0.85rem;
 (function(){
 "use strict";
 
-// Hilfsfunktion: YouTube-URL in Embed-URL umwandeln
-function convertYoutubeUrl(url) {
-if (!url) return '';
-
-if (url.includes('youtube.com/embed/') || url.includes('youtube-nocookie.com/embed/')) {
-return url;
+// ----- HILFSFUNKTIONEN FÜR APP-LINKS (einfach https, System entscheidet) -----
+function openSpotify(url) {
+if (!url) return;
+// Öffne ganz normal im neuen Tab – Android öffnet dann die App oder Browser
+window.open(url, '_blank');
 }
 
-const patterns = [
-/youtube\.com\/watch\?v=([^&]+)/,
-/youtu\.be\/([^?]+)/,
-/youtube\.com\/shorts\/([^?]+)/
-];
-
-for (const pattern of patterns) {
-const match = url.match(pattern);
-if (match && match[1]) {
-return `https://www.youtube-nocookie.com/embed/${match[1]}`;
-}
+function openYoutube(url) {
+if (!url) return;
+window.open(url, '_blank');
 }
 
-return url;
-}
-
-function validateSpotifyUrl(url) {
-if (!url) return '';
-if (url.includes('open.spotify.com/embed/')) return url;
-const match = url.match(/open\.spotify\.com\/(track|album|playlist|episode)\/([^?]+)/);
-if (match) {
-return `https://open.spotify.com/embed/${match[1]}/${match[2]}`;
-}
-return url;
-}
-
-// ----- State -----
+// State
 let tiles = [];
 let editMode = false;
 let nextTileId = 1000;
 
 const DEFAULT_TILES = [
-{ id: 1, type: 'clock', title: 'Uhr', colSpan: 1, rowSpan: 1 },
-{ id: 2, type: 'weather', title: 'Wetter', colSpan: 1, rowSpan: 1 },
-{ id: 3, type: 'calendar', title: 'Kalender', colSpan: 1, rowSpan: 1 },
-{ id: 4, type: 'slideshow', title: 'Slideshow', colSpan: 1, rowSpan: 1 },
-{ id: 5, type: 'appointments', title: 'Termine', colSpan: 1, rowSpan: 1 },
-{ id: 6, type: 'spotify', title: 'Spotify', colSpan: 1, rowSpan: 1 },
-{ id: 7, type: 'youtube', title: 'YouTube', colSpan: 1, rowSpan: 1 },
-{ id: 8, type: 'recipe', title: 'Rezepte', colSpan: 1, rowSpan: 1 }
+{ id: 1, type: 'clock', title: 'Uhr', colSpan: 1, rowSpan: 1, color: '#1a3a5a', bgImage: '' },
+{ id: 2, type: 'weather', title: 'Wetter', colSpan: 1, rowSpan: 1, color: '#2a4a6a', bgImage: '' },
+{ id: 3, type: 'calendar', title: 'Kalender', colSpan: 1, rowSpan: 1, color: '#3a2a5a', bgImage: '' },
+{ id: 4, type: 'slideshow', title: 'Slideshow', colSpan: 1, rowSpan: 1, color: '#2a5a4a', bgImage: '' },
+{ id: 5, type: 'appointments', title: 'Termine', colSpan: 1, rowSpan: 1, color: '#5a3a2a', bgImage: '' },
+{ id: 6, type: 'spotify', title: 'Spotify', colSpan: 1, rowSpan: 1, color: '#1a5a3a', bgImage: '' },
+{ id: 7, type: 'youtube', title: 'YouTube', colSpan: 1, rowSpan: 1, color: '#5a1a1a', bgImage: '' },
+{ id: 8, type: 'recipe', title: 'Rezepte', colSpan: 1, rowSpan: 1, color: '#4a3a5a', bgImage: '' }
 ];
 
 let userConfig = {
@@ -466,19 +560,21 @@ spotifyUrl: '',
 youtubeUrl: '',
 recipeUrl: 'https://www.chefkoch.de/',
 appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
-globalAccent: '#1a3a5a'
+globalAccent: '#1a3a5a',
+globalTextColor: '#ffffff'
 };
 
 let uploadedImages = [];
 let weatherCache = null;
 let lastWeatherFetch = 0;
+let currentEditingTileId = null;
 
-// ----- Storage -----
+// Storage
 function loadFromStorage() {
 try {
-const savedTiles = localStorage.getItem('dash_tiles_v3');
-const savedConfig = localStorage.getItem('dash_config_v3');
-const savedImages = localStorage.getItem('dash_images_v3');
+const savedTiles = localStorage.getItem('dash_tiles_v6');
+const savedConfig = localStorage.getItem('dash_config_v6');
+const savedImages = localStorage.getItem('dash_images_v6');
 
 if (savedTiles) {
 const parsed = JSON.parse(savedTiles);
@@ -499,7 +595,7 @@ uploadedImages = [];
 
 if (!tiles.length) tiles = [...DEFAULT_TILES];
 } catch (e) {
-console.warn('Storage fehlerhaft, nutze Defaults');
+console.warn('Storage fehlerhaft');
 tiles = [...DEFAULT_TILES];
 uploadedImages = [];
 }
@@ -508,20 +604,14 @@ ensureUniqueIds();
 
 function saveToStorage() {
 try {
-localStorage.setItem('dash_tiles_v3', JSON.stringify(tiles));
-localStorage.setItem('dash_config_v3', JSON.stringify(userConfig));
-localStorage.setItem('dash_images_v3', JSON.stringify(uploadedImages));
+localStorage.setItem('dash_tiles_v6', JSON.stringify(tiles));
+localStorage.setItem('dash_config_v6', JSON.stringify(userConfig));
+localStorage.setItem('dash_images_v6', JSON.stringify(uploadedImages));
 } catch(e) {}
 }
 
 function ensureUniqueIds() {
-const ids = new Set();
-tiles.forEach(t => { if (t.id) ids.add(t.id); });
-tiles.forEach(t => {
-if (!t.id || (t.id && tiles.filter(x => x.id === t.id).length > 1)) {
-t.id = ++nextTileId;
-}
-});
+tiles.forEach(t => { if (!t.id) t.id = ++nextTileId; });
 }
 
 function resetToDefault() {
@@ -533,7 +623,8 @@ spotifyUrl: '',
 youtubeUrl: '',
 recipeUrl: 'https://www.chefkoch.de/',
 appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
-globalAccent: '#1a3a5a'
+globalAccent: '#1a3a5a',
+globalTextColor: '#ffffff'
 };
 uploadedImages = [];
 saveToStorage();
@@ -541,22 +632,6 @@ renderAll();
 }
 
 const gridEl = document.getElementById('tileGrid');
-
-// Hilfsfunktion: Helligkeit einer Farbe berechnen
-function getColorBrightness(hex) {
-const r = parseInt(hex.slice(1,3), 16);
-const g = parseInt(hex.slice(3,5), 16);
-const b = parseInt(hex.slice(5,7), 16);
-return (r * 299 + g * 587 + b * 114) / 1000;
-}
-
-// Kachel-Hintergrund mit Transparenz erstellen
-function getTileBackground(baseColor) {
-const r = parseInt(baseColor.slice(1,3), 16);
-const g = parseInt(baseColor.slice(3,5), 16);
-const b = parseInt(baseColor.slice(5,7), 16);
-return `rgba(${r}, ${g}, ${b}, 0.65)`;
-}
 
 function renderAll() {
 if (!gridEl) return;
@@ -579,17 +654,15 @@ div.style.gridColumn = `span ${tile.colSpan || 1}`;
 div.style.gridRow = `span ${tile.rowSpan || 1}`;
 div.setAttribute('draggable', editMode);
 
-// WICHTIG: Farbe aus userConfig anwenden
-const bgColor = getTileBackground(userConfig.globalAccent);
-div.style.backgroundColor = bgColor;
-
-// Textfarbe basierend auf Helligkeit anpassen
-const brightness = getColorBrightness(userConfig.globalAccent);
-if (brightness < 128) {
-div.style.color = '#f0f6ff';
+const bgColor = tile.color || userConfig.globalAccent;
+if (tile.bgImage) {
+div.style.backgroundImage = `url('${tile.bgImage}')`;
+div.style.backgroundColor = 'transparent';
 } else {
-div.style.color = '#1a1a2e';
+div.style.backgroundColor = bgColor;
+div.style.backgroundImage = 'none';
 }
+div.style.color = userConfig.globalTextColor;
 
 const header = document.createElement('div');
 header.className = 'tile-header';
@@ -599,6 +672,7 @@ const controls = document.createElement('div');
 controls.className = 'tile-controls';
 if (editMode) {
 controls.innerHTML = `
+<button class="icon-btn tile-settings-btn" data-id="${tile.id}">⚙️</button>
 <button class="icon-btn tile-size-btn" data-id="${tile.id}">🔲</button>
 <button class="icon-btn tile-delete-btn" data-id="${tile.id}">✕</button>
 `;
@@ -640,13 +714,13 @@ container.innerHTML = `
 <span class="flip-digit">${String(now.getHours()).padStart(2,'0')}</span><span>:</span>
 <span class="flip-digit">${String(now.getMinutes()).padStart(2,'0')}</span>
 </div>
-<div style="font-size:1.3rem; margin-top:8px;">${now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'})}</div>
+<div style="font-size:1.4rem; margin-top:12px;">${now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'})}</div>
 `;
 }
 
 async function renderWeather(container) {
 const city = userConfig.city || 'Düsseldorf';
-container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;">🌤️ Wetter lädt…</div>`;
+container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;">🌤️</div>`;
 
 try {
 const useCache = (Date.now() - lastWeatherFetch < 600000) && weatherCache;
@@ -656,7 +730,7 @@ if (useCache) {
 data = weatherCache;
 } else {
 const res = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`);
-if (!res.ok) throw new Error('API nicht erreichbar');
+if (!res.ok) throw new Error();
 data = await res.json();
 weatherCache = data;
 lastWeatherFetch = Date.now();
@@ -667,10 +741,10 @@ const forecast = data.weather;
 const icon = getWeatherIcon(curr.weatherCode);
 
 container.innerHTML = `
-<div style="display:flex; align-items:center; gap:8px;">
+<div style="display:flex; align-items:center; gap:10px;">
 <span class="weather-icon-large">${icon}</span>
 <div>
-<span style="font-size:2.5rem;">${curr.temp_C}°</span>
+<span style="font-size:2.8rem;">${curr.temp_C}°</span>
 <span>${curr.weatherDesc[0].value}</span>
 </div>
 </div>
@@ -685,14 +759,14 @@ ${d.maxtempC}°
 `;
 } catch(e) {
 container.innerHTML = `
-<div style="display:flex; align-items:center; gap:8px;">
+<div style="display:flex; align-items:center; gap:10px;">
 <span class="weather-icon-large">🌥️</span>
 <div>
-<span style="font-size:2.5rem;">15°C</span>
+<span style="font-size:2.8rem;">15°C</span>
 <span>leicht bewölkt</span>
 </div>
 </div>
-<div style="margin-top:10px; opacity:0.7;">📍 ${city} (Demo-Modus)</div>
+<div style="margin-top:12px;">📍 ${city}</div>
 `;
 }
 }
@@ -713,26 +787,23 @@ const firstDay = new Date(year, month, 1).getDay();
 const daysInMonth = new Date(year, month + 1, 0).getDate();
 
 let html = `
-<div style="font-weight:500; margin-bottom:8px;">
+<div style="font-weight:500; margin-bottom:10px; font-size:1.1rem;">
 ${today.toLocaleString('de', {month:'long'})} ${year}
 </div>
 <div class="calendar-grid">
 `;
 
 ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => {
-html += `<div style="opacity:0.7; font-size:0.8rem;">${d}</div>`;
+html += `<div style="opacity:0.7; font-size:0.85rem;">${d}</div>`;
 });
 
 let startOffset = (firstDay === 0) ? 6 : firstDay - 1;
-for (let i = 0; i < startOffset; i++) {
-html += `<div></div>`;
-}
+for (let i = 0; i < startOffset; i++) html += `<div></div>`;
 
 for (let d = 1; d <= daysInMonth; d++) {
 const dateStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 const isToday = (d === today.getDate() && month === today.getMonth());
 const hasApp = userConfig.appointmentsText.split('\n').some(l => l.startsWith(dateStr));
-
 html += `<div class="cal-day ${isToday ? 'today' : ''} ${hasApp ? 'has-event' : ''}">${d}</div>`;
 }
 
@@ -743,7 +814,7 @@ container.innerHTML = html;
 function renderSlideshow(container) {
 if (!uploadedImages.length) {
 container.innerHTML = `
-<div style="display:flex;align-items:center;justify-content:center;height:100%;background:rgba(0,0,0,0.2);border-radius:22px;flex-direction:column;gap:10px;">
+<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:12px;">
 <span style="font-size:2.5rem;">📸</span>
 <span>Bilder hochladen</span>
 </div>
@@ -760,88 +831,52 @@ function renderAppointments(container) {
 const lines = userConfig.appointmentsText.split('\n').filter(l => l.trim());
 
 if (!lines.length) {
-container.innerHTML = `
-<div style="display:flex;align-items:center;justify-content:center;height:100%;opacity:0.7;">
-📋 Keine Termine
-</div>
-`;
+container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;opacity:0.7;">📋 Keine Termine</div>`;
 return;
 }
 
 container.innerHTML = lines.map(l => `
-<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1);">
-📌 ${l}
+<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.2);font-size:1rem;">
+📅 ${l}
 </div>
 `).join('');
 }
 
 function renderSpotify(container) {
-const url = validateSpotifyUrl(userConfig.spotifyUrl);
-
-if (!url) {
+const spotifyUrl = userConfig.spotifyUrl || '';
 container.innerHTML = `
-<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:8px;">
-<span style="font-size:2rem;">🎧</span>
-<span style="opacity:0.7;">Spotify URL in Einstellungen</span>
+<div style="display:flex;align-items:center;justify-content:center;height:100%;">
+<button class="app-btn" onclick="window.open('${spotifyUrl}', '_blank')">
+<span>🎵</span> Spotify öffnen
+</button>
 </div>
 `;
-return;
-}
-
-container.innerHTML = `<iframe src="${url}" allow="encrypted-media" loading="lazy"></iframe>`;
 }
 
 function renderYoutube(container) {
-const embedUrl = convertYoutubeUrl(userConfig.youtubeUrl);
-
-if (!embedUrl) {
+const youtubeUrl = userConfig.youtubeUrl || '';
 container.innerHTML = `
-<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:8px;">
-<span style="font-size:2rem;">▶️</span>
-<span style="opacity:0.7;">YouTube URL in Einstellungen</span>
+<div style="display:flex;align-items:center;justify-content:center;height:100%;">
+<button class="app-btn" onclick="window.open('${youtubeUrl}', '_blank')">
+<span>▶️</span> YouTube öffnen
+</button>
 </div>
 `;
-return;
-}
-
-container.innerHTML = `<iframe src="${embedUrl}" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" loading="lazy"></iframe>`;
 }
 
 function renderRecipe(container) {
-const url = userConfig.recipeUrl;
-
-if (!url) {
+const url = userConfig.recipeUrl || 'https://www.chefkoch.de/';
 container.innerHTML = `
 <div style="display:flex;align-items:center;justify-content:center;height:100%;">
-🍳 Keine URL konfiguriert
-</div>
-`;
-return;
-}
-
-container.innerHTML = `
-<div style="position:relative; width:100%; height:100%;">
-<iframe src="${url}" sandbox="allow-scripts allow-same-origin allow-popups allow-forms" loading="lazy"
-onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-style="width:100%; height:100%; border:none; border-radius:20px;">
-</iframe>
-<div class="external-link-btn" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; align-items:center; justify-content:center; background:rgba(0,0,0,0.3); border-radius:20px;">
-<button class="btn" onclick="window.open('${url}', '_blank')">
-🍳 Rezepte öffnen
+<button class="app-btn" onclick="window.open('${url}', '_blank')">
+<span>🍳</span> Rezepte öffnen
 </button>
 </div>
-</div>
 `;
+}
 
-setTimeout(() => {
-const iframe = container.querySelector('iframe');
-const fallback = container.querySelector('.external-link-btn');
-if (iframe && fallback && !iframe.contentWindow?.length) {
-iframe.style.display = 'none';
-fallback.style.display = 'flex';
-}
-}, 2000);
-}
+window.openSpotify = openSpotify;
+window.openYoutube = openYoutube;
 
 function refreshDynamicContents() {
 document.querySelectorAll('.tile').forEach(el => {
@@ -901,13 +936,42 @@ function handleDragEnd(e) {
 this.classList.remove('dragging');
 }
 
-// Initialisierung
+function openTileSettings(tileId) {
+const tile = tiles.find(t => t.id == tileId);
+if (!tile) return;
+
+currentEditingTileId = tileId;
+document.getElementById('currentTileId').value = tileId;
+document.getElementById('tileTitle').value = tile.title || '';
+document.getElementById('tileColor').value = tile.color || userConfig.globalAccent;
+document.getElementById('tileColorText').value = tile.color || userConfig.globalAccent;
+
+document.getElementById('tileSettingsModal').classList.remove('hidden');
+}
+
+// Init
 function init() {
 loadFromStorage();
 renderAll();
 
-document.getElementById('editToggleBtn').onclick = () => {
+// Burger-Menü
+const burgerBtn = document.getElementById('burgerMenuBtn');
+const menuDropdown = document.getElementById('menuDropdown');
+
+burgerBtn.addEventListener('click', (e) => {
+e.stopPropagation();
+menuDropdown.classList.toggle('show');
+});
+
+document.addEventListener('click', () => {
+menuDropdown.classList.remove('show');
+});
+
+menuDropdown.addEventListener('click', (e) => e.stopPropagation());
+
+document.getElementById('menuEditToggle').onclick = () => {
 editMode = !editMode;
+menuDropdown.classList.remove('show');
 document.querySelectorAll('.tile').forEach(el => {
 el.classList.toggle('edit-mode', editMode);
 el.setAttribute('draggable', editMode);
@@ -915,7 +979,8 @@ el.setAttribute('draggable', editMode);
 renderAll();
 };
 
-document.getElementById('uploadImagesBtn').onclick = () => {
+document.getElementById('menuUploadImages').onclick = () => {
+menuDropdown.classList.remove('show');
 const inp = document.createElement('input');
 inp.type = 'file';
 inp.accept = 'image/*';
@@ -934,7 +999,8 @@ r.readAsDataURL(f);
 inp.click();
 };
 
-document.getElementById('openSettingsBtn').onclick = () => {
+document.getElementById('menuOpenSettings').onclick = () => {
+menuDropdown.classList.remove('show');
 document.getElementById('settingsCity').value = userConfig.city;
 document.getElementById('settingsSlideshowSec').value = userConfig.slideshowInterval;
 document.getElementById('settingsSpotify').value = userConfig.spotifyUrl;
@@ -942,8 +1008,48 @@ document.getElementById('settingsYoutube').value = userConfig.youtubeUrl;
 document.getElementById('settingsRecipeUrl').value = userConfig.recipeUrl;
 document.getElementById('settingsAppointments').value = userConfig.appointmentsText;
 document.getElementById('globalAccentColor').value = userConfig.globalAccent;
+document.getElementById('globalAccentColorText').value = userConfig.globalAccent;
+document.getElementById('globalTextColor').value = userConfig.globalTextColor;
+document.getElementById('globalTextColorText').value = userConfig.globalTextColor;
 document.getElementById('settingsModal').classList.remove('hidden');
 };
+
+document.getElementById('menuAddTile').onclick = () => {
+menuDropdown.classList.remove('show');
+tiles.push({
+id: ++nextTileId,
+type: 'clock',
+title: 'Neue Uhr',
+colSpan: 1,
+rowSpan: 1,
+color: userConfig.globalAccent,
+bgImage: ''
+});
+saveToStorage();
+renderAll();
+};
+
+document.getElementById('menuReset').onclick = () => {
+menuDropdown.classList.remove('show');
+if (confirm('Wirklich zurücksetzen?')) {
+resetToDefault();
+}
+};
+
+// Color-Picker Sync
+const accentPicker = document.getElementById('globalAccentColor');
+const accentText = document.getElementById('globalAccentColorText');
+const textPicker = document.getElementById('globalTextColor');
+const textText = document.getElementById('globalTextColorText');
+const tileColorPicker = document.getElementById('tileColor');
+const tileColorText = document.getElementById('tileColorText');
+
+accentPicker.addEventListener('input', () => accentText.value = accentPicker.value);
+accentText.addEventListener('input', () => accentPicker.value = accentText.value);
+textPicker.addEventListener('input', () => textText.value = textPicker.value);
+textText.addEventListener('input', () => textPicker.value = textText.value);
+tileColorPicker.addEventListener('input', () => tileColorText.value = tileColorPicker.value);
+tileColorText.addEventListener('input', () => tileColorPicker.value = tileColorText.value);
 
 document.getElementById('closeSettingsBtn').onclick = () => {
 document.getElementById('settingsModal').classList.add('hidden');
@@ -957,32 +1063,70 @@ userConfig.youtubeUrl = document.getElementById('settingsYoutube').value;
 userConfig.recipeUrl = document.getElementById('settingsRecipeUrl').value;
 userConfig.appointmentsText = document.getElementById('settingsAppointments').value;
 userConfig.globalAccent = document.getElementById('globalAccentColor').value;
+userConfig.globalTextColor = document.getElementById('globalTextColor').value;
 
 saveToStorage();
-renderAll(); // NEU RENDERN MIT NEUER FARBE
+renderAll();
 document.getElementById('settingsModal').classList.add('hidden');
 };
 
-document.getElementById('addTileBtn').onclick = () => {
-tiles.push({
-id: ++nextTileId,
-type: 'clock',
-title: 'Neue Uhr',
-colSpan: 1,
-rowSpan: 1
-});
-saveToStorage();
-renderAll();
+document.getElementById('closeTileSettingsBtn').onclick = () => {
+document.getElementById('tileSettingsModal').classList.add('hidden');
 };
 
-document.getElementById('resetBtn').onclick = resetToDefault;
+document.getElementById('saveTileSettingsBtn').onclick = () => {
+const tileId = parseInt(document.getElementById('currentTileId').value);
+const tile = tiles.find(t => t.id === tileId);
+if (tile) {
+tile.title = document.getElementById('tileTitle').value;
+tile.color = document.getElementById('tileColor').value;
+}
+saveToStorage();
+renderAll();
+document.getElementById('tileSettingsModal').classList.add('hidden');
+};
+
+document.getElementById('uploadTileBgBtn').onclick = () => {
+const inp = document.createElement('input');
+inp.type = 'file';
+inp.accept = 'image/*';
+inp.onchange = e => {
+const file = e.target.files[0];
+if (file) {
+const r = new FileReader();
+r.onload = ev => {
+const tileId = parseInt(document.getElementById('currentTileId').value);
+const tile = tiles.find(t => t.id === tileId);
+if (tile) {
+tile.bgImage = ev.target.result;
+saveToStorage();
+renderAll();
+}
+};
+r.readAsDataURL(file);
+}
+};
+inp.click();
+};
+
+document.getElementById('removeTileBgBtn').onclick = () => {
+const tileId = parseInt(document.getElementById('currentTileId').value);
+const tile = tiles.find(t => t.id === tileId);
+if (tile) {
+tile.bgImage = '';
+saveToStorage();
+renderAll();
+}
+};
 
 gridEl.addEventListener('click', e => {
 const btn = e.target.closest('button');
 if (!btn) return;
 const id = btn.dataset.id;
 
-if (btn.classList.contains('tile-delete-btn')) {
+if (btn.classList.contains('tile-settings-btn')) {
+openTileSettings(id);
+} else if (btn.classList.contains('tile-delete-btn')) {
 tiles = tiles.filter(t => t.id != id);
 saveToStorage();
 renderAll();
@@ -997,7 +1141,6 @@ renderAll();
 }
 });
 
-// Periodische Updates
 setInterval(() => {
 document.querySelectorAll('.tile').forEach(el => {
 const t = tiles.find(tt => tt.id == el.dataset.id);
@@ -1007,9 +1150,7 @@ renderFlipClock(el.querySelector('.tile-content'));
 });
 }, 1000);
 
-function updateSlideshowInterval() {
-const interval = (userConfig.slideshowInterval || 6) * 1000;
-return setInterval(() => {
+setInterval(() => {
 document.querySelectorAll('.tile').forEach(el => {
 const t = tiles.find(tt => tt.id == el.dataset.id);
 if (t && t.type === 'slideshow' && uploadedImages.length) {
@@ -1019,18 +1160,7 @@ cont.dataset.slideIndex = idx;
 cont.innerHTML = `<img class="slideshow-img" src="${uploadedImages[idx]}" alt="slide">`;
 }
 });
-}, interval);
-}
-
-let slideshowTimer = updateSlideshowInterval();
-
-// Timer neu starten wenn Intervall geändert wird
-const originalSaveSettings = document.getElementById('saveSettingsBtn').onclick;
-document.getElementById('saveSettingsBtn').onclick = () => {
-if (originalSaveSettings) originalSaveSettings();
-clearInterval(slideshowTimer);
-slideshowTimer = updateSlideshowInterval();
-};
+}, userConfig.slideshowInterval * 1000);
 }
 
 window.onload = init;
