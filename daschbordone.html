@@ -158,17 +158,18 @@ display: flex;
 flex-direction: column;
 }
 
+/* ===== UNTERE LEISTE EXTREM SCHMAL ===== */
 .bottom-nav {
 flex-shrink: 0;
 display: flex;
 justify-content: space-around;
 align-items: center;
-padding: 12px 24px 20px;
+padding: 4px 16px 6px;
 background: var(--glass-bg);
 backdrop-filter: blur(30px);
 -webkit-backdrop-filter: blur(30px);
 border-top: 1px solid var(--glass-border);
-box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
+box-shadow: 0 -5px 15px rgba(0,0,0,0.15);
 z-index: 10;
 transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s, background 0.3s;
 }
@@ -187,19 +188,19 @@ box-shadow: none;
 display: flex;
 flex-direction: column;
 align-items: center;
-gap: 6px;
+gap: 2px;
 background: none;
 border: none;
 color: var(--text-primary);
 opacity: 0.6;
-font-size: 1.2rem;
+font-size: 1.1rem;
 cursor: pointer;
 transition: all 0.2s;
-padding: 8px 16px;
-border-radius: 60px;
-min-width: 70px;
+padding: 4px 10px;
+border-radius: 40px;
+min-width: 60px;
 }
-.nav-item span { font-size: 0.9rem; font-weight: 500; }
+.nav-item span { font-size: 0.7rem; font-weight: 500; }
 .nav-item.active {
 opacity: 1;
 background: var(--glass-highlight);
@@ -705,9 +706,9 @@ amazonmusic: '🎶', recipe: '🍳', app: '📱'
 // ---------- STORAGE ----------
 function loadFromStorage() {
 try {
-const savedTiles = localStorage.getItem('kodi_tiles_v9');
-const savedConfig = localStorage.getItem('kodi_config_v9');
-const savedImages = localStorage.getItem('kodi_images_v9');
+const savedTiles = localStorage.getItem('kodi_tiles_final');
+const savedConfig = localStorage.getItem('kodi_config_final');
+const savedImages = localStorage.getItem('kodi_images_final');
 if (savedTiles) tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
 else tiles = [...DEFAULT_TILES];
 if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
@@ -720,9 +721,9 @@ applyAllSettings();
 
 function saveToStorage() {
 try {
-localStorage.setItem('kodi_tiles_v9', JSON.stringify(tiles));
-localStorage.setItem('kodi_config_v9', JSON.stringify(userConfig));
-localStorage.setItem('kodi_images_v9', JSON.stringify(uploadedImages));
+localStorage.setItem('kodi_tiles_final', JSON.stringify(tiles));
+localStorage.setItem('kodi_config_final', JSON.stringify(userConfig));
+localStorage.setItem('kodi_images_final', JSON.stringify(uploadedImages));
 } catch(e) {}
 }
 
@@ -755,7 +756,7 @@ const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = pars
 return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-// ---------- BOTTOM NAV AUTO-HIDE (komplett unsichtbar) ----------
+// ---------- BOTTOM NAV AUTO-HIDE ----------
 const bottomNav = document.getElementById('bottomNav');
 function resetNavHideTimer() {
 bottomNav.classList.remove('hidden-nav');
