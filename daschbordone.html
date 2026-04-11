@@ -164,7 +164,7 @@ flex-shrink: 0;
 display: flex;
 justify-content: space-around;
 align-items: center;
-padding: 4px 16px 6px;
+padding: 4px 12px 6px;
 background: var(--glass-bg);
 backdrop-filter: blur(30px);
 -webkit-backdrop-filter: blur(30px);
@@ -196,16 +196,29 @@ opacity: 0.6;
 font-size: 1.1rem;
 cursor: pointer;
 transition: all 0.2s;
-padding: 4px 10px;
+padding: 4px 8px;
 border-radius: 40px;
-min-width: 60px;
+min-width: 56px;
 }
-.nav-item span { font-size: 0.7rem; font-weight: 500; }
+.nav-item span { font-size: 0.65rem; font-weight: 500; }
 .nav-item.active {
 opacity: 1;
 background: var(--glass-highlight);
 backdrop-filter: blur(10px);
 box-shadow: var(--shadow-light);
+}
+
+/* Burger in der Leiste */
+.nav-burger {
+position: relative;
+}
+.nav-burger .menu-dropdown {
+position: absolute;
+bottom: 60px;
+left: 0;
+top: auto;
+right: auto;
+min-width: 200px;
 }
 
 .burger-menu-wrapper {
@@ -539,7 +552,19 @@ font-size: 1rem;
 <button class="nav-item active" data-view="home"><span>🏠</span><span>Start</span></button>
 <button class="nav-item" data-view="media"><span>🎬</span><span>Medien</span></button>
 <button class="nav-item" data-view="tools"><span>📋</span><span>Tools</span></button>
-<button class="nav-item" data-view="slideshow"><span>🖼️</span><span>Slideshow</span></button>
+<button class="nav-item" data-view="slideshow"><span>🖼️</span><span>Slides</span></button>
+<div class="nav-item nav-burger" id="bottomBurgerBtn">
+<span>☰</span>
+<span>Menü</span>
+<div class="menu-dropdown" id="bottomMenuDropdown">
+<div class="menu-item" id="bottomMenuEditToggle">✎ Bearbeiten</div>
+<div class="menu-item" id="bottomMenuUploadImages">🖼️ Bilder hochladen</div>
+<div class="menu-item" id="bottomMenuOpenSettings">⚙️ Einstellungen</div>
+<div class="menu-item" id="bottomMenuAddTile">➕ Neue Kachel</div>
+<div class="menu-divider"></div>
+<div class="menu-item" id="bottomMenuReset">↻ Reset</div>
+</div>
+</div>
 </div>
 </div>
 
@@ -706,9 +731,9 @@ amazonmusic: '🎶', recipe: '🍳', app: '📱'
 // ---------- STORAGE ----------
 function loadFromStorage() {
 try {
-const savedTiles = localStorage.getItem('kodi_tiles_final');
-const savedConfig = localStorage.getItem('kodi_config_final');
-const savedImages = localStorage.getItem('kodi_images_final');
+const savedTiles = localStorage.getItem('kodi_tiles_final2');
+const savedConfig = localStorage.getItem('kodi_config_final2');
+const savedImages = localStorage.getItem('kodi_images_final2');
 if (savedTiles) tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
 else tiles = [...DEFAULT_TILES];
 if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
@@ -721,9 +746,9 @@ applyAllSettings();
 
 function saveToStorage() {
 try {
-localStorage.setItem('kodi_tiles_final', JSON.stringify(tiles));
-localStorage.setItem('kodi_config_final', JSON.stringify(userConfig));
-localStorage.setItem('kodi_images_final', JSON.stringify(uploadedImages));
+localStorage.setItem('kodi_tiles_final2', JSON.stringify(tiles));
+localStorage.setItem('kodi_config_final2', JSON.stringify(userConfig));
+localStorage.setItem('kodi_images_final2', JSON.stringify(uploadedImages));
 } catch(e) {}
 }
 
@@ -901,7 +926,52 @@ document.getElementById('menuAddTile').onclick = () => { menuDropdown.classList.
 document.getElementById('menuReset').onclick = () => { if(confirm('Reset?')) resetToDefault(); menuDropdown.classList.remove('show'); };
 }
 
-// ---------- INHALTE ----------
+// ---------- BURGER IN LEISTE ----------
+const bottomBurger = document.getElementById('bottomBurgerBtn');
+const bottomMenu = document.getElementById('bottomMenuDropdown');
+bottomBurger.addEventListener('click', (e) => {
+e.stopPropagation();
+bottomMenu.classList.toggle('show');
+});
+document.addEventListener('click', (e) => {
+if (!bottomBurger.contains(e.target)) bottomMenu.classList.remove('show');
+});
+
+document.getElementById('bottomMenuEditToggle').onclick = () => { editMode = !editMode; bottomMenu.classList.remove('show'); renderAll(); };
+document.getElementById('bottomMenuUploadImages').onclick = () => {
+bottomMenu.classList.remove('show');
+const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.multiple=true;
+inp.onchange = e => { Array.from(e.target.files).forEach(f=>{ const r=new FileReader(); r.onload=ev=>{ uploadedImages.push(ev.target.result); saveToStorage(); renderAll(); }; r.readAsDataURL(f); }); };
+inp.click();
+};
+document.getElementById('bottomMenuOpenSettings').onclick = () => {
+bottomMenu.classList.remove('show');
+document.getElementById('settingsCity').value = userConfig.city;
+document.getElementById('settingsSlideshowSec').value = userConfig.slideshowInterval;
+document.getElementById('settingsSpotify').value = userConfig.spotifyUrl;
+document.getElementById('settingsYoutube').value = userConfig.youtubeUrl;
+document.getElementById('settingsAmazonMusic').value = userConfig.amazonMusicUrl;
+document.getElementById('settingsRecipeUrl').value = userConfig.recipeUrl;
+document.getElementById('settingsAppointments').value = userConfig.appointmentsText;
+document.getElementById('globalAccentColor').value = userConfig.globalAccent;
+document.getElementById('globalAccentColorText').value = userConfig.globalAccent;
+document.getElementById('globalTextColor').value = userConfig.globalTextColor;
+document.getElementById('globalTextColorText').value = userConfig.globalTextColor;
+document.getElementById('settingsTheme').value = userConfig.theme;
+document.getElementById('settingsFontSize').value = userConfig.fontSize;
+document.getElementById('tileOpacitySlider').value = userConfig.tileOpacity;
+document.getElementById('tileOpacityValue').textContent = userConfig.tileOpacity;
+document.getElementById('dashboardBgColor').value = userConfig.dashboardBgColor;
+document.getElementById('dashboardBgColorText').value = userConfig.dashboardBgColor;
+document.getElementById('menuBtnColor').value = userConfig.menuBtnColor;
+document.getElementById('menuBtnColorText').value = userConfig.menuBtnColor;
+document.getElementById('settings3DEffect').value = userConfig.effect3D;
+document.getElementById('settingsModal').classList.remove('hidden');
+};
+document.getElementById('bottomMenuAddTile').onclick = () => { bottomMenu.classList.remove('show'); openAddTileModal(); };
+document.getElementById('bottomMenuReset').onclick = () => { if(confirm('Reset?')) resetToDefault(); bottomMenu.classList.remove('show'); };
+
+// ---------- INHALTE (unverändert) ----------
 function fillTileContent(tile, container) {
 const type = tile.type;
 if (type === 'clock') renderFlipClock(container);
@@ -1123,7 +1193,7 @@ function init() {
 loadFromStorage();
 renderAll();
 
-document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', () => switchView(btn.dataset.view)));
+document.querySelectorAll('.nav-item[data-view]').forEach(btn => btn.addEventListener('click', () => switchView(btn.dataset.view)));
 document.getElementById('tileOpacitySlider').addEventListener('input', e => document.getElementById('tileOpacityValue').textContent = e.target.value);
 document.getElementById('tileOpacity').addEventListener('input', e => document.getElementById('tileOpacityVal').textContent = e.target.value);
 
@@ -1218,4 +1288,3 @@ window.onload = init;
 </script>
 </body>
 </html>
-```
