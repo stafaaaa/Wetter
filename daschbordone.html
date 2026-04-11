@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -197,11 +196,12 @@ backdrop-filter: blur(10px);
 box-shadow: var(--shadow-light);
 }
 
+/* Burger-Menü – bleibt immer sichtbar */
 .burger-menu-wrapper {
 position: absolute;
 top: 20px;
 right: 20px;
-z-index: 50;
+z-index: 100;
 }
 .burger-menu {
 background: var(--menu-btn-bg, #1e2a3a);
@@ -217,6 +217,8 @@ justify-content: center;
 font-size: 1.8rem;
 cursor: pointer;
 box-shadow: var(--shadow-heavy);
+opacity: 1 !important;
+visibility: visible !important;
 }
 
 .menu-dropdown {
@@ -230,7 +232,7 @@ border-radius: 28px;
 padding: 12px 8px;
 min-width: 240px;
 box-shadow: var(--shadow-heavy);
-z-index: 100;
+z-index: 101;
 display: none;
 }
 .menu-dropdown.show { display: block; }
@@ -277,6 +279,8 @@ transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1);
 color: var(--text-primary);
 transform: perspective(1800px) rotateX(1.5deg) rotateY(0.5deg) translateZ(8px);
 transform-style: preserve-3d;
+background-size: cover;
+background-position: center;
 }
 .tile:hover {
 transform: perspective(1800px) rotateX(1deg) rotateY(1deg) translateZ(18px);
@@ -307,25 +311,8 @@ font-weight: 600;
 font-size: 1.35rem;
 position: relative;
 z-index: 2;
-text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+text-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
-.tile-controls { display: flex; gap: 10px; }
-.icon-btn {
-background: var(--glass-bg);
-backdrop-filter: blur(15px);
-border: 1px solid var(--glass-border);
-color: var(--text-primary);
-font-size: 1.3rem;
-cursor: pointer;
-width: 44px;
-height: 44px;
-border-radius: 44px;
-display: flex;
-align-items: center;
-justify-content: center;
-box-shadow: var(--shadow-light), inset 0 1px 2px var(--glass-highlight);
-}
-
 .tile-content {
 flex: 1;
 display: flex;
@@ -333,6 +320,7 @@ flex-direction: column;
 overflow: auto;
 position: relative;
 z-index: 2;
+text-shadow: 0 2px 8px rgba(0,0,0,0.5);
 }
 
 .size-badge {
@@ -356,9 +344,10 @@ gap: 10px;
 font-size: 4.8rem !important;
 font-weight: 300;
 line-height: 1;
+text-shadow: 0 4px 15px rgba(0,0,0,0.6);
 }
 .flip-digit {
-background: rgba(0,0,0,0.15);
+background: rgba(0,0,0,0.25);
 backdrop-filter: blur(10px);
 padding: 14px 20px;
 border-radius: 26px;
@@ -370,6 +359,7 @@ border-bottom: 2px solid var(--glass-border);
 font-size: 4rem;
 line-height: 1;
 display: inline-block;
+filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
 }
 .sun { animation: spin 12s linear infinite; }
 .cloud { animation: floatCloud 6s ease-in-out infinite; }
@@ -452,7 +442,6 @@ gap: 12px;
 box-shadow: var(--shadow-light), inset 0 1px 2px var(--glass-highlight);
 }
 
-/* Modals */
 .settings-overlay {
 position: fixed;
 inset: 0;
@@ -585,7 +574,6 @@ font-size: 1rem;
 <option value="3,2">Extra (3x2)</option>
 </select>
 </div>
-<!-- Zusätzliche Felder für App-Kachel -->
 <div id="appFields" class="hidden">
 <div class="input-group"><label>App-Link (URL oder Intent)</label><input type="text" id="tileAppLink" placeholder="z.B. intent://... oder https://..."></div>
 </div>
@@ -664,9 +652,9 @@ let currentEditingTileId = null;
 // ---------- STORAGE ----------
 function loadFromStorage() {
 try {
-const savedTiles = localStorage.getItem('kodi_tiles_v3');
-const savedConfig = localStorage.getItem('kodi_config_v3');
-const savedImages = localStorage.getItem('kodi_images_v3');
+const savedTiles = localStorage.getItem('kodi_tiles_v4');
+const savedConfig = localStorage.getItem('kodi_config_v4');
+const savedImages = localStorage.getItem('kodi_images_v4');
 if (savedTiles) tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
 else tiles = [...DEFAULT_TILES];
 if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
@@ -679,9 +667,9 @@ applyAllSettings();
 
 function saveToStorage() {
 try {
-localStorage.setItem('kodi_tiles_v3', JSON.stringify(tiles));
-localStorage.setItem('kodi_config_v3', JSON.stringify(userConfig));
-localStorage.setItem('kodi_images_v3', JSON.stringify(uploadedImages));
+localStorage.setItem('kodi_tiles_v4', JSON.stringify(tiles));
+localStorage.setItem('kodi_config_v4', JSON.stringify(userConfig));
+localStorage.setItem('kodi_images_v4', JSON.stringify(uploadedImages));
 } catch(e) {}
 }
 
@@ -705,8 +693,11 @@ document.documentElement.style.setProperty('--menu-btn-bg', userConfig.menuBtnCo
 function applyTheme(theme) { document.body.className = `theme-${theme}`; userConfig.theme = theme; }
 function applyFontSize(size) { document.documentElement.style.fontSize = size === 'small' ? '14px' : (size === 'large' ? '18px' : '16px'); }
 function applyDashboardBackground() {
+const db = document.getElementById('dashboard');
 if (userConfig.dashboardBgImage) {
-document.body.style.setProperty('--bg-image', `url('${userConfig.dashboardBgImage}')`);
+db.style.setProperty('--bg-image', `url('${userConfig.dashboardBgImage}')`);
+} else {
+db.style.setProperty('--bg-image', 'none');
 }
 }
 
@@ -729,7 +720,6 @@ const grid = document.getElementById(`grid-${viewName}`);
 if (!grid) return;
 grid.innerHTML = '';
 let viewTiles = tiles.filter(t => t.view === viewName);
-// Slideshow-View: Kachel auf volle Größe setzen
 if (viewName === 'slideshow') {
 const slideshowTile = viewTiles.find(t => t.type === 'slideshow');
 if (slideshowTile) {
@@ -790,14 +780,12 @@ return div;
 }
 
 function attachBurgerMenu() {
-const clockTile = document.querySelector('.tile[data-id="1"]');
-if (!clockTile) return;
-let wrapper = clockTile.querySelector('.burger-menu-wrapper');
-if (!wrapper) {
-wrapper = document.createElement('div');
+// Entferne alte Wrapper
+const oldWrapper = document.querySelector('.burger-menu-wrapper');
+if (oldWrapper) oldWrapper.remove();
+
+const wrapper = document.createElement('div');
 wrapper.className = 'burger-menu-wrapper';
-clockTile.appendChild(wrapper);
-}
 wrapper.innerHTML = `
 <div class="burger-menu" id="burgerMenuBtn" style="background: ${userConfig.menuBtnColor};">☰</div>
 <div class="menu-dropdown" id="menuDropdown">
@@ -809,11 +797,21 @@ wrapper.innerHTML = `
 <div class="menu-item" id="menuReset">↻ Reset</div>
 </div>
 `;
+document.querySelector('.dashboard').appendChild(wrapper);
 
 const burgerBtn = document.getElementById('burgerMenuBtn');
 const menuDropdown = document.getElementById('menuDropdown');
-burgerBtn.addEventListener('click', (e) => { e.stopPropagation(); menuDropdown.classList.toggle('show'); });
-document.addEventListener('click', (e) => { if (!burgerBtn.contains(e.target) && !menuDropdown.contains(e.target)) menuDropdown.classList.remove('show'); });
+
+burgerBtn.addEventListener('click', (e) => {
+e.stopPropagation();
+menuDropdown.classList.toggle('show');
+});
+
+document.addEventListener('click', (e) => {
+if (!burgerBtn.contains(e.target) && !menuDropdown.contains(e.target)) {
+menuDropdown.classList.remove('show');
+}
+});
 
 document.getElementById('menuEditToggle').onclick = () => { editMode = !editMode; menuDropdown.classList.remove('show'); renderAll(); };
 document.getElementById('menuUploadImages').onclick = () => {
@@ -1174,4 +1172,3 @@ window.onload = init;
 </script>
 </body>
 </html>
-```
