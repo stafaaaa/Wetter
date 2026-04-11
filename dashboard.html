@@ -1,1341 +1,1499 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@200;300;400;500;600;700&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@200;300;400;500;600;700;800;900&family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-<style>
-/* ═══════════ RESET ═══════════ */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{
-  --r:18px;
-  --gap:10px;
-  --glass:rgba(255,255,255,0.11);
-  --glass-border:rgba(255,255,255,0.18);
-  --glass-shine:rgba(255,255,255,0.22);
-  --text:#ffffff;
-  --text-2:rgba(255,255,255,0.72);
-  --text-3:rgba(255,255,255,0.42);
-  --accent:#3d8eff;
-  --green:#30d158;
-  --pink:#ff375f;
-  --orange:#ff9f0a;
-  --purple:#bf5af2;
-  --teal:#5ac8fa;
-  --font-scale:1;
-}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;color:var(--text);
-  font-family:'Outfit',sans-serif;font-size:calc(13px*var(--font-scale));
-  line-height:1.4;user-select:none;-webkit-user-select:none;}
-button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;touch-action:manipulation;}
-a{color:inherit;text-decoration:none;}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Home · Apple Style Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Helvetica Neue', 'SF Pro Text', 'SF Pro Display', sans-serif;
+    }
 
-/* ═══════════ AURORA BACKGROUND ═══════════ */
-#aurora{position:fixed;inset:0;z-index:0;overflow:hidden;}
-#aurora canvas{position:absolute;inset:0;width:100%;height:100%;}
-/* grain overlay */
-#aurora::after{
-  content:'';position:absolute;inset:0;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-  opacity:0.35;pointer-events:none;mix-blend-mode:overlay;
-}
+    :focus { outline: none !important; }
+    button, input, select, textarea, .nav-item, .icon-btn, .app-btn {
+      outline: none !important;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-/* ═══════════ DASHBOARD GRID ═══════════ */
-.dashboard{
-  position:fixed;inset:0;z-index:1;
-  display:grid;gap:var(--gap);padding:var(--gap);
-  grid-template-columns:1.1fr 1.3fr 1fr;
-  grid-template-rows:1fr 1fr;
-  grid-template-areas:"clock weather photos" "spotify calendar photos";
-  overflow:hidden;
-}
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      transition: background 0.3s ease;
+    }
 
-/* ═══════════ GLASS TILE ═══════════ */
-.tile{
-  position:relative;border-radius:var(--r);overflow:hidden;
-  background:var(--glass);
-  border:1px solid var(--glass-border);
-  backdrop-filter:blur(40px) saturate(180%);
-  -webkit-backdrop-filter:blur(40px) saturate(180%);
-  box-shadow:
-    0 0 0 0.5px rgba(255,255,255,0.08),
-    0 20px 60px rgba(0,0,0,0.45),
-    0 4px 16px rgba(0,0,0,0.3),
-    inset 0 1px 0 var(--glass-shine);
-  transition:transform 0.2s ease,box-shadow 0.2s ease;
-}
-.tile:active{transform:scale(0.993);}
+    :root {
+      --bg-primary: #f5f5f7;
+      --card-bg: rgba(255, 255, 255, 0.75);
+      --card-border: rgba(0, 0, 0, 0.04);
+      --text-primary: #1d1d1f;
+      --text-secondary: #86868b;
+      --accent-blue: #0071e3;
+      --accent-purple: #af52de;
+      --accent-green: #28cd41;
+      --accent-orange: #ff9f0a;
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.02);
+      --shadow-md: 0 20px 40px -10px rgba(0, 0, 0, 0.1), 0 8px 16px -6px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+      --glass-bg: rgba(255, 255, 255, 0.6);
+      --glass-border: rgba(255, 255, 255, 0.8);
+    }
 
-/* top-edge shine */
-.tile::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent);
-  z-index:10;pointer-events:none;
-}
+    body.theme-dark {
+      --bg-primary: #1d1d1f;
+      --card-bg: rgba(40, 40, 42, 0.8);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-primary: #f5f5f7;
+      --text-secondary: #98989d;
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 30px 60px -15px rgba(0, 0, 0, 0.4);
+      --glass-bg: rgba(30, 30, 32, 0.6);
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
 
-.tile-inner{
-  position:relative;z-index:2;
-  height:100%;display:flex;flex-direction:column;
-  padding:clamp(10px,1.4vw,18px);overflow:hidden;
-}
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
 
-/* accent glow behind tile */
-.tile-clock   {grid-area:clock;   --glow:#3d8eff;}
-.tile-weather {grid-area:weather; --glow:#5ac8fa;}
-.tile-calendar{grid-area:calendar;--glow:#bf5af2;}
-.tile-photos  {grid-area:photos;  --glow:#30d158;}
-.tile-spotify {grid-area:spotify; --glow:#1ed760;}
+    .dashboard {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
 
-.tile::after{
-  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(ellipse at 50% 0%,color-mix(in srgb,var(--glow) 12%,transparent),transparent 70%);
-}
+    .main-content {
+      flex: 1;
+      padding: 28px 32px 12px 32px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
 
-/* ═══════════ LABELS ═══════════ */
-.label{
-  font-size:calc(0.65em*var(--font-scale));
-  font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
-  color:var(--text-3);margin-bottom:6px;flex-shrink:0;
-  display:flex;align-items:center;gap:6px;
-}
-.label-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+    .view {
+      display: none;
+      flex: 1;
+    }
+    .view.active {
+      display: flex;
+      flex-direction: column;
+    }
 
-/* ═══════════ CLOCK TILE ═══════════ */
-.tile-clock .tile-inner{justify-content:center;align-items:flex-start;gap:2px;padding-left:clamp(14px,2vw,24px);}
-.clock-time{
-  font-family:'Outfit',sans-serif;
-  font-size:clamp(3em,6vw,7em);
-  font-weight:200;letter-spacing:-0.04em;
-  line-height:0.95;
-  background:linear-gradient(135deg,#fff 30%,rgba(255,255,255,0.6));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.clock-ampm{font-size:0.3em;font-weight:400;opacity:0.6;vertical-align:super;margin-left:4px;letter-spacing:0.05em;}
-.clock-date{font-size:calc(0.9em*var(--font-scale));font-weight:400;color:var(--text-2);margin-top:6px;}
-.clock-secs{font-size:calc(0.7em*var(--font-scale));color:var(--text-3);margin-top:2px;font-variant-numeric:tabular-nums;}
+    /* ── NAV: komplett unsichtbar, nur floating Bubbles beim Tippen ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 48px;           /* unsichtbare Touch-Zone */
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      z-index: 200;
+      pointer-events: all;
+    }
 
-/* ═══════════ WEATHER TILE ═══════════ */
-.weather-top{display:flex;align-items:flex-start;justify-content:space-between;flex:1;min-height:0;}
-.weather-left{display:flex;flex-direction:column;justify-content:center;}
-.weather-icon{font-size:clamp(2.8em,5vw,5.5em);line-height:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.3));}
-.weather-temp{
-  font-family:'Outfit',sans-serif;font-size:clamp(2.2em,4vw,4.5em);
-  font-weight:200;letter-spacing:-0.03em;line-height:1;
-  background:linear-gradient(135deg,#fff,rgba(255,255,255,0.7));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.weather-desc{font-size:calc(0.8em*var(--font-scale));color:var(--text-2);margin-top:3px;}
-.weather-meta{display:flex;gap:10px;margin-top:4px;font-size:calc(0.68em*var(--font-scale));color:var(--text-3);}
-.weather-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;}
-.weather-city{font-size:calc(0.72em*var(--font-scale));color:var(--text-3);font-weight:500;}
-.weather-feels{font-size:calc(0.68em*var(--font-scale));color:var(--text-3);}
-.forecast{
-  display:flex;justify-content:space-between;
-  border-top:1px solid rgba(255,255,255,0.1);
-  padding-top:8px;margin-top:6px;flex-shrink:0;
-}
-.fc-day{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;}
-.fc-name{font-size:calc(0.58em*var(--font-scale));color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;}
-.fc-icon{font-size:calc(1.1em*var(--font-scale));}
-.fc-hi{font-size:calc(0.72em*var(--font-scale));font-weight:600;color:var(--text);}
-.fc-lo{font-size:calc(0.62em*var(--font-scale));color:var(--text-3);}
+    /* Die Bubble-Leiste die beim Tippen erscheint */
+    .nav-bubble-bar {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid var(--card-border);
+      border-radius: 60px;
+      padding: 8px 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.10),
+                  inset 0 1px 0 rgba(255,255,255,0.8);
+      z-index: 201;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .nav-bubble-bar.nav-visible {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateX(-50%) translateY(0);
+    }
 
-/* ═══════════ CALENDAR TILE ═══════════ */
-.tile-calendar .tile-inner{gap:0;}
-.cal-head{display:flex;align-items:center;gap:4px;margin-bottom:8px;flex-shrink:0;}
-.cal-month{flex:1;font-size:calc(0.9em*var(--font-scale));font-weight:600;color:var(--text);}
-.cal-nav-btn{
-  width:24px;height:24px;border-radius:50%;
-  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);
-  font-size:0.9em;display:flex;align-items:center;justify-content:center;
-  transition:background 0.15s;color:var(--text-2);
-}
-.cal-nav-btn:hover{background:rgba(255,255,255,0.16);}
-.cal-add{
-  width:24px;height:24px;border-radius:50%;
-  background:var(--accent);font-size:0.95em;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 2px 8px rgba(61,142,255,0.5);color:#fff;
-}
-.cal-dow{
-  display:grid;grid-template-columns:repeat(7,1fr);
-  margin-bottom:2px;flex-shrink:0;
-}
-.cal-dow span{
-  text-align:center;font-size:calc(0.58em*var(--font-scale));
-  color:var(--text-3);font-weight:700;letter-spacing:0.04em;
-  text-transform:uppercase;padding:2px 0;
-}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);flex:1;min-height:0;}
-.cal-cell{
-  display:flex;align-items:center;justify-content:center;
-  position:relative;font-size:calc(0.7em*var(--font-scale));
-  cursor:pointer;border-radius:50%;
-  max-width:28px;max-height:28px;width:100%;aspect-ratio:1;
-  margin:auto;transition:background 0.12s;
-}
-.cal-cell:hover{background:rgba(255,255,255,0.1);}
-.cal-cell.today{
-  background:var(--accent);color:#fff;font-weight:700;
-  box-shadow:0 2px 10px rgba(61,142,255,0.6);
-}
-.cal-cell.other{opacity:0.2;}
-.cal-cell.has-event::after{
-  content:'';position:absolute;bottom:1px;left:50%;transform:translateX(-50%);
-  width:4px;height:4px;border-radius:50%;background:var(--green);
-}
-.cal-cell.today.has-event::after{background:#fff;}
-.cal-events{
-  flex-shrink:0;border-top:1px solid rgba(255,255,255,0.08);
-  padding-top:5px;display:flex;flex-direction:column;gap:2px;
-  max-height:48px;overflow:hidden;
-}
-.cal-ev-item{
-  display:flex;align-items:center;gap:5px;cursor:pointer;
-  font-size:calc(0.63em*var(--font-scale));border-radius:5px;
-  padding:1px 4px;transition:background 0.1s;
-}
-.cal-ev-item:hover{background:rgba(255,255,255,0.07);}
-.cal-ev-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
-.cal-ev-txt{color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.cal-empty{font-size:calc(0.6em*var(--font-scale));color:var(--text-3);}
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.4rem;
+      cursor: pointer;
+      transition: all 0.18s;
+      padding: 7px 14px;
+      border-radius: 50px;
+      min-width: 58px;
+    }
+    .nav-label {
+      font-size: 0.66rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .nav-item.active {
+      color: var(--accent-blue);
+      background: rgba(0, 113, 227, 0.1);
+    }
+    .nav-item:hover { color: var(--text-primary); }
 
-/* ═══════════ PHOTOS TILE ═══════════ */
-.tile-photos .tile-inner{gap:0;padding:0;overflow:hidden;}
-.photos-header{
-  position:absolute;top:0;left:0;right:0;z-index:20;
-  padding:12px 14px 8px;
-  background:linear-gradient(to bottom,rgba(0,0,0,0.5),transparent);
-  display:flex;align-items:center;gap:6px;
-}
-.photos-title{font-size:calc(0.65em*var(--font-scale));font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.7);flex:1;}
-.photos-controls{display:flex;gap:4px;}
-.ph-btn,.ph-upload-lbl{
-  width:26px;height:26px;border-radius:8px;
-  background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.15);
-  backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;
-  font-size:0.85em;cursor:pointer;transition:background 0.15s;color:#fff;
-}
-.ph-btn:hover,.ph-upload-lbl:hover{background:rgba(0,0,0,0.55);}
-.photos-img-wrap{width:100%;height:100%;position:relative;overflow:hidden;}
-.photos-img-wrap img{
-  width:100%;height:100%;object-fit:cover;
-  transition:opacity 0.7s ease,transform 8s ease;
-  transform:scale(1.04);
-}
-.photos-img-wrap img.zooming{transform:scale(1.0);}
-.photos-placeholder{
-  width:100%;height:100%;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:8px;
-  color:rgba(255,255,255,0.3);
-}
-.photos-placeholder .ph-icon{font-size:3em;}
-.photos-placeholder .ph-hint{font-size:0.75em;text-align:center;}
-.photos-bottom{
-  position:absolute;bottom:0;left:0;right:0;z-index:20;
-  padding:8px 14px 12px;
-  background:linear-gradient(to top,rgba(0,0,0,0.5),transparent);
-  display:flex;align-items:center;justify-content:space-between;
-}
-.photos-dots{display:flex;gap:4px;}
-.ph-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.3);transition:all 0.25s;}
-.ph-dot.on{background:#fff;width:14px;border-radius:3px;}
-.photos-counter{font-size:calc(0.6em*var(--font-scale));color:rgba(255,255,255,0.4);}
-.photos-source-bar{
-  position:absolute;bottom:0;left:0;right:0;z-index:21;
-  display:flex;gap:3px;padding:0 10px 8px;
-}
-.ph-src-btn{
-  flex:1;padding:4px;border-radius:7px;font-size:calc(0.58em*var(--font-scale));
-  background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);
-  backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;gap:3px;
-  cursor:pointer;transition:all 0.15s;color:rgba(255,255,255,0.6);
-}
-.ph-src-btn.on{background:rgba(255,255,255,0.18);border-color:rgba(255,255,255,0.3);color:#fff;}
+    .nav-burger { position: relative; }
+    .nav-burger .menu-dropdown {
+      position: absolute;
+      bottom: 62px;
+      left: 50%;
+      transform: translateX(-50%);
+      top: auto;
+      right: auto;
+      min-width: 220px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(40px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 8px;
+      box-shadow: var(--shadow-lg);
+    }
 
-/* ═══════════ SPOTIFY TILE ═══════════ */
-.sp-wrap{display:flex;gap:10px;align-items:center;flex:1;min-height:0;overflow:hidden;}
-.sp-art{
-  width:clamp(52px,7vw,80px);height:clamp(52px,7vw,80px);flex-shrink:0;
-  border-radius:10px;overflow:hidden;
-  background:rgba(255,255,255,0.06);
-  box-shadow:0 4px 20px rgba(0,0,0,0.5);
-  display:flex;align-items:center;justify-content:center;position:relative;
-}
-.sp-art img{width:100%;height:100%;object-fit:cover;}
-.sp-art-ph{font-size:1.8em;opacity:0.25;}
-.sp-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
-.sp-track{font-size:calc(0.88em*var(--font-scale));font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
-.sp-artist{font-size:calc(0.74em*var(--font-scale));color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sp-album{font-size:calc(0.62em*var(--font-scale));color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px;}
-.sp-prog-row{display:flex;align-items:center;gap:5px;}
-.sp-t{font-size:calc(0.58em*var(--font-scale));color:var(--text-3);font-variant-numeric:tabular-nums;flex-shrink:0;}
-.sp-bar{flex:1;height:3px;background:rgba(255,255,255,0.12);border-radius:2px;overflow:hidden;cursor:pointer;}
-.sp-fill{height:100%;background:linear-gradient(90deg,var(--green),#4adeab);border-radius:2px;transition:width 1s linear;}
-.sp-btns{display:flex;align-items:center;gap:5px;margin-top:4px;}
-.sp-btn{
-  width:28px;height:28px;border-radius:50%;
-  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
-  display:flex;align-items:center;justify-content:center;font-size:0.75em;
-  transition:all 0.15s;
-}
-.sp-btn:hover{background:rgba(255,255,255,0.15);}
-.sp-btn:active{transform:scale(0.9);}
-.sp-btn.play{
-  width:34px;height:34px;background:var(--green);border-color:transparent;
-  box-shadow:0 3px 12px rgba(30,215,96,0.5);font-size:0.9em;color:#000;
-}
-.sp-btn.play:hover{background:#35e86c;}
-.sp-footer{
-  display:flex;align-items:center;justify-content:space-between;
-  border-top:1px solid rgba(255,255,255,0.08);padding-top:6px;margin-top:4px;flex-shrink:0;
-}
-.sp-connect{
-  background:var(--green);color:#000;font-weight:700;
-  border-radius:20px;padding:4px 12px;font-size:calc(0.66em*var(--font-scale));
-  box-shadow:0 2px 10px rgba(30,215,96,0.4);transition:opacity 0.15s;
-}
-.sp-connect:hover{opacity:0.85;}
-.sp-status{font-size:calc(0.6em*var(--font-scale));color:var(--text-3);font-style:italic;}
-.sp-open{font-size:calc(0.62em*var(--font-scale));color:var(--text-3);padding:3px 8px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);}
-.sp-open:hover{background:rgba(255,255,255,0.12);}
+    .burger-menu-wrapper {
+      position: absolute;
+      top: 24px;
+      right: 28px;
+      z-index: 100;
+    }
+    .burger-menu {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      color: var(--text-primary);
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s;
+    }
+    .burger-menu:hover {
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: var(--shadow-md);
+    }
+    .menu-dropdown {
+      position: absolute;
+      top: 60px;
+      right: 0;
+      background: var(--glass-bg);
+      backdrop-filter: blur(40px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 8px;
+      min-width: 240px;
+      box-shadow: var(--shadow-lg);
+      z-index: 101;
+      display: none;
+    }
+    .menu-dropdown.show { display: block; }
+    .menu-item {
+      padding: 14px 20px;
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 16px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .menu-item:hover {
+      background: rgba(0, 113, 227, 0.1);
+      color: var(--accent-blue);
+    }
+    .menu-divider {
+      height: 1px;
+      background: var(--card-border);
+      margin: 8px 0;
+    }
 
-/* ═══════════ GEAR ═══════════ */
-.gear{
-  position:fixed;top:11px;right:11px;z-index:100;
-  width:38px;height:38px;border-radius:50%;
-  background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);
-  backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:center;
-  color:rgba(255,255,255,0.7);transition:all 0.25s;
-  box-shadow:0 2px 12px rgba(0,0,0,0.3);
-}
-.gear:hover{background:rgba(255,255,255,0.2);color:#fff;}
-.gear svg{width:17px;height:17px;}
-.gear.open{transform:rotate(55deg);background:rgba(61,142,255,0.35);color:#fff;border-color:rgba(61,142,255,0.5);}
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-auto-rows: minmax(150px, auto);
+      gap: 24px;
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px;
+    }
 
-/* ═══════════ SETTINGS PANEL ═══════════ */
-.settings-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);display:flex;justify-content:flex-end;}
-.settings-overlay.hidden{display:none;}
-.settings-panel{
-  width:min(390px,92vw);
-  background:rgba(18,18,28,0.96);
-  border-left:1px solid rgba(255,255,255,0.1);
-  backdrop-filter:blur(40px);
-  box-shadow:-10px 0 50px rgba(0,0,0,0.7);
-  display:flex;flex-direction:column;overflow:hidden;
-  animation:slideIn 0.22s ease;
-}
-@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
-.sp-hdr{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.07);
-  font-weight:600;font-size:1em;flex-shrink:0;
-}
-.sp-close{
-  width:27px;height:27px;border-radius:50%;
-  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
-  font-size:0.8em;display:flex;align-items:center;justify-content:center;
-  transition:background 0.15s;
-}
-.sp-close:hover{background:rgba(255,80,80,0.3);}
-.sp-body{flex:1;overflow-y:auto;padding:14px 18px 20px;display:flex;flex-direction:column;gap:20px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent;}
-.sp-section-title{font-size:0.65em;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:-6px;}
-.sp-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:0.86em;}
-.sp-row span{color:rgba(255,255,255,0.8);flex-shrink:0;}
-input[type=color]{width:34px;height:26px;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:2px;background:transparent;cursor:pointer;}
-.range-wrap{display:flex;align-items:center;gap:6px;flex:1;justify-content:flex-end;}
-input[type=range]{-webkit-appearance:none;appearance:none;width:100px;height:3px;border-radius:2px;background:rgba(255,255,255,0.12);outline:none;cursor:pointer;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,0.4);}
-.rval{min-width:32px;text-align:right;font-size:0.78em;color:rgba(255,255,255,0.5);font-variant-numeric:tabular-nums;}
-.txt-inp{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:5px 8px;color:#fff;font-size:0.83em;outline:none;width:130px;font-family:inherit;}
-.txt-inp:focus{border-color:var(--accent);}
-.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
-.preset{padding:6px 4px;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:0.75em;text-align:center;cursor:pointer;transition:all 0.15s;}
-.preset:hover,.preset.on{background:rgba(61,142,255,0.2);border-color:rgba(61,142,255,0.45);}
-.toggle-row{display:flex;align-items:center;justify-content:space-between;font-size:0.86em;}
-.toggle-row span{color:rgba(255,255,255,0.8);}
-.toggle{position:relative;width:40px;height:23px;flex-shrink:0;}
-.toggle input{opacity:0;width:0;height:0;}
-.tslider{position:absolute;inset:0;background:rgba(255,255,255,0.1);border-radius:12px;cursor:pointer;transition:background 0.2s;border:1px solid rgba(255,255,255,0.08);}
-.tslider::before{content:'';position:absolute;left:3px;top:3px;width:15px;height:15px;border-radius:50%;background:#fff;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.3);}
-.toggle input:checked+.tslider{background:var(--accent);}
-.toggle input:checked+.tslider::before{transform:translateX(17px);}
-.g-btn{
-  display:flex;align-items:center;justify-content:center;gap:6px;
-  padding:7px 12px;border-radius:10px;font-size:0.76em;font-weight:500;cursor:pointer;
-  border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.07);
-  transition:all 0.15s;flex:1;
-}
-.g-btn:hover{background:rgba(255,255,255,0.13);}
-.g-btn.ok{background:rgba(30,215,96,0.15);border-color:rgba(30,215,96,0.3);color:#6eed9a;}
-.g-btn svg{width:13px;height:13px;flex-shrink:0;}
-.g-row{display:flex;gap:6px;flex-wrap:wrap;}
-.g-stat{font-size:0.66em;color:rgba(255,255,255,0.38);font-style:italic;margin-top:-6px;}
-.sp-footer-btns{display:flex;gap:8px;justify-content:flex-end;padding-top:8px;border-top:1px solid rgba(255,255,255,0.07);margin-top:4px;}
-.btn-del{padding:7px 14px;border-radius:9px;background:rgba(255,80,80,0.13);border:1px solid rgba(255,80,80,0.22);font-size:0.82em;color:#ff8080;cursor:pointer;transition:background 0.15s;}
-.btn-del:hover{background:rgba(255,80,80,0.22);}
-.btn-ok{padding:7px 16px;border-radius:9px;background:var(--accent);color:#fff;font-weight:600;font-size:0.82em;cursor:pointer;box-shadow:0 2px 10px rgba(61,142,255,0.35);transition:opacity 0.15s;}
-.btn-ok:hover{opacity:0.85;}
+    .tile {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      padding: 24px 26px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: box-shadow 0.35s cubic-bezier(0.2,0.9,0.4,1), border-color 0.25s;
+      color: var(--text-primary);
+      transform-style: preserve-3d;
+      background-size: cover;
+      background-position: center;
+      /* inner top-edge highlight for depth illusion */
+      box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.75), inset 0 -1px 0 rgba(0,0,0,0.04);
+    }
+    /* Real strong 3D: large perspective tilt that looks physically lifted */
+    .tile[data-3d="low"]    { transform: perspective(900px) rotateX(2deg)  rotateY(-1deg)  translateZ(4px);  }
+    .tile[data-3d="medium"] { transform: perspective(700px) rotateX(6deg)  rotateY(-3deg)  translateZ(10px); }
+    .tile[data-3d="high"]   { transform: perspective(500px) rotateX(11deg) rotateY(-5deg)  translateZ(18px); }
 
-/* ═══════════ MODAL ═══════════ */
-.modal-bg{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;}
-.modal-bg.hidden{display:none;}
-.modal{background:rgba(22,22,34,0.98);border:1px solid rgba(255,255,255,0.12);border-radius:20px;width:min(330px,90vw);overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,0.8);animation:pop 0.2s ease;}
-@keyframes pop{from{transform:scale(0.9);opacity:0}to{transform:scale(1);opacity:1}}
-.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07);font-weight:600;font-size:0.95em;}
-.modal-body{padding:14px 16px;display:flex;flex-direction:column;gap:11px;}
-.modal-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:0.86em;}
-.modal-row span{color:rgba(255,255,255,0.7);flex-shrink:0;}
-.modal-row .txt-inp{width:155px;}
-.modal-row input[type=color]{width:34px;height:26px;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:2px;background:transparent;cursor:pointer;}
-.modal-ftr{display:flex;gap:7px;justify-content:flex-end;padding:9px 16px 14px;border-top:1px solid rgba(255,255,255,0.07);}
+    .tile:hover {
+      transform: perspective(600px) rotateX(4deg) rotateY(-2deg) translateZ(28px) scale(1.025);
+      box-shadow: 0 40px 80px -16px rgba(0,0,0,0.22), 0 16px 32px -8px rgba(0,0,0,0.12),
+                  inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.04);
+      border-color: rgba(255,255,255,0.7);
+      z-index: 5;
+    }
+    .tile:active {
+      transform: perspective(600px) rotateX(8deg) rotateY(-4deg) translateZ(6px) scale(0.98);
+    }
+    .tile.edit-mode {
+      border: 2px dashed var(--accent-blue);
+      cursor: grab;
+    }
+    /* Pinch resize indicator shown during active pinch gesture */
+    .tile.pinching {
+      outline: 2.5px solid var(--accent-blue);
+      outline-offset: 3px;
+      transition: outline 0.1s;
+    }
 
-/* ═══════════ DRAG MODE ═══════════ */
-.edit-mode .tile{cursor:grab;animation:wiggle 0.45s infinite alternate ease-in-out;}
-@keyframes wiggle{from{transform:rotate(-0.25deg) scale(0.997)}to{transform:rotate(0.25deg) scale(1.003)}}
-.tile.drag-target{outline:2px solid var(--accent);outline-offset:-2px;}
-</style>
+    .tile-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      font-weight: 600;
+      font-size: 1.3rem;
+      letter-spacing: -0.02em;
+      position: relative;
+      z-index: 2;
+    }
+    .tile-header span:first-child {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    /* ── TILE BIG 3D ICON ── */
+    .tile-big-icon {
+      position: absolute;
+      bottom: 18px;
+      right: 20px;
+      font-size: 4.2rem;
+      line-height: 1;
+      pointer-events: none;
+      z-index: 1;
+      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.22)) drop-shadow(0 2px 4px rgba(0,0,0,0.12));
+      transform: perspective(300px) rotateX(18deg) rotateY(-12deg) rotateZ(-4deg) translateZ(20px);
+      animation: iconFloat 3.8s ease-in-out infinite;
+      will-change: transform;
+      user-select: none;
+    }
+    @keyframes iconFloat {
+      0%   { transform: perspective(300px) rotateX(18deg) rotateY(-12deg) rotateZ(-4deg) translateZ(20px) translateY(0px);
+             filter: drop-shadow(0 8px 18px rgba(0,0,0,0.22)) drop-shadow(0 2px 4px rgba(0,0,0,0.12)); }
+      30%  { transform: perspective(300px) rotateX(22deg) rotateY(-8deg)  rotateZ(-2deg) translateZ(26px) translateY(-7px);
+             filter: drop-shadow(0 14px 28px rgba(0,0,0,0.18)) drop-shadow(0 4px 8px rgba(0,0,0,0.10)); }
+      60%  { transform: perspective(300px) rotateX(14deg) rotateY(-16deg) rotateZ(-6deg) translateZ(16px) translateY(-3px);
+             filter: drop-shadow(0 6px 14px rgba(0,0,0,0.25)) drop-shadow(0 2px 4px rgba(0,0,0,0.14)); }
+      100% { transform: perspective(300px) rotateX(18deg) rotateY(-12deg) rotateZ(-4deg) translateZ(20px) translateY(0px);
+             filter: drop-shadow(0 8px 18px rgba(0,0,0,0.22)) drop-shadow(0 2px 4px rgba(0,0,0,0.12)); }
+    }
+    /* Stagger animation per tile so they don't all float in sync */
+    .tile:nth-child(2) .tile-big-icon { animation-delay: -1.2s; }
+    .tile:nth-child(3) .tile-big-icon { animation-delay: -2.4s; }
+    .tile:nth-child(4) .tile-big-icon { animation-delay: -0.7s; }
+    .tile:nth-child(5) .tile-big-icon { animation-delay: -1.9s; }
+    .tile:nth-child(6) .tile-big-icon { animation-delay: -3.1s; }
+    .tile:nth-child(7) .tile-big-icon { animation-delay: -0.4s; }
+
+    .tile-icon { font-size: 1.6rem; line-height: 1; }
+    .tile-controls { display: flex; gap: 8px; }
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+      border: 0.5px solid var(--card-border);
+      color: var(--text-primary);
+      font-size: 1.2rem;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+      transition: 0.15s;
+    }
+    .icon-btn:hover {
+      background: rgba(0, 113, 227, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .tile-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+      z-index: 2;
+    }
+
+    .size-badge {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      padding: 4px 12px;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      z-index: 3;
+      border: 0.5px solid var(--card-border);
+    }
+
+    .flip-clock {
+      display: flex;
+      gap: 8px;
+      font-size: 4.5rem !important;
+      font-weight: 300;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      align-items: center;
+    }
+    .flip-digit {
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+      padding: 12px 18px;
+      border-radius: 20px;
+      box-shadow: var(--shadow-sm);
+      border: 0.5px solid var(--card-border);
+    }
+
+    .clockweather-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .weather-icon-animated {
+      font-size: 3.5rem;
+      line-height: 1;
+      display: inline-block;
+    }
+
+    .forecast-icons {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .forecast-item {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 10px 12px;
+      text-align: center;
+      border: 0.5px solid var(--card-border);
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .slideshow-full {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 28px;
+    }
+    .tile-slideshow { padding: 0 !important; }
+    .tile-slideshow .tile-header {
+      position: absolute;
+      top: 20px; left: 20px; right: 20px;
+      z-index: 5;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 40px;
+      padding: 8px 20px;
+      margin: 0;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .cal-day {
+      padding: 10px 0;
+      border-radius: 16px;
+      background: var(--glass-bg);
+      font-weight: 500;
+      text-align: center;
+    }
+    .today {
+      background: var(--accent-blue);
+      color: white;
+      font-weight: 600;
+    }
+    .has-event::after {
+      content: "•";
+      color: var(--accent-orange);
+      font-size: 20px;
+      line-height: 0;
+      display: block;
+    }
+
+    .app-btn {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 0.5px solid var(--card-border);
+      color: var(--text-primary);
+      padding: 16px 24px;
+      border-radius: 60px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s;
+    }
+    .app-btn:hover {
+      background: var(--accent-blue);
+      color: white;
+      border-color: transparent;
+    }
+
+    .settings-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.2);
+      backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .settings-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(50px);
+      border: 1px solid var(--card-border);
+      border-radius: 40px;
+      padding: 36px 40px;
+      width: 700px;
+      max-width: 90vw;
+      max-height: 85vh;
+      overflow-y: auto;
+      color: var(--text-primary);
+      box-shadow: var(--shadow-lg);
+    }
+    .input-group { margin-bottom: 24px; }
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+    }
+    .input-group input, .input-group textarea, .input-group select {
+      width: 100%;
+      padding: 16px 20px;
+      border-radius: 20px;
+      border: 1px solid var(--card-border);
+      background: rgba(255,255,255,0.5);
+      backdrop-filter: blur(10px);
+      color: var(--text-primary);
+      font-size: 1rem;
+    }
+    .hidden { display: none !important; }
+    .flex-row { display: flex; gap: 16px; flex-wrap: wrap; }
+    .color-row { display: flex; gap: 16px; align-items: center; }
+    .color-row input[type="color"] { width: 70px; height: 50px; border-radius: 20px; }
+  </style>
 </head>
-<body>
-
-<!-- AURORA -->
-<div id="aurora"><canvas id="auroraCanvas"></canvas></div>
-
-<!-- GEAR -->
-<button class="gear" id="gearBtn" title="Einstellungen">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="12" cy="12" r="3"/>
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-  </svg>
-</button>
-
-<!-- DASHBOARD -->
-<main id="dashboard" class="dashboard">
-
-  <!-- CLOCK -->
-  <div class="tile tile-clock" data-tile="clock">
-    <div class="tile-inner">
-      <div class="label"><span class="label-dot" style="background:var(--accent)"></span>Uhrzeit</div>
-      <div id="clockTime" class="clock-time">22:45</div>
-      <div id="clockDate" class="clock-date">Donnerstag, 9. April</div>
-      <div id="clockSecs" class="clock-secs">:00 · Berlin</div>
+<body class="theme-light">
+<div class="dashboard" id="dashboard">
+  <div class="main-content">
+    <div id="view-home" class="view active">
+      <div class="grid-container" id="grid-home"></div>
+    </div>
+    <div id="view-media" class="view">
+      <div class="grid-container" id="grid-media"></div>
+    </div>
+    <div id="view-tools" class="view">
+      <div class="grid-container" id="grid-tools"></div>
+    </div>
+    <div id="view-slideshow" class="view">
+      <div class="grid-container" id="grid-slideshow"></div>
     </div>
   </div>
 
-  <!-- WEATHER -->
-  <div class="tile tile-weather" data-tile="weather">
-    <div class="tile-inner">
-      <div class="label"><span class="label-dot" style="background:var(--teal)"></span>Wetter</div>
-      <div class="weather-top">
-        <div class="weather-left">
-          <div id="wIcon" class="weather-icon">🌤</div>
-          <div id="wTemp" class="weather-temp">18°</div>
-          <div id="wDesc" class="weather-desc">Teilweise bewölkt</div>
-          <div id="wMeta" class="weather-meta"><span>💧 62%</span><span>💨 14 km/h</span></div>
-        </div>
-        <div class="weather-right">
-          <div id="wCity" class="weather-city">Düsseldorf</div>
-          <div id="wFeels" class="weather-feels">Gefühlt 16°</div>
-        </div>
-      </div>
-      <div id="wForecast" class="forecast"></div>
-    </div>
-  </div>
+  <!-- Unsichtbare Touch-Zone unten -->
+  <div class="bottom-nav" id="bottomNav"></div>
 
-  <!-- CALENDAR -->
-  <div class="tile tile-calendar" data-tile="calendar">
-    <div class="tile-inner">
-      <div class="cal-head">
-        <button class="cal-nav-btn" id="calPrev">‹</button>
-        <div id="calLabel" class="cal-month">April 2026</div>
-        <button class="cal-nav-btn" id="calNext">›</button>
-        <button class="cal-add" id="calAdd">＋</button>
-      </div>
-      <div class="cal-dow"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
-      <div id="calGrid" class="cal-grid"></div>
-      <div id="calEvents" class="cal-events"></div>
-    </div>
-  </div>
-
-  <!-- PHOTOS -->
-  <div class="tile tile-photos" data-tile="photos">
-    <div class="photos-header">
-      <div class="photos-title">Fotos</div>
-      <div class="photos-controls">
-        <button class="ph-btn" id="phPrev">‹</button>
-        <button class="ph-btn" id="phPlay">⏸</button>
-        <button class="ph-btn" id="phNext">›</button>
-        <label class="ph-upload-lbl" title="Hochladen">📁<input type="file" id="phUpload" accept="image/*" multiple style="display:none"/></label>
-      </div>
-    </div>
-    <div class="photos-img-wrap" id="phWrap">
-      <img id="phImg" src="" alt="" style="display:none;opacity:0"/>
-      <div id="phPh" class="photos-placeholder">
-        <div class="ph-icon">🖼</div>
-        <div class="ph-hint">📁 Lokal · 📸 Google Fotos · ☁️ Drive<br>Tippe zum Hinzufügen</div>
-      </div>
-    </div>
-    <div class="photos-bottom">
-      <div id="phDots" class="photos-dots"></div>
-      <div id="phCount" class="photos-counter"></div>
-    </div>
-    <div class="photos-source-bar">
-      <button class="ph-src-btn on" id="phSrcLocal">📁 Lokal</button>
-      <button class="ph-src-btn" id="phSrcGP">📸 Fotos</button>
-      <button class="ph-src-btn" id="phSrcDrive">☁️ Drive</button>
-    </div>
-  </div>
-
-  <!-- SPOTIFY -->
-  <div class="tile tile-spotify" data-tile="spotify">
-    <div class="tile-inner">
-      <div class="label">
-        <span class="label-dot" style="background:var(--green)"></span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="#1ed760"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.87 7.077-.496 9.713 1.115.294.18.387.563.206.857zm1.223-2.722a.78.78 0 0 1-1.072.257C14.1 12.26 10.64 11.7 7.4 12.646a.779.779 0 1 1-.451-1.489c3.668-1.113 7.527-.574 10.378 1.489a.779.779 0 0 1 .307 1.056zm.105-2.835C15.199 9.04 10.537 8.88 7.43 9.797a.935.935 0 1 1-.541-1.789c3.571-1.08 9.504-.872 13.253 1.455a.935.935 0 0 1-1.228 1.404z"/></svg>
-        Spotify
-      </div>
-      <div class="sp-wrap">
-        <div class="sp-art"><img id="spArt" src="" alt="" style="display:none"/><div id="spArtPh" class="sp-art-ph">♪</div></div>
-        <div class="sp-info">
-          <div id="spTrack" class="sp-track">Kein Titel</div>
-          <div id="spArtist" class="sp-artist">Unbekannt</div>
-          <div id="spAlbum" class="sp-album">–</div>
-          <div class="sp-prog-row">
-            <span id="spCur" class="sp-t">0:00</span>
-            <div class="sp-bar"><div id="spFill" class="sp-fill" style="width:0%"></div></div>
-            <span id="spTot" class="sp-t">0:00</span>
-          </div>
-          <div class="sp-btns">
-            <button class="sp-btn" id="spPrev">⏮</button>
-            <button class="sp-btn play" id="spPlay">▶</button>
-            <button class="sp-btn" id="spNext">⏭</button>
-          </div>
-        </div>
-      </div>
-      <div class="sp-footer">
-        <button class="sp-connect" id="spConnectBtn">Mit Spotify verbinden</button>
-        <span id="spStatus" class="sp-status">Mock-Daten aktiv</span>
-        <a class="sp-open" href="https://open.spotify.com" target="_blank">Öffnen ↗</a>
-      </div>
-    </div>
-  </div>
-
-</main>
-
-<!-- SETTINGS -->
-<div id="settingsOverlay" class="settings-overlay hidden">
-  <div class="settings-panel">
-    <div class="sp-hdr"><span>⚙ Einstellungen</span><button id="spCloseBtn" class="sp-close">✕</button></div>
-    <div class="sp-body">
-
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div class="sp-section-title">Design</div>
-        <label class="sp-row"><span>Hintergrund</span><input type="color" id="sBg" value="#0a0a14"/></label>
-        <label class="sp-row"><span>Kachel-Farbe</span><input type="color" id="sTile" value="#ffffff"/></label>
-        <label class="sp-row"><span>Text</span><input type="color" id="sText" value="#ffffff"/></label>
-        <label class="sp-row"><span>Transparenz</span><div class="range-wrap"><input type="range" id="sAlpha" min="5" max="90" value="11"/><span class="rval" id="sAlphaV">11%</span></div></label>
-        <label class="sp-row"><span>Schriftgröße</span><div class="range-wrap"><input type="range" id="sFontSz" min="70" max="130" value="100"/><span class="rval" id="sFontSzV">100%</span></div></label>
-        <label class="sp-row"><span>Radius</span><div class="range-wrap"><input type="range" id="sRadius" min="4" max="32" value="18"/><span class="rval" id="sRadiusV">18px</span></div></label>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div class="sp-section-title">Themes</div>
-        <div class="presets">
-          <button class="preset on" data-t="aurora">🌌 Aurora</button>
-          <button class="preset" data-t="midnight">🌙 Midnight</button>
-          <button class="preset" data-t="ocean">🌊 Ozean</button>
-          <button class="preset" data-t="forest">🌿 Wald</button>
-          <button class="preset" data-t="rose">🌸 Rose</button>
-          <button class="preset" data-t="gold">✨ Gold</button>
-        </div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div class="sp-section-title">🎵 Spotify</div>
-        <label class="sp-row"><span>Client ID</span><input type="text" id="sSpClientId" class="txt-inp" placeholder="Spotify Client ID"/></label>
-        <div class="g-row">
-          <button class="g-btn" id="sSpConnect">
-            <svg viewBox="0 0 24 24" fill="#1ed760"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.87 7.077-.496 9.713 1.115.294.18.387.563.206.857zm1.223-2.722a.78.78 0 0 1-1.072.257C14.1 12.26 10.64 11.7 7.4 12.646a.779.779 0 1 1-.451-1.489c3.668-1.113 7.527-.574 10.378 1.489a.779.779 0 0 1 .307 1.056zm.105-2.835C15.199 9.04 10.537 8.88 7.43 9.797a.935.935 0 1 1-.541-1.789c3.571-1.08 9.504-.872 13.253 1.455a.935.935 0 0 1-1.228 1.404z"/></svg>
-            Verbinden
-          </button>
-          <button class="g-btn ok" id="sSpDisconnect" style="display:none">✓ Trennen</button>
-        </div>
-        <div class="g-stat" id="sSpStatus">Nicht verbunden · Redirect URI: stafaaaa.github.io/Wetter/dashboard.html</div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div class="sp-section-title">📸 Google Fotos</div>
-        <label class="sp-row"><span>Client ID</span><input type="text" id="sGpClientId" class="txt-inp" placeholder="Google Client ID"/></label>
-        <div class="g-row">
-          <button class="g-btn" id="sGpConnect">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-            Verbinden
-          </button>
-          <button class="g-btn ok" id="sGpDisconnect" style="display:none">✓ Trennen</button>
-        </div>
-        <div class="g-stat" id="sGpStatus">Nicht verbunden</div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div class="sp-section-title">☁️ Google Drive</div>
-        <label class="sp-row"><span>Ordner-ID</span><input type="text" id="sDriveFolderId" class="txt-inp" placeholder="Ordner-ID"/></label>
-        <div class="g-row">
-          <button class="g-btn" id="sDriveConnect">
-            <svg viewBox="0 0 24 24" fill="#4285F4"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
-            Verbinden
-          </button>
-          <button class="g-btn ok" id="sDriveDisconnect" style="display:none">✓ Trennen</button>
-        </div>
-        <div class="g-stat" id="sDriveStatus">Nicht verbunden</div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div class="sp-section-title">🌤 Wetter</div>
-        <label class="sp-row"><span>Stadt</span><input type="text" id="sCity" class="txt-inp" value="Düsseldorf" placeholder="Stadt"/></label>
-        <label class="sp-row"><span>API-Key</span><input type="text" id="sWeatherKey" class="txt-inp" placeholder="OpenWeatherMap Key"/></label>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div class="sp-section-title">Slideshow</div>
-        <label class="sp-row"><span>Intervall (s)</span><div class="range-wrap"><input type="range" id="sInterval" min="5" max="120" value="30"/><span class="rval" id="sIntervalV">30s</span></div></label>
-        <div class="toggle-row"><span>Fotos löschen</span><button class="btn-del" id="sClearPhotos" style="padding:4px 10px;font-size:.73em">🗑 Alle</button></div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div class="sp-section-title">Layout</div>
-        <div class="toggle-row"><span>Kacheln verschieben</span><label class="toggle"><input type="checkbox" id="sEditMode"/><span class="tslider"></span></label></div>
-      </div>
-
-      <div class="sp-footer-btns">
-        <button class="btn-del" id="sReset">↺ Standard</button>
-        <button class="btn-ok" id="spClose2">✓ Fertig</button>
+  <!-- Bubble-Leiste erscheint beim Tippen -->
+  <div class="nav-bubble-bar" id="navBubbleBar">
+    <button class="nav-item active" data-view="home"><span>🏠</span><span class="nav-label">Start</span></button>
+    <button class="nav-item" data-view="media"><span>🎬</span><span class="nav-label">Medien</span></button>
+    <button class="nav-item" data-view="tools"><span>📋</span><span class="nav-label">Tools</span></button>
+    <button class="nav-item" data-view="slideshow"><span>🖼️</span><span class="nav-label">Slides</span></button>
+    <div class="nav-item nav-burger" id="bottomBurgerBtn">
+      <span>☰</span>
+      <span class="nav-label">Menü</span>
+      <div class="menu-dropdown" id="bottomMenuDropdown">
+        <div class="menu-item" id="bottomMenuEditToggle">✎ Bearbeiten</div>
+        <div class="menu-item" id="bottomMenuUploadImages">🖼️ Bilder hochladen</div>
+        <div class="menu-item" id="bottomMenuOpenSettings">⚙️ Einstellungen</div>
+        <div class="menu-item" id="bottomMenuAddTile">➕ Neue Kachel</div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" id="bottomMenuReset">↻ Reset</div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- CALENDAR MODAL -->
-<div id="calModal" class="modal-bg hidden">
-  <div class="modal">
-    <div class="modal-hdr"><span id="calModalTitle">Termin</span><button id="calModalClose" class="sp-close">✕</button></div>
-    <div class="modal-body">
-      <div class="modal-row"><span>Titel</span><input type="text" id="calTitle" class="txt-inp" placeholder="Termintitel"/></div>
-      <div class="modal-row"><span>Datum</span><input type="date" id="calDate" class="txt-inp"/></div>
-      <div class="modal-row"><span>Uhrzeit</span><input type="time" id="calTime" class="txt-inp" value="09:00"/></div>
-      <div class="modal-row"><span>Farbe</span><input type="color" id="calColor" value="#3d8eff"/></div>
+<!-- Einstellungen Modal -->
+<div id="settingsModal" class="settings-overlay hidden">
+  <div class="settings-card">
+    <h2 style="margin-bottom:32px; font-weight:600; letter-spacing:-0.02em;">Einstellungen</h2>
+    <div class="input-group"><label>📍 Stadt</label><input type="text" id="settingsCity" value="Düsseldorf"></div>
+    <div class="input-group"><label>⏱️ Slideshow (Sek)</label><input type="number" id="settingsSlideshowSec" value="6"></div>
+    <div class="input-group"><label>🎵 Spotify Link</label><input type="text" id="settingsSpotify" value="spotify:"></div>
+    <div class="input-group"><label>▶️ YouTube Link</label><input type="text" id="settingsYoutube" value="vnd.youtube://"></div>
+    <div class="input-group"><label>🎶 Amazon Music Link</label><input type="text" id="settingsAmazonMusic" value="amazonmusic://"></div>
+    <div class="input-group"><label>🍳 Rezepte-URL</label><input type="text" id="settingsRecipeUrl" value="https://www.chefkoch.de/"></div>
+    <div class="input-group"><label>📋 Termine</label><textarea id="settingsAppointments" rows="3">2026-04-10 09:00 | Arzttermin
+2026-04-12 14:30 | Team Meeting</textarea></div>
+    <div class="input-group">
+      <label>🖼️ Dashboard-Hintergrund</label>
+      <div class="flex-row"><button class="app-btn" id="uploadDashboardBgBtn">📸 Bild wählen</button><button class="app-btn" id="removeDashboardBgBtn">🗑️ Entfernen</button></div>
     </div>
-    <div class="modal-ftr">
-      <button class="btn-del" id="calDelete" style="display:none">🗑 Löschen</button>
-      <button class="btn-ok" id="calSave">💾 Speichern</button>
+    <div class="input-group"><label>🎨 Hintergrundfarbe</label><div class="color-row"><input type="color" id="dashboardBgColor" value="#f5f5f7"><input type="text" id="dashboardBgColorText"></div></div>
+    <div class="input-group">
+      <label>🎨 Erscheinungsbild</label>
+      <select id="settingsTheme"><option value="light">Hell</option><option value="dark">Dunkel</option></select>
     </div>
+    <div class="input-group"><label>✏️ Schriftgröße</label><select id="settingsFontSize"><option value="medium">Mittel</option><option value="small">Klein</option><option value="large">Groß</option></select></div>
+    <div class="input-group"><label>🔮 Kachel-Transparenz</label><input type="range" id="tileOpacitySlider" min="0.3" max="1.0" step="0.05" value="0.75"><span id="tileOpacityValue">0.75</span></div>
+    <div class="input-group">
+      <label>🧊 3D-Effekt</label>
+      <select id="settings3DEffect"><option value="low">Leicht</option><option value="medium" selected>Mittel</option><option value="high">Stark</option></select>
+    </div>
+    <div class="input-group"><label>🎨 Akzentfarbe</label><div class="color-row"><input type="color" id="globalAccentColor" value="#0071e3"><input type="text" id="globalAccentColorText"></div></div>
+    <div class="input-group"><label>✏️ Schriftfarbe</label><div class="color-row"><input type="color" id="globalTextColor" value="#1d1d1f"><input type="text" id="globalTextColorText"></div></div>
+    <div class="input-group"><label>🎨 Menü-Button</label><div class="color-row"><input type="color" id="menuBtnColor" value="#ffffff"><input type="text" id="menuBtnColorText"></div></div>
+    <div class="flex-row"><button class="app-btn" id="saveSettingsBtn">Speichern</button><button class="app-btn" id="closeSettingsBtn">Abbrechen</button></div>
+  </div>
+</div>
+
+<!-- Kachel-Einstellungen Modal -->
+<div id="tileSettingsModal" class="settings-overlay hidden">
+  <div class="settings-card" style="width:550px;">
+    <h2>Kachel anpassen</h2>
+    <input type="hidden" id="currentTileId">
+    <div class="input-group"><label>Titel</label><input type="text" id="tileTitle"></div>
+    <div class="input-group"><label>Hintergrundfarbe</label><div class="color-row"><input type="color" id="tileColor"><input type="text" id="tileColorText"></div></div>
+    <div class="input-group"><label>Hintergrundbild</label><div class="flex-row"><button class="app-btn" id="uploadTileBgBtn">📸 Bild</button><button class="app-btn" id="removeTileBgBtn">🗑️</button></div></div>
+    <div class="input-group"><label>Transparenz</label><input type="range" id="tileOpacity" min="0.1" max="1.0" step="0.05" value="0.75"><span id="tileOpacityVal">0.75</span></div>
+    <div class="input-group">
+      <label>Größe</label>
+      <select id="tileSizeSelect">
+        <option value="1,1">Klein (1x1)</option>
+        <option value="2,2">Mittel (2x2)</option>
+        <option value="3,3">Groß (3x3)</option>
+        <option value="2,1">Breit (2x1)</option>
+        <option value="3,2">Extra (3x2)</option>
+      </select>
+    </div>
+    <div id="appFields" class="hidden">
+      <div class="input-group"><label>App-Link</label><input type="text" id="tileAppLink"></div>
+    </div>
+    <div class="flex-row"><button class="app-btn" id="saveTileSettingsBtn">Speichern</button><button class="app-btn" id="closeTileSettingsBtn">Abbrechen</button></div>
+  </div>
+</div>
+
+<!-- Neue Kachel Modal -->
+<div id="addTileModal" class="settings-overlay hidden">
+  <div class="settings-card" style="width:500px;">
+    <h2 style="margin-bottom:24px;">Neue Kachel</h2>
+    <div class="input-group">
+      <label>Typ</label>
+      <select id="newTileType">
+        <option value="clockweather">🕐🌤️ Uhr+Wetter</option>
+        <option value="clock">🕐 Uhr</option>
+        <option value="weather">🌤️ Wetter</option>
+        <option value="calendar">📅 Kalender</option>
+        <option value="slideshow">🖼️ Slideshow</option>
+        <option value="appointments">📋 Termine</option>
+        <option value="spotify">🎵 Spotify</option>
+        <option value="youtube">▶️ YouTube</option>
+        <option value="amazonmusic">🎶 Amazon Music</option>
+        <option value="recipe">🍳 Rezepte</option>
+        <option value="app">📱 Eigene App</option>
+      </select>
+    </div>
+    <div class="input-group"><label>Titel (optional)</label><input type="text" id="newTileTitle"></div>
+    <div id="newAppLinkGroup" class="input-group hidden"><label>App-Link</label><input type="text" id="newTileAppLink"></div>
+    <div class="flex-row"><button class="app-btn" id="confirmAddTileBtn">Hinzufügen</button><button class="app-btn" id="cancelAddTileBtn">Abbrechen</button></div>
   </div>
 </div>
 
 <script>
-'use strict';
-// ══════════════════════════════════════════
-// STORAGE
-// ══════════════════════════════════════════
-const S={
-  get:(k,fb=null)=>{try{const v=localStorage.getItem('db3_'+k);return v!==null?JSON.parse(v):fb;}catch{return fb;}},
-  set:(k,v)=>{try{localStorage.setItem('db3_'+k,JSON.stringify(v));}catch{}}
-};
+  (function(){
+    "use strict";
 
-// ══════════════════════════════════════════
-// INDEXEDDB FOR PHOTOS
-// ══════════════════════════════════════════
-const IDB=(()=>{
-  const NM='db3img',ST='imgs';let db=null;
-  const open=()=>new Promise((res,rej)=>{
-    if(db)return res(db);
-    const r=indexedDB.open(NM,1);
-    r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains(ST))d.createObjectStore(ST,{keyPath:'id',autoIncrement:true});};
-    r.onsuccess=e=>{db=e.target.result;res(db);};r.onerror=e=>rej(e);
-  });
-  const getAll=async()=>{const d=await open();return new Promise((res,rej)=>{const r=d.transaction(ST,'readonly').objectStore(ST).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=e=>rej(e);});};
-  const add=async(data,src,name)=>{const d=await open();return new Promise((res,rej)=>{const r=d.transaction(ST,'readwrite').objectStore(ST).add({data,src,name});r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e);});};
-  const clear=async()=>{const d=await open();return new Promise((res,rej)=>{const r=d.transaction(ST,'readwrite').objectStore(ST).clear();r.onsuccess=()=>res();r.onerror=e=>rej(e);});};
-  return{getAll,add,clear};
-})();
+    let tiles = [];
+    let editMode = false;
+    let nextTileId = 1000;
+    let currentView = 'home';
+    // FIX #3: Slideshow timer reference so it can be cleared/reset when interval changes
+    let slideshowTimer = null;
 
-// ══════════════════════════════════════════
-// CONFIG & STATE
-// ══════════════════════════════════════════
-const REDIRECT='https://stafaaaa.github.io/Wetter/dashboard.html';
+    const DEFAULT_TILES = [
+      { id: 1, type: 'clockweather', title: 'Start', colSpan: 3, rowSpan: 3, color: '#ffffff', bgImage: '', opacity: 0.75, view: 'home' },
+      { id: 4, type: 'slideshow', title: 'Slideshow', colSpan: 6, rowSpan: 4, color: '#ffffff', bgImage: '', opacity: 0.75, view: 'slideshow' },
+      { id: 5, type: 'calendar', title: 'Kalender', colSpan: 2, rowSpan: 2, color: '#ffffff', bgImage: '', opacity: 0.75, view: 'tools' },
+      { id: 6, type: 'appointments', title: 'Termine', colSpan: 2, rowSpan: 2, color: '#ffffff', bgImage: '', opacity: 0.75, view: 'tools' },
+      { id: 7, type: 'youtube', title: 'YouTube', colSpan: 2, rowSpan: 2, color: '#ffffff', bgImage: '', opacity: 0.75, view: 'media' },
+      { id: 8, type: 'amazonmusic', title: 'Amazon Music', colSpan: 2, rowSpan: 2, color: '#ffffff', bgImage: '', opacity: 0.75, view: 'media' },
+      { id: 9, type: 'recipe', title: 'Rezepte', colSpan: 2, rowSpan: 2, color: '#ffffff', bgImage: '', opacity: 0.75, view: 'tools' }
+    ];
 
-const DEF={
-  bg:'#0a0a14',tileColor:'#ffffff',textColor:'#ffffff',alpha:11,
-  fontSize:100,radius:18,interval:30,
-  city:'Düsseldorf',weatherKey:'',editMode:false,
-  gpClientId:'',gpToken:'',gpExpiry:0,
-  driveToken:'',driveExpiry:0,driveFolderId:''
-};
+    let userConfig = {
+      city: 'Düsseldorf', slideshowInterval: 6,
+      spotifyUrl: 'spotify:', youtubeUrl: 'vnd.youtube://', amazonMusicUrl: 'amazonmusic://',
+      recipeUrl: 'https://www.chefkoch.de/',
+      appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
+      globalAccent: '#0071e3', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium',
+      tileOpacity: 0.75, dashboardBgImage: '', dashboardBgColor: '#f5f5f7',
+      menuBtnColor: '#ffffff',
+      effect3D: 'medium'
+    };
 
-const THEMES={
-  aurora:{bg:'#060a14',tileColor:'#a0c0ff',textColor:'#ffffff',alpha:11},
-  midnight:{bg:'#0d0d1a',tileColor:'#ffffff',textColor:'#e8eaf0',alpha:13},
-  ocean:{bg:'#030d1e',tileColor:'#60c8ff',textColor:'#cce8ff',alpha:12},
-  forest:{bg:'#050f08',tileColor:'#60e890',textColor:'#ccffe0',alpha:11},
-  rose:{bg:'#160510',tileColor:'#ff80b4',textColor:'#ffe0ef',alpha:12},
-  gold:{bg:'#120e00',tileColor:'#ffcc44',textColor:'#fff8e0',alpha:10}
-};
+    let uploadedImages = [];
+    let currentEditingTileId = null;
 
-const WI={'01d':'☀️','01n':'🌙','02d':'⛅','02n':'🌥','03d':'🌥','03n':'🌥','04d':'☁️','04n':'☁️','09d':'🌧','09n':'🌧','10d':'🌦','10n':'🌧','11d':'⛈','11n':'⛈','13d':'❄️','13n':'❄️','50d':'🌫','50n':'🌫'};
+    const tileIcons = {
+      clock: '🕐', weather: '🌤️', clockweather: '🕐🌤️', calendar: '📅',
+      slideshow: '🖼️', appointments: '📋', spotify: '🎵', youtube: '▶️',
+      amazonmusic: '🎶', recipe: '🍳', app: '📱'
+    };
 
-const MOCK_W={city:'Düsseldorf',temp:18,feels:16,desc:'Teilweise bewölkt',icon:'02d',humidity:62,wind:14,forecast:[{d:'Do',i:'03d',h:19,l:12},{d:'Fr',i:'10d',h:14,l:9},{d:'Sa',i:'01d',h:22,l:13},{d:'So',i:'01d',h:24,l:14},{d:'Mo',i:'02d',h:20,l:12}]};
-const MOCK_T=[
-  {t:'Burning Down the House',a:'Talking Heads',al:'Speaking in Tongues',dur:197},
-  {t:'This Must Be the Place',a:'Talking Heads',al:'Speaking in Tongues',dur:272},
-  {t:'Running Up That Hill',a:'Kate Bush',al:'Hounds of Love',dur:300},
-  {t:'Take On Me',a:'a-ha',al:'Hunting High and Low',dur:225},
-  {t:'Once in a Lifetime',a:'Talking Heads',al:'Remain in Light',dur:244}
-];
-
-let cfg={...DEF,...S.get('cfg',{})};
-let events=S.get('events',[]);
-let photos=[]; // {data,src,name}
-let phIdx=0,phPlaying=true,phTimer=null;
-let calY,calM,calEditId=null;
-let spToken=S.get('spToken',''),spExp=S.get('spExp',0),spRefresh=S.get('spRefresh','');
-let spPlaying=true,spMockIdx=0,spMockElapsed=82,spMockDur=197,spMockTimer=null,spPollTimer=null;
-
-// ══════════════════════════════════════════
-// AURORA CANVAS
-// ══════════════════════════════════════════
-const cvs=document.getElementById('auroraCanvas');
-const ctx2=cvs.getContext('2d');
-let af=0;
-function resizeCvs(){cvs.width=innerWidth;cvs.height=innerHeight;}
-function drawAurora(){
-  const w=cvs.width,h=cvs.height,t=af*0.0025;
-  ctx2.clearRect(0,0,w,h);
-  // deep space base
-  const bg=ctx2.createLinearGradient(0,0,0,h);
-  bg.addColorStop(0,'#02030a');bg.addColorStop(1,'#060310');
-  ctx2.fillStyle=bg;ctx2.fillRect(0,0,w,h);
-  // aurora bands
-  const bands=[
-    {x:0.1+Math.sin(t*0.7)*0.15, y:0.25+Math.sin(t*0.5)*0.08, rx:0.6, ry:0.18, hue:160, sat:70, lit:45, a:0.18},
-    {x:0.3+Math.cos(t*0.4)*0.12, y:0.15+Math.cos(t*0.6)*0.07, rx:0.5, ry:0.14, hue:200, sat:80, lit:55, a:0.15},
-    {x:0.6+Math.sin(t*0.5)*0.1,  y:0.35+Math.sin(t*0.8)*0.06, rx:0.45,ry:0.12, hue:270, sat:75, lit:50, a:0.13},
-    {x:0.2+Math.cos(t*0.6)*0.08, y:0.55+Math.cos(t*0.4)*0.05, rx:0.4, ry:0.1,  hue:140, sat:65, lit:40, a:0.1},
-    {x:0.75+Math.sin(t*0.8)*0.1, y:0.2+Math.sin(t*0.3)*0.08,  rx:0.35,ry:0.13, hue:320, sat:60, lit:50, a:0.1},
-    {x:0.5+Math.cos(t*0.3)*0.15, y:0.7+Math.cos(t*0.7)*0.05,  rx:0.55,ry:0.09, hue:180, sat:70, lit:45, a:0.09},
-  ];
-  bands.forEach(b=>{
-    const cx=b.x*w,cy=b.y*h;
-    const gx=ctx2.createRadialGradient(cx,cy,0,cx,cy,Math.max(b.rx*w,b.ry*h));
-    gx.addColorStop(0,`hsla(${b.hue},${b.sat}%,${b.lit}%,${b.a})`);
-    gx.addColorStop(0.5,`hsla(${b.hue+20},${b.sat-10}%,${b.lit-5}%,${b.a*0.4})`);
-    gx.addColorStop(1,'transparent');
-    ctx2.save();
-    ctx2.scale(1,b.ry/b.rx);
-    ctx2.fillStyle=gx;
-    ctx2.beginPath();
-    ctx2.arc(cx,cy*(b.rx/b.ry),b.rx*w,0,Math.PI*2);
-    ctx2.fill();
-    ctx2.restore();
-  });
-  // stars
-  if(af%3===0){
-    for(let i=0;i<4;i++){
-      const sx=Math.random()*w,sy=Math.random()*h*0.6;
-      const sr=Math.random()*1.2;
-      const sa=Math.random()*0.6+0.1;
-      ctx2.beginPath();
-      ctx2.arc(sx,sy,sr,0,Math.PI*2);
-      ctx2.fillStyle=`rgba(255,255,255,${sa})`;
-      ctx2.fill();
+    // Derive a contextual big icon from the tile's title text (falls back to type icon)
+    function getBigIconForTile(tile) {
+      const t = (tile.title || '').toLowerCase();
+      // Type-based overrides first (most reliable)
+      const typeMap = {
+        clock: '🕰️', weather: '🌤️', clockweather: '🕰️', calendar: '📅',
+        slideshow: '🖼️', appointments: '📋', spotify: '🎵', youtube: '▶️',
+        amazonmusic: '🎶', recipe: '🍳', app: '📱'
+      };
+      if (typeMap[tile.type]) return typeMap[tile.type];
+      // Title keyword matching
+      const keywords = [
+        ['wetter','wolke','regen','sonne'],  '🌤️',
+        ['uhr','zeit','clock'],              '🕰️',
+        ['kalender','calendar','termin'],   '📅',
+        ['termin','appointment','meeting'],  '📋',
+        ['slide','foto','bild','photo'],     '🖼️',
+        ['spotify','musik','music'],         '🎵',
+        ['youtube','video','stream'],        '▶️',
+        ['amazon','prime','audio'],          '🎶',
+        ['rezept','koch','food','essen'],    '🍳',
+        ['news','nachrichten'],              '📰',
+        ['notiz','note'],                   '📝',
+        ['todo','aufgabe','task'],           '✅',
+        ['karte','map','navigation'],        '🗺️',
+        ['sport','fitness'],                '🏃',
+        ['home','haus','start'],             '🏠',
+        ['auto','fahrt','car'],              '🚗',
+        ['shop','einkauf','market'],         '🛒',
+        ['mail','email','post'],             '📧',
+        ['telefon','phone','anruf'],         '📞',
+        ['kamera','photo','camera'],         '📷',
+        ['licht','light','lampe'],           '💡',
+        ['alarm','wake','wecker'],           '⏰',
+        ['info','über','about'],             'ℹ️',
+        ['settings','einstellung'],          '⚙️',
+      ];
+      for (let i = 0; i < keywords.length; i += 2) {
+        if (keywords[i].some(kw => t.includes(kw))) return keywords[i+1];
+      }
+      return tileIcons[tile.type] || '📦';
     }
-  }
-  af++;requestAnimationFrame(drawAurora);
-}
 
-// ══════════════════════════════════════════
-// APPLY CONFIG
-// ══════════════════════════════════════════
-function apply(){
-  const r=document.documentElement;
-  const tc=hex2rgb(cfg.tileColor)||{r:255,g:255,b:255};
-  r.style.setProperty('--glass',`rgba(${tc.r},${tc.g},${tc.b},${(cfg.alpha/100).toFixed(2)})`);
-  r.style.setProperty('--glass-border',`rgba(${tc.r},${tc.g},${tc.b},${Math.min((cfg.alpha/100)*1.6,0.35).toFixed(2)})`);
-  r.style.setProperty('--text',cfg.textColor);
-  r.style.setProperty('--r',cfg.radius+'px');
-  r.style.setProperty('--font-scale',(cfg.fontSize/100).toFixed(2));
-  document.body.style.background=cfg.bg;
-}
-function hex2rgb(h){const r=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h);return r?{r:parseInt(r[1],16),g:parseInt(r[2],16),b:parseInt(r[3],16)}:null;}
-function saveCfg(){S.set('cfg',cfg);apply();}
-
-// ══════════════════════════════════════════
-// CLOCK
-// ══════════════════════════════════════════
-function tick(){
-  const n=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Berlin'}));
-  const hh=String(n.getHours()).padStart(2,'0');
-  const mm=String(n.getMinutes()).padStart(2,'0');
-  const ss=String(n.getSeconds()).padStart(2,'0');
-  document.getElementById('clockTime').innerHTML=`${hh}<span style="opacity:.4">:</span>${mm}`;
-  document.getElementById('clockSecs').textContent=`:${ss} · Berlin`;
-  const days=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
-  const mons=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  document.getElementById('clockDate').textContent=`${days[n.getDay()]}, ${n.getDate()}. ${mons[n.getMonth()]}`;
-}
-
-// ══════════════════════════════════════════
-// WEATHER
-// ══════════════════════════════════════════
-function renderW(d){
-  document.getElementById('wIcon').textContent=WI[d.icon]||'🌤';
-  document.getElementById('wTemp').textContent=Math.round(d.temp)+'°';
-  document.getElementById('wDesc').textContent=d.desc;
-  document.getElementById('wCity').textContent=d.city;
-  document.getElementById('wFeels').textContent='Gefühlt '+Math.round(d.feels)+'°';
-  document.getElementById('wMeta').innerHTML=`<span>💧 ${d.humidity}%</span><span>💨 ${d.wind} km/h</span>`;
-  document.getElementById('wForecast').innerHTML=d.forecast.map(f=>`
-    <div class="fc-day">
-      <div class="fc-name">${f.d}</div>
-      <div class="fc-icon">${WI[f.i]||'🌤'}</div>
-      <div class="fc-hi">${f.h}°</div>
-      <div class="fc-lo">${f.l}°</div>
-    </div>`).join('');
-}
-async function fetchW(){
-  const k=cfg.weatherKey,c=cfg.city;
-  if(!k){renderW({...MOCK_W,city:c});return;}
-  try{
-    const r=await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(c)}&appid=${k}&units=metric&lang=de`);
-    if(!r.ok)throw 0;
-    const j=await r.json();
-    const cur=j.list[0];
-    const dm={};
-    j.list.forEach(item=>{
-      const dk=new Date(item.dt*1000).toLocaleDateString('de-DE',{weekday:'short',timeZone:'Europe/Berlin'});
-      if(!dm[dk])dm[dk]={ts:[],i:item.weather[0].icon};
-      dm[dk].ts.push(item.main.temp);
-    });
-    const fc=Object.entries(dm).slice(1,6).map(([d,v])=>({d,i:v.i,h:Math.round(Math.max(...v.ts)),l:Math.round(Math.min(...v.ts))}));
-    renderW({city:c,temp:cur.main.temp,feels:cur.main.feels_like,desc:cur.weather[0].description,icon:cur.weather[0].icon,humidity:cur.main.humidity,wind:Math.round(cur.wind.speed*3.6),forecast:fc});
-  }catch{renderW({...MOCK_W,city:c});}
-}
-
-// ══════════════════════════════════════════
-// CALENDAR
-// ══════════════════════════════════════════
-function calInit(){
-  const n=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Berlin'}));
-  calY=n.getFullYear();calM=n.getMonth();renderCal();
-}
-function renderCal(){
-  const MS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  document.getElementById('calLabel').textContent=MS[calM]+' '+calY;
-  const g=document.getElementById('calGrid');g.innerHTML='';
-  const fd=new Date(calY,calM,1).getDay();
-  const off=fd===0?6:fd-1;
-  const dim=new Date(calY,calM+1,0).getDate();
-  const dimp=new Date(calY,calM,0).getDate();
-  const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Berlin'}));
-  const tod=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  const cells=[];
-  for(let i=off-1;i>=0;i--)cells.push({d:dimp-i,cur:false});
-  for(let d=1;d<=dim;d++)cells.push({d,cur:true});
-  while(cells.length<42)cells.push({d:cells.length-dim-off+1,cur:false});
-  cells.forEach(({d,cur})=>{
-    const ds=cur?`${calY}-${String(calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`:'' ;
-    const hasEv=cur&&events.some(e=>e.date===ds);
-    const isT=cur&&ds===tod;
-    const el=document.createElement('div');
-    el.className='cal-cell'+(isT?' today':'')+((!cur)?' other':'')+(hasEv?' has-event':'');
-    el.textContent=d;
-    if(cur)el.addEventListener('click',()=>openCalModal(null,ds));
-    g.appendChild(el);
-  });
-  renderCalEvents();
-}
-function renderCalEvents(){
-  const el=document.getElementById('calEvents');
-  const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Berlin'}));
-  const tod=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  const rel=events.filter(e=>e.date>=tod&&e.date.startsWith(`${calY}-${String(calM+1).padStart(2,'0')}`)).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
-  if(!rel.length){el.innerHTML=`<div class="cal-empty">Keine Termine</div>`;return;}
-  el.innerHTML=rel.map(e=>`<div class="cal-ev-item" data-id="${e.id}"><div class="cal-ev-dot" style="background:${e.color}"></div><div class="cal-ev-txt">${e.time?e.time+' · ':''}${e.title}</div></div>`).join('');
-  el.querySelectorAll('.cal-ev-item').forEach(item=>{
-    item.addEventListener('click',()=>{const ev=events.find(e=>e.id==item.dataset.id);if(ev)openCalModal(ev);});
-  });
-}
-function openCalModal(ev=null,prefill=null){
-  calEditId=ev?ev.id:null;
-  document.getElementById('calModalTitle').textContent=ev?'Bearbeiten':'Termin hinzufügen';
-  document.getElementById('calDelete').style.display=ev?'':'none';
-  document.getElementById('calTitle').value=ev?ev.title:'';
-  document.getElementById('calDate').value=ev?ev.date:(prefill||'');
-  document.getElementById('calTime').value=ev?(ev.time||'09:00'):'09:00';
-  document.getElementById('calColor').value=ev?ev.color:'#3d8eff';
-  document.getElementById('calModal').classList.remove('hidden');
-  document.getElementById('calTitle').focus();
-}
-function saveCalEvent(){
-  const t=document.getElementById('calTitle').value.trim();
-  const d=document.getElementById('calDate').value;
-  if(!t||!d)return;
-  const entry={id:calEditId||Date.now(),title:t,date:d,time:document.getElementById('calTime').value,color:document.getElementById('calColor').value};
-  if(calEditId!==null){const i=events.findIndex(e=>e.id===calEditId);if(i>-1)events[i]=entry;}
-  else events.push(entry);
-  S.set('events',events);
-  document.getElementById('calModal').classList.add('hidden');
-  renderCal();
-}
-function delCalEvent(){
-  if(calEditId===null)return;
-  events=events.filter(e=>e.id!==calEditId);
-  S.set('events',events);
-  document.getElementById('calModal').classList.add('hidden');
-  renderCal();
-}
-
-// ══════════════════════════════════════════
-// PHOTOS / SLIDESHOW
-// ══════════════════════════════════════════
-function renderPhotos(){
-  const img=document.getElementById('phImg');
-  const ph=document.getElementById('phPh');
-  const dots=document.getElementById('phDots');
-  const count=document.getElementById('phCount');
-  if(!photos.length){img.style.display='none';ph.style.display='flex';dots.innerHTML='';count.textContent='';return;}
-  ph.style.display='none';
-  const item=photos[phIdx];
-  img.style.opacity='0';img.style.display='block';
-  img.src=item.data;
-  img.onload=()=>{img.style.opacity='1';};
-  if(img.complete&&img.naturalWidth)img.style.opacity='1';
-  count.textContent=`${phIdx+1} / ${photos.length}`;
-  if(photos.length<=12){
-    dots.innerHTML=photos.map((_,i)=>`<div class="ph-dot${i===phIdx?' on':''}"></div>`).join('');
-  }else dots.innerHTML='';
-}
-function phAdv(d=1){if(!photos.length)return;phIdx=(phIdx+d+photos.length)%photos.length;renderPhotos();}
-function phToggle(){phPlaying=!phPlaying;document.getElementById('phPlay').textContent=phPlaying?'⏸':'▶';if(phPlaying)startPhTimer();else clearTimeout(phTimer);}
-function startPhTimer(){clearTimeout(phTimer);if(!phPlaying||photos.length<2)return;phTimer=setTimeout(()=>{phAdv(1);startPhTimer();},cfg.interval*1000);}
-async function handleUpload(files){
-  for(const f of [...files]){
-    const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(f);});
-    await IDB.add(data,'local',f.name);
-  }
-  await loadLocalPhotos();
-}
-async function loadLocalPhotos(){
-  const recs=await IDB.getAll();
-  const local=recs.map(r=>({data:r.data,src:'local',name:r.name||''}));
-  photos=[...local,...photos.filter(p=>p.src!=='local')];
-  if(phIdx>=photos.length)phIdx=0;
-  document.getElementById('phSrcLocal').classList.add('on');
-  renderPhotos();startPhTimer();
-}
-async function clearPhotos(){await IDB.clear();photos=photos.filter(p=>p.src!=='local');phIdx=0;renderPhotos();startPhTimer();}
-
-// ══════════════════════════════════════════
-// SPOTIFY — PKCE + Implicit fallback
-// Redirect URI: stafaaaa.github.io/Wetter/dashboard.html
-// ══════════════════════════════════════════
-function spValid(){return spToken&&Date.now()<spExp-30000;}
-
-// PKCE helpers
-function rndStr(n){const c='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';let s='';const a=new Uint8Array(n);crypto.getRandomValues(a);a.forEach(b=>s+=c[b%c.length]);return s;}
-async function pkceChallenge(v){const d=new TextEncoder().encode(v);const h=await crypto.subtle.digest('SHA-256',d);return btoa(String.fromCharCode(...new Uint8Array(h))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
-
-async function spStartAuth(clientId){
-  const v=rndStr(64),ch=await pkceChallenge(v),st=rndStr(16);
-  S.set('spV',v);S.set('spSt',st);S.set('spCid',clientId);
-  const p=new URLSearchParams({
-    client_id:clientId,response_type:'code',
-    redirect_uri:REDIRECT,
-    code_challenge_method:'S256',code_challenge:ch,
-    state:st,
-    scope:'user-read-playback-state user-modify-playback-state user-read-currently-playing'
-  });
-  window.location.href='https://accounts.spotify.com/authorize?'+p;
-}
-
-async function spHandleCallback(){
-  const p=new URLSearchParams(location.search);
-  const code=p.get('code');if(!code)return false;
-  const v=S.get('spV',''),cid=S.get('spCid','');
-  if(!v||!cid){history.replaceState(null,'',location.pathname);return false;}
-  try{
-    const res=await fetch('https://accounts.spotify.com/api/token',{
-      method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:REDIRECT,client_id:cid,code_verifier:v})
-    });
-    const data=await res.json();
-    if(data.access_token){
-      spToken=data.access_token;spExp=Date.now()+(data.expires_in||3600)*1000;
-      spRefresh=data.refresh_token||'';
-      S.set('spToken',spToken);S.set('spExp',spExp);S.set('spRefresh',spRefresh);
-      S.set('spV','');S.set('spSt','');
-      history.replaceState(null,'',location.pathname);
-      return true;
+    // ---------- WEATHER HELPERS (FIX #1 + #2) ----------
+    // Full WMO weather code → emoji mapping
+    function getAnimatedWeatherIcon(code) {
+      if (code === 0) return '☀️';
+      if (code <= 2) return '⛅';
+      if (code === 3) return '☁️';
+      if (code <= 49) return '🌫️';
+      if (code <= 55) return '🌦️';
+      if (code <= 57) return '🌧️';
+      if (code <= 65) return '🌧️';
+      if (code <= 67) return '🌨️';
+      if (code <= 77) return '❄️';
+      if (code <= 82) return '🌧️';
+      if (code <= 86) return '🌨️';
+      if (code <= 99) return '⛈️';
+      return '🌡️';
     }
-  }catch{}
-  history.replaceState(null,'',location.pathname);return false;
-}
 
-async function spRefreshToken(){
-  const cid=S.get('spCid','');if(!spRefresh||!cid)return false;
-  try{
-    const res=await fetch('https://accounts.spotify.com/api/token',{
-      method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:new URLSearchParams({grant_type:'refresh_token',refresh_token:spRefresh,client_id:cid})
-    });
-    const data=await res.json();
-    if(data.access_token){
-      spToken=data.access_token;spExp=Date.now()+(data.expires_in||3600)*1000;
-      if(data.refresh_token)spRefresh=data.refresh_token;
-      S.set('spToken',spToken);S.set('spExp',spExp);S.set('spRefresh',spRefresh);
-      return true;
+    // Full WMO weather code → German description
+    function getWeatherDescription(code) {
+      if (code === 0) return 'Klarer Himmel';
+      if (code === 1) return 'Überwiegend klar';
+      if (code === 2) return 'Teilweise bewölkt';
+      if (code === 3) return 'Bedeckt';
+      if (code <= 49) return 'Neblig';
+      if (code <= 55) return 'Nieselregen';
+      if (code <= 57) return 'Gefrierender Nieselregen';
+      if (code <= 61) return 'Leichter Regen';
+      if (code <= 65) return 'Starker Regen';
+      if (code <= 67) return 'Gefrierender Regen';
+      if (code <= 71) return 'Leichter Schneefall';
+      if (code <= 75) return 'Starker Schneefall';
+      if (code <= 77) return 'Schneekörner';
+      if (code <= 82) return 'Regenschauer';
+      if (code <= 86) return 'Schneeschauer';
+      if (code <= 99) return 'Gewitter';
+      return 'Unbekannt';
     }
-  }catch{}return false;
-}
 
-async function spApi(method,path,body){
-  if(spToken&&!spValid()){const ok=await spRefreshToken();if(!ok){spShowMock();return null;}}
-  if(!spValid()){spShowMock();return null;}
-  try{
-    const o={method,headers:{Authorization:'Bearer '+spToken}};
-    if(body){o.headers['Content-Type']='application/json';o.body=JSON.stringify(body);}
-    const r=await fetch('https://api.spotify.com/v1'+path,o);
-    if(r.status===204)return{};
-    if(!r.ok){
-      if(r.status===401){const ok=await spRefreshToken();if(ok)return spApi(method,path,body);spToken='';S.set('spToken','');spShowMock();}
-      return null;
+    // ---------- STORAGE ----------
+    function loadFromStorage() {
+      try {
+        const savedTiles = localStorage.getItem('apple_dash_tiles');
+        const savedConfig = localStorage.getItem('apple_dash_config');
+        const savedImages = localStorage.getItem('apple_dash_images');
+        if (savedTiles) tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
+        else tiles = [...DEFAULT_TILES];
+        if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
+        if (savedImages) uploadedImages = JSON.parse(savedImages);
+        if (!tiles.length) tiles = [...DEFAULT_TILES];
+      } catch(e) { tiles = [...DEFAULT_TILES]; }
+      ensureUniqueIds();
+      applyAllSettings();
     }
-    return r.json();
-  }catch{return null;}
-}
 
-async function spFetch(){
-  const d=await spApi('GET','/me/player');
-  if(!d||!d.item){return;}
-  const tr=d.item,al=tr.album,art=al?.images?.[0]?.url;
-  document.getElementById('spTrack').textContent=tr.name;
-  document.getElementById('spArtist').textContent=tr.artists.map(a=>a.name).join(', ');
-  document.getElementById('spAlbum').textContent=al?.name||'';
-  const aImg=document.getElementById('spArt'),aPh=document.getElementById('spArtPh');
-  if(art){aImg.src=art;aImg.style.display='block';aPh.style.display='none';}
-  else{aImg.style.display='none';aPh.style.display='';}
-  const el=Math.floor((d.progress_ms||0)/1000),dur=Math.floor((tr.duration_ms||1)/1000);
-  document.getElementById('spFill').style.width=Math.min(100,(el/dur)*100)+'%';
-  document.getElementById('spCur').textContent=fmt(el);
-  document.getElementById('spTot').textContent=fmt(dur);
-  document.getElementById('spPlay').textContent=d.is_playing?'⏸':'▶';
-  spPlaying=d.is_playing;
-  document.getElementById('spConnectBtn').style.display='none';
-  document.getElementById('spStatus').textContent='✓ Verbunden';
-  document.getElementById('spStatus').style.color='var(--green)';
-  updateSpSettingsUI();
-}
+    function saveToStorage() {
+      try {
+        localStorage.setItem('apple_dash_tiles', JSON.stringify(tiles));
+        localStorage.setItem('apple_dash_config', JSON.stringify(userConfig));
+        localStorage.setItem('apple_dash_images', JSON.stringify(uploadedImages));
+      } catch(e) {}
+    }
 
-function spStartPoll(){clearInterval(spPollTimer);if(!spValid())return;spFetch();spPollTimer=setInterval(spFetch,5000);}
+    // FIX #6: nextTileId must be at least max existing ID to avoid collisions
+    function ensureUniqueIds() {
+      tiles.forEach(t => { if (!t.id) t.id = ++nextTileId; });
+      const maxId = Math.max(...tiles.map(t => t.id), nextTileId);
+      nextTileId = maxId;
+    }
 
-function spShowMock(){
-  clearInterval(spMockTimer);clearInterval(spPollTimer);
-  const t=MOCK_T[spMockIdx];
-  document.getElementById('spTrack').textContent=t.t;
-  document.getElementById('spArtist').textContent=t.a;
-  document.getElementById('spAlbum').textContent=t.al;
-  spMockDur=t.dur;updateSpProg();
-  document.getElementById('spPlay').textContent=spPlaying?'⏸':'▶';
-  document.getElementById('spConnectBtn').style.display='';
-  document.getElementById('spStatus').textContent='Mock-Daten aktiv';
-  document.getElementById('spStatus').style.color='';
-  document.getElementById('spArt').style.display='none';
-  document.getElementById('spArtPh').style.display='';
-  spStartMockTimer();
-}
-function updateSpProg(){
-  const p=Math.min(100,(spMockElapsed/spMockDur)*100);
-  document.getElementById('spFill').style.width=p+'%';
-  document.getElementById('spCur').textContent=fmt(spMockElapsed);
-  document.getElementById('spTot').textContent=fmt(spMockDur);
-}
-function spStartMockTimer(){
-  clearInterval(spMockTimer);if(!spPlaying)return;
-  spMockTimer=setInterval(()=>{
-    spMockElapsed=(spMockElapsed+1)%(spMockDur+1);
-    if(spMockElapsed===0){spMockIdx=(spMockIdx+1)%MOCK_T.length;const t=MOCK_T[spMockIdx];document.getElementById('spTrack').textContent=t.t;document.getElementById('spArtist').textContent=t.a;document.getElementById('spAlbum').textContent=t.al;spMockDur=t.dur;}
-    updateSpProg();
-  },1000);
-}
-function fmt(s){return`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;}
+    function resetToDefault() {
+      tiles = DEFAULT_TILES.map(t => ({...t}));
+      userConfig = {
+        city: 'Düsseldorf', slideshowInterval: 6, spotifyUrl: 'spotify:', youtubeUrl: 'vnd.youtube://',
+        amazonMusicUrl: 'amazonmusic://', recipeUrl: 'https://www.chefkoch.de/',
+        appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
+        globalAccent: '#0071e3', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium',
+        tileOpacity: 0.75, dashboardBgImage: '', dashboardBgColor: '#f5f5f7',
+        menuBtnColor: '#ffffff', effect3D: 'medium'
+      };
+      uploadedImages = [];
+      applyAllSettings();
+      saveToStorage();
+      renderAll();
+      // FIX #3: restart slideshow timer after reset
+      restartSlideshowTimer();
+    }
 
-// ══════════════════════════════════════════
-// GOOGLE PHOTOS
-// ══════════════════════════════════════════
-function gpOAuthUrl(clientId){
-  const p=new URLSearchParams({client_id:clientId,redirect_uri:REDIRECT,response_type:'token',scope:'https://www.googleapis.com/auth/photoslibrary.readonly',state:'gphotos',include_granted_scopes:'true'});
-  return'https://accounts.google.com/o/oauth2/v2/auth?'+p;
-}
-function driveOAuthUrl(clientId){
-  const p=new URLSearchParams({client_id:clientId,redirect_uri:REDIRECT,response_type:'token',scope:'https://www.googleapis.com/auth/drive.readonly',state:'gdrive',include_granted_scopes:'true'});
-  return'https://accounts.google.com/o/oauth2/v2/auth?'+p;
-}
-function handleGoogleCallback(){
-  if(!location.hash.includes('access_token'))return;
-  const p=new URLSearchParams(location.hash.substring(1));
-  const tok=p.get('access_token'),exp=Date.now()+(parseInt(p.get('expires_in')||3600)*1000),st=p.get('state');
-  if(!tok)return;
-  if(st==='gphotos'){cfg.gpToken=tok;cfg.gpExpiry=exp;saveCfg();fetchGPhotos();}
-  else if(st==='gdrive'){cfg.driveToken=tok;cfg.driveExpiry=exp;saveCfg();fetchDrive();}
-  history.replaceState(null,'',location.pathname);
-}
-function tokOk(exp){return exp&&Date.now()<exp-60000;}
+    function applyAllSettings() {
+      applyTheme(userConfig.theme);
+      applyFontSize(userConfig.fontSize);
+      applyDashboardBackground();
+      document.documentElement.style.setProperty('--menu-btn-bg', userConfig.menuBtnColor);
+      document.documentElement.style.setProperty('--accent-blue', userConfig.globalAccent);
+    }
+    function applyTheme(theme) { document.body.className = `theme-${theme}`; userConfig.theme = theme; }
+    function applyFontSize(size) { document.documentElement.style.fontSize = size === 'small' ? '14px' : (size === 'large' ? '18px' : '16px'); }
+    function applyDashboardBackground() {
+      if (userConfig.dashboardBgImage) {
+        document.body.style.backgroundImage = `url('${userConfig.dashboardBgImage}')`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+      } else {
+        document.body.style.backgroundImage = 'none';
+        document.body.style.backgroundColor = userConfig.dashboardBgColor;
+      }
+    }
 
-async function fetchGPhotos(){
-  if(!tokOk(cfg.gpExpiry)){document.getElementById('sGpStatus').textContent='Token abgelaufen';return;}
-  document.getElementById('sGpStatus').textContent='Lade…';
-  try{
-    const r=await fetch('https://photoslibrary.googleapis.com/v1/mediaItems?pageSize=50',{headers:{Authorization:'Bearer '+cfg.gpToken}});
-    if(!r.ok)throw 0;
-    const d=await r.json();
-    const items=(d.mediaItems||[]).filter(i=>i.mimeType?.startsWith('image/'));
-    const gp=items.map(i=>({data:i.baseUrl+'=w1920-h1080',src:'gphotos',name:i.filename||''}));
-    photos=[...photos.filter(p=>p.src!=='gphotos'),...gp];
-    phIdx=0;document.getElementById('phSrcGP').classList.add('on');renderPhotos();startPhTimer();
-    document.getElementById('sGpStatus').textContent=`✓ ${gp.length} Fotos geladen`;
-    document.getElementById('sGpConnect').style.display='none';
-    document.getElementById('sGpDisconnect').style.display='';
-  }catch{document.getElementById('sGpStatus').textContent='Fehler beim Laden';}
-}
+    function hexToRgba(hex, alpha) {
+      const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
 
-async function fetchDrive(){
-  if(!tokOk(cfg.driveExpiry)){document.getElementById('sDriveStatus').textContent='Token abgelaufen';return;}
-  const fid=cfg.driveFolderId||document.getElementById('sDriveFolderId').value.trim();
-  if(!fid){document.getElementById('sDriveStatus').textContent='Ordner-ID fehlt';return;}
-  document.getElementById('sDriveStatus').textContent='Lade…';
-  try{
-    const q=encodeURIComponent(`'${fid}' in parents and mimeType contains 'image/' and trashed=false`);
-    const r=await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,thumbnailLink)&pageSize=50`,{headers:{Authorization:'Bearer '+cfg.driveToken}});
-    if(!r.ok)throw 0;
-    const d=await r.json();
-    const drv=(d.files||[]).map(f=>({data:(f.thumbnailLink||'').replace('=s220','=s1600'),src:'drive',name:f.name})).filter(f=>f.data);
-    photos=[...photos.filter(p=>p.src!=='drive'),...drv];
-    phIdx=0;document.getElementById('phSrcDrive').classList.add('on');renderPhotos();startPhTimer();
-    document.getElementById('sDriveStatus').textContent=`✓ ${drv.length} Bilder`;
-    document.getElementById('sDriveConnect').style.display='none';
-    document.getElementById('sDriveDisconnect').style.display='';
-  }catch{document.getElementById('sDriveStatus').textContent='Fehler beim Laden';}
-}
+    // ---------- BOTTOM NAV: unsichtbare Zone → Bubbles erscheinen ----------
+    const bottomNav = document.getElementById('bottomNav');
+    const navBubbleBar = document.getElementById('navBubbleBar');
+    let navHideTimeout = null;
 
-// ══════════════════════════════════════════
-// SETTINGS
-// ══════════════════════════════════════════
-function fillSettings(){
-  document.getElementById('sBg').value=cfg.bg;
-  document.getElementById('sTile').value=cfg.tileColor;
-  document.getElementById('sText').value=cfg.textColor;
-  document.getElementById('sAlpha').value=cfg.alpha;document.getElementById('sAlphaV').textContent=cfg.alpha+'%';
-  document.getElementById('sFontSz').value=cfg.fontSize;document.getElementById('sFontSzV').textContent=cfg.fontSize+'%';
-  document.getElementById('sRadius').value=cfg.radius;document.getElementById('sRadiusV').textContent=cfg.radius+'px';
-  document.getElementById('sInterval').value=cfg.interval;document.getElementById('sIntervalV').textContent=cfg.interval+'s';
-  document.getElementById('sCity').value=cfg.city;
-  document.getElementById('sWeatherKey').value=cfg.weatherKey||'';
-  document.getElementById('sDriveFolderId').value=cfg.driveFolderId||'';
-  document.getElementById('sEditMode').checked=cfg.editMode;
-  const cid=S.get('spCid','');if(cid)document.getElementById('sSpClientId').value=cid;
-  const gpCid=S.get('gpCid','');if(gpCid)document.getElementById('sGpClientId').value=gpCid;
-  updateSpSettingsUI();
-  if(tokOk(cfg.gpExpiry)){document.getElementById('sGpConnect').style.display='none';document.getElementById('sGpDisconnect').style.display='';}
-  if(tokOk(cfg.driveExpiry)){document.getElementById('sDriveConnect').style.display='none';document.getElementById('sDriveDisconnect').style.display='';}
-}
-function openSettings(){fillSettings();document.getElementById('settingsOverlay').classList.remove('hidden');document.getElementById('gearBtn').classList.add('open');}
-function closeSettings(){document.getElementById('settingsOverlay').classList.add('hidden');document.getElementById('gearBtn').classList.remove('open');saveCfg();fetchW();startPhTimer();}
-function updateSpSettingsUI(){
-  const ok=spValid();
-  document.getElementById('sSpConnect').style.display=ok?'none':'';
-  document.getElementById('sSpDisconnect').style.display=ok?'':'none';
-  document.getElementById('sSpStatus').textContent=ok?'✓ Verbunden · Steuerung aktiv':'Redirect URI: stafaaaa.github.io/Wetter/dashboard.html';
-  document.getElementById('sSpStatus').style.color=ok?'var(--green)':'';
-}
-function wireSettings(){
-  document.getElementById('gearBtn').addEventListener('click',openSettings);
-  ['spCloseBtn','spClose2'].forEach(id=>document.getElementById(id).addEventListener('click',closeSettings));
-  document.getElementById('settingsOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('settingsOverlay'))closeSettings();});
+    function showNav() {
+      navBubbleBar.classList.add('nav-visible');
+      clearTimeout(navHideTimeout);
+      navHideTimeout = setTimeout(hideNav, 3500);
+    }
+    function hideNav() {
+      navBubbleBar.classList.remove('nav-visible');
+      clearTimeout(navHideTimeout);
+    }
 
-  // live color
-  document.getElementById('sBg').addEventListener('input',e=>{cfg.bg=e.target.value;apply();});
-  document.getElementById('sTile').addEventListener('input',e=>{cfg.tileColor=e.target.value;apply();});
-  document.getElementById('sText').addEventListener('input',e=>{cfg.textColor=e.target.value;apply();});
+    // Tippen auf die unsichtbare Zone unten → Bubbles zeigen
+    bottomNav.addEventListener('click', e => { e.stopPropagation(); showNav(); });
+    bottomNav.addEventListener('touchstart', e => { e.stopPropagation(); showNav(); }, { passive: true });
 
-  // sliders
-  [['sAlpha','alpha','sAlphaV','%'],['sFontSz','fontSize','sFontSzV','%'],['sRadius','radius','sRadiusV','px'],['sInterval','interval','sIntervalV','s',true]].forEach(([id,k,vid,sfx,noApply])=>{
-    document.getElementById(id).addEventListener('input',e=>{const v=+e.target.value;cfg[k]=v;document.getElementById(vid).textContent=v+sfx;if(!noApply)apply();});
-  });
-
-  // themes
-  document.querySelectorAll('.preset').forEach(b=>{
-    b.addEventListener('click',()=>{
-      const t=THEMES[b.dataset.t];if(!t)return;
-      Object.assign(cfg,t);apply();fillSettings();
-      document.querySelectorAll('.preset').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    // Tippen irgendwo außerhalb → Bubbles weg
+    document.addEventListener('click', e => {
+      if (!navBubbleBar.contains(e.target) && !bottomNav.contains(e.target)) hideNav();
     });
-  });
 
-  // text inputs
-  document.getElementById('sCity').addEventListener('change',e=>cfg.city=e.target.value);
-  document.getElementById('sWeatherKey').addEventListener('change',e=>cfg.weatherKey=e.target.value);
-  document.getElementById('sDriveFolderId').addEventListener('change',e=>cfg.driveFolderId=e.target.value);
-  document.getElementById('sEditMode').addEventListener('change',e=>{cfg.editMode=e.target.checked;toggleEdit(cfg.editMode);});
+    // Start: Bubbles versteckt
+    hideNav();
 
-  // reset
-  document.getElementById('sReset').addEventListener('click',()=>{Object.assign(cfg,DEF);apply();fillSettings();});
-  document.getElementById('sClearPhotos').addEventListener('click',async()=>{if(confirm('Alle lokalen Fotos löschen?'))await clearPhotos();});
+    // ---------- RENDERING ----------
+    function renderAll() {
+      renderView('home');
+      renderView('media');
+      renderView('tools');
+      renderView('slideshow');
+      attachBurgerMenu();
+    }
 
-  // Spotify
-  document.getElementById('sSpClientId').addEventListener('change',e=>S.set('spCid',e.target.value.trim()));
-  document.getElementById('sSpConnect').addEventListener('click',async()=>{
-    const cid=document.getElementById('sSpClientId').value.trim()||S.get('spCid','');
-    if(!cid){alert('Client ID eingeben!\n\nSo geht\'s:\n1. developer.spotify.com → Dashboard → App erstellen\n2. Settings → Redirect URIs:\n   https://stafaaaa.github.io/Wetter/dashboard.html\n3. Client ID hier einfügen');return;}
-    S.set('spCid',cid);await spStartAuth(cid);
-  });
-  document.getElementById('sSpDisconnect').addEventListener('click',()=>{
-    spToken='';spExp=0;S.set('spToken','');S.set('spExp',0);spShowMock();updateSpSettingsUI();
-  });
+    function renderView(viewName) {
+      const grid = document.getElementById(`grid-${viewName}`);
+      if (!grid) return;
+      grid.innerHTML = '';
+      let viewTiles = tiles.filter(t => t.view === viewName);
+      if (viewName === 'slideshow') {
+        const slideshowTile = viewTiles.find(t => t.type === 'slideshow');
+        if (slideshowTile) { slideshowTile.colSpan = 6; slideshowTile.rowSpan = 4; }
+      }
+      viewTiles.forEach(tile => { grid.appendChild(createTileElement(tile)); });
+      // FIX #5: Do NOT call refreshDynamicContents() here — content is already filled
+      // by createTileElement → fillTileContent. A second call would double-init tiles.
+    }
 
-  // Google Photos
-  document.getElementById('sGpClientId').addEventListener('change',e=>S.set('gpCid',e.target.value.trim()));
-  document.getElementById('sGpConnect').addEventListener('click',()=>{
-    const cid=document.getElementById('sGpClientId').value.trim()||S.get('gpCid','');
-    if(!cid){alert('Google Client ID eingeben!');return;}
-    S.set('gpCid',cid);cfg.gpClientId=cid;window.location.href=gpOAuthUrl(cid);
-  });
-  document.getElementById('sGpDisconnect').addEventListener('click',()=>{
-    cfg.gpToken='';cfg.gpExpiry=0;saveCfg();photos=photos.filter(p=>p.src!=='gphotos');renderPhotos();
-    document.getElementById('sGpConnect').style.display='';document.getElementById('sGpDisconnect').style.display='none';document.getElementById('sGpStatus').textContent='Getrennt';
-  });
+    function createTileElement(tile) {
+      const div = document.createElement('div');
+      div.className = `tile ${editMode ? 'edit-mode' : ''} ${tile.type === 'slideshow' ? 'tile-slideshow' : ''}`;
+      div.dataset.id = tile.id;
+      div.setAttribute('data-3d', userConfig.effect3D);
+      div.style.gridColumn = `span ${tile.colSpan || 2}`;
+      div.style.gridRow = `span ${tile.rowSpan || 2}`;
+      div.setAttribute('draggable', editMode);
 
-  // Drive
-  document.getElementById('sDriveConnect').addEventListener('click',()=>{
-    const cid=document.getElementById('sGpClientId').value.trim()||S.get('gpCid','');
-    if(!cid){alert('Google Client ID eingeben!');return;}
-    cfg.driveFolderId=document.getElementById('sDriveFolderId').value.trim();saveCfg();
-    window.location.href=driveOAuthUrl(cid);
-  });
-  document.getElementById('sDriveDisconnect').addEventListener('click',()=>{
-    cfg.driveToken='';cfg.driveExpiry=0;saveCfg();photos=photos.filter(p=>p.src!=='drive');renderPhotos();
-    document.getElementById('sDriveConnect').style.display='';document.getElementById('sDriveDisconnect').style.display='none';document.getElementById('sDriveStatus').textContent='Getrennt';
-  });
+      const bgColor = tile.color || userConfig.globalAccent;
+      const opacity = tile.opacity !== undefined ? tile.opacity : userConfig.tileOpacity;
+      if (tile.bgImage) {
+        div.style.backgroundImage = `url('${tile.bgImage}')`;
+        div.style.backgroundColor = 'transparent';
+      } else {
+        div.style.backgroundImage = 'none';
+        div.style.backgroundColor = hexToRgba(bgColor, opacity);
+      }
+      div.style.color = userConfig.globalTextColor;
 
-  // source buttons
-  document.getElementById('phSrcLocal').addEventListener('click',()=>{document.querySelectorAll('.ph-src-btn').forEach(b=>b.classList.remove('on'));document.getElementById('phSrcLocal').classList.add('on');const i=photos.findIndex(p=>p.src==='local');if(i>-1){phIdx=i;renderPhotos();}});
-  document.getElementById('phSrcGP').addEventListener('click',()=>{if(!tokOk(cfg.gpExpiry)){openSettings();return;}document.querySelectorAll('.ph-src-btn').forEach(b=>b.classList.remove('on'));document.getElementById('phSrcGP').classList.add('on');const i=photos.findIndex(p=>p.src==='gphotos');if(i>-1){phIdx=i;renderPhotos();}});
-  document.getElementById('phSrcDrive').addEventListener('click',()=>{if(!tokOk(cfg.driveExpiry)){openSettings();return;}document.querySelectorAll('.ph-src-btn').forEach(b=>b.classList.remove('on'));document.getElementById('phSrcDrive').classList.add('on');const i=photos.findIndex(p=>p.src==='drive');if(i>-1){phIdx=i;renderPhotos();}});
-}
+      const header = document.createElement('div'); header.className = 'tile-header';
+      const titleSpan = document.createElement('span');
+      titleSpan.innerHTML = `<span class="tile-icon">${tileIcons[tile.type] || '📦'}</span>${tile.title || tile.type}`;
+      header.appendChild(titleSpan);
 
-// ══════════════════════════════════════════
-// DRAG & DROP
-// ══════════════════════════════════════════
-function toggleEdit(on){document.getElementById('dashboard').classList.toggle('edit-mode',on);}
-let dragSrc=null;
-function wireDrag(){
-  document.querySelectorAll('.tile').forEach(t=>{
-    t.setAttribute('draggable',true);
-    t.addEventListener('dragstart',()=>{dragSrc=t;setTimeout(()=>t.style.opacity='.45',0);});
-    t.addEventListener('dragend',()=>{t.style.opacity='';document.querySelectorAll('.tile').forEach(x=>x.classList.remove('drag-target'));});
-    t.addEventListener('dragover',e=>{if(!cfg.editMode)return;e.preventDefault();t.classList.add('drag-target');});
-    t.addEventListener('dragleave',()=>t.classList.remove('drag-target'));
-    t.addEventListener('drop',e=>{
-      e.preventDefault();t.classList.remove('drag-target');
-      if(!cfg.editMode||!dragSrc||dragSrc===t)return;
-      const sa=getComputedStyle(dragSrc).gridArea,da=getComputedStyle(t).gridArea;
-      dragSrc.style.gridArea=da;t.style.gridArea=sa;
-      S.set('tileAreas',[...document.querySelectorAll('.tile')].map(x=>({id:x.dataset.tile,area:getComputedStyle(x).gridArea})));
-    });
-  });
-}
-function restoreAreas(){const sv=S.get('tileAreas',null);if(!sv)return;sv.forEach(({id,area})=>{const el=document.querySelector(`[data-tile="${id}"]`);if(el)el.style.gridArea=area;});}
+      const controls = document.createElement('div'); controls.className = 'tile-controls';
+      if (editMode) {
+        controls.innerHTML = `<button class="icon-btn tile-settings-btn" data-id="${tile.id}">⚙️</button>
+          <button class="icon-btn tile-delete-btn" data-id="${tile.id}">✕</button>`;
+      }
+      header.appendChild(controls);
+      div.appendChild(header);
 
-// ══════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════
-async function init(){
-  // 1. OAuth callbacks
-  await spHandleCallback();
-  handleGoogleCallback();
+      const content = document.createElement('div'); content.className = 'tile-content';
+      div.appendChild(content);
+      fillTileContent(tile, content);
 
-  // 2. Apply config
-  apply();restoreAreas();
+      // Big 3D floating icon — not for slideshow (it's a full-bleed image)
+      if (tile.type !== 'slideshow') {
+        const bigIcon = document.createElement('div');
+        bigIcon.className = 'tile-big-icon';
+        bigIcon.textContent = getBigIconForTile(tile);
+        div.appendChild(bigIcon);
+      }
 
-  // 3. Aurora
-  resizeCvs();drawAurora();window.addEventListener('resize',resizeCvs);
+      if (tile.type !== 'slideshow') {
+        const badge = document.createElement('div'); badge.className = 'size-badge';
+        badge.textContent = `${tile.colSpan}x${tile.rowSpan}`;
+        div.appendChild(badge);
+      }
 
-  // 4. Clock
-  tick();setInterval(tick,1000);
+      div.addEventListener('dragstart', handleDragStart);
+      div.addEventListener('dragover', handleDragOver);
+      div.addEventListener('drop', handleDrop);
+      div.addEventListener('dragend', handleDragEnd);
 
-  // 5. Weather
-  fetchW();setInterval(fetchW,10*60*1000);
+      // ── PINCH TO RESIZE ──
+      attachPinchResize(div, tile);
 
-  // 6. Calendar
-  calInit();
-  document.getElementById('calPrev').addEventListener('click',()=>{calM--;if(calM<0){calM=11;calY--;}renderCal();});
-  document.getElementById('calNext').addEventListener('click',()=>{calM++;if(calM>11){calM=0;calY++;}renderCal();});
-  document.getElementById('calAdd').addEventListener('click',()=>openCalModal());
-  document.getElementById('calModalClose').addEventListener('click',()=>document.getElementById('calModal').classList.add('hidden'));
-  document.getElementById('calModal').addEventListener('click',e=>{if(e.target===document.getElementById('calModal'))document.getElementById('calModal').classList.add('hidden');});
-  document.getElementById('calSave').addEventListener('click',saveCalEvent);
-  document.getElementById('calDelete').addEventListener('click',delCalEvent);
+      return div;
+    }
 
-  // 7. Photos
-  document.getElementById('phPrev').addEventListener('click',()=>phAdv(-1));
-  document.getElementById('phNext').addEventListener('click',()=>phAdv(1));
-  document.getElementById('phPlay').addEventListener('click',phToggle);
-  document.getElementById('phUpload').addEventListener('change',e=>{handleUpload(e.target.files);e.target.value='';});
-  // drag-drop onto photo tile
-  const pw=document.getElementById('phWrap');
-  pw.addEventListener('dragover',e=>{e.preventDefault();pw.style.outline='2px dashed rgba(255,255,255,.4)';});
-  pw.addEventListener('dragleave',()=>pw.style.outline='');
-  pw.addEventListener('drop',e=>{e.preventDefault();pw.style.outline='';if(e.dataTransfer.files.length)handleUpload(e.dataTransfer.files);});
-  await loadLocalPhotos();
-  if(tokOk(cfg.gpExpiry))fetchGPhotos();
-  if(tokOk(cfg.driveExpiry))fetchDrive();
+    // FIX #7: Shared helper to open settings modal, avoids code duplication
+    function openSettingsModal() {
+      document.getElementById('settingsCity').value = userConfig.city;
+      document.getElementById('settingsSlideshowSec').value = userConfig.slideshowInterval;
+      document.getElementById('settingsSpotify').value = userConfig.spotifyUrl;
+      document.getElementById('settingsYoutube').value = userConfig.youtubeUrl;
+      document.getElementById('settingsAmazonMusic').value = userConfig.amazonMusicUrl;
+      document.getElementById('settingsRecipeUrl').value = userConfig.recipeUrl;
+      document.getElementById('settingsAppointments').value = userConfig.appointmentsText;
+      document.getElementById('globalAccentColor').value = userConfig.globalAccent;
+      document.getElementById('globalAccentColorText').value = userConfig.globalAccent;
+      document.getElementById('globalTextColor').value = userConfig.globalTextColor;
+      document.getElementById('globalTextColorText').value = userConfig.globalTextColor;
+      document.getElementById('settingsTheme').value = userConfig.theme;
+      document.getElementById('settingsFontSize').value = userConfig.fontSize;
+      document.getElementById('tileOpacitySlider').value = userConfig.tileOpacity;
+      document.getElementById('tileOpacityValue').textContent = userConfig.tileOpacity;
+      document.getElementById('dashboardBgColor').value = userConfig.dashboardBgColor;
+      document.getElementById('dashboardBgColorText').value = userConfig.dashboardBgColor;
+      document.getElementById('menuBtnColor').value = userConfig.menuBtnColor;
+      document.getElementById('menuBtnColorText').value = userConfig.menuBtnColor;
+      document.getElementById('settings3DEffect').value = userConfig.effect3D;
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
 
-  // 8. Spotify
-  document.getElementById('spPlay').addEventListener('click',async()=>{
-    if(spValid()){if(spPlaying)await spApi('PUT','/me/player/pause');else await spApi('PUT','/me/player/play');setTimeout(spFetch,300);}
-    else{spPlaying=!spPlaying;document.getElementById('spPlay').textContent=spPlaying?'⏸':'▶';spStartMockTimer();}
-  });
-  document.getElementById('spPrev').addEventListener('click',async()=>{
-    if(spValid()){await spApi('POST','/me/player/previous');setTimeout(spFetch,600);}
-    else{spMockIdx=(spMockIdx-1+MOCK_T.length)%MOCK_T.length;spMockElapsed=0;spShowMock();}
-  });
-  document.getElementById('spNext').addEventListener('click',async()=>{
-    if(spValid()){await spApi('POST','/me/player/next');setTimeout(spFetch,600);}
-    else{spMockIdx=(spMockIdx+1)%MOCK_T.length;spMockElapsed=0;spShowMock();}
-  });
-  document.getElementById('spConnectBtn').addEventListener('click',()=>{openSettings();setTimeout(()=>document.getElementById('sSpClientId').focus(),350);});
+    function attachBurgerMenu() {
+      const oldWrapper = document.querySelector('.burger-menu-wrapper');
+      if (oldWrapper) oldWrapper.remove();
+      const wrapper = document.createElement('div');
+      wrapper.className = 'burger-menu-wrapper';
+      wrapper.innerHTML = `
+        <div class="burger-menu" id="burgerMenuBtn" style="background: ${userConfig.menuBtnColor};">☰</div>
+        <div class="menu-dropdown" id="menuDropdown">
+          <div class="menu-item" id="menuEditToggle">✎ Bearbeiten</div>
+          <div class="menu-item" id="menuUploadImages">🖼️ Bilder hochladen</div>
+          <div class="menu-item" id="menuOpenSettings">⚙️ Einstellungen</div>
+          <div class="menu-item" id="menuAddTile">➕ Neue Kachel</div>
+          <div class="menu-divider"></div>
+          <div class="menu-item" id="menuReset">↻ Reset</div>
+        </div>
+      `;
+      document.querySelector('.dashboard').appendChild(wrapper);
 
-  if(spValid())spStartPoll();else spShowMock();
+      const burgerBtn = document.getElementById('burgerMenuBtn');
+      const menuDropdown = document.getElementById('menuDropdown');
+      burgerBtn.addEventListener('click', (e) => { e.stopPropagation(); menuDropdown.classList.toggle('show'); });
+      document.addEventListener('click', (e) => { if (!burgerBtn.contains(e.target) && !menuDropdown.contains(e.target)) menuDropdown.classList.remove('show'); });
 
-  // 9. Settings + Drag
-  wireSettings();
-  toggleEdit(cfg.editMode);
-  wireDrag();
+      document.getElementById('menuEditToggle').onclick = () => { editMode = !editMode; menuDropdown.classList.remove('show'); renderAll(); };
+      document.getElementById('menuUploadImages').onclick = () => {
+        menuDropdown.classList.remove('show');
+        uploadImagesPrompt();
+      };
+      document.getElementById('menuOpenSettings').onclick = () => { menuDropdown.classList.remove('show'); openSettingsModal(); };
+      document.getElementById('menuAddTile').onclick = () => { menuDropdown.classList.remove('show'); openAddTileModal(); };
+      document.getElementById('menuReset').onclick = () => { if(confirm('Reset?')) resetToDefault(); menuDropdown.classList.remove('show'); };
+    }
 
-  // 10. Keyboard + touch
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.getElementById('settingsOverlay').classList.add('hidden');document.getElementById('calModal').classList.add('hidden');document.getElementById('gearBtn').classList.remove('open');}});
-  document.addEventListener('contextmenu',e=>e.preventDefault());
-  document.addEventListener('touchmove',e=>{
-    const tag=e.target.tagName;
-    const inScroll=e.target.closest('.sp-body,.settings-panel,.modal');
-    if(tag==='INPUT'||tag==='LABEL'||inScroll)return;
-    e.preventDefault();
-  },{passive:false});
-}
+    function uploadImagesPrompt() {
+      const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.multiple=true;
+      inp.onchange = e => {
+        Array.from(e.target.files).forEach(f => {
+          const r = new FileReader();
+          r.onload = ev => { uploadedImages.push(ev.target.result); saveToStorage(); renderAll(); };
+          r.readAsDataURL(f);
+        });
+      };
+      inp.click();
+    }
 
-document.addEventListener('DOMContentLoaded',init);
+    // ---------- BURGER IN LEISTE ----------
+    const bottomBurger = document.getElementById('bottomBurgerBtn');
+    const bottomMenu = document.getElementById('bottomMenuDropdown');
+    bottomBurger.addEventListener('click', (e) => { e.stopPropagation(); bottomMenu.classList.toggle('show'); });
+    document.addEventListener('click', (e) => { if (!bottomBurger.contains(e.target)) bottomMenu.classList.remove('show'); });
+
+    document.getElementById('bottomMenuEditToggle').onclick = () => { editMode = !editMode; bottomMenu.classList.remove('show'); renderAll(); };
+    document.getElementById('bottomMenuUploadImages').onclick = () => { bottomMenu.classList.remove('show'); uploadImagesPrompt(); };
+    document.getElementById('bottomMenuOpenSettings').onclick = () => { bottomMenu.classList.remove('show'); openSettingsModal(); };
+    document.getElementById('bottomMenuAddTile').onclick = () => { bottomMenu.classList.remove('show'); openAddTileModal(); };
+    document.getElementById('bottomMenuReset').onclick = () => { if(confirm('Zurücksetzen?')) resetToDefault(); bottomMenu.classList.remove('show'); };
+
+    // ---------- TILE CONTENT ----------
+    function fillTileContent(tile, container) {
+      const type = tile.type;
+      if (type === 'clock') renderFlipClock(container);
+      else if (type === 'clockweather') renderClockWeather(container);
+      else if (type === 'weather') renderWeatherAnimated(container);
+      else if (type === 'calendar') renderCalendar(container);
+      else if (type === 'slideshow') renderSlideshow(container);
+      else if (type === 'appointments') renderAppointments(container);
+      else if (type === 'spotify') renderSpotify(container);
+      else if (type === 'youtube') renderYoutube(container);
+      else if (type === 'amazonmusic') renderAmazonMusic(container);
+      else if (type === 'recipe') renderRecipe(container);
+      else if (type === 'app') renderApp(container, tile);
+    }
+
+    function renderFlipClock(container) {
+      const now = new Date();
+      container.innerHTML = `
+        <div class="flip-clock">
+          <span class="flip-digit">${String(now.getHours()).padStart(2,'0')}</span>
+          <span style="font-size:3rem;">:</span>
+          <span class="flip-digit">${String(now.getMinutes()).padStart(2,'0')}</span>
+        </div>
+        <div style="margin-top:16px; font-size:1.4rem; font-weight:400;">
+          ${now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'})}
+        </div>`;
+    }
+
+    // FIX #4: renderClockWeather builds the full structure first, then passes the
+    // already-mounted .weather-part node to renderWeatherAnimated — no innerHTML overwrite.
+    function renderClockWeather(container) {
+      const now = new Date();
+      container.innerHTML = `
+        <div class="clockweather-container">
+          <div class="flip-clock">
+            <span class="flip-digit">${String(now.getHours()).padStart(2,'0')}</span>
+            <span style="font-size:3rem;">:</span>
+            <span class="flip-digit">${String(now.getMinutes()).padStart(2,'0')}</span>
+          </div>
+          <div style="font-size:1.3rem; font-weight:400;">
+            ${now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'})}
+          </div>
+          <div class="weather-part">🌤️ Wetter lädt…</div>
+        </div>`;
+      // Pass the already-mounted node — no innerHTML will overwrite it now
+      const weatherPart = container.querySelector('.weather-part');
+      renderWeatherAnimated(weatherPart);
+    }
+
+    async function renderWeatherAnimated(container) {
+      const city = userConfig.city || 'Düsseldorf';
+      try {
+        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=de&format=json`);
+        const geoData = await geoRes.json();
+        if (!geoData.results || !geoData.results.length) throw new Error('Stadt nicht gefunden');
+        const { latitude, longitude, name } = geoData.results[0];
+
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=6`);
+        const data = await weatherRes.json();
+
+        const current = data.current;
+        const daily = data.daily;
+        const currentTemp = Math.round(current.temperature_2m);
+        const weatherCode = current.weather_code;
+        // FIX #1 + #2: Use the real icon and description based on WMO code
+        const icon = getAnimatedWeatherIcon(weatherCode);
+        const desc = getWeatherDescription(weatherCode);
+
+        let forecastHtml = '';
+        for (let i = 1; i <= 5; i++) {
+          const date = new Date(daily.time[i]);
+          const dayName = date.toLocaleDateString('de-DE', { weekday: 'short' });
+          const maxTemp = Math.round(daily.temperature_2m_max[i]);
+          const minTemp = Math.round(daily.temperature_2m_min[i]);
+          const fIcon = getAnimatedWeatherIcon(daily.weather_code[i]);
+          forecastHtml += `<div class="forecast-item">${fIcon}<br>${dayName}<br>${maxTemp}°/${minTemp}°</div>`;
+        }
+
+        container.innerHTML = `
+          <div style="display:flex; align-items:center; gap:20px;">
+            <div class="weather-icon-animated" style="font-size:3.5rem;">${icon}</div>
+            <div>
+              <div style="font-size:2.8rem; font-weight:300; line-height:1;">${currentTemp}°</div>
+              <div style="opacity:0.8; font-weight:500;">${desc}</div>
+              <div style="font-size:0.95rem; opacity:0.6;">${name}</div>
+            </div>
+          </div>
+          <div class="forecast-icons">${forecastHtml}</div>`;
+      } catch (e) {
+        container.innerHTML = `<div>🌥️ ${city}<br>–°<br><small>Offline / Fehler</small></div>`;
+      }
+    }
+
+    function renderCalendar(container) {
+      const today = new Date(); const y = today.getFullYear(), m = today.getMonth();
+      const firstDay = new Date(y, m, 1).getDay(); const days = new Date(y, m+1, 0).getDate();
+      let html = `<div style="font-weight:600; margin-bottom:12px; font-size:1.2rem;">${today.toLocaleString('de',{month:'long'})} ${y}</div><div class="calendar-grid">`;
+      ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => html += `<div style="font-weight:600;opacity:0.5;text-align:center;font-size:0.8rem;">${d}</div>`);
+      let start = (firstDay === 0) ? 6 : firstDay - 1;
+      for (let i = 0; i < start; i++) html += `<div></div>`;
+      for (let d = 1; d <= days; d++) {
+        const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isToday = (d === today.getDate() && m === today.getMonth());
+        const hasApp = userConfig.appointmentsText.split('\n').some(l => l.startsWith(ds));
+        html += `<div class="cal-day ${isToday?'today':''} ${hasApp?'has-event':''}">${d}</div>`;
+      }
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    function renderSlideshow(container) {
+      container.style.overflow = 'hidden';
+      container.style.position = 'relative';
+      if (!uploadedImages.length) {
+        container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;opacity:0.5;">📸 Bilder hochladen</div>`;
+        return;
+      }
+      let idx = (parseInt(container.dataset.slideIndex) || 0) % uploadedImages.length;
+      container.innerHTML = `<img class="slideshow-full" src="${uploadedImages[idx]}" alt="Slide ${idx+1}">`;
+      container.dataset.slideIndex = idx;
+    }
+
+    function renderAppointments(container) {
+      const lines = userConfig.appointmentsText.split('\n').filter(l => l.trim());
+      container.innerHTML = lines.length
+        ? lines.map(l => `<div style="padding:8px 0; border-bottom:0.5px solid var(--card-border);">📅 ${l}</div>`).join('')
+        : '<div style="opacity:0.5;">Keine Termine</div>';
+    }
+
+    function renderSpotify(container) {
+      container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.location.href='${userConfig.spotifyUrl}'">🎵 Spotify öffnen</button></div>`;
+    }
+    function renderYoutube(container) {
+      container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.location.href='${userConfig.youtubeUrl}'">▶️ YouTube öffnen</button></div>`;
+    }
+    function renderAmazonMusic(container) {
+      container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.location.href='${userConfig.amazonMusicUrl}'">🎶 Amazon Music öffnen</button></div>`;
+    }
+    function renderRecipe(container) {
+      container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${userConfig.recipeUrl}','_blank')">🍳 Rezepte öffnen</button></div>`;
+    }
+    function renderApp(container, tile) {
+      const appLink = tile.appLink || '#';
+      container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.location.href='${appLink}'">📱 ${tile.title || 'App'} öffnen</button></div>`;
+    }
+
+    // ── PINCH TO RESIZE ──────────────────────────────────────────────
+    // Two-finger pinch on a tile: spread fingers = grow, squeeze = shrink.
+    // Snaps to grid sizes: cols 1-6, rows 1-5.
+    // colSpan/rowSpan are updated live via grid style, then saved on touchend.
+    function attachPinchResize(el, tile) {
+      let startDist = 0;
+      let startCol = tile.colSpan;
+      let startRow = tile.rowSpan;
+      let activeTouches = [];
+
+      el.addEventListener('touchstart', e => {
+        if (e.touches.length === 2) {
+          e.preventDefault();
+          e.stopPropagation();
+          activeTouches = Array.from(e.touches);
+          startDist = getTouchDist(activeTouches);
+          startCol = tile.colSpan;
+          startRow = tile.rowSpan;
+          el.classList.add('pinching');
+        }
+      }, { passive: false });
+
+      el.addEventListener('touchmove', e => {
+        if (e.touches.length !== 2) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const currentDist = getTouchDist(Array.from(e.touches));
+        const ratio = currentDist / startDist;
+
+        // Scale factor → new grid spans (clamped)
+        const newCol = Math.min(6, Math.max(1, Math.round(startCol * ratio)));
+        const newRow = Math.min(5, Math.max(1, Math.round(startRow * ratio)));
+
+        // Apply live to grid without full re-render
+        el.style.gridColumn = `span ${newCol}`;
+        el.style.gridRow    = `span ${newRow}`;
+
+        // Update badge live
+        const badge = el.querySelector('.size-badge');
+        if (badge) badge.textContent = `${newCol}x${newRow}`;
+
+        tile.colSpan = newCol;
+        tile.rowSpan = newRow;
+      }, { passive: false });
+
+      el.addEventListener('touchend', e => {
+        if (activeTouches.length) {
+          el.classList.remove('pinching');
+          activeTouches = [];
+          saveToStorage();
+          // Brief flash to confirm save
+          el.style.transition = 'outline 0.05s';
+          el.classList.add('pinching');
+          setTimeout(() => el.classList.remove('pinching'), 350);
+        }
+      });
+    }
+
+    function getTouchDist(touches) {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+    // ─────────────────────────────────────────────────────────────────
+
+    // ---------- DRAG & DROP ----------
+    let dragSrc = null;
+    function handleDragStart(e) {
+      if (editMode) { dragSrc = this; this.classList.add('dragging'); }
+      else e.preventDefault();
+    }
+    function handleDragOver(e) { if (editMode) e.preventDefault(); }
+    function handleDrop(e) {
+      e.preventDefault();
+      if (!editMode || !dragSrc) return;
+      const target = this.closest('.tile');
+      if (!target || dragSrc === target) return;
+      const srcId = Number(dragSrc.dataset.id), targetId = Number(target.dataset.id);
+      const srcIdx = tiles.findIndex(t => t.id === srcId), tgtIdx = tiles.findIndex(t => t.id === targetId);
+      if (srcIdx > -1 && tgtIdx > -1) {
+        [tiles[srcIdx], tiles[tgtIdx]] = [tiles[tgtIdx], tiles[srcIdx]];
+        saveToStorage();
+        renderAll();
+      }
+    }
+    function handleDragEnd() { this.classList.remove('dragging'); }
+
+    // ---------- TILE SETTINGS ----------
+    function openTileSettings(tileId) {
+      const tile = tiles.find(t => t.id == tileId); if (!tile) return;
+      currentEditingTileId = tileId;
+      document.getElementById('currentTileId').value = tileId;
+      document.getElementById('tileTitle').value = tile.title || '';
+      document.getElementById('tileColor').value = tile.color || userConfig.globalAccent;
+      document.getElementById('tileColorText').value = tile.color || userConfig.globalAccent;
+      document.getElementById('tileOpacity').value = tile.opacity !== undefined ? tile.opacity : userConfig.tileOpacity;
+      document.getElementById('tileOpacityVal').textContent = document.getElementById('tileOpacity').value;
+      document.getElementById('tileSizeSelect').value = `${tile.colSpan},${tile.rowSpan}`;
+      const appFields = document.getElementById('appFields');
+      if (tile.type === 'app') { appFields.classList.remove('hidden'); document.getElementById('tileAppLink').value = tile.appLink || ''; }
+      else { appFields.classList.add('hidden'); }
+      document.getElementById('tileSettingsModal').classList.remove('hidden');
+    }
+
+    function openAddTileModal() {
+      document.getElementById('newTileType').value = 'clockweather';
+      document.getElementById('newTileTitle').value = '';
+      document.getElementById('newTileAppLink').value = '';
+      document.getElementById('newAppLinkGroup').classList.add('hidden');
+      document.getElementById('addTileModal').classList.remove('hidden');
+    }
+
+    // ---------- VIEW SWITCHING ----------
+    function switchView(viewName) {
+      currentView = viewName;
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(`view-${viewName}`).classList.add('active');
+      document.querySelectorAll('.nav-item[data-view]').forEach(n => n.classList.remove('active'));
+      document.querySelector(`.nav-item[data-view="${viewName}"]`).classList.add('active');
+      hideNav();
+    }
+
+    // FIX #3: Slideshow timer restart function — clears old timer and creates a new one
+    // with the current interval value. Call this after saving settings.
+    function restartSlideshowTimer() {
+      if (slideshowTimer) clearInterval(slideshowTimer);
+      slideshowTimer = setInterval(() => {
+        document.querySelectorAll('.tile').forEach(el => {
+          const t = tiles.find(tt => tt.id == el.dataset.id);
+          if (t && t.type === 'slideshow' && uploadedImages.length) {
+            const cont = el.querySelector('.tile-content');
+            if (!cont) return;
+            let idx = (parseInt(cont.dataset.slideIndex || 0) + 1) % uploadedImages.length;
+            cont.dataset.slideIndex = idx;
+            cont.innerHTML = `<img class="slideshow-full" src="${uploadedImages[idx]}" alt="Slide ${idx+1}">`;
+          }
+        });
+      }, userConfig.slideshowInterval * 1000);
+    }
+
+    // ---------- INIT ----------
+    function init() {
+      loadFromStorage();
+      renderAll();
+
+      // Nav
+      document.querySelectorAll('.nav-item[data-view]').forEach(btn => btn.addEventListener('click', () => switchView(btn.dataset.view)));
+
+      // Opacity slider live preview
+      document.getElementById('tileOpacitySlider').addEventListener('input', e => document.getElementById('tileOpacityValue').textContent = e.target.value);
+      document.getElementById('tileOpacity').addEventListener('input', e => document.getElementById('tileOpacityVal').textContent = e.target.value);
+
+      // Dashboard background upload
+      document.getElementById('uploadDashboardBgBtn').onclick = () => {
+        const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
+        inp.onchange = e => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = ev => { userConfig.dashboardBgImage = ev.target.result; applyDashboardBackground(); saveToStorage(); }; r.readAsDataURL(f); } };
+        inp.click();
+      };
+      document.getElementById('removeDashboardBgBtn').onclick = () => { userConfig.dashboardBgImage = ''; applyDashboardBackground(); saveToStorage(); };
+
+      // Color pickers — two-way sync between picker and text input
+      function syncColors(pickerId, textId) {
+        const picker = document.getElementById(pickerId), text = document.getElementById(textId);
+        picker.addEventListener('input', () => text.value = picker.value);
+        text.addEventListener('input', () => { if (/^#[0-9a-fA-F]{6}$/.test(text.value)) picker.value = text.value; });
+      }
+      syncColors('globalAccentColor', 'globalAccentColorText');
+      syncColors('globalTextColor', 'globalTextColorText');
+      syncColors('dashboardBgColor', 'dashboardBgColorText');
+      syncColors('tileColor', 'tileColorText');
+      syncColors('menuBtnColor', 'menuBtnColorText');
+
+      // Settings modal save/close
+      document.getElementById('closeSettingsBtn').onclick = () => document.getElementById('settingsModal').classList.add('hidden');
+      document.getElementById('saveSettingsBtn').onclick = () => {
+        userConfig.city = document.getElementById('settingsCity').value;
+        userConfig.slideshowInterval = parseInt(document.getElementById('settingsSlideshowSec').value) || 6;
+        userConfig.spotifyUrl = document.getElementById('settingsSpotify').value;
+        userConfig.youtubeUrl = document.getElementById('settingsYoutube').value;
+        userConfig.amazonMusicUrl = document.getElementById('settingsAmazonMusic').value;
+        userConfig.recipeUrl = document.getElementById('settingsRecipeUrl').value;
+        userConfig.appointmentsText = document.getElementById('settingsAppointments').value;
+        userConfig.globalAccent = document.getElementById('globalAccentColor').value;
+        userConfig.globalTextColor = document.getElementById('globalTextColor').value;
+        userConfig.theme = document.getElementById('settingsTheme').value;
+        userConfig.fontSize = document.getElementById('settingsFontSize').value;
+        userConfig.tileOpacity = parseFloat(document.getElementById('tileOpacitySlider').value);
+        userConfig.dashboardBgColor = document.getElementById('dashboardBgColor').value;
+        userConfig.menuBtnColor = document.getElementById('menuBtnColor').value;
+        userConfig.effect3D = document.getElementById('settings3DEffect').value;
+        applyAllSettings();
+        saveToStorage();
+        renderAll();
+        // FIX #3: restart slideshow timer with new interval
+        restartSlideshowTimer();
+        document.getElementById('settingsModal').classList.add('hidden');
+      };
+
+      // Tile settings modal save/close
+      document.getElementById('closeTileSettingsBtn').onclick = () => document.getElementById('tileSettingsModal').classList.add('hidden');
+      document.getElementById('saveTileSettingsBtn').onclick = () => {
+        const tileId = parseInt(document.getElementById('currentTileId').value);
+        const tile = tiles.find(t => t.id === tileId);
+        if (tile) {
+          tile.title = document.getElementById('tileTitle').value;
+          tile.color = document.getElementById('tileColor').value;
+          tile.opacity = parseFloat(document.getElementById('tileOpacity').value);
+          const [col, row] = document.getElementById('tileSizeSelect').value.split(',').map(Number);
+          tile.colSpan = col; tile.rowSpan = row;
+          if (tile.type === 'app') tile.appLink = document.getElementById('tileAppLink').value;
+        }
+        saveToStorage(); renderAll(); document.getElementById('tileSettingsModal').classList.add('hidden');
+      };
+      document.getElementById('uploadTileBgBtn').onclick = () => {
+        const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
+        inp.onchange = e => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = ev => { const tileId = parseInt(document.getElementById('currentTileId').value); const tile = tiles.find(t => t.id === tileId); if (tile) { tile.bgImage = ev.target.result; saveToStorage(); renderAll(); } }; r.readAsDataURL(f); } };
+        inp.click();
+      };
+      document.getElementById('removeTileBgBtn').onclick = () => {
+        const tileId = parseInt(document.getElementById('currentTileId').value);
+        const tile = tiles.find(t => t.id === tileId);
+        if (tile) { tile.bgImage = ''; saveToStorage(); renderAll(); }
+      };
+
+      // Add tile modal
+      document.getElementById('newTileType').addEventListener('change', e => {
+        document.getElementById('newAppLinkGroup').classList.toggle('hidden', e.target.value !== 'app');
+      });
+      document.getElementById('cancelAddTileBtn').onclick = () => document.getElementById('addTileModal').classList.add('hidden');
+      document.getElementById('confirmAddTileBtn').onclick = () => {
+        const type = document.getElementById('newTileType').value;
+        const title = document.getElementById('newTileTitle').value || type;
+        const appLink = document.getElementById('newTileAppLink').value;
+        const newTile = {
+          id: ++nextTileId, type, title,
+          colSpan: (type === 'clockweather' ? 3 : 2),
+          rowSpan: (type === 'clockweather' ? 3 : 2),
+          color: userConfig.globalAccent, bgImage: '', opacity: userConfig.tileOpacity, view: currentView
+        };
+        if (type === 'app') newTile.appLink = appLink;
+        tiles.push(newTile);
+        saveToStorage(); renderAll();
+        document.getElementById('addTileModal').classList.add('hidden');
+      };
+
+      // Delegated tile button clicks (settings / delete)
+      document.addEventListener('click', e => {
+        const btn = e.target.closest('button'); if (!btn) return;
+        const id = btn.dataset.id;
+        if (btn.classList.contains('tile-settings-btn')) openTileSettings(id);
+        else if (btn.classList.contains('tile-delete-btn')) { tiles = tiles.filter(t => t.id != id); saveToStorage(); renderAll(); }
+      });
+
+      // Clock tick — only updates the flip digits, no full re-render
+      setInterval(() => {
+        document.querySelectorAll('.tile').forEach(el => {
+          const t = tiles.find(tt => tt.id == el.dataset.id);
+          if (t && (t.type === 'clock' || t.type === 'clockweather')) {
+            const cont = el.querySelector('.tile-content');
+            if (!cont) return;
+            const now = new Date();
+            const flip = cont.querySelector('.flip-clock');
+            if (flip) {
+              const digits = flip.querySelectorAll('.flip-digit');
+              if (digits[0]) digits[0].textContent = String(now.getHours()).padStart(2,'0');
+              if (digits[1]) digits[1].textContent = String(now.getMinutes()).padStart(2,'0');
+            }
+          }
+        });
+      }, 1000);
+
+      // Start slideshow timer
+      restartSlideshowTimer();
+    }
+
+    window.onload = init;
+  })();
 </script>
 </body>
 </html>
