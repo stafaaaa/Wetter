@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -141,7 +142,6 @@ overflow: hidden;
 position: relative;
 }
 
-/* ===== HAUPTINHALT ===== */
 .main-content {
 flex: 1;
 padding: 20px 24px 0 24px;
@@ -159,7 +159,6 @@ display: flex;
 flex-direction: column;
 }
 
-/* ===== BOTTOM NAVIGATION ===== */
 .bottom-nav {
 flex-shrink: 0;
 display: flex;
@@ -198,7 +197,6 @@ backdrop-filter: blur(10px);
 box-shadow: var(--shadow-light);
 }
 
-/* ===== BURGER MENÜ ===== */
 .burger-menu-wrapper {
 position: absolute;
 top: 20px;
@@ -352,7 +350,6 @@ border: 1px solid var(--glass-border);
 opacity: 0.9;
 }
 
-/* Widget Styles */
 .flip-clock {
 display: flex;
 gap: 10px;
@@ -369,7 +366,6 @@ box-shadow: inset 0 2px 8px rgba(0,0,0,0.2), 0 8px 20px rgba(0,0,0,0.3), inset 0
 border-bottom: 2px solid var(--glass-border);
 }
 
-/* Animierte Wetter-Icons */
 .weather-icon-animated {
 font-size: 4rem;
 line-height: 1;
@@ -456,7 +452,7 @@ gap: 12px;
 box-shadow: var(--shadow-light), inset 0 1px 2px var(--glass-highlight);
 }
 
-/* ===== MODALS ===== */
+/* Modals */
 .settings-overlay {
 position: fixed;
 inset: 0;
@@ -531,7 +527,7 @@ font-size: 1rem;
 <div class="input-group"><label>⏱️ Slideshow (Sek)</label><input type="number" id="settingsSlideshowSec" value="6"></div>
 <div class="input-group"><label>🎵 Spotify Link</label><input type="text" id="settingsSpotify" placeholder="https://open.spotify.com/..."></div>
 <div class="input-group"><label>▶️ YouTube Link</label><input type="text" id="settingsYoutube" placeholder="https://youtube.com/..."></div>
-<div class="input-group"><label>📦 Amazon Prime Video Link</label><input type="text" id="settingsPrime" placeholder="https://www.amazon.de/..."></div>
+<div class="input-group"><label>🎶 Amazon Music Link</label><input type="text" id="settingsAmazonMusic" placeholder="https://music.amazon.com/..."></div>
 <div class="input-group"><label>🍳 Rezepte-URL</label><input type="text" id="settingsRecipeUrl" placeholder="https://..."></div>
 <div class="input-group"><label>📋 Termine</label><textarea id="settingsAppointments" rows="3" placeholder="2026-04-10 09:00 | Arzttermin"></textarea></div>
 
@@ -589,7 +585,45 @@ font-size: 1rem;
 <option value="3,2">Extra (3x2)</option>
 </select>
 </div>
+<!-- Zusätzliche Felder für App-Kachel -->
+<div id="appFields" class="hidden">
+<div class="input-group"><label>App-Link (URL oder Intent)</label><input type="text" id="tileAppLink" placeholder="z.B. intent://... oder https://..."></div>
+</div>
 <div class="flex-row"><button class="app-btn" id="saveTileSettingsBtn">Speichern</button><button class="app-btn" id="closeTileSettingsBtn">Abbrechen</button></div>
+</div>
+</div>
+
+<!-- Neue Kachel Modal -->
+<div id="addTileModal" class="settings-overlay hidden">
+<div class="settings-card" style="width:500px;">
+<h2 style="margin-bottom:24px;">➕ Neue Kachel</h2>
+<div class="input-group">
+<label>Kacheltyp</label>
+<select id="newTileType">
+<option value="clock">🕐 Uhr</option>
+<option value="weather">🌤️ Wetter</option>
+<option value="calendar">📅 Kalender</option>
+<option value="slideshow">🖼️ Slideshow</option>
+<option value="appointments">📋 Termine</option>
+<option value="spotify">🎵 Spotify</option>
+<option value="youtube">▶️ YouTube</option>
+<option value="amazonmusic">🎶 Amazon Music</option>
+<option value="recipe">🍳 Rezepte</option>
+<option value="app">📱 Eigene App</option>
+</select>
+</div>
+<div class="input-group">
+<label>Titel (optional)</label>
+<input type="text" id="newTileTitle" placeholder="z.B. Meine App">
+</div>
+<div id="newAppLinkGroup" class="input-group hidden">
+<label>App-Link</label>
+<input type="text" id="newTileAppLink" placeholder="https://... oder intent://...">
+</div>
+<div class="flex-row">
+<button class="app-btn" id="confirmAddTileBtn">Hinzufügen</button>
+<button class="app-btn" id="cancelAddTileBtn">Abbrechen</button>
+</div>
 </div>
 </div>
 
@@ -606,17 +640,17 @@ let currentView = 'home';
 const DEFAULT_TILES = [
 { id: 1, type: 'clock', title: 'Uhr', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3, view: 'home' },
 { id: 2, type: 'weather', title: 'Wetter', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3, view: 'home' },
-{ id: 3, type: 'calendar', title: 'Kalender', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3, view: 'tools' },
-{ id: 4, type: 'slideshow', title: 'Slideshow', colSpan: 4, rowSpan: 3, color: '#4a7db5', bgImage: '', opacity: 0.3, view: 'slideshow' },
-{ id: 5, type: 'appointments', title: 'Termine', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3, view: 'tools' },
-{ id: 6, type: 'spotify', title: 'Spotify', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3, view: 'media' },
+{ id: 3, type: 'spotify', title: 'Spotify', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3, view: 'home' },
+{ id: 4, type: 'slideshow', title: 'Slideshow', colSpan: 6, rowSpan: 4, color: '#4a7db5', bgImage: '', opacity: 0.3, view: 'slideshow' },
+{ id: 5, type: 'calendar', title: 'Kalender', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3, view: 'tools' },
+{ id: 6, type: 'appointments', title: 'Termine', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3, view: 'tools' },
 { id: 7, type: 'youtube', title: 'YouTube', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3, view: 'media' },
-{ id: 8, type: 'recipe', title: 'Rezepte', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3, view: 'tools' },
-{ id: 9, type: 'prime', title: 'Prime Video', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3, view: 'media' }
+{ id: 8, type: 'amazonmusic', title: 'Amazon Music', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3, view: 'media' },
+{ id: 9, type: 'recipe', title: 'Rezepte', colSpan: 2, rowSpan: 2, color: '#4a7db5', bgImage: '', opacity: 0.3, view: 'tools' }
 ];
 
 let userConfig = {
-city: 'Düsseldorf', slideshowInterval: 6, spotifyUrl: '', youtubeUrl: '', primeUrl: '', recipeUrl: 'https://www.chefkoch.de/',
+city: 'Düsseldorf', slideshowInterval: 6, spotifyUrl: '', youtubeUrl: '', amazonMusicUrl: '', recipeUrl: 'https://www.chefkoch.de/',
 appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
 globalAccent: '#4a7db5', globalTextColor: '#ffffff', theme: 'ios18', fontSize: 'medium',
 tileOpacity: 0.3, dashboardBgImage: '', dashboardBgColor: '#1a2b4a',
@@ -630,9 +664,9 @@ let currentEditingTileId = null;
 // ---------- STORAGE ----------
 function loadFromStorage() {
 try {
-const savedTiles = localStorage.getItem('kodi_tiles_v2');
-const savedConfig = localStorage.getItem('kodi_config_v2');
-const savedImages = localStorage.getItem('kodi_images_v2');
+const savedTiles = localStorage.getItem('kodi_tiles_v3');
+const savedConfig = localStorage.getItem('kodi_config_v3');
+const savedImages = localStorage.getItem('kodi_images_v3');
 if (savedTiles) tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
 else tiles = [...DEFAULT_TILES];
 if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
@@ -645,9 +679,9 @@ applyAllSettings();
 
 function saveToStorage() {
 try {
-localStorage.setItem('kodi_tiles_v2', JSON.stringify(tiles));
-localStorage.setItem('kodi_config_v2', JSON.stringify(userConfig));
-localStorage.setItem('kodi_images_v2', JSON.stringify(uploadedImages));
+localStorage.setItem('kodi_tiles_v3', JSON.stringify(tiles));
+localStorage.setItem('kodi_config_v3', JSON.stringify(userConfig));
+localStorage.setItem('kodi_images_v3', JSON.stringify(uploadedImages));
 } catch(e) {}
 }
 
@@ -655,7 +689,7 @@ function ensureUniqueIds() { tiles.forEach(t => { if (!t.id) t.id = ++nextTileId
 
 function resetToDefault() {
 tiles = DEFAULT_TILES.map(t => ({...t}));
-userConfig = { city: 'Düsseldorf', slideshowInterval: 6, spotifyUrl: '', youtubeUrl: '', primeUrl: '', recipeUrl: 'https://www.chefkoch.de/', appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting', globalAccent: '#4a7db5', globalTextColor: '#ffffff', theme: 'ios18', fontSize: 'medium', tileOpacity: 0.3, dashboardBgImage: '', dashboardBgColor: '#1a2b4a', menuBtnColor: '#1e2a3a' };
+userConfig = { city: 'Düsseldorf', slideshowInterval: 6, spotifyUrl: '', youtubeUrl: '', amazonMusicUrl: '', recipeUrl: 'https://www.chefkoch.de/', appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting', globalAccent: '#4a7db5', globalTextColor: '#ffffff', theme: 'ios18', fontSize: 'medium', tileOpacity: 0.3, dashboardBgImage: '', dashboardBgColor: '#1a2b4a', menuBtnColor: '#1e2a3a' };
 uploadedImages = [];
 applyAllSettings();
 saveToStorage();
@@ -694,7 +728,15 @@ function renderView(viewName) {
 const grid = document.getElementById(`grid-${viewName}`);
 if (!grid) return;
 grid.innerHTML = '';
-const viewTiles = tiles.filter(t => t.view === viewName);
+let viewTiles = tiles.filter(t => t.view === viewName);
+// Slideshow-View: Kachel auf volle Größe setzen
+if (viewName === 'slideshow') {
+const slideshowTile = viewTiles.find(t => t.type === 'slideshow');
+if (slideshowTile) {
+slideshowTile.colSpan = 6;
+slideshowTile.rowSpan = 4;
+}
+}
 viewTiles.forEach(tile => { grid.appendChild(createTileElement(tile)); });
 refreshDynamicContents();
 }
@@ -786,7 +828,7 @@ document.getElementById('settingsCity').value = userConfig.city;
 document.getElementById('settingsSlideshowSec').value = userConfig.slideshowInterval;
 document.getElementById('settingsSpotify').value = userConfig.spotifyUrl;
 document.getElementById('settingsYoutube').value = userConfig.youtubeUrl;
-document.getElementById('settingsPrime').value = userConfig.primeUrl || '';
+document.getElementById('settingsAmazonMusic').value = userConfig.amazonMusicUrl || '';
 document.getElementById('settingsRecipeUrl').value = userConfig.recipeUrl;
 document.getElementById('settingsAppointments').value = userConfig.appointmentsText;
 document.getElementById('globalAccentColor').value = userConfig.globalAccent;
@@ -804,13 +846,13 @@ document.getElementById('menuBtnColorText').value = userConfig.menuBtnColor;
 document.getElementById('settingsModal').classList.remove('hidden');
 };
 document.getElementById('menuAddTile').onclick = () => {
-tiles.push({ id: ++nextTileId, type: 'clock', title: 'Neue Uhr', colSpan:2, rowSpan:2, color: userConfig.globalAccent, bgImage: '', opacity: userConfig.tileOpacity, view: currentView });
-saveToStorage(); renderAll(); menuDropdown.classList.remove('show');
+menuDropdown.classList.remove('show');
+openAddTileModal();
 };
 document.getElementById('menuReset').onclick = () => { if(confirm('Reset?')) resetToDefault(); menuDropdown.classList.remove('show'); };
 }
 
-// ---------- INHALTE (mit animiertem Wetter) ----------
+// ---------- INHALTE ----------
 function fillTileContent(tile, container) {
 const type = tile.type;
 if (type === 'clock') renderFlipClock(container);
@@ -820,8 +862,9 @@ else if (type === 'slideshow') renderSlideshow(container);
 else if (type === 'appointments') renderAppointments(container);
 else if (type === 'spotify') renderSpotify(container);
 else if (type === 'youtube') renderYoutube(container);
-else if (type === 'prime') renderPrime(container);
+else if (type === 'amazonmusic') renderAmazonMusic(container);
 else if (type === 'recipe') renderRecipe(container);
+else if (type === 'app') renderApp(container, tile);
 }
 
 function renderFlipClock(container) {
@@ -875,7 +918,6 @@ container.innerHTML = `<div style="text-align:center;">🌥️ ${city}<br>15°C<
 
 function getAnimatedWeatherIcon(code, size) {
 const style = `font-size:${size};`;
-// Animierte Icons basierend auf WMO-Codes
 if ([0].includes(code)) return `<span class="sun" style="${style}">☀️</span>`;
 if ([1,2,3].includes(code)) return `<span class="cloud" style="${style}">⛅</span>`;
 if ([45,48].includes(code)) return `<span class="cloud" style="${style}">🌫️</span>`;
@@ -926,8 +968,12 @@ container.innerHTML = lines.length ? lines.map(l=>`<div style="padding:6px 0;">�
 
 function renderSpotify(container) { container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${userConfig.spotifyUrl}','_blank')">🎵 Spotify öffnen</button></div>`; }
 function renderYoutube(container) { container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${userConfig.youtubeUrl}','_blank')">▶️ YouTube öffnen</button></div>`; }
-function renderPrime(container) { container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${userConfig.primeUrl}','_blank')">📦 Prime Video öffnen</button></div>`; }
+function renderAmazonMusic(container) { container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${userConfig.amazonMusicUrl}','_blank')">🎶 Amazon Music öffnen</button></div>`; }
 function renderRecipe(container) { container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${userConfig.recipeUrl}','_blank')">🍳 Rezepte öffnen</button></div>`; }
+function renderApp(container, tile) {
+const appLink = tile.appLink || '#';
+container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><button class="app-btn" onclick="window.open('${appLink}','_blank')">📱 ${tile.title || 'App'} öffnen</button></div>`;
+}
 
 function refreshDynamicContents() {
 document.querySelectorAll('.tile').forEach(el => {
@@ -962,10 +1008,59 @@ document.getElementById('tileColorText').value = tile.color || userConfig.global
 document.getElementById('tileOpacity').value = tile.opacity !== undefined ? tile.opacity : userConfig.tileOpacity;
 document.getElementById('tileOpacityVal').textContent = document.getElementById('tileOpacity').value;
 document.getElementById('tileSizeSelect').value = `${tile.colSpan},${tile.rowSpan}`;
+
+const appFields = document.getElementById('appFields');
+const appLinkInput = document.getElementById('tileAppLink');
+if (tile.type === 'app') {
+appFields.classList.remove('hidden');
+appLinkInput.value = tile.appLink || '';
+} else {
+appFields.classList.add('hidden');
+}
+
 document.getElementById('tileSettingsModal').classList.remove('hidden');
 }
 
-// ---------- NAVIGATION ----------
+// Neue Kachel Modal
+function openAddTileModal() {
+document.getElementById('newTileType').value = 'clock';
+document.getElementById('newTileTitle').value = '';
+document.getElementById('newTileAppLink').value = '';
+document.getElementById('newAppLinkGroup').classList.add('hidden');
+document.getElementById('addTileModal').classList.remove('hidden');
+}
+
+document.getElementById('newTileType').addEventListener('change', (e) => {
+const appGroup = document.getElementById('newAppLinkGroup');
+appGroup.classList.toggle('hidden', e.target.value !== 'app');
+});
+
+document.getElementById('cancelAddTileBtn').onclick = () => document.getElementById('addTileModal').classList.add('hidden');
+document.getElementById('confirmAddTileBtn').onclick = () => {
+const type = document.getElementById('newTileType').value;
+const title = document.getElementById('newTileTitle').value || type;
+const appLink = document.getElementById('newTileAppLink').value;
+
+const newTile = {
+id: ++nextTileId,
+type: type,
+title: title,
+colSpan: 2,
+rowSpan: 2,
+color: userConfig.globalAccent,
+bgImage: '',
+opacity: userConfig.tileOpacity,
+view: currentView
+};
+if (type === 'app') newTile.appLink = appLink;
+
+tiles.push(newTile);
+saveToStorage();
+renderAll();
+document.getElementById('addTileModal').classList.add('hidden');
+};
+
+// Navigation
 function switchView(viewName) {
 currentView = viewName;
 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -1017,7 +1112,7 @@ userConfig.city = document.getElementById('settingsCity').value;
 userConfig.slideshowInterval = parseInt(document.getElementById('settingsSlideshowSec').value)||6;
 userConfig.spotifyUrl = document.getElementById('settingsSpotify').value;
 userConfig.youtubeUrl = document.getElementById('settingsYoutube').value;
-userConfig.primeUrl = document.getElementById('settingsPrime').value;
+userConfig.amazonMusicUrl = document.getElementById('settingsAmazonMusic').value;
 userConfig.recipeUrl = document.getElementById('settingsRecipeUrl').value;
 userConfig.appointmentsText = document.getElementById('settingsAppointments').value;
 userConfig.globalAccent = document.getElementById('globalAccentColor').value;
@@ -1043,6 +1138,9 @@ tile.color = document.getElementById('tileColor').value;
 tile.opacity = parseFloat(document.getElementById('tileOpacity').value);
 const [col, row] = document.getElementById('tileSizeSelect').value.split(',').map(Number);
 tile.colSpan = col; tile.rowSpan = row;
+if (tile.type === 'app') {
+tile.appLink = document.getElementById('tileAppLink').value;
+}
 }
 saveToStorage(); renderAll(); document.getElementById('tileSettingsModal').classList.add('hidden');
 };
