@@ -158,7 +158,6 @@ display: flex;
 flex-direction: column;
 }
 
-/* Bottom Navigation – Auto-Hide */
 .bottom-nav {
 flex-shrink: 0;
 display: flex;
@@ -172,8 +171,6 @@ border-top: 1px solid var(--glass-border);
 box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
 z-index: 10;
 transition: transform 0.3s ease, opacity 0.3s ease;
-transform: translateY(0);
-opacity: 1;
 }
 .bottom-nav.hidden-nav {
 transform: translateY(100%);
@@ -205,7 +202,6 @@ backdrop-filter: blur(10px);
 box-shadow: var(--shadow-light);
 }
 
-/* Burger-Menü */
 .burger-menu-wrapper {
 position: absolute;
 top: 20px;
@@ -214,7 +210,6 @@ z-index: 100;
 }
 .burger-menu {
 background: var(--menu-btn-bg, #1e2a3a);
-backdrop-filter: none;
 border: 1px solid var(--glass-border);
 border-radius: 16px;
 color: var(--text-primary);
@@ -227,7 +222,6 @@ font-size: 1.8rem;
 cursor: pointer;
 box-shadow: var(--shadow-heavy);
 }
-
 .menu-dropdown {
 position: absolute;
 top: 60px;
@@ -269,7 +263,6 @@ overflow-y: auto;
 padding: 4px;
 }
 
-/* 3D-Effekt Stufen */
 .tile {
 backdrop-filter: blur(30px) saturate(180%);
 -webkit-backdrop-filter: blur(30px) saturate(180%);
@@ -289,16 +282,9 @@ transform-style: preserve-3d;
 background-size: cover;
 background-position: center;
 }
-/* 3D-Stärke wird per JS gesetzt */
-.tile[data-3d="low"] {
-transform: perspective(2000px) rotateX(0.5deg) rotateY(0.2deg) translateZ(2px);
-}
-.tile[data-3d="medium"] {
-transform: perspective(1800px) rotateX(1.5deg) rotateY(0.5deg) translateZ(8px);
-}
-.tile[data-3d="high"] {
-transform: perspective(1500px) rotateX(3deg) rotateY(1deg) translateZ(15px);
-}
+.tile[data-3d="low"] { transform: perspective(2000px) rotateX(0.5deg) rotateY(0.2deg) translateZ(2px); }
+.tile[data-3d="medium"] { transform: perspective(1800px) rotateX(1.5deg) rotateY(0.5deg) translateZ(8px); }
+.tile[data-3d="high"] { transform: perspective(1500px) rotateX(3deg) rotateY(1deg) translateZ(15px); }
 .tile:hover {
 transform: perspective(1800px) rotateX(1deg) rotateY(1deg) translateZ(18px);
 box-shadow: 0 40px 60px -15px #000000cc, inset 0 0 0 1px var(--glass-highlight);
@@ -335,10 +321,7 @@ display: flex;
 align-items: center;
 gap: 8px;
 }
-.tile-icon {
-font-size: 1.6rem;
-line-height: 1;
-}
+.tile-icon { font-size: 1.6rem; line-height: 1; }
 .tile-controls { display: flex; gap: 10px; }
 .icon-btn {
 background: var(--glass-bg);
@@ -435,9 +418,7 @@ height: 100%;
 object-fit: cover;
 border-radius: 38px;
 }
-.tile-slideshow {
-padding: 0 !important;
-}
+.tile-slideshow { padding: 0 !important; }
 .tile-slideshow .tile-header {
 position: absolute;
 top: 20px; left: 20px; right: 20px;
@@ -710,7 +691,6 @@ let uploadedImages = [];
 let weatherCache = null, lastWeatherFetch = 0;
 let currentEditingTileId = null;
 
-// Icon-Mapping für Kacheltypen
 const tileIcons = {
 clock: '🕐', weather: '🌤️', clockweather: '🕐🌤️', calendar: '📅',
 slideshow: '🖼️', appointments: '📋', spotify: '🎵', youtube: '▶️',
@@ -720,9 +700,9 @@ amazonmusic: '🎶', recipe: '🍳', app: '📱'
 // ---------- STORAGE ----------
 function loadFromStorage() {
 try {
-const savedTiles = localStorage.getItem('kodi_tiles_v6');
-const savedConfig = localStorage.getItem('kodi_config_v6');
-const savedImages = localStorage.getItem('kodi_images_v6');
+const savedTiles = localStorage.getItem('kodi_tiles_v8');
+const savedConfig = localStorage.getItem('kodi_config_v8');
+const savedImages = localStorage.getItem('kodi_images_v8');
 if (savedTiles) tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
 else tiles = [...DEFAULT_TILES];
 if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
@@ -735,9 +715,9 @@ applyAllSettings();
 
 function saveToStorage() {
 try {
-localStorage.setItem('kodi_tiles_v6', JSON.stringify(tiles));
-localStorage.setItem('kodi_config_v6', JSON.stringify(userConfig));
-localStorage.setItem('kodi_images_v6', JSON.stringify(uploadedImages));
+localStorage.setItem('kodi_tiles_v8', JSON.stringify(tiles));
+localStorage.setItem('kodi_config_v8', JSON.stringify(userConfig));
+localStorage.setItem('kodi_images_v8', JSON.stringify(uploadedImages));
 } catch(e) {}
 }
 
@@ -757,17 +737,12 @@ applyTheme(userConfig.theme);
 applyFontSize(userConfig.fontSize);
 applyDashboardBackground();
 document.documentElement.style.setProperty('--menu-btn-bg', userConfig.menuBtnColor);
-apply3DEffect(userConfig.effect3D);
 }
 function applyTheme(theme) { document.body.className = `theme-${theme}`; userConfig.theme = theme; }
 function applyFontSize(size) { document.documentElement.style.fontSize = size === 'small' ? '14px' : (size === 'large' ? '18px' : '16px'); }
 function applyDashboardBackground() {
 const db = document.getElementById('dashboard');
 if (userConfig.dashboardBgImage) db.style.setProperty('--bg-image', `url('${userConfig.dashboardBgImage}')`);
-}
-function apply3DEffect(level) {
-document.querySelectorAll('.tile').forEach(tile => tile.dataset.d3 = level);
-userConfig.effect3D = level;
 }
 
 function hexToRgba(hex, alpha) {
@@ -815,7 +790,7 @@ function createTileElement(tile) {
 const div = document.createElement('div');
 div.className = `tile ${editMode ? 'edit-mode' : ''} ${tile.type === 'slideshow' ? 'tile-slideshow' : ''}`;
 div.dataset.id = tile.id;
-div.dataset.d3 = userConfig.effect3D;
+div.setAttribute('data-3d', userConfig.effect3D); // KORREKTUR: data-3d statt d3
 div.style.gridColumn = `span ${tile.colSpan || 2}`;
 div.style.gridRow = `span ${tile.rowSpan || 2}`;
 div.setAttribute('draggable', editMode);
@@ -920,8 +895,7 @@ document.getElementById('menuAddTile').onclick = () => { menuDropdown.classList.
 document.getElementById('menuReset').onclick = () => { if(confirm('Reset?')) resetToDefault(); menuDropdown.classList.remove('show'); };
 }
 
-// ---------- INHALTE (Wetter stabilisiert) ----------
-const weatherRenderPromises = new Map();
+// ---------- INHALTE ----------
 function fillTileContent(tile, container) {
 const type = tile.type;
 if (type === 'clock') renderFlipClock(container);
@@ -944,19 +918,13 @@ container.innerHTML = `<div class="flip-clock"><span class="flip-digit">${String
 
 function renderClockWeather(container) {
 const now = new Date();
-const uniqueId = 'cw-' + Date.now() + '-' + Math.random();
-container.innerHTML = `<div class="clockweather-container" id="${uniqueId}">
+container.innerHTML = `<div class="clockweather-container">
 <div class="flip-clock"><span class="flip-digit">${String(now.getHours()).padStart(2,'0')}</span><span>:</span><span class="flip-digit">${String(now.getMinutes()).padStart(2,'0')}</span></div>
 <div style="font-size:1.2rem;">${now.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'})}</div>
 <div class="weather-part">🌤️ Wetter lädt…</div>
 </div>`;
 const weatherPart = container.querySelector('.weather-part');
-if (weatherPart) {
-if (weatherRenderPromises.has(container)) return;
-const promise = renderWeatherAnimated(weatherPart);
-weatherRenderPromises.set(container, promise);
-promise.finally(() => weatherRenderPromises.delete(container));
-}
+if (weatherPart) renderWeatherAnimated(weatherPart);
 }
 
 async function renderWeatherAnimated(container) {
@@ -1157,4 +1125,90 @@ document.getElementById('uploadDashboardBgBtn').onclick = ()=>{
 const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
 inp.onchange = e => { const f=e.target.files[0]; if(f){ const r=new FileReader(); r.onload=ev=>{ userConfig.dashboardBgImage = ev.target.result; applyDashboardBackground(); saveToStorage(); }; r.readAsDataURL(f); } };
 inp.click();
-...
+};
+document.getElementById('removeDashboardBgBtn').onclick = ()=>{ userConfig.dashboardBgImage = ''; applyDashboardBackground(); saveToStorage(); };
+
+// Color syncs
+const accentPicker = document.getElementById('globalAccentColor'), accentText = document.getElementById('globalAccentColorText');
+const textPicker = document.getElementById('globalTextColor'), textText = document.getElementById('globalTextColorText');
+const dashboardColor = document.getElementById('dashboardBgColor'), dashboardText = document.getElementById('dashboardBgColorText');
+const tileColorPicker = document.getElementById('tileColor'), tileColorText = document.getElementById('tileColorText');
+const menuColorPicker = document.getElementById('menuBtnColor'), menuColorText = document.getElementById('menuBtnColorText');
+accentPicker.addEventListener('input', ()=> accentText.value = accentPicker.value);
+accentText.addEventListener('input', ()=> accentPicker.value = accentText.value);
+textPicker.addEventListener('input', ()=> textText.value = textPicker.value);
+textText.addEventListener('input', ()=> textPicker.value = textText.value);
+dashboardColor.addEventListener('input', ()=> dashboardText.value = dashboardColor.value);
+dashboardText.addEventListener('input', ()=> dashboardColor.value = dashboardText.value);
+tileColorPicker.addEventListener('input', ()=> tileColorText.value = tileColorPicker.value);
+tileColorText.addEventListener('input', ()=> tileColorPicker.value = tileColorText.value);
+menuColorPicker.addEventListener('input', ()=> menuColorText.value = menuColorPicker.value);
+menuColorText.addEventListener('input', ()=> menuColorPicker.value = menuColorText.value);
+
+document.getElementById('closeSettingsBtn').onclick = ()=> document.getElementById('settingsModal').classList.add('hidden');
+document.getElementById('saveSettingsBtn').onclick = ()=>{
+userConfig.city = document.getElementById('settingsCity').value;
+userConfig.slideshowInterval = parseInt(document.getElementById('settingsSlideshowSec').value)||6;
+userConfig.spotifyUrl = document.getElementById('settingsSpotify').value;
+userConfig.youtubeUrl = document.getElementById('settingsYoutube').value;
+userConfig.amazonMusicUrl = document.getElementById('settingsAmazonMusic').value;
+userConfig.recipeUrl = document.getElementById('settingsRecipeUrl').value;
+userConfig.appointmentsText = document.getElementById('settingsAppointments').value;
+userConfig.globalAccent = document.getElementById('globalAccentColor').value;
+userConfig.globalTextColor = document.getElementById('globalTextColor').value;
+userConfig.theme = document.getElementById('settingsTheme').value;
+userConfig.fontSize = document.getElementById('settingsFontSize').value;
+userConfig.tileOpacity = parseFloat(document.getElementById('tileOpacitySlider').value);
+userConfig.dashboardBgColor = document.getElementById('dashboardBgColor').value;
+userConfig.menuBtnColor = document.getElementById('menuBtnColor').value;
+userConfig.effect3D = document.getElementById('settings3DEffect').value;
+applyAllSettings();
+saveToStorage();
+renderAll();
+document.getElementById('settingsModal').classList.add('hidden');
+};
+
+document.getElementById('closeTileSettingsBtn').onclick = ()=> document.getElementById('tileSettingsModal').classList.add('hidden');
+document.getElementById('saveTileSettingsBtn').onclick = ()=>{
+const tileId = parseInt(document.getElementById('currentTileId').value);
+const tile = tiles.find(t=>t.id===tileId);
+if(tile){
+tile.title = document.getElementById('tileTitle').value;
+tile.color = document.getElementById('tileColor').value;
+tile.opacity = parseFloat(document.getElementById('tileOpacity').value);
+const [col, row] = document.getElementById('tileSizeSelect').value.split(',').map(Number);
+tile.colSpan = col; tile.rowSpan = row;
+if (tile.type === 'app') tile.appLink = document.getElementById('tileAppLink').value;
+}
+saveToStorage(); renderAll(); document.getElementById('tileSettingsModal').classList.add('hidden');
+};
+document.getElementById('uploadTileBgBtn').onclick = ()=>{
+const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
+inp.onchange = e => { const f=e.target.files[0]; if(f){ const r=new FileReader(); r.onload=ev=>{ const tileId=parseInt(document.getElementById('currentTileId').value); const tile=tiles.find(t=>t.id===tileId); if(tile){ tile.bgImage=ev.target.result; saveToStorage(); renderAll(); } }; r.readAsDataURL(f); } };
+inp.click();
+};
+document.getElementById('removeTileBgBtn').onclick = ()=>{
+const tileId = parseInt(document.getElementById('currentTileId').value);
+const tile = tiles.find(t=>t.id===tileId); if(tile){ tile.bgImage=''; saveToStorage(); renderAll(); }
+};
+
+document.addEventListener('click', e => {
+const btn = e.target.closest('button'); if(!btn) return;
+const id = btn.dataset.id;
+if(btn.classList.contains('tile-settings-btn')) openTileSettings(id);
+else if(btn.classList.contains('tile-delete-btn')) { tiles = tiles.filter(t=>t.id!=id); saveToStorage(); renderAll(); }
+});
+
+setInterval(() => {
+document.querySelectorAll('.tile').forEach(el => { const t = tiles.find(tt=>tt.id==el.dataset.id); if(t&&(t.type==='clock'||t.type==='clockweather')) { const cont = el.querySelector('.tile-content'); if(cont) { const now = new Date(); const flip = cont.querySelector('.flip-clock'); if(flip) flip.innerHTML = `<span class="flip-digit">${String(now.getHours()).padStart(2,'0')}</span><span>:</span><span class="flip-digit">${String(now.getMinutes()).padStart(2,'0')}</span>`; } } });
+}, 1000);
+setInterval(() => {
+document.querySelectorAll('.tile').forEach(el => { const t = tiles.find(tt=>tt.id==el.dataset.id); if(t&&t.type==='slideshow'&&uploadedImages.length){ const cont=el.querySelector('.tile-content'); let idx=(parseInt(cont.dataset.slideIndex||0)+1)%uploadedImages.length; cont.dataset.slideIndex=idx; cont.innerHTML=`<img class="slideshow-full" src="${uploadedImages[idx]}">`; } });
+}, userConfig.slideshowInterval*1000);
+}
+
+window.onload = init;
+})();
+</script>
+</body>
+</html>
