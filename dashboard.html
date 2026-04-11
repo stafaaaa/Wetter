@@ -90,46 +90,21 @@
       flex-direction: column;
     }
 
-    /* ── NAV: komplett unsichtbar, nur floating Bubbles beim Tippen ── */
+    /* ── NAV: keine Leiste, nur schwebende Icons ── */
     .bottom-nav {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      height: 48px;           /* unsichtbare Touch-Zone */
+      height: 72px;
       background: transparent;
       border: none;
       box-shadow: none;
       z-index: 200;
-      pointer-events: all;
-    }
-
-    /* Die Bubble-Leiste die beim Tippen erscheint */
-    .nav-bubble-bar {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
       display: flex;
+      justify-content: space-around;
       align-items: center;
-      gap: 8px;
-      background: var(--glass-bg);
-      backdrop-filter: blur(40px);
-      -webkit-backdrop-filter: blur(40px);
-      border: 1px solid var(--card-border);
-      border-radius: 60px;
-      padding: 8px 12px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.10),
-                  inset 0 1px 0 rgba(255,255,255,0.8);
-      z-index: 201;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    .nav-bubble-bar.nav-visible {
-      opacity: 1;
-      pointer-events: all;
-      transform: translateX(-50%) translateY(0);
+      padding: 0 20px 8px;
     }
 
     .nav-item {
@@ -140,23 +115,30 @@
       background: none;
       border: none;
       color: var(--text-secondary);
-      font-size: 1.4rem;
+      font-size: 1.6rem;
       cursor: pointer;
-      transition: all 0.18s;
-      padding: 7px 14px;
+      transition: all 0.2s;
+      padding: 6px 10px;
       border-radius: 50px;
-      min-width: 58px;
+      min-width: 52px;
+      /* weicher Schatten damit Icons auf hellem+dunklem Hintergrund lesbar sind */
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
     }
     .nav-label {
-      font-size: 0.66rem;
-      font-weight: 600;
-      letter-spacing: -0.01em;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0em;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
     .nav-item.active {
       color: var(--accent-blue);
-      background: rgba(0, 113, 227, 0.1);
+      filter: drop-shadow(0 2px 8px rgba(0,113,227,0.45));
+      transform: scale(1.12);
     }
-    .nav-item:hover { color: var(--text-primary); }
+    .nav-item:hover {
+      color: var(--text-primary);
+      transform: scale(1.08);
+    }
 
     .nav-burger { position: relative; }
     .nav-burger .menu-dropdown {
@@ -569,11 +551,8 @@
     </div>
   </div>
 
-  <!-- Unsichtbare Touch-Zone unten -->
-  <div class="bottom-nav" id="bottomNav"></div>
-
-  <!-- Bubble-Leiste erscheint beim Tippen -->
-  <div class="nav-bubble-bar" id="navBubbleBar">
+  <!-- Nav Icons schweben frei, keine Leiste -->
+  <div class="bottom-nav" id="bottomNav">
     <button class="nav-item active" data-view="home"><span>🏠</span><span class="nav-label">Start</span></button>
     <button class="nav-item" data-view="media"><span>🎬</span><span class="nav-label">Medien</span></button>
     <button class="nav-item" data-view="tools"><span>📋</span><span class="nav-label">Tools</span></button>
@@ -876,32 +855,8 @@
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
 
-    // ---------- BOTTOM NAV: unsichtbare Zone → Bubbles erscheinen ----------
+    // ---------- BOTTOM NAV: schwebende Icons, immer sichtbar ----------
     const bottomNav = document.getElementById('bottomNav');
-    const navBubbleBar = document.getElementById('navBubbleBar');
-    let navHideTimeout = null;
-
-    function showNav() {
-      navBubbleBar.classList.add('nav-visible');
-      clearTimeout(navHideTimeout);
-      navHideTimeout = setTimeout(hideNav, 3500);
-    }
-    function hideNav() {
-      navBubbleBar.classList.remove('nav-visible');
-      clearTimeout(navHideTimeout);
-    }
-
-    // Tippen auf die unsichtbare Zone unten → Bubbles zeigen
-    bottomNav.addEventListener('click', e => { e.stopPropagation(); showNav(); });
-    bottomNav.addEventListener('touchstart', e => { e.stopPropagation(); showNav(); }, { passive: true });
-
-    // Tippen irgendwo außerhalb → Bubbles weg
-    document.addEventListener('click', e => {
-      if (!navBubbleBar.contains(e.target) && !bottomNav.contains(e.target)) hideNav();
-    });
-
-    // Start: Bubbles versteckt
-    hideNav();
 
     // ---------- RENDERING ----------
     function renderAll() {
@@ -1336,7 +1291,6 @@
       document.getElementById(`view-${viewName}`).classList.add('active');
       document.querySelectorAll('.nav-item[data-view]').forEach(n => n.classList.remove('active'));
       document.querySelector(`.nav-item[data-view="${viewName}"]`).classList.add('active');
-      hideNav();
     }
 
     // FIX #3: Slideshow timer restart function — clears old timer and creates a new one
