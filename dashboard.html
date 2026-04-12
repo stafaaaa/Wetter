@@ -227,6 +227,8 @@
 
     .grid-container {
       display: grid;
+      perspective: 1400px;
+      transform-style: preserve-3d;
       grid-template-columns: repeat(6, 1fr);
       gap: 10px;
       flex: 1;
@@ -1220,6 +1222,30 @@
       return maxRow || 1;
     }
 
+
+    function applyCurrent3DEffect(forceReflow = false) {
+      const fx = userConfig.effect3D || 'float-medium';
+      document.querySelectorAll('.tile').forEach(el => {
+        if (forceReflow) {
+          el.style.animation = 'none';
+          el.style.transform = 'none';
+          void el.offsetHeight;
+          el.style.animation = '';
+          el.style.transform = '';
+        }
+        el.setAttribute('data-fx', fx);
+      });
+      const lbl = document.getElementById('active3dLabel');
+      if (lbl) {
+        const fxNames = {
+          'float-low':'Schweben Leicht','float-medium':'Schweben Mittel','float-high':'Schweben Stark',
+          'tilt-low':'Kippen Leicht','tilt-medium':'Kippen Mittel','tilt-high':'Kippen Stark',
+          'pulse':'Pulsieren','swing':'Pendeln','wobble':'Taumeln','none':'Kein Effekt'
+        };
+        lbl.textContent = 'Aktiv: ' + (fxNames[fx] || fx);
+      }
+    }
+
     function createTileElement(tile) {
       const div = document.createElement('div');
       div.className = `tile ${editMode ? 'edit-mode' : ''} ${tile.type === 'slideshow' ? 'tile-slideshow' : ''}`;
@@ -1371,7 +1397,7 @@
       userConfig.effect3D = fx;
       document.getElementById('settings3DEffect').value = fx;
       // Alle Kacheln sofort updaten
-      document.querySelectorAll('.tile').forEach(el => el.setAttribute('data-fx', fx));
+      applyCurrent3DEffect(true);
       // Button-Highlighting
       document.querySelectorAll('.effect3d-btn').forEach(b => {
         b.style.background = b.dataset.fx === fx ? 'var(--accent-blue)' : '';
@@ -2022,6 +2048,7 @@
         applyAllSettings();
         saveToStorage();
         renderAll();
+        applyCurrent3DEffect(true);
         // FIX #3: restart slideshow timer with new interval
         restartSlideshowTimer();
         initSlideshowImages();
@@ -2161,5 +2188,16 @@
     window.onload = init;
   })();
 </script>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./service-worker.js")
+        .then(() => console.log("Service Worker registriert"))
+        .catch(err => console.error("Service Worker Fehler:", err));
+    });
+  }
+</script>
+
 </body>
 </html>
