@@ -1031,14 +1031,18 @@
       div.style.gridRow = `span ${tile.rowSpan || 2}`;
       div.setAttribute('draggable', editMode);
 
-      const bgColor = tile.color || userConfig.globalAccent;
+      const bgColor = tile.color || '#ffffff';
       const opacity = tile.opacity !== undefined ? tile.opacity : userConfig.tileOpacity;
       if (tile.bgImage) {
         div.style.backgroundImage = `url('${tile.bgImage}')`;
         div.style.backgroundColor = 'transparent';
+        div.style.opacity = '1';
       } else {
         div.style.backgroundImage = 'none';
+        // Use rgba for background so backdrop-filter still works,
+        // but ALSO set element opacity so change is clearly visible
         div.style.backgroundColor = hexToRgba(bgColor, opacity);
+        div.style.opacity = String(0.3 + opacity * 0.7); // maps 0.1→0.37, 1.0→1.0
       }
       div.style.color = userConfig.globalTextColor;
 
@@ -1566,9 +1570,35 @@
       // Nav
       document.querySelectorAll('.nav-item[data-view]').forEach(btn => btn.addEventListener('click', () => switchView(btn.dataset.view)));
 
-      // Opacity slider live preview
-      document.getElementById('tileOpacitySlider').addEventListener('input', e => document.getElementById('tileOpacityValue').textContent = e.target.value);
-      document.getElementById('tileOpacity').addEventListener('input', e => document.getElementById('tileOpacityVal').textContent = e.target.value);
+      // Opacity slider — live preview while dragging
+      document.getElementById('tileOpacitySlider').addEventListener('input', e => {
+        const val = parseFloat(e.target.value);
+        document.getElementById('tileOpacityValue').textContent = val.toFixed(2);
+        // Live update all tiles immediately
+        document.querySelectorAll('.tile').forEach(el => {
+          if (!el.style.backgroundImage || el.style.backgroundImage === 'none') {
+            const tileId = Number(el.dataset.id);
+            const tile = tiles.find(t => t.id === tileId);
+            const col = tile ? (tile.color || '#ffffff') : '#ffffff';
+            el.style.backgroundColor = hexToRgba(col, val);
+            el.style.opacity = String(0.3 + val * 0.7);
+          }
+        });
+      });
+
+      // Per-tile opacity slider — live preview
+      document.getElementById('tileOpacity').addEventListener('input', e => {
+        const val = parseFloat(e.target.value);
+        document.getElementById('tileOpacityVal').textContent = val.toFixed(2);
+        const tileId = parseInt(document.getElementById('currentTileId').value);
+        const tileEl = document.querySelector(`.tile[data-id="${tileId}"]`);
+        const tile = tiles.find(t => t.id === tileId);
+        if (tileEl && tile && (!tile.bgImage)) {
+          const col = tile.color || '#ffffff';
+          tileEl.style.backgroundColor = hexToRgba(col, val);
+          tileEl.style.opacity = String(0.3 + val * 0.7);
+        }
+      });
 
       // Dashboard background upload
       document.getElementById('uploadDashboardBgBtn').onclick = () => {
