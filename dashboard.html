@@ -1648,7 +1648,15 @@
     }
 
     // Alle Bilder kombiniert — async wegen Ordner-Laden
-    async function getAllSlideImagesAsync() {
+    // Sync version — lokale Bilder IMMER sofort, Online-Bilder aus Cache
+    function getAllSlideImages() {
+      const local = uploadedImages || [];
+      const cached = window._cachedOnlineImages || [];
+      return [...cached, ...local];
+    }
+
+    async function initSlideshowImages() {
+      // Nur Online-Bilder async laden — lokale sind immer direkt verfügbar
       const local = uploadedImages || [];
       let driveImages = [];
 
@@ -1656,7 +1664,6 @@
       for (const url of driveRaw) {
         const folderId = extractFolderId(url);
         if (folderId) {
-          // Ordner → alle Bilder laden
           const folderImgs = await loadDriveFolderImages(folderId);
           driveImages.push(...folderImgs);
         } else {
@@ -1674,18 +1681,10 @@
       const legacyRaw = (userConfig.onlineImageUrls || '').split('\n').map(u=>u.trim()).filter(Boolean);
       const legacyImages = legacyRaw.map(u => convertToDirectImageUrl(u, 'auto')).filter(Boolean);
 
-      return [...driveImages, ...photosImages, ...cloudImages, ...legacyImages, ...local];
-    }
+      // Nur Online-Bilder cachen — lokale Bilder werden in getAllSlideImages() direkt gelesen
+      window._cachedOnlineImages = [...driveImages, ...photosImages, ...cloudImages, ...legacyImages];
 
-    // Sync version für timer (nutzt gecachte Liste)
-    function getAllSlideImages() {
-      // Gibt gecachte Liste zurück — wird durch initSlideshowImages() befüllt
-      return window._cachedSlideImages || [];
-    }
-
-    async function initSlideshowImages() {
-      window._cachedSlideImages = await getAllSlideImagesAsync();
-      // Slideshow neu rendern mit geladenen Bildern
+      // Slideshow neu rendern
       document.querySelectorAll('.tile').forEach(el => {
         const t = tiles.find(tt => tt.id == el.dataset.id);
         if (t && t.type === 'slideshow') {
