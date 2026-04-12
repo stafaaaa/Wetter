@@ -1475,66 +1475,89 @@
 
     // Convert share URLs to direct image URLs
     function convertToDirectImageUrl(url, type) {
-      if (!url) return null;
+      if (!url || !url.trim()) return null;
+      url = url.trim();
 
+      // ── GOOGLE DRIVE ──────────────────────────────────────────────
       if (type === 'drive' || type === 'auto') {
-        // Google Drive: https://drive.google.com/file/d/FILE_ID/view
-        const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-        if (driveMatch) return 'https://drive.google.com/uc?export=view&id=' + driveMatch[1];
 
-        // Google Drive: open?id=
-        const driveOpen = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
-        if (driveOpen) return 'https://drive.google.com/uc?export=view&id=' + driveOpen[1];
+        // Einzelne Datei: /file/d/FILE_ID/
+        const fileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (fileMatch) {
+          return 'https://drive.google.com/uc?export=view&id=' + fileMatch[1];
+        }
+
+        // open?id= Format
+        const openMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        if (openMatch && url.includes('drive.google.com')) {
+          return 'https://drive.google.com/uc?export=view&id=' + openMatch[1];
+        }
+
+        // ORDNER-LINK: /folders/FOLDER_ID — kann nicht direkt als Bild genutzt werden
+        if (url.includes('/folders/')) {
+          // Zeige Fehlermeldung im Slideshow-Placeholder
+          console.warn('Dashboard: Google Drive Ordner-Link erkannt. Bitte einzelne Datei-Links verwenden.');
+          return '__FOLDER_LINK__'; // wird als Fehler-Marker behandelt
+        }
       }
 
+      // ── GOOGLE FOTOS ──────────────────────────────────────────────
       if (type === 'photos' || type === 'auto') {
-        if (url.includes('photos.google.com') || url.includes('photos.app.goo.gl')) {
-          // Google Fotos direkte Bild-URL (endet auf =w oder =d)
-          if (url.match(/=w\d|=h\d|=d$/)) {
-            // Auf =w2048 setzen für große Auflösung ohne Login-Pflicht
-            return url.replace(/=w\d+.*$|=h\d+.*$|=d$/, '=w2048');
-          }
-          // Einzel-Foto Link → =w2048 anhängen
+
+        // Kurzlink photos.app.goo.gl → kann nicht direkt aufgelöst werden (CORS)
+        // Zeige hilfreiche Fehlermeldung
+        if (url.includes('photos.app.goo.gl')) {
+          console.warn('Dashboard: Google Fotos Kurzlink. Bitte Einzelfoto öffnen und direkten Link kopieren.');
+          return '__PHOTOS_SHORTLINK__';
+        }
+
+        if (url.includes('photos.google.com')) {
+          // Direkter Foto-Link
           if (url.includes('/photo/')) {
-            return url.split('?')[0] + '=w2048';
+            const base = url.split('?')[0].replace(/=\w+$/, '');
+            return base + '=w2048';
           }
-          // Fallback
           return url;
         }
       }
 
+      // ── CLOUDINARY ────────────────────────────────────────────────
       if (type === 'cloudinary' || type === 'auto') {
         if (url.includes('cloudinary.com')) return url;
       }
 
-      // Direkte Bild-URL (jpg, png, webp, gif...)
+      // ── DIREKTE BILD-URL ──────────────────────────────────────────
       if (url.match(/\.(jpg|jpeg|png|webp|gif|bmp|avif)(\?.*)?$/i)) return url;
 
-      // Jede andere https URL — as-is
+      // ── JEDE ANDERE URL ───────────────────────────────────────────
       if (url.startsWith('http')) return url;
 
       return null;
     }
 
-    // Combine all image sources into one array for slideshow
+    // Combine all image sources — filter out error markers
     function getAllSlideImages() {
       const local = uploadedImages || [];
 
-      // Google Drive URLs
       const driveRaw = (userConfig.driveUrls || '').split('\n');
-      const driveImages = driveRaw.map(u => convertToDirectImageUrl(u.trim(), 'drive')).filter(Boolean);
+      const driveImages = driveRaw
+        .map(u => convertToDirectImageUrl(u.trim(), 'drive'))
+        .filter(u => u && !u.startsWith('__'));
 
-      // Google Fotos URLs — wrap in a CORS proxy to fix loading issues
       const photosRaw = (userConfig.photosUrls || '').split('\n');
-      const photosImages = photosRaw.map(u => convertToDirectImageUrl(u.trim(), 'photos')).filter(Boolean);
+      const photosImages = photosRaw
+        .map(u => convertToDirectImageUrl(u.trim(), 'photos'))
+        .filter(u => u && !u.startsWith('__'));
 
-      // Cloudinary URLs
       const cloudRaw = (userConfig.cloudinaryUrls || '').split('\n');
-      const cloudImages = cloudRaw.map(u => convertToDirectImageUrl(u.trim(), 'cloudinary')).filter(Boolean);
+      const cloudImages = cloudRaw
+        .map(u => convertToDirectImageUrl(u.trim(), 'cloudinary'))
+        .filter(u => u && !u.startsWith('__'));
 
-      // Legacy single-field support
       const legacyRaw = (userConfig.onlineImageUrls || '').split('\n');
-      const legacyImages = legacyRaw.map(u => convertToDirectImageUrl(u.trim(), 'auto')).filter(Boolean);
+      const legacyImages = legacyRaw
+        .map(u => convertToDirectImageUrl(u.trim(), 'auto'))
+        .filter(u => u && !u.startsWith('__'));
 
       return [...driveImages, ...photosImages, ...cloudImages, ...legacyImages, ...local];
     }
@@ -1543,17 +1566,40 @@
       container.style.overflow = 'hidden';
       container.style.position = 'relative';
       const allImages = getAllSlideImages();
+
+      // Check for common mistakes in entered URLs
+      const driveRaw = (userConfig.driveUrls || '').split('\n').map(u=>u.trim()).filter(Boolean);
+      const photosRaw = (userConfig.photosUrls || '').split('\n').map(u=>u.trim()).filter(Boolean);
+      const hasFolderLink = driveRaw.some(u => u.includes('/folders/'));
+      const hasShortLink  = photosRaw.some(u => u.includes('photos.app.goo.gl'));
+
       if (!allImages.length) {
+        let hint = '';
+        if (hasFolderLink) {
+          hint = `<div style="margin-top:12px;background:rgba(255,80,0,0.12);border-radius:12px;padding:12px;font-size:0.82rem;text-align:left;">
+            ⚠️ <b>Google Drive Ordner-Link erkannt!</b><br>
+            Bitte <b>einzelne Dateien</b> teilen:<br>
+            Foto im Drive öffnen → ⋮ → "Link abrufen"
+          </div>`;
+        } else if (hasShortLink) {
+          hint = `<div style="margin-top:12px;background:rgba(255,80,0,0.12);border-radius:12px;padding:12px;font-size:0.82rem;text-align:left;">
+            ⚠️ <b>Google Fotos Kurzlink nicht unterstützt!</b><br>
+            Einzelfoto in Google Fotos öffnen → ⋮ → Teilen → Link erstellen<br>
+            Oder Foto auf Google Drive hochladen und dort teilen.
+          </div>`;
+        } else {
+          hint = `<div style="font-size:0.8rem;opacity:0.6;margin-top:8px;">Bilder hochladen oder URLs in Einstellungen eintragen</div>`;
+        }
         container.innerHTML = `
-          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;opacity:0.7;">
-            <div style="font-size:5rem;animation:iconFloat 3s ease-in-out infinite;filter:drop-shadow(0 8px 18px rgba(0,0,0,0.22));">🖼️</div>
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;padding:16px;">
+            <div style="font-size:4rem;animation:iconFloat 3s ease-in-out infinite;">🖼️</div>
             <div style="font-size:1rem;font-weight:600;">Noch keine Bilder</div>
-            <div style="font-size:0.8rem;opacity:0.6;text-align:center;padding:0 16px;">Bilder hochladen oder Google Drive / Cloudinary URLs in Einstellungen eintragen</div>
+            ${hint}
           </div>`;
         return;
       }
       let idx = (parseInt(container.dataset.slideIndex) || 0) % allImages.length;
-      container.innerHTML = `<img class="slideshow-full" src="${allImages[idx]}" alt="Slide ${idx+1}" onerror="this.style.display='none'">`;
+      container.innerHTML = `<img class="slideshow-full" src="${allImages[idx]}" alt="Slide ${idx+1}" onerror="this.style.display='none';this.nextSibling.style.display='flex'" /><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:8px;"><span style="font-size:2rem;">⚠️</span><span style="font-size:0.85rem;">Bild konnte nicht geladen werden</span></div>`;
       container.dataset.slideIndex = idx;
     }
 
