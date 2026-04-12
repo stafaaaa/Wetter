@@ -75,8 +75,8 @@
 
     .main-content {
       flex: 1;
-      padding: 16px 16px 56px 16px; /* 56px bottom = nur Platz für schwebende Icons */
-      overflow: hidden; /* NO scroll */
+      padding: 8px 12px 50px 12px;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       min-height: 0;
@@ -93,54 +93,52 @@
       min-height: 0;
     }
 
-    /* ── NAV: KEINE Leiste, Icons schweben frei ── */
+    /* ── NAV: komplett aus dem Fluss, schwebende Icons ── */
     .bottom-nav {
       position: fixed;
-      bottom: 12px;
+      bottom: 8px;
       left: 0;
       right: 0;
-      height: 0;           /* Kein Platz, keine Leiste */
+      height: auto;
       background: none !important;
       border: none !important;
       box-shadow: none !important;
-      z-index: 200;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      z-index: 500;
       display: flex;
       justify-content: space-around;
-      align-items: flex-end;
-      padding: 0;
-      overflow: visible;   /* Icons dürfen sichtbar sein */
+      align-items: center;
+      padding: 0 8px;
+      pointer-events: none; /* Klicks gehen durch zur Kachel */
     }
-
     .nav-item {
+      pointer-events: all; /* Nur die Icons selbst sind klickbar */
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 2px;
-      background: none;
+      gap: 1px;
+      background: none !important;
       border: none;
-      color: var(--text-secondary);
-      font-size: 1.5rem;
+      color: #333;
+      font-size: 1.4rem;
       cursor: pointer;
-      transition: all 0.2s;
-      padding: 4px 8px;
-      border-radius: 50px;
-      min-width: 48px;
-      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
-      position: relative;
-      bottom: 0;
+      padding: 4px 6px;
+      border-radius: 12px;
+      min-width: 44px;
+      text-shadow: 0 1px 3px rgba(255,255,255,0.8), 0 -1px 3px rgba(255,255,255,0.8);
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
     }
     .nav-label {
-      font-size: 0.58rem;
-      font-weight: 700;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.5), 0 0 8px rgba(0,0,0,0.3);
+      font-size: 0.55rem;
+      font-weight: 800;
+      color: inherit;
       white-space: nowrap;
     }
     .nav-item.active {
       color: var(--accent-blue);
-      filter: drop-shadow(0 2px 10px rgba(0,113,227,0.6));
-      transform: scale(1.15) translateY(-2px);
+      filter: drop-shadow(0 0 6px rgba(0,113,227,0.7));
     }
-    .nav-item:hover { transform: scale(1.1) translateY(-2px); }
 
     .nav-burger { position: relative; }
     .nav-burger .menu-dropdown {
@@ -224,17 +222,13 @@
 
     .grid-container {
       display: grid;
-      /* 6 equal columns */
       grid-template-columns: repeat(6, 1fr);
-      /* Rows: fill ALL available height equally — no fixed px, no scroll */
-      grid-auto-rows: 1fr;
-      gap: 12px;
+      gap: 10px;
       flex: 1;
       min-height: 0;
-      overflow: hidden; /* never scroll */
-      padding: 4px;
-      /* Height fills the view exactly */
-      height: 100%;
+      overflow: hidden;
+      padding: 2px;
+      align-content: stretch;
     }
 
     .tile {
@@ -1069,17 +1063,14 @@
     }
 
     function fitGridToViewport(grid, viewTiles) {
-      // Find the maximum number of grid rows needed
-      let maxRow = 0;
-      viewTiles.forEach(t => { maxRow = Math.max(maxRow, t.rowSpan || 2); });
-      // Count distinct row tracks needed (sum of unique row spans)
-      // Simple: count total row tracks = max rowSpan value used as rows
-      // Better: simulate grid placement to find actual row count
+      if (!viewTiles.length) return;
       const totalRows = calcGridRowCount(viewTiles);
       if (totalRows < 1) return;
-
-      // Set explicit row count so grid fills height
-      grid.style.gridTemplateRows = `repeat(${totalRows}, 1fr)`;
+      // Berechne verfügbare Höhe und teile durch Anzahl der Zeilen
+      const availH = grid.parentElement ? grid.parentElement.clientHeight : window.innerHeight;
+      const gap = 10;
+      const rowH = Math.floor((availH - gap * (totalRows - 1) - 8) / totalRows);
+      grid.style.gridTemplateRows = `repeat(${totalRows}, ${rowH}px)`;
     }
 
     function calcGridRowCount(viewTiles) {
@@ -1451,13 +1442,19 @@
       if (!url || !url.trim()) return null;
       url = url.trim();
 
-      // Google Drive Einzeldatei: /file/d/FILE_ID/
+      // Google Drive Einzeldatei — nutze thumbnail API (funktioniert ohne Login/CORS)
       const fileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-      if (fileMatch) return 'https://drive.google.com/uc?export=view&id=' + fileMatch[1];
+      if (fileMatch) {
+        const id = fileMatch[1];
+        // sz=w2048 gibt hohe Auflösung, funktioniert für öffentliche Dateien
+        return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w2048';
+      }
 
-      // Google Drive open?id=
+      // open?id= Format
       const openMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-      if (openMatch && url.includes('drive.google.com')) return 'https://drive.google.com/uc?export=view&id=' + openMatch[1];
+      if (openMatch && url.includes('drive.google.com')) {
+        return 'https://drive.google.com/thumbnail?id=' + openMatch[1] + '&sz=w2048';
+      }
 
       // Google Fotos Einzelfoto
       if (url.includes('photos.google.com') && url.includes('/photo/')) {
@@ -1476,32 +1473,31 @@
       return null;
     }
 
-    // Ordner-Link → Folder ID extrahieren
     function extractFolderId(url) {
       const m = url.match(/\/folders\/([a-zA-Z0-9_-]+)/);
       return m ? m[1] : null;
     }
 
-    // Lade alle Bild-IDs aus einem öffentlichen Google Drive Ordner
-    // Nutzt den öffentlichen RSS/JSON Feed von Google Drive
     async function loadDriveFolderImages(folderId) {
       try {
-        // Google Drive public folder → embed-Seite parsen
-        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(
-          'https://drive.google.com/drive/folders/' + folderId
-        );
-        const res = await fetch(proxyUrl);
+        // Öffentlicher Google Drive Ordner — embed-Seite über CORS-Proxy laden
+        const embedUrl = 'https://drive.google.com/drive/folders/' + folderId;
+        const proxy = 'https://corsproxy.io/?' + encodeURIComponent(embedUrl);
+        const res = await fetch(proxy, { signal: AbortSignal.timeout(8000) });
         const html = await res.text();
-        // Datei-IDs aus dem HTML extrahieren
-        const ids = [...new Set([...html.matchAll(/"([a-zA-Z0-9_-]{25,})"[^}]*"image\//g)].map(m=>m[1]))];
-        // Fallback: alle langen IDs die wie Drive-IDs aussehen
-        if (!ids.length) {
-          const allIds = [...html.matchAll(/data-id="([a-zA-Z0-9_-]{25,})"/g)].map(m=>m[1]);
-          return [...new Set(allIds)].slice(0, 100).map(id => 'https://drive.google.com/uc?export=view&id=' + id);
+        // Alle Drive File-IDs aus dem HTML extrahieren (25-44 Zeichen lang)
+        const allIds = [...html.matchAll(/data-id="([a-zA-Z0-9_-]{25,44})"/g)].map(m => m[1]);
+        const uniqueIds = [...new Set(allIds)].slice(0, 200);
+        if (!uniqueIds.length) {
+          // Fallback: nach IDs in anderen Formaten suchen
+          const ids2 = [...html.matchAll(/"([a-zA-Z0-9_-]{33,44})"/g)].map(m=>m[1]);
+          return [...new Set(ids2)].slice(0,50).map(id =>
+            'https://drive.google.com/thumbnail?id=' + id + '&sz=w2048'
+          );
         }
-        return ids.slice(0, 100).map(id => 'https://drive.google.com/uc?export=view&id=' + id);
+        return uniqueIds.map(id => 'https://drive.google.com/thumbnail?id=' + id + '&sz=w2048');
       } catch(e) {
-        console.warn('Drive Ordner laden fehlgeschlagen:', e);
+        console.warn('Drive Ordner laden fehlgeschlagen:', e.message);
         return [];
       }
     }
@@ -1955,6 +1951,11 @@
       restartSlideshowTimer();
       // Lade Bilder (inkl. Drive-Ordner async)
       initSlideshowImages();
+
+      // Bei Fenstergröße-Änderung Grid neu berechnen
+      window.addEventListener('resize', () => renderAll());
+      // Nochmal nach kurzem Delay rendern (für Android Browser die langsam laden)
+      setTimeout(() => renderAll(), 300);
     }
 
     window.onload = init;
