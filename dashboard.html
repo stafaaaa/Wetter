@@ -91,11 +91,13 @@
       display: none;
       flex: 1;
       min-height: 0;
+      overflow: visible;
     }
     .view.active {
       display: flex;
       flex-direction: column;
       min-height: 0;
+      overflow: visible;
     }
 
     /* ── NAV: komplett aus dem Fluss, schwebende Icons ── */
@@ -227,18 +229,13 @@
 
     .grid-container {
       display: grid;
-      perspective: 1400px;
-      transform-style: preserve-3d;
       grid-template-columns: repeat(6, 1fr);
       gap: 10px;
       flex: 1;
       min-height: 0;
-      overflow: hidden;
-      padding: 2px;
+      overflow: visible; /* Kacheln dürfen über den Rand schweben */
+      padding: 12px 4px 24px 4px; /* Platz für Schatten + Float-Bewegung */
       align-content: stretch;
-      perspective: 1400px;
-      perspective-origin: center center;
-      transform-style: preserve-3d;
     }
 
     .tile {
@@ -257,15 +254,9 @@
       overflow: hidden;
       min-height: 0;
       transform-style: preserve-3d;
-      transform-origin: center center;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-      translate: 0 0;
       transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1),
-                  box-shadow 0.4s cubic-bezier(0.2, 0.9, 0.3, 1),
-                  filter 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
-      will-change: transform, box-shadow, filter;
-      contain: layout paint style;
+                  box-shadow 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+      will-change: transform, box-shadow;
       /* Standard-Schatten wenn kein Effekt aktiv */
       box-shadow: 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
     }
@@ -274,30 +265,30 @@
 
     /* SCHWEBEN */
     .tile:not(.edit-mode)[data-fx="float-low"] {
-      transform: translateY(-6px) translateZ(0) !important;
-      box-shadow: 0 6px 0 rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.85) !important;
+      transform: translateY(-6px);
+      box-shadow: 0 6px 0 rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.85);
     }
     .tile:not(.edit-mode)[data-fx="float-medium"] {
-      transform: translateY(-12px) translateZ(0) !important;
-      box-shadow: 0 12px 0 rgba(0,0,0,0.10), 0 20px 44px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+      transform: translateY(-12px);
+      box-shadow: 0 12px 0 rgba(0,0,0,0.10), 0 20px 44px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.9);
     }
     .tile:not(.edit-mode)[data-fx="float-high"] {
-      transform: translateY(-20px) translateZ(0) !important;
-      box-shadow: 0 20px 0 rgba(0,0,0,0.12), 0 32px 64px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.95) !important;
+      transform: translateY(-20px);
+      box-shadow: 0 20px 0 rgba(0,0,0,0.12), 0 32px 64px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.95);
     }
 
     /* KIPPEN */
     .tile:not(.edit-mode)[data-fx="tilt-low"] {
-      transform: perspective(800px) rotateX(4deg) rotateY(-2deg) translateZ(8px) !important;
-      box-shadow: 0 12px 32px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.85) !important;
+      transform: perspective(800px) rotateX(4deg) rotateY(-2deg) translateZ(8px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.85);
     }
     .tile:not(.edit-mode)[data-fx="tilt-medium"] {
-      transform: perspective(600px) rotateX(8deg) rotateY(-4deg) translateZ(16px) !important;
-      box-shadow: 0 20px 48px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+      transform: perspective(600px) rotateX(8deg) rotateY(-4deg) translateZ(16px);
+      box-shadow: 0 20px 48px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.9);
     }
     .tile:not(.edit-mode)[data-fx="tilt-high"] {
-      transform: perspective(400px) rotateX(14deg) rotateY(-7deg) translateZ(24px) !important;
-      box-shadow: 0 32px 64px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.95) !important;
+      transform: perspective(400px) rotateX(14deg) rotateY(-7deg) translateZ(24px);
+      box-shadow: 0 32px 64px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.95);
     }
 
     /* PULSIEREN */
@@ -363,19 +354,24 @@
     .tile:nth-child(3)[data-fx="wobble"] { animation-delay: -2.6s; }
     .tile:nth-child(4)[data-fx="wobble"] { animation-delay: -0.8s; }
 
-    /* Hover immer: noch höher schweben */
-    .tile:not(.edit-mode):hover {
-      transform: translateY(-18px) scale(1.02) !important;
-      animation: none !important;
-      box-shadow: 0 20px 0 rgba(0,0,0,0.07), 0 30px 60px rgba(0,0,0,0.18), 0 50px 100px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.95) !important;
+    /* Hover: statische Effekte heben sich noch weiter */
+    .tile:not(.edit-mode)[data-fx="float-low"]:hover,
+    .tile:not(.edit-mode)[data-fx="float-medium"]:hover,
+    .tile:not(.edit-mode)[data-fx="float-high"]:hover,
+    .tile:not(.edit-mode)[data-fx="tilt-low"]:hover,
+    .tile:not(.edit-mode)[data-fx="tilt-medium"]:hover,
+    .tile:not(.edit-mode)[data-fx="tilt-high"]:hover,
+    .tile:not(.edit-mode)[data-fx="none"]:hover {
+      transform: translateY(-22px) scale(1.02) !important;
+      box-shadow: 0 24px 0 rgba(0,0,0,0.08), 0 36px 72px rgba(0,0,0,0.22),
+                  inset 0 1px 0 rgba(255,255,255,0.95) !important;
       border-color: rgba(255,255,255,0.6);
       z-index: 5;
-      transition: transform 0.3s, box-shadow 0.3s !important;
     }
     .tile:not(.edit-mode):active {
-      transform: translateY(-2px) scale(0.98) !important;
-      animation: none !important;
-      box-shadow: 0 2px 0 rgba(0,0,0,0.10), 0 6px 16px rgba(0,0,0,0.12) !important;
+      transform: translateY(-2px) scale(0.97) !important;
+      animation-play-state: paused !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
       transition: transform 0.08s, box-shadow 0.08s !important;
     }
     /* Pinch resize indicator shown during active pinch gesture */
@@ -1222,35 +1218,11 @@
       return maxRow || 1;
     }
 
-
-    function applyCurrent3DEffect(forceReflow = false) {
-      const fx = userConfig.effect3D || 'float-medium';
-      document.querySelectorAll('.tile').forEach(el => {
-        if (forceReflow) {
-          el.style.animation = 'none';
-          el.style.transform = 'none';
-          void el.offsetHeight;
-          el.style.animation = '';
-          el.style.transform = '';
-        }
-        el.setAttribute('data-fx', fx);
-      });
-      const lbl = document.getElementById('active3dLabel');
-      if (lbl) {
-        const fxNames = {
-          'float-low':'Schweben Leicht','float-medium':'Schweben Mittel','float-high':'Schweben Stark',
-          'tilt-low':'Kippen Leicht','tilt-medium':'Kippen Mittel','tilt-high':'Kippen Stark',
-          'pulse':'Pulsieren','swing':'Pendeln','wobble':'Taumeln','none':'Kein Effekt'
-        };
-        lbl.textContent = 'Aktiv: ' + (fxNames[fx] || fx);
-      }
-    }
-
     function createTileElement(tile) {
       const div = document.createElement('div');
       div.className = `tile ${editMode ? 'edit-mode' : ''} ${tile.type === 'slideshow' ? 'tile-slideshow' : ''}`;
       div.dataset.id = tile.id;
-      div.setAttribute('data-fx', userConfig.effect3D || 'float-medium');
+      div.setAttribute('data-fx', userConfig.effect3D);
       div.style.gridColumn = `span ${tile.colSpan || 2}`;
       div.style.gridRow = `span ${tile.rowSpan || 2}`;
       div.setAttribute('draggable', editMode);
@@ -1397,7 +1369,7 @@
       userConfig.effect3D = fx;
       document.getElementById('settings3DEffect').value = fx;
       // Alle Kacheln sofort updaten
-      applyCurrent3DEffect(true);
+      document.querySelectorAll('.tile').forEach(el => el.setAttribute('data-fx', fx));
       // Button-Highlighting
       document.querySelectorAll('.effect3d-btn').forEach(b => {
         b.style.background = b.dataset.fx === fx ? 'var(--accent-blue)' : '';
@@ -1410,11 +1382,6 @@
       };
       const lbl = document.getElementById('active3dLabel');
       if (lbl) lbl.textContent = 'Aktiv: ' + (fxNames[fx] || fx);
-      document.querySelectorAll('.tile').forEach(el => {
-        el.style.animation = 'none';
-        void el.offsetHeight;
-        el.style.animation = '';
-      });
       saveToStorage();
     });
     function buildSubThemeRow(famKey, activeId) {
@@ -2048,7 +2015,6 @@
         applyAllSettings();
         saveToStorage();
         renderAll();
-        applyCurrent3DEffect(true);
         // FIX #3: restart slideshow timer with new interval
         restartSlideshowTimer();
         initSlideshowImages();
@@ -2188,16 +2154,5 @@
     window.onload = init;
   })();
 </script>
-
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./service-worker.js")
-        .then(() => console.log("Service Worker registriert"))
-        .catch(err => console.error("Service Worker Fehler:", err));
-    });
-  }
-</script>
-
 </body>
 </html>
