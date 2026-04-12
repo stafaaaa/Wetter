@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Home · Apple Style Dashboard</title>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#000000">
+  <link rel="manifest" href="manifest.json">
+  <title>Dashboard</title>
   <style>
     * {
       margin: 0;
@@ -238,41 +243,125 @@
       border: 1px solid var(--card-border);
       border-radius: 28px;
       padding: 14px 16px;
-      box-shadow: var(--shadow-md);
       display: flex;
       flex-direction: column;
       position: relative;
-      transition: box-shadow 0.35s cubic-bezier(0.2,0.9,0.4,1), border-color 0.25s;
       color: var(--text-primary);
-      transform-style: preserve-3d;
       background-size: cover;
       background-position: center;
       overflow: hidden;
       min-height: 0;
-      box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.75), inset 0 -1px 0 rgba(0,0,0,0.04);
+      /* Schwebender Grundzustand — Schatten unter der Kachel wie ein echtes Objekt in der Luft */
+      transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1),
+                  box-shadow 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+      will-change: transform, box-shadow;
     }
-    /* Real strong 3D: large perspective tilt that looks physically lifted */
-    .tile:not(.edit-mode)[data-3d="low"]    { transform: perspective(900px) rotateX(2deg)  rotateY(-1deg)  translateZ(4px);  }
-    .tile:not(.edit-mode)[data-3d="medium"] { transform: perspective(700px) rotateX(6deg)  rotateY(-3deg)  translateZ(10px); }
-    .tile:not(.edit-mode)[data-3d="high"]   { transform: perspective(500px) rotateX(11deg) rotateY(-5deg)  translateZ(18px); }
 
-    .tile:hover {
-      transform: perspective(600px) rotateX(4deg) rotateY(-2deg) translateZ(28px) scale(1.025);
-      box-shadow: 0 40px 80px -16px rgba(0,0,0,0.22), 0 16px 32px -8px rgba(0,0,0,0.12),
-                  inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.04);
-      border-color: rgba(255,255,255,0.7);
-      z-index: 5;
+    /* ── ALLE 3D-EFFEKTE ─────────────────────────────────────── */
+
+    /* SCHWEBEN */
+    .tile:not(.edit-mode)[data-fx="float-low"] {
+      transform: translateY(-3px);
+      box-shadow: 0 3px 0 rgba(0,0,0,0.06), 0 8px 20px rgba(0,0,0,0.10), 0 16px 40px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.8);
     }
-    /* Only animate press when NOT in edit mode — edit mode needs clean touch for buttons */
-    .tile:not(.edit-mode):active {
-      transform: perspective(600px) rotateX(8deg) rotateY(-4deg) translateZ(6px) scale(0.98);
+    .tile:not(.edit-mode)[data-fx="float-medium"] {
+      transform: translateY(-7px);
+      box-shadow: 0 7px 0 rgba(0,0,0,0.07), 0 14px 32px rgba(0,0,0,0.14), 0 28px 60px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.85);
     }
+    .tile:not(.edit-mode)[data-fx="float-high"] {
+      transform: translateY(-14px);
+      box-shadow: 0 14px 0 rgba(0,0,0,0.08), 0 22px 50px rgba(0,0,0,0.18), 0 44px 80px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.9);
+    }
+
+    /* KIPPEN */
+    .tile:not(.edit-mode)[data-fx="tilt-low"] {
+      transform: perspective(1200px) rotateX(2deg) rotateY(-1deg) translateZ(4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+    .tile:not(.edit-mode)[data-fx="tilt-medium"] {
+      transform: perspective(800px) rotateX(5deg) rotateY(-2deg) translateZ(10px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.85);
+    }
+    .tile:not(.edit-mode)[data-fx="tilt-high"] {
+      transform: perspective(500px) rotateX(10deg) rotateY(-4deg) translateZ(18px);
+      box-shadow: 0 28px 60px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.9);
+    }
+
+    /* PULSIEREN */
+    @keyframes fxPulse {
+      0%,100% { transform: scale(1.00); box-shadow: 0 6px 20px rgba(0,0,0,0.10); }
+      50%      { transform: scale(1.03); box-shadow: 0 14px 40px rgba(0,0,0,0.16); }
+    }
+    .tile:not(.edit-mode)[data-fx="pulse"] {
+      animation: fxPulse 2.8s ease-in-out infinite;
+    }
+
+    /* PENDELN */
+    @keyframes fxSwing {
+      0%,100% { transform: rotate(-1deg) translateY(-2px); }
+      50%      { transform: rotate(1deg)  translateY(-6px); }
+    }
+    .tile:not(.edit-mode)[data-fx="swing"] {
+      animation: fxSwing 3.2s ease-in-out infinite;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      transform-origin: center top;
+    }
+
+    /* TAUMELN */
+    @keyframes fxWobble {
+      0%   { transform: translateY(-4px) rotate(-0.8deg); }
+      25%  { transform: translateY(-10px) rotate(0.6deg); }
+      50%  { transform: translateY(-6px)  rotate(-0.4deg); }
+      75%  { transform: translateY(-12px) rotate(0.8deg); }
+      100% { transform: translateY(-4px)  rotate(-0.8deg); }
+    }
+    .tile:not(.edit-mode)[data-fx="wobble"] {
+      animation: fxWobble 4s ease-in-out infinite;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.14);
+    }
+
+    /* KEIN EFFEKT */
+    .tile:not(.edit-mode)[data-fx="none"] {
+      transform: none;
+      box-shadow: var(--shadow-md);
+    }
+
     .tile.edit-mode {
-      border: 2px dashed var(--accent-blue);
+      border: 2px dashed var(--accent-blue) !important;
       cursor: grab;
-      /* Disable 3D hover/active transforms in edit mode so buttons are always tappable */
       transform: none !important;
-      box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.75);
+      animation: none !important;
+      box-shadow: var(--shadow-md) !important;
+    }
+    .tile.pinching {
+      outline: 2.5px solid var(--accent-blue);
+      outline-offset: 3px;
+    }
+
+    /* Stagger — verschiedene Delays damit nicht alle gleich animieren */
+    .tile:nth-child(2)[data-fx="pulse"]  { animation-delay: -0.9s; }
+    .tile:nth-child(3)[data-fx="pulse"]  { animation-delay: -1.8s; }
+    .tile:nth-child(4)[data-fx="pulse"]  { animation-delay: -0.5s; }
+    .tile:nth-child(2)[data-fx="swing"]  { animation-delay: -1.1s; }
+    .tile:nth-child(3)[data-fx="swing"]  { animation-delay: -2.2s; }
+    .tile:nth-child(2)[data-fx="wobble"] { animation-delay: -1.3s; }
+    .tile:nth-child(3)[data-fx="wobble"] { animation-delay: -2.6s; }
+    .tile:nth-child(4)[data-fx="wobble"] { animation-delay: -0.8s; }
+
+    /* Hover immer: noch höher schweben */
+    .tile:not(.edit-mode):hover {
+      transform: translateY(-18px) scale(1.02) !important;
+      animation: none !important;
+      box-shadow: 0 20px 0 rgba(0,0,0,0.07), 0 30px 60px rgba(0,0,0,0.18), 0 50px 100px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.95) !important;
+      border-color: rgba(255,255,255,0.6);
+      z-index: 5;
+      transition: transform 0.3s, box-shadow 0.3s !important;
+    }
+    .tile:not(.edit-mode):active {
+      transform: translateY(-2px) scale(0.98) !important;
+      animation: none !important;
+      box-shadow: 0 2px 0 rgba(0,0,0,0.10), 0 6px 16px rgba(0,0,0,0.12) !important;
+      transition: transform 0.08s, box-shadow 0.08s !important;
     }
     /* Pinch resize indicator shown during active pinch gesture */
     .tile.pinching {
@@ -308,21 +397,17 @@
       line-height: 1;
       pointer-events: none;
       z-index: 1;
-      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.22)) drop-shadow(0 2px 4px rgba(0,0,0,0.12));
-      transform: perspective(300px) rotateX(18deg) rotateY(-12deg) rotateZ(-4deg) translateZ(20px);
-      animation: iconFloat 3.8s ease-in-out infinite;
+      animation: iconFloat 3s ease-in-out infinite;
       will-change: transform;
       user-select: none;
     }
     @keyframes iconFloat {
-      0%   { transform: perspective(300px) rotateX(18deg) rotateY(-12deg) rotateZ(-4deg) translateZ(20px) translateY(0px);
-             filter: drop-shadow(0 8px 18px rgba(0,0,0,0.22)) drop-shadow(0 2px 4px rgba(0,0,0,0.12)); }
-      30%  { transform: perspective(300px) rotateX(22deg) rotateY(-8deg)  rotateZ(-2deg) translateZ(26px) translateY(-7px);
-             filter: drop-shadow(0 14px 28px rgba(0,0,0,0.18)) drop-shadow(0 4px 8px rgba(0,0,0,0.10)); }
-      60%  { transform: perspective(300px) rotateX(14deg) rotateY(-16deg) rotateZ(-6deg) translateZ(16px) translateY(-3px);
-             filter: drop-shadow(0 6px 14px rgba(0,0,0,0.25)) drop-shadow(0 2px 4px rgba(0,0,0,0.14)); }
-      100% { transform: perspective(300px) rotateX(18deg) rotateY(-12deg) rotateZ(-4deg) translateZ(20px) translateY(0px);
-             filter: drop-shadow(0 8px 18px rgba(0,0,0,0.22)) drop-shadow(0 2px 4px rgba(0,0,0,0.12)); }
+      0%   { transform: translateY(0px);
+             filter: drop-shadow(0 8px 16px rgba(0,0,0,0.20)); }
+      50%  { transform: translateY(-8px);
+             filter: drop-shadow(0 16px 24px rgba(0,0,0,0.14)); }
+      100% { transform: translateY(0px);
+             filter: drop-shadow(0 8px 16px rgba(0,0,0,0.20)); }
     }
     /* Stagger animation per tile so they don't all float in sync */
     .tile:nth-child(2) .tile-big-icon { animation-delay: -1.2s; }
@@ -662,8 +747,22 @@
     <div class="input-group"><label>✏️ Schriftgröße</label><select id="settingsFontSize"><option value="medium">Mittel</option><option value="small">Klein</option><option value="large">Groß</option></select></div>
     <div class="input-group"><label>🔮 Kachel-Transparenz</label><input type="range" id="tileOpacitySlider" min="0.3" max="1.0" step="0.05" value="0.75"><span id="tileOpacityValue">0.75</span></div>
     <div class="input-group">
-      <label>🧊 3D-Effekt</label>
-      <select id="settings3DEffect"><option value="low">Leicht</option><option value="medium" selected>Mittel</option><option value="high">Stark</option></select>
+      <label>🧊 3D-Effekt — Stil wählen</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="effect3dPicker">
+        <button class="app-btn effect3d-btn" data-fx="float-low"     style="flex:1;min-width:130px;">🫧 Schweben Leicht</button>
+        <button class="app-btn effect3d-btn" data-fx="float-medium"  style="flex:1;min-width:130px;">🫧 Schweben Mittel</button>
+        <button class="app-btn effect3d-btn" data-fx="float-high"    style="flex:1;min-width:130px;">🫧 Schweben Stark</button>
+        <button class="app-btn effect3d-btn" data-fx="tilt-low"      style="flex:1;min-width:130px;">↗️ Kippen Leicht</button>
+        <button class="app-btn effect3d-btn" data-fx="tilt-medium"   style="flex:1;min-width:130px;">↗️ Kippen Mittel</button>
+        <button class="app-btn effect3d-btn" data-fx="tilt-high"     style="flex:1;min-width:130px;">↗️ Kippen Stark</button>
+        <button class="app-btn effect3d-btn" data-fx="pulse"         style="flex:1;min-width:130px;">💓 Pulsieren</button>
+        <button class="app-btn effect3d-btn" data-fx="swing"         style="flex:1;min-width:130px;">🎭 Pendeln</button>
+        <button class="app-btn effect3d-btn" data-fx="wobble"        style="flex:1;min-width:130px;">🌀 Taumeln</button>
+        <button class="app-btn effect3d-btn" data-fx="none"          style="flex:1;min-width:130px;">⬜ Kein Effekt</button>
+      </div>
+      <div id="active3dLabel" style="margin-top:8px;font-size:0.85rem;color:var(--text-secondary);">Aktiv: Schweben Mittel</div>
+      <!-- Legacy hidden select für Kompatibilität -->
+      <select id="settings3DEffect" style="display:none;"><option value="float-medium" selected>Schweben Mittel</option></select>
     </div>
     <div class="input-group"><label>🎨 Akzentfarbe</label><div class="color-row"><input type="color" id="globalAccentColor" value="#0071e3"><input type="text" id="globalAccentColorText"></div></div>
     <div class="input-group"><label>✏️ Schriftfarbe</label><div class="color-row"><input type="color" id="globalTextColor" value="#1d1d1f"><input type="text" id="globalTextColorText"></div></div>
@@ -775,7 +874,7 @@
       globalAccent: '#0071e3', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium',
       tileOpacity: 0.75, dashboardBgImage: '', dashboardBgColor: '#f5f5f7',
       menuBtnColor: '#ffffff',
-      effect3D: 'medium',
+      effect3D: 'float-medium',
       layoutTheme: 'apple-light',
       onlineImageUrls: '',   // legacy — kept for backwards compat
       driveUrls: '',
@@ -998,7 +1097,7 @@
         appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
         globalAccent: '#0071e3', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium',
         tileOpacity: 0.75, dashboardBgImage: '', dashboardBgColor: '#f5f5f7',
-        menuBtnColor: '#ffffff', effect3D: 'medium', layoutTheme: 'apple-light',
+        menuBtnColor: '#ffffff', effect3D: 'float-medium', layoutTheme: 'apple-light',
         onlineImageUrls: '', driveUrls: '', photosUrls: '', cloudinaryUrls: ''
       };
       uploadedImages = [];
@@ -1112,7 +1211,7 @@
       const div = document.createElement('div');
       div.className = `tile ${editMode ? 'edit-mode' : ''} ${tile.type === 'slideshow' ? 'tile-slideshow' : ''}`;
       div.dataset.id = tile.id;
-      div.setAttribute('data-3d', userConfig.effect3D);
+      div.setAttribute('data-fx', userConfig.effect3D);
       div.style.gridColumn = `span ${tile.colSpan || 2}`;
       div.style.gridRow = `span ${tile.rowSpan || 2}`;
       div.setAttribute('draggable', editMode);
@@ -1224,6 +1323,19 @@
       document.getElementById('menuBtnColor').value = userConfig.menuBtnColor;
       document.getElementById('menuBtnColorText').value = userConfig.menuBtnColor;
       document.getElementById('settings3DEffect').value = userConfig.effect3D;
+      // Aktiven 3D-Effekt-Button markieren
+      const fx = userConfig.effect3D || 'float-medium';
+      document.querySelectorAll('.effect3d-btn').forEach(b => {
+        b.style.background = b.dataset.fx === fx ? 'var(--accent-blue)' : '';
+        b.style.color = b.dataset.fx === fx ? '#fff' : '';
+      });
+      const fxNames = {
+        'float-low':'Schweben Leicht','float-medium':'Schweben Mittel','float-high':'Schweben Stark',
+        'tilt-low':'Kippen Leicht','tilt-medium':'Kippen Mittel','tilt-high':'Kippen Stark',
+        'pulse':'Pulsieren','swing':'Pendeln','wobble':'Taumeln','none':'Kein Effekt'
+      };
+      const lbl = document.getElementById('active3dLabel');
+      if (lbl) lbl.textContent = 'Aktiv: ' + (fxNames[fx] || fx);
       // Update active theme display
       const lt = userConfig.layoutTheme || 'apple-light';
       const t = getThemeById(lt);
@@ -1238,7 +1350,29 @@
       document.getElementById('settingsModal').classList.remove('hidden');
     }
 
-    // ── THEME PICKER: Familie → Unter-Themes ──────────────────────────
+    // 3D-Effekt Picker — sofort live anwenden
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.effect3d-btn');
+      if (!btn) return;
+      const fx = btn.dataset.fx;
+      userConfig.effect3D = fx;
+      document.getElementById('settings3DEffect').value = fx;
+      // Alle Kacheln sofort updaten
+      document.querySelectorAll('.tile').forEach(el => el.setAttribute('data-fx', fx));
+      // Button-Highlighting
+      document.querySelectorAll('.effect3d-btn').forEach(b => {
+        b.style.background = b.dataset.fx === fx ? 'var(--accent-blue)' : '';
+        b.style.color = b.dataset.fx === fx ? '#fff' : '';
+      });
+      const fxNames = {
+        'float-low':'Schweben Leicht','float-medium':'Schweben Mittel','float-high':'Schweben Stark',
+        'tilt-low':'Kippen Leicht','tilt-medium':'Kippen Mittel','tilt-high':'Kippen Stark',
+        'pulse':'Pulsieren','swing':'Pendeln','wobble':'Taumeln','none':'Kein Effekt'
+      };
+      const lbl = document.getElementById('active3dLabel');
+      if (lbl) lbl.textContent = 'Aktiv: ' + (fxNames[fx] || fx);
+      saveToStorage();
+    });
     function buildSubThemeRow(famKey, activeId) {
       const row = document.getElementById('subThemeRow');
       if (!row) return;
@@ -1866,7 +2000,7 @@
         userConfig.tileOpacity = parseFloat(document.getElementById('tileOpacitySlider').value);
         userConfig.dashboardBgColor = document.getElementById('dashboardBgColor').value;
         userConfig.menuBtnColor = document.getElementById('menuBtnColor').value;
-        userConfig.effect3D = document.getElementById('settings3DEffect').value;
+        userConfig.effect3D = document.getElementById('settings3DEffect').value || 'float-medium';
         applyAllSettings();
         saveToStorage();
         renderAll();
@@ -1957,6 +2091,54 @@
       // Nochmal nach kurzem Delay rendern (für Android Browser die langsam laden)
       setTimeout(() => renderAll(), 300);
     }
+
+    // ── IMMERSIVE FULLSCREEN ─────────────────────────────────────────
+    // Versteckt Statusleiste + Navigationsleiste auf Android
+    // Erscheint kurz beim Antippen, verschwindet dann wieder automatisch
+
+    function enterFullscreen() {
+      const el = document.documentElement;
+      const req = el.requestFullscreen
+        || el.webkitRequestFullscreen
+        || el.mozRequestFullScreen
+        || el.msRequestFullscreen;
+      if (req) {
+        req.call(el, { navigationUI: 'hide' }).catch(() => {});
+      }
+    }
+
+    function lockScreenOrientation() {
+      try {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(() =>
+            screen.orientation.lock('any').catch(() => {})
+          );
+        }
+      } catch(e) {}
+    }
+
+    // Beim ersten Tippen/Klick Vollbild aktivieren (Browser erfordert User-Geste)
+    function onFirstInteraction() {
+      enterFullscreen();
+      lockScreenOrientation();
+      document.removeEventListener('touchstart', onFirstInteraction);
+      document.removeEventListener('click', onFirstInteraction);
+    }
+    document.addEventListener('touchstart', onFirstInteraction, { once: true });
+    document.addEventListener('click', onFirstInteraction, { once: true });
+
+    // Wenn Vollbild verlassen wird (z.B. durch Android-Geste) → nach 3 Sek wieder aktivieren
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        setTimeout(enterFullscreen, 3000);
+      }
+    });
+    document.addEventListener('webkitfullscreenchange', () => {
+      if (!document.webkitFullscreenElement) {
+        setTimeout(enterFullscreen, 3000);
+      }
+    });
+    // ─────────────────────────────────────────────────────────────────
 
     window.onload = init;
   })();
