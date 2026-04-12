@@ -745,8 +745,7 @@
     <div class="input-group"><label>▶️ YouTube Link</label><input type="text" id="settingsYoutube" value="vnd.youtube://"></div>
     <div class="input-group"><label>🎶 Amazon Music Link</label><input type="text" id="settingsAmazonMusic" value="amazonmusic://"></div>
     <div class="input-group"><label>🍳 Rezepte-URL</label><input type="text" id="settingsRecipeUrl" value="https://www.chefkoch.de/"></div>
-    <div class="input-group"><label>📋 Termine</label><textarea id="settingsAppointments" rows="3">2026-04-10 09:00 | Arzttermin
-2026-04-12 14:30 | Team Meeting</textarea></div>
+    <div class="input-group"><label>📋 Termine</label><textarea id="settingsAppointments" rows="3" placeholder="2026-04-15 09:00 | Arzttermin&#10;2026-04-20 14:30 | Meeting"></textarea></div>
     <div class="input-group">
       <label>🖼️ Dashboard-Hintergrund</label>
       <div class="flex-row"><button class="app-btn" id="uploadDashboardBgBtn">📸 Bild wählen</button><button class="app-btn" id="removeDashboardBgBtn">🗑️ Entfernen</button></div>
@@ -895,7 +894,7 @@
       city: 'Düsseldorf', slideshowInterval: 6,
       spotifyUrl: 'spotify:', youtubeUrl: 'vnd.youtube://', amazonMusicUrl: 'amazonmusic://',
       recipeUrl: 'https://www.chefkoch.de/',
-      appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
+      appointmentsText: '',
       globalAccent: '#0071e3', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium',
       tileOpacity: 0.75, dashboardBgImage: '', dashboardBgColor: '#f5f5f7',
       menuBtnColor: '#ffffff',
@@ -1211,7 +1210,7 @@
       userConfig = {
         city: 'Düsseldorf', slideshowInterval: 6, spotifyUrl: 'spotify:', youtubeUrl: 'vnd.youtube://',
         amazonMusicUrl: 'amazonmusic://', recipeUrl: 'https://www.chefkoch.de/',
-        appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
+        appointmentsText: '',
         globalAccent: '#0071e3', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium',
         tileOpacity: 0.75, dashboardBgImage: '', dashboardBgColor: '#f5f5f7',
         menuBtnColor: '#ffffff', effect3D: 'float-medium', layoutTheme: 'apple-light',
@@ -1870,8 +1869,8 @@
     function renderAppointments(container) {
       const lines = userConfig.appointmentsText.split('\n').filter(l => l.trim());
       container.innerHTML = lines.length
-        ? lines.map(l => `<div style="padding:8px 0; border-bottom:0.5px solid var(--card-border);">📅 ${l}</div>`).join('')
-        : '<div style="opacity:0.5;">Keine Termine</div>';
+        ? lines.map(l => `<div style="padding:8px 0; border-bottom:0.5px solid var(--card-border); font-size:0.9rem;">📅 ${l}</div>`).join('')
+        : `<div style="opacity:0.5;font-size:0.85rem;padding:8px 0;">Keine Termine<br><small>Einstellungen → Termine eingeben<br>Format: 2026-04-15 09:00 | Beschreibung</small></div>`;
     }
 
     function renderSpotify(container) {
