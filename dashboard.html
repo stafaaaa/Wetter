@@ -611,13 +611,30 @@
     <div class="input-group"><label>⏱️ Slideshow (Sek)</label><input type="number" id="settingsSlideshowSec" value="6"></div>
 
     <div class="input-group">
-      <label>🌐 Slideshow — Online Bild-URLs</label>
-      <textarea id="settingsOnlineUrls" rows="6" placeholder="Eine URL pro Zeile. Unterstützt:&#10;• Google Drive: https://drive.google.com/file/d/ID/view&#10;• Google Fotos: Foto öffnen → Teilen → Link kopieren&#10;• Cloudinary: https://res.cloudinary.com/...&#10;• Jede direkte Bild-URL (jpg, png, webp)"></textarea>
-      <div style="margin-top:8px;background:var(--glass-bg);border-radius:14px;padding:12px;font-size:0.82rem;color:var(--text-secondary);border:1px solid var(--card-border);">
-        <b style="color:var(--text-primary);">📌 Google Drive:</b> Datei → Teilen → "Jeder mit Link" → Link kopieren.<br>
-        <b style="color:var(--text-primary);">📸 Google Fotos:</b> Einzelnes Foto öffnen → ⋮ → Teilen → Link erstellen → kopieren.<br>
-        <b style="color:var(--text-primary);">☁️ Cloudinary:</b> cloudinary.com → kostenloses Konto → Bild hochladen → URL kopieren.<br>
-        <b style="color:var(--text-primary);">✅ Vorteil:</b> Bilder bleiben dauerhaft gespeichert — Fully Kiosk löscht sie nie.
+      <label>🌐 Slideshow — Online Bilder</label>
+
+      <div style="margin-bottom:10px;">
+        <div style="font-weight:600;font-size:0.9rem;margin-bottom:6px;">📌 Google Drive</div>
+        <textarea id="settingsDriveUrls" rows="3" placeholder="Eine URL pro Zeile&#10;z.B. https://drive.google.com/file/d/ABC123/view"></textarea>
+        <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;padding:8px;background:var(--glass-bg);border-radius:10px;border:1px solid var(--card-border);">
+          Datei → Teilen → "Jeder mit Link" → Link kopieren
+        </div>
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <div style="font-weight:600;font-size:0.9rem;margin-bottom:6px;">📸 Google Fotos</div>
+        <textarea id="settingsPhotosUrls" rows="3" placeholder="Einzelnes Foto öffnen → ⋮ → Teilen → Link erstellen&#10;Nur Einzelfotos funktionieren, keine Alben"></textarea>
+        <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;padding:8px;background:var(--glass-bg);border-radius:10px;border:1px solid var(--card-border);">
+          ⚠️ Google Fotos blockiert manchmal externe Anzeige. Falls Bild nicht erscheint → Bild herunterladen und auf Google Drive hochladen.
+        </div>
+      </div>
+
+      <div style="margin-bottom:4px;">
+        <div style="font-weight:600;font-size:0.9rem;margin-bottom:6px;">☁️ Cloudinary</div>
+        <textarea id="settingsCloudinaryUrls" rows="3" placeholder="Eine URL pro Zeile&#10;z.B. https://res.cloudinary.com/deinname/image/upload/foto.jpg"></textarea>
+        <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;padding:8px;background:var(--glass-bg);border-radius:10px;border:1px solid var(--card-border);">
+          cloudinary.com → kostenloses Konto → Bild hochladen → URL kopieren. Zuverlässigste Option!
+        </div>
       </div>
     </div>
     <div class="input-group"><label>🎵 Spotify Link</label><input type="text" id="settingsSpotify" value="spotify:"></div>
@@ -766,7 +783,10 @@
       menuBtnColor: '#ffffff',
       effect3D: 'medium',
       layoutTheme: 'apple-light',
-      onlineImageUrls: ''   // Newline-separated URLs for slideshow
+      onlineImageUrls: '',   // legacy — kept for backwards compat
+      driveUrls: '',
+      photosUrls: '',
+      cloudinaryUrls: ''
     };
 
     // ── LAYOUT THEMES ─────────────────────────────────────────────────
@@ -984,7 +1004,8 @@
         appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
         globalAccent: '#0071e3', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium',
         tileOpacity: 0.75, dashboardBgImage: '', dashboardBgColor: '#f5f5f7',
-        menuBtnColor: '#ffffff', effect3D: 'medium', layoutTheme: 'apple-light', onlineImageUrls: ''
+        menuBtnColor: '#ffffff', effect3D: 'medium', layoutTheme: 'apple-light',
+        onlineImageUrls: '', driveUrls: '', photosUrls: '', cloudinaryUrls: ''
       };
       uploadedImages = [];
       applyAllSettings();
@@ -1191,7 +1212,9 @@
     function openSettingsModal() {
       document.getElementById('settingsCity').value = userConfig.city;
       document.getElementById('settingsSlideshowSec').value = userConfig.slideshowInterval;
-      document.getElementById('settingsOnlineUrls').value = userConfig.onlineImageUrls || '';
+      document.getElementById('settingsDriveUrls').value = userConfig.driveUrls || '';
+      document.getElementById('settingsPhotosUrls').value = userConfig.photosUrls || '';
+      document.getElementById('settingsCloudinaryUrls').value = userConfig.cloudinaryUrls || '';
       document.getElementById('settingsSpotify').value = userConfig.spotifyUrl;
       document.getElementById('settingsYoutube').value = userConfig.youtubeUrl;
       document.getElementById('settingsAmazonMusic').value = userConfig.amazonMusicUrl;
@@ -1450,62 +1473,70 @@
       container.innerHTML = html;
     }
 
-    // Convert any Google Drive / Google Photos / Cloudinary share URL to a direct image URL
-    function convertToDirectImageUrl(url) {
-      url = url.trim();
+    // Convert share URLs to direct image URLs
+    function convertToDirectImageUrl(url, type) {
       if (!url) return null;
 
-      // Google Drive: https://drive.google.com/file/d/FILE_ID/view...
-      const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-      if (driveMatch) {
-        return `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
+      if (type === 'drive' || type === 'auto') {
+        // Google Drive: https://drive.google.com/file/d/FILE_ID/view
+        const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (driveMatch) return 'https://drive.google.com/uc?export=view&id=' + driveMatch[1];
+
+        // Google Drive: open?id=
+        const driveOpen = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+        if (driveOpen) return 'https://drive.google.com/uc?export=view&id=' + driveOpen[1];
       }
 
-      // Google Drive: https://drive.google.com/open?id=FILE_ID
-      const driveOpen = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
-      if (driveOpen) {
-        return `https://drive.google.com/uc?export=view&id=${driveOpen[1]}`;
-      }
-
-      // Google Fotos: https://photos.google.com/photo/...
-      // Google Fotos direkte Bild-URL endet auf =w oder =h oder =d
-      // Teilen-Link: photos.app.goo.gl oder photos.google.com/share/...
-      // Direkter Download: URL mit =d am Ende erzwingen
-      if (url.includes('photos.google.com') || url.includes('photos.app.goo.gl')) {
-        // Wenn URL schon auf =d oder =w... endet → als direkte URL nutzen
-        if (url.match(/=d$|=w\d|=h\d/)) {
-          // Ersetze jeden Größenparameter durch =d für Original-Download
-          return url.replace(/=w\d+.*$|=h\d+.*$/, '=d');
+      if (type === 'photos' || type === 'auto') {
+        if (url.includes('photos.google.com') || url.includes('photos.app.goo.gl')) {
+          // Google Fotos direkte Bild-URL (endet auf =w oder =d)
+          if (url.match(/=w\d|=h\d|=d$/)) {
+            // Auf =w2048 setzen für große Auflösung ohne Login-Pflicht
+            return url.replace(/=w\d+.*$|=h\d+.*$|=d$/, '=w2048');
+          }
+          // Einzel-Foto Link → =w2048 anhängen
+          if (url.includes('/photo/')) {
+            return url.split('?')[0] + '=w2048';
+          }
+          // Fallback
+          return url;
         }
-        // Geteilter Foto-Link → direkt anhängen =d
-        // Hinweis: Alben-Links funktionieren nicht direkt, nur Einzel-Fotos
-        if (url.includes('/photo/')) {
-          return url + '=d';
-        }
-        // Fallback: URL as-is zurückgeben
-        return url;
       }
 
-      // Cloudinary URL — immer direkt nutzbar
-      if (url.includes('cloudinary.com')) return url;
+      if (type === 'cloudinary' || type === 'auto') {
+        if (url.includes('cloudinary.com')) return url;
+      }
 
-      // Already a direct image URL (jpg, png, webp, gif etc.)
+      // Direkte Bild-URL (jpg, png, webp, gif...)
       if (url.match(/\.(jpg|jpeg|png|webp|gif|bmp|avif)(\?.*)?$/i)) return url;
 
-      // Any other https URL — try as-is
+      // Jede andere https URL — as-is
       if (url.startsWith('http')) return url;
 
       return null;
     }
 
-    // Combine uploaded (local base64) + online URLs into one array for slideshow
+    // Combine all image sources into one array for slideshow
     function getAllSlideImages() {
       const local = uploadedImages || [];
-      const onlineRaw = (userConfig.onlineImageUrls || '').split('\n');
-      const online = onlineRaw
-        .map(u => convertToDirectImageUrl(u))
-        .filter(Boolean);
-      return [...online, ...local]; // online first (more reliable), local as fallback
+
+      // Google Drive URLs
+      const driveRaw = (userConfig.driveUrls || '').split('\n');
+      const driveImages = driveRaw.map(u => convertToDirectImageUrl(u.trim(), 'drive')).filter(Boolean);
+
+      // Google Fotos URLs — wrap in a CORS proxy to fix loading issues
+      const photosRaw = (userConfig.photosUrls || '').split('\n');
+      const photosImages = photosRaw.map(u => convertToDirectImageUrl(u.trim(), 'photos')).filter(Boolean);
+
+      // Cloudinary URLs
+      const cloudRaw = (userConfig.cloudinaryUrls || '').split('\n');
+      const cloudImages = cloudRaw.map(u => convertToDirectImageUrl(u.trim(), 'cloudinary')).filter(Boolean);
+
+      // Legacy single-field support
+      const legacyRaw = (userConfig.onlineImageUrls || '').split('\n');
+      const legacyImages = legacyRaw.map(u => convertToDirectImageUrl(u.trim(), 'auto')).filter(Boolean);
+
+      return [...driveImages, ...photosImages, ...cloudImages, ...legacyImages, ...local];
     }
 
     function renderSlideshow(container) {
@@ -1808,7 +1839,9 @@
       document.getElementById('saveSettingsBtn').onclick = () => {
         userConfig.city = document.getElementById('settingsCity').value;
         userConfig.slideshowInterval = parseInt(document.getElementById('settingsSlideshowSec').value) || 6;
-        userConfig.onlineImageUrls = document.getElementById('settingsOnlineUrls').value;
+        userConfig.driveUrls = document.getElementById('settingsDriveUrls').value;
+        userConfig.photosUrls = document.getElementById('settingsPhotosUrls').value;
+        userConfig.cloudinaryUrls = document.getElementById('settingsCloudinaryUrls').value;
         userConfig.spotifyUrl = document.getElementById('settingsSpotify').value;
         userConfig.youtubeUrl = document.getElementById('settingsYoutube').value;
         userConfig.amazonMusicUrl = document.getElementById('settingsAmazonMusic').value;
