@@ -75,7 +75,7 @@
 
     .main-content {
       flex: 1;
-      padding: 16px 16px 80px 16px; /* 80px bottom = space for floating nav icons */
+      padding: 16px 16px 56px 16px; /* 56px bottom = nur Platz für schwebende Icons */
       overflow: hidden; /* NO scroll */
       display: flex;
       flex-direction: column;
@@ -93,55 +93,54 @@
       min-height: 0;
     }
 
-    /* ── NAV: keine Leiste, nur schwebende Icons ── */
+    /* ── NAV: KEINE Leiste, Icons schweben frei ── */
     .bottom-nav {
       position: fixed;
-      bottom: 0;
+      bottom: 12px;
       left: 0;
       right: 0;
-      height: 72px;
-      background: transparent;
-      border: none;
-      box-shadow: none;
+      height: 0;           /* Kein Platz, keine Leiste */
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
       z-index: 200;
       display: flex;
       justify-content: space-around;
-      align-items: center;
-      padding: 0 20px 8px;
+      align-items: flex-end;
+      padding: 0;
+      overflow: visible;   /* Icons dürfen sichtbar sein */
     }
 
     .nav-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       background: none;
       border: none;
       color: var(--text-secondary);
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       cursor: pointer;
       transition: all 0.2s;
-      padding: 6px 10px;
+      padding: 4px 8px;
       border-radius: 50px;
-      min-width: 52px;
-      /* weicher Schatten damit Icons auf hellem+dunklem Hintergrund lesbar sind */
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+      min-width: 48px;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
+      position: relative;
+      bottom: 0;
     }
     .nav-label {
-      font-size: 0.62rem;
+      font-size: 0.58rem;
       font-weight: 700;
-      letter-spacing: 0em;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5), 0 0 8px rgba(0,0,0,0.3);
+      white-space: nowrap;
     }
     .nav-item.active {
       color: var(--accent-blue);
-      filter: drop-shadow(0 2px 8px rgba(0,113,227,0.45));
-      transform: scale(1.12);
+      filter: drop-shadow(0 2px 10px rgba(0,113,227,0.6));
+      transform: scale(1.15) translateY(-2px);
     }
-    .nav-item:hover {
-      color: var(--text-primary);
-      transform: scale(1.08);
-    }
+    .nav-item:hover { transform: scale(1.1) translateY(-2px); }
 
     .nav-burger { position: relative; }
     .nav-burger .menu-dropdown {
@@ -615,9 +614,10 @@
 
       <div style="margin-bottom:10px;">
         <div style="font-weight:600;font-size:0.9rem;margin-bottom:6px;">📌 Google Drive</div>
-        <textarea id="settingsDriveUrls" rows="3" placeholder="Eine URL pro Zeile&#10;z.B. https://drive.google.com/file/d/ABC123/view"></textarea>
+        <textarea id="settingsDriveUrls" rows="3" placeholder="Ordner-Link ODER einzelne Datei-Links (eine pro Zeile)&#10;Ordner: https://drive.google.com/drive/folders/ID&#10;Datei: https://drive.google.com/file/d/ID/view"></textarea>
         <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:4px;padding:8px;background:var(--glass-bg);border-radius:10px;border:1px solid var(--card-border);">
-          Datei → Teilen → "Jeder mit Link" → Link kopieren
+          Ordner teilen: Ordner → Rechtsklick → Teilen → "Jeder mit Link" → Link kopieren.<br>
+          Einzeldatei: Foto → ⋮ → "Link abrufen" → kopieren.
         </div>
       </div>
 
@@ -1306,36 +1306,9 @@
     });
 
     function attachBurgerMenu() {
+      // Burger oben rechts entfernt — nur noch der ☰ in der Nav-Leiste unten
       const oldWrapper = document.querySelector('.burger-menu-wrapper');
       if (oldWrapper) oldWrapper.remove();
-      const wrapper = document.createElement('div');
-      wrapper.className = 'burger-menu-wrapper';
-      wrapper.innerHTML = `
-        <div class="burger-menu" id="burgerMenuBtn" style="background: ${userConfig.menuBtnColor};">☰</div>
-        <div class="menu-dropdown" id="menuDropdown">
-          <div class="menu-item" id="menuEditToggle">✎ Bearbeiten</div>
-          <div class="menu-item" id="menuUploadImages">🖼️ Bilder hochladen</div>
-          <div class="menu-item" id="menuOpenSettings">⚙️ Einstellungen</div>
-          <div class="menu-item" id="menuAddTile">➕ Neue Kachel</div>
-          <div class="menu-divider"></div>
-          <div class="menu-item" id="menuReset">↻ Reset</div>
-        </div>
-      `;
-      document.querySelector('.dashboard').appendChild(wrapper);
-
-      const burgerBtn = document.getElementById('burgerMenuBtn');
-      const menuDropdown = document.getElementById('menuDropdown');
-      burgerBtn.addEventListener('click', (e) => { e.stopPropagation(); menuDropdown.classList.toggle('show'); });
-      document.addEventListener('click', (e) => { if (!burgerBtn.contains(e.target) && !menuDropdown.contains(e.target)) menuDropdown.classList.remove('show'); });
-
-      document.getElementById('menuEditToggle').onclick = () => { editMode = !editMode; menuDropdown.classList.remove('show'); renderAll(); };
-      document.getElementById('menuUploadImages').onclick = () => {
-        menuDropdown.classList.remove('show');
-        uploadImagesPrompt();
-      };
-      document.getElementById('menuOpenSettings').onclick = () => { menuDropdown.classList.remove('show'); openSettingsModal(); };
-      document.getElementById('menuAddTile').onclick = () => { menuDropdown.classList.remove('show'); openAddTileModal(); };
-      document.getElementById('menuReset').onclick = () => { if(confirm('Reset?')) resetToDefault(); menuDropdown.classList.remove('show'); };
     }
 
     function uploadImagesPrompt() {
@@ -1478,88 +1451,107 @@
       if (!url || !url.trim()) return null;
       url = url.trim();
 
-      // ── GOOGLE DRIVE ──────────────────────────────────────────────
-      if (type === 'drive' || type === 'auto') {
+      // Google Drive Einzeldatei: /file/d/FILE_ID/
+      const fileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (fileMatch) return 'https://drive.google.com/uc?export=view&id=' + fileMatch[1];
 
-        // Einzelne Datei: /file/d/FILE_ID/
-        const fileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-        if (fileMatch) {
-          return 'https://drive.google.com/uc?export=view&id=' + fileMatch[1];
-        }
+      // Google Drive open?id=
+      const openMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (openMatch && url.includes('drive.google.com')) return 'https://drive.google.com/uc?export=view&id=' + openMatch[1];
 
-        // open?id= Format
-        const openMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-        if (openMatch && url.includes('drive.google.com')) {
-          return 'https://drive.google.com/uc?export=view&id=' + openMatch[1];
-        }
-
-        // ORDNER-LINK: /folders/FOLDER_ID — kann nicht direkt als Bild genutzt werden
-        if (url.includes('/folders/')) {
-          // Zeige Fehlermeldung im Slideshow-Placeholder
-          console.warn('Dashboard: Google Drive Ordner-Link erkannt. Bitte einzelne Datei-Links verwenden.');
-          return '__FOLDER_LINK__'; // wird als Fehler-Marker behandelt
-        }
+      // Google Fotos Einzelfoto
+      if (url.includes('photos.google.com') && url.includes('/photo/')) {
+        return url.split('?')[0].replace(/=\w+$/, '') + '=w2048';
       }
 
-      // ── GOOGLE FOTOS ──────────────────────────────────────────────
-      if (type === 'photos' || type === 'auto') {
+      // Cloudinary
+      if (url.includes('cloudinary.com')) return url;
 
-        // Kurzlink photos.app.goo.gl → kann nicht direkt aufgelöst werden (CORS)
-        // Zeige hilfreiche Fehlermeldung
-        if (url.includes('photos.app.goo.gl')) {
-          console.warn('Dashboard: Google Fotos Kurzlink. Bitte Einzelfoto öffnen und direkten Link kopieren.');
-          return '__PHOTOS_SHORTLINK__';
-        }
-
-        if (url.includes('photos.google.com')) {
-          // Direkter Foto-Link
-          if (url.includes('/photo/')) {
-            const base = url.split('?')[0].replace(/=\w+$/, '');
-            return base + '=w2048';
-          }
-          return url;
-        }
-      }
-
-      // ── CLOUDINARY ────────────────────────────────────────────────
-      if (type === 'cloudinary' || type === 'auto') {
-        if (url.includes('cloudinary.com')) return url;
-      }
-
-      // ── DIREKTE BILD-URL ──────────────────────────────────────────
+      // Direkte Bild-URL
       if (url.match(/\.(jpg|jpeg|png|webp|gif|bmp|avif)(\?.*)?$/i)) return url;
 
-      // ── JEDE ANDERE URL ───────────────────────────────────────────
+      // Jede andere https URL
       if (url.startsWith('http')) return url;
 
       return null;
     }
 
-    // Combine all image sources — filter out error markers
-    function getAllSlideImages() {
+    // Ordner-Link → Folder ID extrahieren
+    function extractFolderId(url) {
+      const m = url.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+      return m ? m[1] : null;
+    }
+
+    // Lade alle Bild-IDs aus einem öffentlichen Google Drive Ordner
+    // Nutzt den öffentlichen RSS/JSON Feed von Google Drive
+    async function loadDriveFolderImages(folderId) {
+      try {
+        // Google Drive public folder → embed-Seite parsen
+        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(
+          'https://drive.google.com/drive/folders/' + folderId
+        );
+        const res = await fetch(proxyUrl);
+        const html = await res.text();
+        // Datei-IDs aus dem HTML extrahieren
+        const ids = [...new Set([...html.matchAll(/"([a-zA-Z0-9_-]{25,})"[^}]*"image\//g)].map(m=>m[1]))];
+        // Fallback: alle langen IDs die wie Drive-IDs aussehen
+        if (!ids.length) {
+          const allIds = [...html.matchAll(/data-id="([a-zA-Z0-9_-]{25,})"/g)].map(m=>m[1]);
+          return [...new Set(allIds)].slice(0, 100).map(id => 'https://drive.google.com/uc?export=view&id=' + id);
+        }
+        return ids.slice(0, 100).map(id => 'https://drive.google.com/uc?export=view&id=' + id);
+      } catch(e) {
+        console.warn('Drive Ordner laden fehlgeschlagen:', e);
+        return [];
+      }
+    }
+
+    // Alle Bilder kombiniert — async wegen Ordner-Laden
+    async function getAllSlideImagesAsync() {
       const local = uploadedImages || [];
+      let driveImages = [];
 
-      const driveRaw = (userConfig.driveUrls || '').split('\n');
-      const driveImages = driveRaw
-        .map(u => convertToDirectImageUrl(u.trim(), 'drive'))
-        .filter(u => u && !u.startsWith('__'));
+      const driveRaw = (userConfig.driveUrls || '').split('\n').map(u=>u.trim()).filter(Boolean);
+      for (const url of driveRaw) {
+        const folderId = extractFolderId(url);
+        if (folderId) {
+          // Ordner → alle Bilder laden
+          const folderImgs = await loadDriveFolderImages(folderId);
+          driveImages.push(...folderImgs);
+        } else {
+          const direct = convertToDirectImageUrl(url, 'drive');
+          if (direct) driveImages.push(direct);
+        }
+      }
 
-      const photosRaw = (userConfig.photosUrls || '').split('\n');
-      const photosImages = photosRaw
-        .map(u => convertToDirectImageUrl(u.trim(), 'photos'))
-        .filter(u => u && !u.startsWith('__'));
+      const photosRaw = (userConfig.photosUrls || '').split('\n').map(u=>u.trim()).filter(Boolean);
+      const photosImages = photosRaw.map(u => convertToDirectImageUrl(u, 'photos')).filter(Boolean);
 
-      const cloudRaw = (userConfig.cloudinaryUrls || '').split('\n');
-      const cloudImages = cloudRaw
-        .map(u => convertToDirectImageUrl(u.trim(), 'cloudinary'))
-        .filter(u => u && !u.startsWith('__'));
+      const cloudRaw = (userConfig.cloudinaryUrls || '').split('\n').map(u=>u.trim()).filter(Boolean);
+      const cloudImages = cloudRaw.map(u => convertToDirectImageUrl(u, 'cloudinary')).filter(Boolean);
 
-      const legacyRaw = (userConfig.onlineImageUrls || '').split('\n');
-      const legacyImages = legacyRaw
-        .map(u => convertToDirectImageUrl(u.trim(), 'auto'))
-        .filter(u => u && !u.startsWith('__'));
+      const legacyRaw = (userConfig.onlineImageUrls || '').split('\n').map(u=>u.trim()).filter(Boolean);
+      const legacyImages = legacyRaw.map(u => convertToDirectImageUrl(u, 'auto')).filter(Boolean);
 
       return [...driveImages, ...photosImages, ...cloudImages, ...legacyImages, ...local];
+    }
+
+    // Sync version für timer (nutzt gecachte Liste)
+    function getAllSlideImages() {
+      // Gibt gecachte Liste zurück — wird durch initSlideshowImages() befüllt
+      return window._cachedSlideImages || [];
+    }
+
+    async function initSlideshowImages() {
+      window._cachedSlideImages = await getAllSlideImagesAsync();
+      // Slideshow neu rendern mit geladenen Bildern
+      document.querySelectorAll('.tile').forEach(el => {
+        const t = tiles.find(tt => tt.id == el.dataset.id);
+        if (t && t.type === 'slideshow') {
+          const cont = el.querySelector('.tile-content');
+          if (cont) renderSlideshow(cont);
+        }
+      });
     }
 
     function renderSlideshow(container) {
@@ -1567,39 +1559,17 @@
       container.style.position = 'relative';
       const allImages = getAllSlideImages();
 
-      // Check for common mistakes in entered URLs
-      const driveRaw = (userConfig.driveUrls || '').split('\n').map(u=>u.trim()).filter(Boolean);
-      const photosRaw = (userConfig.photosUrls || '').split('\n').map(u=>u.trim()).filter(Boolean);
-      const hasFolderLink = driveRaw.some(u => u.includes('/folders/'));
-      const hasShortLink  = photosRaw.some(u => u.includes('photos.app.goo.gl'));
-
       if (!allImages.length) {
-        let hint = '';
-        if (hasFolderLink) {
-          hint = `<div style="margin-top:12px;background:rgba(255,80,0,0.12);border-radius:12px;padding:12px;font-size:0.82rem;text-align:left;">
-            ⚠️ <b>Google Drive Ordner-Link erkannt!</b><br>
-            Bitte <b>einzelne Dateien</b> teilen:<br>
-            Foto im Drive öffnen → ⋮ → "Link abrufen"
-          </div>`;
-        } else if (hasShortLink) {
-          hint = `<div style="margin-top:12px;background:rgba(255,80,0,0.12);border-radius:12px;padding:12px;font-size:0.82rem;text-align:left;">
-            ⚠️ <b>Google Fotos Kurzlink nicht unterstützt!</b><br>
-            Einzelfoto in Google Fotos öffnen → ⋮ → Teilen → Link erstellen<br>
-            Oder Foto auf Google Drive hochladen und dort teilen.
-          </div>`;
-        } else {
-          hint = `<div style="font-size:0.8rem;opacity:0.6;margin-top:8px;">Bilder hochladen oder URLs in Einstellungen eintragen</div>`;
-        }
         container.innerHTML = `
           <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;padding:16px;">
             <div style="font-size:4rem;animation:iconFloat 3s ease-in-out infinite;">🖼️</div>
             <div style="font-size:1rem;font-weight:600;">Noch keine Bilder</div>
-            ${hint}
+            <div style="font-size:0.8rem;opacity:0.6;text-align:center;">Bilder hochladen oder Drive/Cloudinary URLs in Einstellungen eintragen</div>
           </div>`;
         return;
       }
       let idx = (parseInt(container.dataset.slideIndex) || 0) % allImages.length;
-      container.innerHTML = `<img class="slideshow-full" src="${allImages[idx]}" alt="Slide ${idx+1}" onerror="this.style.display='none';this.nextSibling.style.display='flex'" /><div style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:8px;"><span style="font-size:2rem;">⚠️</span><span style="font-size:0.85rem;">Bild konnte nicht geladen werden</span></div>`;
+      container.innerHTML = `<img class="slideshow-full" src="${allImages[idx]}" alt="Slide ${idx+1}" onerror="this.style.display='none'">`;
       container.dataset.slideIndex = idx;
     }
 
@@ -1906,6 +1876,7 @@
         renderAll();
         // FIX #3: restart slideshow timer with new interval
         restartSlideshowTimer();
+        initSlideshowImages();
         document.getElementById('settingsModal').classList.add('hidden');
       };
 
@@ -1982,6 +1953,8 @@
 
       // Start slideshow timer
       restartSlideshowTimer();
+      // Lade Bilder (inkl. Drive-Ordner async)
+      initSlideshowImages();
     }
 
     window.onload = init;
