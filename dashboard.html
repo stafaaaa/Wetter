@@ -1129,46 +1129,74 @@
     // ────────────────────────────────────────────────────────────────
 
     function loadFromStorage() {
+      // Erst schnell aus localStorage laden (synchron, sofort)
       try {
-        const savedTiles = localStorage.getItem('apple_dash_tiles');
+        const savedTiles  = localStorage.getItem('apple_dash_tiles');
         const savedConfig = localStorage.getItem('apple_dash_config');
         const savedImages = localStorage.getItem('apple_dash_images');
-        if (savedTiles) tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
+        if (savedTiles)  tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
         else tiles = [...DEFAULT_TILES];
         if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
-        // Bilder aus localStorage als Fallback laden
         if (savedImages) uploadedImages = JSON.parse(savedImages);
         if (!tiles.length) tiles = [...DEFAULT_TILES];
       } catch(e) { tiles = [...DEFAULT_TILES]; }
       ensureUniqueIds();
       applyAllSettings();
-      // Bilder aus IndexedDB laden (überschreibt localStorage falls vorhanden)
-      openDB().then(() => dbLoad('images', 'uploadedImages')).then(imgs => {
+
+      // Dann aus IndexedDB laden — überschreibt localStorage komplett
+      openDB().then(async () => {
+        let changed = false;
+
+        // Tiles komplett (inkl. bgImage) aus IndexedDB
+        const idbTiles = await dbLoad('config', 'tiles').catch(() => null);
+        if (idbTiles && idbTiles.length) {
+          tiles = idbTiles;
+          ensureUniqueIds();
+          changed = true;
+        }
+
+        // userConfig aus IndexedDB
+        const idbConfig = await dbLoad('config', 'userConfig').catch(() => null);
+        if (idbConfig) {
+          userConfig = { ...userConfig, ...idbConfig };
+          changed = true;
+        }
+
+        // Dashboard-Hintergrundbild
+        const dashBg = await dbLoad('images', 'dashboardBgImage').catch(() => null);
+        if (dashBg) {
+          userConfig.dashboardBgImage = dashBg;
+          changed = true;
+        }
+
+        // Slideshow-Bilder
+        const imgs = await dbLoad('images', 'uploadedImages').catch(() => null);
         if (imgs && imgs.length) {
           uploadedImages = imgs;
-          // Slideshow neu rendern
-          document.querySelectorAll('.tile').forEach(el => {
-            const t = tiles.find(tt => tt.id == el.dataset.id);
-            if (t && t.type === 'slideshow') {
-              const cont = el.querySelector('.tile-content');
-              if (cont) renderSlideshow(cont);
-            }
-          });
+          changed = true;
+        }
+
+        if (changed) {
+          applyAllSettings();
+          renderAll();
         }
       }).catch(() => {});
     }
 
     function saveToStorage() {
+      // localStorage (ohne große Bilder — nur als Schnell-Fallback)
       try {
-        localStorage.setItem('apple_dash_tiles', JSON.stringify(tiles));
-        localStorage.setItem('apple_dash_config', JSON.stringify(userConfig));
-        // Bilder in BEIDE speichern — IndexedDB primär, localStorage als Backup
-        localStorage.setItem('apple_dash_images', JSON.stringify(uploadedImages));
-        dbSave('images', 'uploadedImages', uploadedImages).catch(() => {});
-      } catch(e) {
-        // localStorage voll → nur IndexedDB
-        dbSave('images', 'uploadedImages', uploadedImages).catch(() => {});
-      }
+        const tilesLight = tiles.map(t => ({ ...t, bgImage: t.bgImage ? '__idb__' : '' }));
+        localStorage.setItem('apple_dash_tiles', JSON.stringify(tilesLight));
+        localStorage.setItem('apple_dash_config', JSON.stringify({ ...userConfig, dashboardBgImage: userConfig.dashboardBgImage ? '__idb__' : '' }));
+        localStorage.setItem('apple_dash_images', '[]'); // Bilder nur in IndexedDB
+      } catch(e) {}
+
+      // IndexedDB — alles dauerhaft speichern
+      dbSave('config', 'tiles', tiles).catch(() => {});
+      dbSave('config', 'userConfig', userConfig).catch(() => {});
+      dbSave('images', 'uploadedImages', uploadedImages).catch(() => {});
+      dbSave('images', 'dashboardBgImage', userConfig.dashboardBgImage || '').catch(() => {});
     }
 
     // FIX #6: nextTileId must be at least max existing ID to avoid collisions
