@@ -593,6 +593,16 @@
       <label>🎨 Erscheinungsbild</label>
       <select id="settingsTheme"><option value="light">Hell</option><option value="dark">Dunkel</option></select>
     </div>
+    <div class="input-group">
+      <label>📱 Layout-Theme</label>
+      <div class="flex-row" style="gap:10px;flex-wrap:wrap;">
+        <button class="app-btn theme-pick-btn" data-lt="apple"  style="flex:1;min-width:120px;">🍎 Apple</button>
+        <button class="app-btn theme-pick-btn" data-lt="windows" style="flex:1;min-width:120px;">🪟 Windows</button>
+        <button class="app-btn theme-pick-btn" data-lt="xiaomi"  style="flex:1;min-width:120px;">🟠 Xiaomi</button>
+        <button class="app-btn theme-pick-btn" data-lt="nothing" style="flex:1;min-width:120px;">⚫ Nothing OS</button>
+      </div>
+      <div id="activeThemeLabel" style="margin-top:8px;font-size:0.85rem;color:var(--text-secondary);">Aktiv: Apple</div>
+    </div>
     <div class="input-group"><label>✏️ Schriftgröße</label><select id="settingsFontSize"><option value="medium">Mittel</option><option value="small">Klein</option><option value="large">Groß</option></select></div>
     <div class="input-group"><label>🔮 Kachel-Transparenz</label><input type="range" id="tileOpacitySlider" min="0.3" max="1.0" step="0.05" value="0.75"><span id="tileOpacityValue">0.75</span></div>
     <div class="input-group">
@@ -687,8 +697,94 @@
       globalAccent: '#0071e3', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium',
       tileOpacity: 0.75, dashboardBgImage: '', dashboardBgColor: '#f5f5f7',
       menuBtnColor: '#ffffff',
-      effect3D: 'medium'
+      effect3D: 'medium',
+      layoutTheme: 'apple'   // apple | windows | xiaomi | nothing
     };
+
+    // ── LAYOUT THEMES ─────────────────────────────────────────────────
+    const LAYOUT_THEMES = {
+      apple: {
+        name: '🍎 Apple',
+        '--card-bg': 'rgba(255,255,255,0.78)',
+        '--card-border': 'rgba(0,0,0,0.05)',
+        '--glass-bg': 'rgba(255,255,255,0.62)',
+        '--accent-blue': '#0071e3',
+        '--text-primary': '#1d1d1f',
+        '--text-secondary': '#86868b',
+        '--bg-primary': '#f5f5f7',
+        '--shadow-md': '0 20px 40px -10px rgba(0,0,0,0.10), 0 8px 16px -6px rgba(0,0,0,0.05)',
+        tileRadius: '28px', fontFamily: "system-ui,-apple-system,'Helvetica Neue',sans-serif",
+        bgColor: '#f5f5f7', darkBg: '#1d1d1f', accentColor: '#0071e3', textColor: '#1d1d1f'
+      },
+      windows: {
+        name: '🪟 Windows',
+        '--card-bg': 'rgba(243,243,243,0.85)',
+        '--card-border': 'rgba(0,0,0,0.08)',
+        '--glass-bg': 'rgba(249,249,249,0.72)',
+        '--accent-blue': '#0078d4',
+        '--text-primary': '#201f1e',
+        '--text-secondary': '#605e5c',
+        '--bg-primary': '#e8e8e8',
+        '--shadow-md': '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
+        tileRadius: '8px', fontFamily: "'Segoe UI',system-ui,sans-serif",
+        bgColor: '#e8e8e8', darkBg: '#1f1f1f', accentColor: '#0078d4', textColor: '#201f1e'
+      },
+      xiaomi: {
+        name: '🟠 Xiaomi',
+        '--card-bg': 'rgba(255,255,255,0.92)',
+        '--card-border': 'rgba(255,102,0,0.12)',
+        '--glass-bg': 'rgba(255,255,255,0.75)',
+        '--accent-blue': '#ff6900',
+        '--text-primary': '#1a1a1a',
+        '--text-secondary': '#888888',
+        '--bg-primary': '#f2f2f2',
+        '--shadow-md': '0 16px 48px rgba(255,105,0,0.10), 0 4px 12px rgba(0,0,0,0.06)',
+        tileRadius: '20px', fontFamily: "'MiSans',system-ui,sans-serif",
+        bgColor: '#f2f2f2', darkBg: '#0d0d0d', accentColor: '#ff6900', textColor: '#1a1a1a'
+      },
+      nothing: {
+        name: '⚫ Nothing OS',
+        '--card-bg': 'rgba(20,20,20,0.92)',
+        '--card-border': 'rgba(255,255,255,0.10)',
+        '--glass-bg': 'rgba(15,15,15,0.85)',
+        '--accent-blue': '#ffffff',
+        '--text-primary': '#ffffff',
+        '--text-secondary': '#888888',
+        '--bg-primary': '#0a0a0a',
+        '--shadow-md': '0 16px 48px rgba(0,0,0,0.5), 0 4px 12px rgba(255,255,255,0.04)',
+        tileRadius: '4px', fontFamily: "'Courier New',monospace",
+        bgColor: '#0a0a0a', darkBg: '#0a0a0a', accentColor: '#ffffff', textColor: '#ffffff'
+      }
+    };
+
+    function applyLayoutTheme(themeName) {
+      const t = LAYOUT_THEMES[themeName] || LAYOUT_THEMES.apple;
+      userConfig.layoutTheme = themeName;
+      const root = document.documentElement;
+      Object.entries(t).forEach(([k,v]) => { if (k.startsWith('--')) root.style.setProperty(k, v); });
+      // tile border-radius
+      root.style.setProperty('--tile-radius', t.tileRadius);
+      document.querySelectorAll('.tile').forEach(el => el.style.borderRadius = t.tileRadius);
+      document.querySelectorAll('.settings-card').forEach(el => el.style.borderRadius = t.tileRadius === '4px' ? '8px' : '40px');
+      // font
+      document.body.style.fontFamily = t.fontFamily;
+      // bg
+      if (!userConfig.dashboardBgImage) {
+        const isDark = document.body.classList.contains('theme-dark');
+        document.body.style.backgroundColor = isDark ? t.darkBg : t.bgColor;
+        userConfig.dashboardBgColor = isDark ? t.darkBg : t.bgColor;
+      }
+      // accent + text
+      userConfig.globalAccent = t.accentColor;
+      userConfig.globalTextColor = t.textColor;
+      root.style.setProperty('--accent-blue', t.accentColor);
+      // Nothing OS forces dark
+      if (themeName === 'nothing') {
+        document.body.classList.remove('theme-light');
+        document.body.classList.add('theme-dark');
+        userConfig.theme = 'dark';
+      }
+    }
 
     let uploadedImages = [];
     let currentEditingTileId = null;
@@ -820,7 +916,7 @@
         appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
         globalAccent: '#0071e3', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium',
         tileOpacity: 0.75, dashboardBgImage: '', dashboardBgColor: '#f5f5f7',
-        menuBtnColor: '#ffffff', effect3D: 'medium'
+        menuBtnColor: '#ffffff', effect3D: 'medium', layoutTheme: 'apple'
       };
       uploadedImages = [];
       applyAllSettings();
@@ -834,6 +930,7 @@
       applyTheme(userConfig.theme);
       applyFontSize(userConfig.fontSize);
       applyDashboardBackground();
+      applyLayoutTheme(userConfig.layoutTheme || 'apple');
       document.documentElement.style.setProperty('--menu-btn-bg', userConfig.menuBtnColor);
       document.documentElement.style.setProperty('--accent-blue', userConfig.globalAccent);
     }
@@ -965,8 +1062,30 @@
       document.getElementById('menuBtnColor').value = userConfig.menuBtnColor;
       document.getElementById('menuBtnColorText').value = userConfig.menuBtnColor;
       document.getElementById('settings3DEffect').value = userConfig.effect3D;
+      // Update active theme label
+      const lt = userConfig.layoutTheme || 'apple';
+      document.getElementById('activeThemeLabel').textContent = 'Aktiv: ' + (LAYOUT_THEMES[lt]?.name || lt);
+      document.querySelectorAll('.theme-pick-btn').forEach(b => {
+        b.style.background = b.dataset.lt === lt ? 'var(--accent-blue)' : '';
+        b.style.color = b.dataset.lt === lt ? '#fff' : '';
+      });
       document.getElementById('settingsModal').classList.remove('hidden');
     }
+
+    // Theme picker — live preview on tap
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.theme-pick-btn');
+      if (!btn) return;
+      const lt = btn.dataset.lt;
+      applyLayoutTheme(lt);
+      saveToStorage();
+      renderAll();
+      document.getElementById('activeThemeLabel').textContent = 'Aktiv: ' + (LAYOUT_THEMES[lt]?.name || lt);
+      document.querySelectorAll('.theme-pick-btn').forEach(b => {
+        b.style.background = b.dataset.lt === lt ? 'var(--accent-blue)' : '';
+        b.style.color = b.dataset.lt === lt ? '#fff' : '';
+      });
+    });
 
     function attachBurgerMenu() {
       const oldWrapper = document.querySelector('.burger-menu-wrapper');
@@ -1140,7 +1259,12 @@
       container.style.overflow = 'hidden';
       container.style.position = 'relative';
       if (!uploadedImages.length) {
-        container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;opacity:0.5;">📸 Bilder hochladen</div>`;
+        container.innerHTML = `
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;opacity:0.7;">
+            <div style="font-size:5rem;animation:iconFloat 3s ease-in-out infinite;filter:drop-shadow(0 8px 18px rgba(0,0,0,0.22));">🖼️</div>
+            <div style="font-size:1rem;font-weight:600;">Bilder hochladen</div>
+            <div style="font-size:0.8rem;opacity:0.6;">oder Google Drive / Cloudinary URL in Einstellungen</div>
+          </div>`;
         return;
       }
       let idx = (parseInt(container.dataset.slideIndex) || 0) % uploadedImages.length;
