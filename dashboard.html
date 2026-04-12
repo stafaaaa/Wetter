@@ -66,7 +66,7 @@
 
     .dashboard {
       width: 100vw;
-      height: 100vh;
+      height: 100dvh; /* dynamic viewport height — works on Android Chrome */
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -75,19 +75,22 @@
 
     .main-content {
       flex: 1;
-      padding: 28px 32px 12px 32px;
-      overflow-y: auto;
+      padding: 16px 16px 80px 16px; /* 80px bottom = space for floating nav icons */
+      overflow: hidden; /* NO scroll */
       display: flex;
       flex-direction: column;
+      min-height: 0;
     }
 
     .view {
       display: none;
       flex: 1;
+      min-height: 0;
     }
     .view.active {
       display: flex;
       flex-direction: column;
+      min-height: 0;
     }
 
     /* ── NAV: keine Leiste, nur schwebende Icons ── */
@@ -222,12 +225,17 @@
 
     .grid-container {
       display: grid;
+      /* 6 equal columns */
       grid-template-columns: repeat(6, 1fr);
-      grid-auto-rows: minmax(150px, auto);
-      gap: 24px;
+      /* Rows: fill ALL available height equally — no fixed px, no scroll */
+      grid-auto-rows: 1fr;
+      gap: 12px;
       flex: 1;
-      overflow-y: auto;
+      min-height: 0;
+      overflow: hidden; /* never scroll */
       padding: 4px;
+      /* Height fills the view exactly */
+      height: 100%;
     }
 
     .tile {
@@ -236,7 +244,7 @@
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--card-border);
       border-radius: 28px;
-      padding: 24px 26px;
+      padding: 14px 16px;
       box-shadow: var(--shadow-md);
       display: flex;
       flex-direction: column;
@@ -246,7 +254,8 @@
       transform-style: preserve-3d;
       background-size: cover;
       background-position: center;
-      /* inner top-edge highlight for depth illusion */
+      overflow: hidden;
+      min-height: 0;
       box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.75), inset 0 -1px 0 rgba(0,0,0,0.04);
     }
     /* Real strong 3D: large perspective tilt that looks physically lifted */
@@ -283,14 +292,14 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 8px;
       font-weight: 600;
-      font-size: 1.3rem;
+      font-size: 1rem;
       letter-spacing: -0.02em;
       position: relative;
       z-index: 20;
-      /* Isolate stacking context so buttons are above 3D tile */
       isolation: isolate;
+      flex-shrink: 0;
     }
     .tile-header span:first-child {
       display: flex;
@@ -300,13 +309,13 @@
     /* ── TILE BIG 3D ICON ── */
     .tile-big-icon {
       position: absolute;
-      bottom: 18px;
-      right: 20px;
-      font-size: 4.2rem;
+      bottom: 10px;
+      right: 12px;
+      font-size: clamp(2rem, 4vw, 3.5rem);
       line-height: 1;
       pointer-events: none;
       z-index: 1;
-      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.22)) drop-shadow(0 2px 4px rgba(0,0,0,0.12));
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.22)) drop-shadow(0 2px 4px rgba(0,0,0,0.12));
       transform: perspective(300px) rotateX(18deg) rotateY(-12deg) rotateZ(-4deg) translateZ(20px);
       animation: iconFloat 3.8s ease-in-out infinite;
       will-change: transform;
@@ -374,6 +383,8 @@
       overflow: hidden;
       position: relative;
       z-index: 2;
+      min-height: 0;
+      font-size: clamp(0.75rem, 1.5vw, 1rem);
     }
 
     .size-badge {
@@ -393,8 +404,8 @@
 
     .flip-clock {
       display: flex;
-      gap: 8px;
-      font-size: 4.5rem !important;
+      gap: 4px;
+      font-size: clamp(2rem, 5vw, 4rem) !important;
       font-weight: 300;
       line-height: 1;
       letter-spacing: -0.02em;
@@ -403,8 +414,8 @@
     .flip-digit {
       background: rgba(255, 255, 255, 0.3);
       backdrop-filter: blur(10px);
-      padding: 12px 18px;
-      border-radius: 20px;
+      padding: 6px 10px;
+      border-radius: 14px;
       box-shadow: var(--shadow-sm);
       border: 0.5px solid var(--card-border);
     }
@@ -598,6 +609,17 @@
     <h2 style="margin-bottom:32px; font-weight:600; letter-spacing:-0.02em;">Einstellungen</h2>
     <div class="input-group"><label>📍 Stadt</label><input type="text" id="settingsCity" value="Düsseldorf"></div>
     <div class="input-group"><label>⏱️ Slideshow (Sek)</label><input type="number" id="settingsSlideshowSec" value="6"></div>
+
+    <div class="input-group">
+      <label>🌐 Slideshow — Online Bild-URLs</label>
+      <textarea id="settingsOnlineUrls" rows="6" placeholder="Eine URL pro Zeile. Unterstützt:&#10;• Google Drive: https://drive.google.com/file/d/ID/view&#10;• Google Fotos: Foto öffnen → Teilen → Link kopieren&#10;• Cloudinary: https://res.cloudinary.com/...&#10;• Jede direkte Bild-URL (jpg, png, webp)"></textarea>
+      <div style="margin-top:8px;background:var(--glass-bg);border-radius:14px;padding:12px;font-size:0.82rem;color:var(--text-secondary);border:1px solid var(--card-border);">
+        <b style="color:var(--text-primary);">📌 Google Drive:</b> Datei → Teilen → "Jeder mit Link" → Link kopieren.<br>
+        <b style="color:var(--text-primary);">📸 Google Fotos:</b> Einzelnes Foto öffnen → ⋮ → Teilen → Link erstellen → kopieren.<br>
+        <b style="color:var(--text-primary);">☁️ Cloudinary:</b> cloudinary.com → kostenloses Konto → Bild hochladen → URL kopieren.<br>
+        <b style="color:var(--text-primary);">✅ Vorteil:</b> Bilder bleiben dauerhaft gespeichert — Fully Kiosk löscht sie nie.
+      </div>
+    </div>
     <div class="input-group"><label>🎵 Spotify Link</label><input type="text" id="settingsSpotify" value="spotify:"></div>
     <div class="input-group"><label>▶️ YouTube Link</label><input type="text" id="settingsYoutube" value="vnd.youtube://"></div>
     <div class="input-group"><label>🎶 Amazon Music Link</label><input type="text" id="settingsAmazonMusic" value="amazonmusic://"></div>
@@ -615,13 +637,16 @@
     </div>
     <div class="input-group">
       <label>📱 Layout-Theme</label>
-      <div class="flex-row" style="gap:10px;flex-wrap:wrap;">
-        <button class="app-btn theme-pick-btn" data-lt="apple"  style="flex:1;min-width:120px;">🍎 Apple</button>
-        <button class="app-btn theme-pick-btn" data-lt="windows" style="flex:1;min-width:120px;">🪟 Windows</button>
-        <button class="app-btn theme-pick-btn" data-lt="xiaomi"  style="flex:1;min-width:120px;">🟠 Xiaomi</button>
-        <button class="app-btn theme-pick-btn" data-lt="nothing" style="flex:1;min-width:120px;">⚫ Nothing OS</button>
+      <!-- Familie wählen -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+        <button class="app-btn theme-fam-btn" data-fam="apple"   style="flex:1;min-width:100px;">🍎 Apple</button>
+        <button class="app-btn theme-fam-btn" data-fam="windows" style="flex:1;min-width:100px;">🪟 Windows</button>
+        <button class="app-btn theme-fam-btn" data-fam="xiaomi"  style="flex:1;min-width:100px;">🟠 Xiaomi</button>
+        <button class="app-btn theme-fam-btn" data-fam="nothing" style="flex:1;min-width:100px;">⚫ Nothing</button>
       </div>
-      <div id="activeThemeLabel" style="margin-top:8px;font-size:0.85rem;color:var(--text-secondary);">Aktiv: Apple</div>
+      <!-- Unter-Themes -->
+      <div id="subThemeRow" style="display:flex;gap:8px;flex-wrap:wrap;min-height:44px;"></div>
+      <div id="activeThemeLabel" style="margin-top:8px;font-size:0.85rem;color:var(--text-secondary);">Aktiv: Apple Light</div>
     </div>
     <div class="input-group"><label>✏️ Schriftgröße</label><select id="settingsFontSize"><option value="medium">Mittel</option><option value="small">Klein</option><option value="large">Groß</option></select></div>
     <div class="input-group"><label>🔮 Kachel-Transparenz</label><input type="range" id="tileOpacitySlider" min="0.3" max="1.0" step="0.05" value="0.75"><span id="tileOpacityValue">0.75</span></div>
@@ -740,91 +765,90 @@
       tileOpacity: 0.75, dashboardBgImage: '', dashboardBgColor: '#f5f5f7',
       menuBtnColor: '#ffffff',
       effect3D: 'medium',
-      layoutTheme: 'apple'   // apple | windows | xiaomi | nothing
+      layoutTheme: 'apple-light',
+      onlineImageUrls: ''   // Newline-separated URLs for slideshow
     };
 
     // ── LAYOUT THEMES ─────────────────────────────────────────────────
-    const LAYOUT_THEMES = {
+    // ── THEME FAMILIES mit je mehreren Unter-Themes ──────────────────
+    const THEME_FAMILIES = {
       apple: {
-        name: '🍎 Apple',
-        '--card-bg': 'rgba(255,255,255,0.78)',
-        '--card-border': 'rgba(0,0,0,0.05)',
-        '--glass-bg': 'rgba(255,255,255,0.62)',
-        '--accent-blue': '#0071e3',
-        '--text-primary': '#1d1d1f',
-        '--text-secondary': '#86868b',
-        '--bg-primary': '#f5f5f7',
-        '--shadow-md': '0 20px 40px -10px rgba(0,0,0,0.10), 0 8px 16px -6px rgba(0,0,0,0.05)',
-        tileRadius: '28px', fontFamily: "system-ui,-apple-system,'Helvetica Neue',sans-serif",
-        bgColor: '#f5f5f7', darkBg: '#1d1d1f', accentColor: '#0071e3', textColor: '#1d1d1f'
+        label: '🍎 Apple', icon: '🍎',
+        themes: {
+          'apple-light':   { name: 'Light',      '--card-bg':'rgba(255,255,255,0.78)', '--card-border':'rgba(0,0,0,0.05)', '--glass-bg':'rgba(255,255,255,0.62)', '--accent-blue':'#0071e3', '--text-primary':'#1d1d1f', '--text-secondary':'#86868b', '--bg-primary':'#f5f5f7', '--shadow-md':'0 20px 40px -10px rgba(0,0,0,0.10),0 8px 16px -6px rgba(0,0,0,0.05)', tileRadius:'28px', fontFamily:"system-ui,-apple-system,'Helvetica Neue',sans-serif", bgColor:'#f5f5f7', darkBg:'#1d1d1f', accentColor:'#0071e3', textColor:'#1d1d1f', forceDark:false },
+          'apple-dark':    { name: 'Dark',        '--card-bg':'rgba(30,30,30,0.85)',   '--card-border':'rgba(255,255,255,0.08)', '--glass-bg':'rgba(20,20,20,0.7)',   '--accent-blue':'#0a84ff', '--text-primary':'#f5f5f7', '--text-secondary':'#98989d', '--bg-primary':'#1c1c1e', '--shadow-md':'0 20px 40px rgba(0,0,0,0.4)', tileRadius:'28px', fontFamily:"system-ui,-apple-system,'Helvetica Neue',sans-serif", bgColor:'#1c1c1e', darkBg:'#1c1c1e', accentColor:'#0a84ff', textColor:'#f5f5f7', forceDark:true },
+          'apple-pro':     { name: 'Pro Gold',    '--card-bg':'rgba(20,18,15,0.92)',   '--card-border':'rgba(212,175,55,0.25)', '--glass-bg':'rgba(15,13,10,0.8)',   '--accent-blue':'#d4af37', '--text-primary':'#f5f0e0', '--text-secondary':'#a09060', '--bg-primary':'#0f0d0a', '--shadow-md':'0 20px 60px rgba(212,175,55,0.15)', tileRadius:'24px', fontFamily:"system-ui,-apple-system,'Helvetica Neue',sans-serif", bgColor:'#0f0d0a', darkBg:'#0f0d0a', accentColor:'#d4af37', textColor:'#f5f0e0', forceDark:true },
+          'apple-pink':    { name: 'Rose',        '--card-bg':'rgba(255,240,245,0.82)','--card-border':'rgba(255,45,85,0.12)', '--glass-bg':'rgba(255,230,240,0.65)','--accent-blue':'#ff2d55', '--text-primary':'#2d0015', '--text-secondary':'#a06070', '--bg-primary':'#ffe0ec', '--shadow-md':'0 20px 40px rgba(255,45,85,0.12)', tileRadius:'32px', fontFamily:"system-ui,-apple-system,'Helvetica Neue',sans-serif", bgColor:'#ffe0ec', darkBg:'#1a0010', accentColor:'#ff2d55', textColor:'#2d0015', forceDark:false },
+          'apple-mint':    { name: 'Mint',        '--card-bg':'rgba(235,255,245,0.82)','--card-border':'rgba(0,200,120,0.12)', '--glass-bg':'rgba(220,255,240,0.65)','--accent-blue':'#28cd41', '--text-primary':'#003820', '--text-secondary':'#407060', '--bg-primary':'#d5f5e3', '--shadow-md':'0 20px 40px rgba(0,200,120,0.12)', tileRadius:'28px', fontFamily:"system-ui,-apple-system,'Helvetica Neue',sans-serif", bgColor:'#d5f5e3', darkBg:'#001a0e', accentColor:'#28cd41', textColor:'#003820', forceDark:false },
+        }
       },
       windows: {
-        name: '🪟 Windows',
-        '--card-bg': 'rgba(243,243,243,0.85)',
-        '--card-border': 'rgba(0,0,0,0.08)',
-        '--glass-bg': 'rgba(249,249,249,0.72)',
-        '--accent-blue': '#0078d4',
-        '--text-primary': '#201f1e',
-        '--text-secondary': '#605e5c',
-        '--bg-primary': '#e8e8e8',
-        '--shadow-md': '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
-        tileRadius: '8px', fontFamily: "'Segoe UI',system-ui,sans-serif",
-        bgColor: '#e8e8e8', darkBg: '#1f1f1f', accentColor: '#0078d4', textColor: '#201f1e'
+        label: '🪟 Windows', icon: '🪟',
+        themes: {
+          'win-light':     { name: 'Light',       '--card-bg':'rgba(243,243,243,0.85)', '--card-border':'rgba(0,0,0,0.08)', '--glass-bg':'rgba(249,249,249,0.72)', '--accent-blue':'#0078d4', '--text-primary':'#201f1e', '--text-secondary':'#605e5c', '--bg-primary':'#e8e8e8', '--shadow-md':'0 8px 32px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06)', tileRadius:'8px', fontFamily:"'Segoe UI',system-ui,sans-serif", bgColor:'#e8e8e8', darkBg:'#1f1f1f', accentColor:'#0078d4', textColor:'#201f1e', forceDark:false },
+          'win-dark':      { name: 'Dark',         '--card-bg':'rgba(32,32,32,0.9)',    '--card-border':'rgba(255,255,255,0.08)', '--glass-bg':'rgba(24,24,24,0.8)',  '--accent-blue':'#60cdff', '--text-primary':'#ffffff', '--text-secondary':'#9d9d9d', '--bg-primary':'#202020', '--shadow-md':'0 8px 32px rgba(0,0,0,0.4)', tileRadius:'8px', fontFamily:"'Segoe UI',system-ui,sans-serif", bgColor:'#202020', darkBg:'#202020', accentColor:'#60cdff', textColor:'#ffffff', forceDark:true },
+          'win-mica':      { name: 'Mica Aero',    '--card-bg':'rgba(200,210,230,0.55)','--card-border':'rgba(255,255,255,0.5)', '--glass-bg':'rgba(180,200,220,0.4)','--accent-blue':'#0078d4', '--text-primary':'#1a1a2e', '--text-secondary':'#5060a0', '--bg-primary':'#ccd4e0', '--shadow-md':'0 8px 40px rgba(0,100,200,0.15)', tileRadius:'12px', fontFamily:"'Segoe UI',system-ui,sans-serif", bgColor:'#ccd4e0', darkBg:'#0d1117', accentColor:'#0078d4', textColor:'#1a1a2e', forceDark:false },
+          'win-contrast':  { name: 'High Contrast','--card-bg':'rgba(0,0,0,0.95)',      '--card-border':'rgba(255,255,0,0.8)',  '--glass-bg':'rgba(0,0,0,0.9)',      '--accent-blue':'#ffff00', '--text-primary':'#ffffff', '--text-secondary':'#ffff00', '--bg-primary':'#000000', '--shadow-md':'0 0 0 2px #ffff00', tileRadius:'0px', fontFamily:"'Segoe UI',system-ui,sans-serif", bgColor:'#000000', darkBg:'#000000', accentColor:'#ffff00', textColor:'#ffffff', forceDark:true },
+          'win-11':        { name: 'Windows 11',   '--card-bg':'rgba(232,240,254,0.80)','--card-border':'rgba(0,120,212,0.15)', '--glass-bg':'rgba(220,232,252,0.65)','--accent-blue':'#0067c0', '--text-primary':'#001a40', '--text-secondary':'#3a5a8a', '--bg-primary':'#dce8fc', '--shadow-md':'0 8px 32px rgba(0,100,200,0.12)', tileRadius:'12px', fontFamily:"'Segoe UI Variable',system-ui,sans-serif", bgColor:'#dce8fc', darkBg:'#001228', accentColor:'#0067c0', textColor:'#001a40', forceDark:false },
+        }
       },
       xiaomi: {
-        name: '🟠 Xiaomi',
-        '--card-bg': 'rgba(255,255,255,0.92)',
-        '--card-border': 'rgba(255,102,0,0.12)',
-        '--glass-bg': 'rgba(255,255,255,0.75)',
-        '--accent-blue': '#ff6900',
-        '--text-primary': '#1a1a1a',
-        '--text-secondary': '#888888',
-        '--bg-primary': '#f2f2f2',
-        '--shadow-md': '0 16px 48px rgba(255,105,0,0.10), 0 4px 12px rgba(0,0,0,0.06)',
-        tileRadius: '20px', fontFamily: "'MiSans',system-ui,sans-serif",
-        bgColor: '#f2f2f2', darkBg: '#0d0d0d', accentColor: '#ff6900', textColor: '#1a1a1a'
+        label: '🟠 Xiaomi', icon: '🟠',
+        themes: {
+          'mi-light':      { name: 'MIUI Light',   '--card-bg':'rgba(255,255,255,0.92)', '--card-border':'rgba(255,102,0,0.12)', '--glass-bg':'rgba(255,255,255,0.75)', '--accent-blue':'#ff6900', '--text-primary':'#1a1a1a', '--text-secondary':'#888888', '--bg-primary':'#f2f2f2', '--shadow-md':'0 16px 48px rgba(255,105,0,0.10),0 4px 12px rgba(0,0,0,0.06)', tileRadius:'20px', fontFamily:"system-ui,sans-serif", bgColor:'#f2f2f2', darkBg:'#0d0d0d', accentColor:'#ff6900', textColor:'#1a1a1a', forceDark:false },
+          'mi-dark':       { name: 'MIUI Dark',     '--card-bg':'rgba(28,28,28,0.92)',   '--card-border':'rgba(255,102,0,0.20)', '--glass-bg':'rgba(20,20,20,0.8)',   '--accent-blue':'#ff8533', '--text-primary':'#f0f0f0', '--text-secondary':'#888888', '--bg-primary':'#0d0d0d', '--shadow-md':'0 16px 48px rgba(255,105,0,0.15)', tileRadius:'20px', fontFamily:"system-ui,sans-serif", bgColor:'#0d0d0d', darkBg:'#0d0d0d', accentColor:'#ff8533', textColor:'#f0f0f0', forceDark:true },
+          'mi-hyper':      { name: 'HyperOS',       '--card-bg':'rgba(10,10,30,0.88)',   '--card-border':'rgba(100,150,255,0.25)', '--glass-bg':'rgba(5,5,20,0.75)',  '--accent-blue':'#6496ff', '--text-primary':'#e8eeff', '--text-secondary':'#6070a0', '--bg-primary':'#05050f', '--shadow-md':'0 16px 48px rgba(100,150,255,0.20)', tileRadius:'24px', fontFamily:"system-ui,sans-serif", bgColor:'#05050f', darkBg:'#05050f', accentColor:'#6496ff', textColor:'#e8eeff', forceDark:true },
+          'mi-nature':     { name: 'Nature',         '--card-bg':'rgba(235,248,235,0.90)','--card-border':'rgba(50,180,80,0.15)', '--glass-bg':'rgba(220,245,220,0.75)','--accent-blue':'#2eb85c', '--text-primary':'#0a2a10', '--text-secondary':'#40804a', '--bg-primary':'#d0f0d5', '--shadow-md':'0 16px 48px rgba(50,180,80,0.12)', tileRadius:'24px', fontFamily:"system-ui,sans-serif", bgColor:'#d0f0d5', darkBg:'#031008', accentColor:'#2eb85c', textColor:'#0a2a10', forceDark:false },
+          'mi-ocean':      { name: 'Ocean',          '--card-bg':'rgba(225,240,255,0.88)','--card-border':'rgba(0,120,200,0.15)', '--glass-bg':'rgba(200,230,255,0.70)','--accent-blue':'#0090e0', '--text-primary':'#001830', '--text-secondary':'#306090', '--bg-primary':'#c5e0f5', '--shadow-md':'0 16px 48px rgba(0,120,200,0.12)', tileRadius:'20px', fontFamily:"system-ui,sans-serif", bgColor:'#c5e0f5', darkBg:'#000d1a', accentColor:'#0090e0', textColor:'#001830', forceDark:false },
+        }
       },
       nothing: {
-        name: '⚫ Nothing OS',
-        '--card-bg': 'rgba(20,20,20,0.92)',
-        '--card-border': 'rgba(255,255,255,0.10)',
-        '--glass-bg': 'rgba(15,15,15,0.85)',
-        '--accent-blue': '#ffffff',
-        '--text-primary': '#ffffff',
-        '--text-secondary': '#888888',
-        '--bg-primary': '#0a0a0a',
-        '--shadow-md': '0 16px 48px rgba(0,0,0,0.5), 0 4px 12px rgba(255,255,255,0.04)',
-        tileRadius: '4px', fontFamily: "'Courier New',monospace",
-        bgColor: '#0a0a0a', darkBg: '#0a0a0a', accentColor: '#ffffff', textColor: '#ffffff'
+        label: '⚫ Nothing', icon: '⚫',
+        themes: {
+          'nth-black':     { name: 'Black',         '--card-bg':'rgba(20,20,20,0.92)',   '--card-border':'rgba(255,255,255,0.10)', '--glass-bg':'rgba(15,15,15,0.85)', '--accent-blue':'#ffffff', '--text-primary':'#ffffff', '--text-secondary':'#888888', '--bg-primary':'#0a0a0a', '--shadow-md':'0 16px 48px rgba(0,0,0,0.5),0 4px 12px rgba(255,255,255,0.04)', tileRadius:'4px', fontFamily:"'Courier New',monospace", bgColor:'#0a0a0a', darkBg:'#0a0a0a', accentColor:'#ffffff', textColor:'#ffffff', forceDark:true },
+          'nth-white':     { name: 'White',          '--card-bg':'rgba(245,245,245,0.95)','--card-border':'rgba(0,0,0,0.10)',     '--glass-bg':'rgba(240,240,240,0.85)','--accent-blue':'#000000', '--text-primary':'#000000', '--text-secondary':'#555555', '--bg-primary':'#f0f0f0', '--shadow-md':'0 8px 32px rgba(0,0,0,0.08)', tileRadius:'4px', fontFamily:"'Courier New',monospace", bgColor:'#f0f0f0', darkBg:'#0a0a0a', accentColor:'#000000', textColor:'#000000', forceDark:false },
+          'nth-dot':       { name: 'Dot Matrix',     '--card-bg':'rgba(10,10,10,0.95)',   '--card-border':'rgba(255,50,50,0.30)', '--glass-bg':'rgba(5,5,5,0.9)',     '--accent-blue':'#ff3232', '--text-primary':'#ff3232', '--text-secondary':'#882020', '--bg-primary':'#030303', '--shadow-md':'0 0 20px rgba(255,50,50,0.2)', tileRadius:'2px', fontFamily:"'Courier New',monospace", bgColor:'#030303', darkBg:'#030303', accentColor:'#ff3232', textColor:'#ff3232', forceDark:true },
+          'nth-green':     { name: 'Matrix Green',   '--card-bg':'rgba(0,15,0,0.95)',     '--card-border':'rgba(0,255,65,0.25)',  '--glass-bg':'rgba(0,10,0,0.9)',    '--accent-blue':'#00ff41', '--text-primary':'#00ff41', '--text-secondary':'#006620', '--bg-primary':'#000500', '--shadow-md':'0 0 20px rgba(0,255,65,0.15)', tileRadius:'0px', fontFamily:"'Courier New',monospace", bgColor:'#000500', darkBg:'#000500', accentColor:'#00ff41', textColor:'#00ff41', forceDark:true },
+          'nth-grey':      { name: 'Grey Matter',    '--card-bg':'rgba(50,50,55,0.90)',   '--card-border':'rgba(180,180,190,0.20)','--glass-bg':'rgba(40,40,45,0.80)', '--accent-blue':'#c8c8d0', '--text-primary':'#e0e0e8', '--text-secondary':'#808090', '--bg-primary':'#1e1e22', '--shadow-md':'0 12px 40px rgba(0,0,0,0.5)', tileRadius:'6px', fontFamily:"'Courier New',monospace", bgColor:'#1e1e22', darkBg:'#1e1e22', accentColor:'#c8c8d0', textColor:'#e0e0e8', forceDark:true },
+        }
       }
     };
 
+    // Flat lookup: themeName → theme object
+    function getThemeById(id) {
+      for (const fam of Object.values(THEME_FAMILIES)) {
+        if (fam.themes[id]) return fam.themes[id];
+      }
+      return THEME_FAMILIES.apple.themes['apple-light'];
+    }
+
     function applyLayoutTheme(themeName) {
-      const t = LAYOUT_THEMES[themeName] || LAYOUT_THEMES.apple;
+      const t = getThemeById(themeName);
       userConfig.layoutTheme = themeName;
       const root = document.documentElement;
       Object.entries(t).forEach(([k,v]) => { if (k.startsWith('--')) root.style.setProperty(k, v); });
-      // tile border-radius
       root.style.setProperty('--tile-radius', t.tileRadius);
       document.querySelectorAll('.tile').forEach(el => el.style.borderRadius = t.tileRadius);
-      document.querySelectorAll('.settings-card').forEach(el => el.style.borderRadius = t.tileRadius === '4px' ? '8px' : '40px');
-      // font
+      document.querySelectorAll('.settings-card').forEach(el => {
+        el.style.borderRadius = (parseInt(t.tileRadius) <= 4) ? '8px' : '32px';
+      });
       document.body.style.fontFamily = t.fontFamily;
-      // bg
       if (!userConfig.dashboardBgImage) {
-        const isDark = document.body.classList.contains('theme-dark');
+        const isDark = t.forceDark || document.body.classList.contains('theme-dark');
         document.body.style.backgroundColor = isDark ? t.darkBg : t.bgColor;
         userConfig.dashboardBgColor = isDark ? t.darkBg : t.bgColor;
       }
-      // accent + text
       userConfig.globalAccent = t.accentColor;
       userConfig.globalTextColor = t.textColor;
       root.style.setProperty('--accent-blue', t.accentColor);
-      // Nothing OS forces dark
-      if (themeName === 'nothing') {
+      if (t.forceDark) {
         document.body.classList.remove('theme-light');
         document.body.classList.add('theme-dark');
         userConfig.theme = 'dark';
+      } else {
+        document.body.classList.remove('theme-dark');
+        document.body.classList.add('theme-light');
+        userConfig.theme = 'light';
       }
     }
 
@@ -960,7 +984,7 @@
         appointmentsText: '2026-04-10 09:00 | Arzttermin\n2026-04-12 14:30 | Team Meeting',
         globalAccent: '#0071e3', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium',
         tileOpacity: 0.75, dashboardBgImage: '', dashboardBgColor: '#f5f5f7',
-        menuBtnColor: '#ffffff', effect3D: 'medium', layoutTheme: 'apple'
+        menuBtnColor: '#ffffff', effect3D: 'medium', layoutTheme: 'apple-light', onlineImageUrls: ''
       };
       uploadedImages = [];
       applyAllSettings();
@@ -974,7 +998,7 @@
       applyTheme(userConfig.theme);
       applyFontSize(userConfig.fontSize);
       applyDashboardBackground();
-      applyLayoutTheme(userConfig.layoutTheme || 'apple');
+      applyLayoutTheme(userConfig.layoutTheme || 'apple-light');
       document.documentElement.style.setProperty('--menu-btn-bg', userConfig.menuBtnColor);
       document.documentElement.style.setProperty('--accent-blue', userConfig.globalAccent);
     }
@@ -1018,8 +1042,58 @@
         if (slideshowTile) { slideshowTile.colSpan = 6; slideshowTile.rowSpan = 4; }
       }
       viewTiles.forEach(tile => { grid.appendChild(createTileElement(tile)); });
-      // FIX #5: Do NOT call refreshDynamicContents() here — content is already filled
-      // by createTileElement → fillTileContent. A second call would double-init tiles.
+
+      // Responsive: fit all rows into available height with no scroll
+      fitGridToViewport(grid, viewTiles);
+    }
+
+    function fitGridToViewport(grid, viewTiles) {
+      // Find the maximum number of grid rows needed
+      let maxRow = 0;
+      viewTiles.forEach(t => { maxRow = Math.max(maxRow, t.rowSpan || 2); });
+      // Count distinct row tracks needed (sum of unique row spans)
+      // Simple: count total row tracks = max rowSpan value used as rows
+      // Better: simulate grid placement to find actual row count
+      const totalRows = calcGridRowCount(viewTiles);
+      if (totalRows < 1) return;
+
+      // Set explicit row count so grid fills height
+      grid.style.gridTemplateRows = `repeat(${totalRows}, 1fr)`;
+    }
+
+    function calcGridRowCount(viewTiles) {
+      // Simulate a 6-column grid to find how many rows are actually occupied
+      if (!viewTiles.length) return 1;
+      const cols = 6;
+      const occupied = {}; // "col,row" → true
+      let maxRow = 0;
+
+      viewTiles.forEach(tile => {
+        const colSpan = Math.min(tile.colSpan || 2, cols);
+        const rowSpan = tile.rowSpan || 2;
+        // Find first position that fits
+        let placed = false;
+        for (let row = 1; row <= 50 && !placed; row++) {
+          for (let col = 1; col <= cols - colSpan + 1 && !placed; col++) {
+            let fits = true;
+            for (let r = row; r < row + rowSpan && fits; r++) {
+              for (let c = col; c < col + colSpan && fits; c++) {
+                if (occupied[`${c},${r}`]) fits = false;
+              }
+            }
+            if (fits) {
+              for (let r = row; r < row + rowSpan; r++) {
+                for (let c = col; c < col + colSpan; c++) {
+                  occupied[`${c},${r}`] = true;
+                }
+              }
+              maxRow = Math.max(maxRow, row + rowSpan - 1);
+              placed = true;
+            }
+          }
+        }
+      });
+      return maxRow || 1;
     }
 
     function createTileElement(tile) {
@@ -1117,6 +1191,7 @@
     function openSettingsModal() {
       document.getElementById('settingsCity').value = userConfig.city;
       document.getElementById('settingsSlideshowSec').value = userConfig.slideshowInterval;
+      document.getElementById('settingsOnlineUrls').value = userConfig.onlineImageUrls || '';
       document.getElementById('settingsSpotify').value = userConfig.spotifyUrl;
       document.getElementById('settingsYoutube').value = userConfig.youtubeUrl;
       document.getElementById('settingsAmazonMusic').value = userConfig.amazonMusicUrl;
@@ -1135,25 +1210,72 @@
       document.getElementById('menuBtnColor').value = userConfig.menuBtnColor;
       document.getElementById('menuBtnColorText').value = userConfig.menuBtnColor;
       document.getElementById('settings3DEffect').value = userConfig.effect3D;
-      // Update active theme label
-      const lt = userConfig.layoutTheme || 'apple';
-      document.getElementById('activeThemeLabel').textContent = 'Aktiv: ' + (LAYOUT_THEMES[lt]?.name || lt);
-      document.querySelectorAll('.theme-pick-btn').forEach(b => {
-        b.style.background = b.dataset.lt === lt ? 'var(--accent-blue)' : '';
-        b.style.color = b.dataset.lt === lt ? '#fff' : '';
-      });
+      // Update active theme display
+      const lt = userConfig.layoutTheme || 'apple-light';
+      const t = getThemeById(lt);
+      document.getElementById('activeThemeLabel').textContent = 'Aktiv: ' + t.name;
+      // Find which family this theme belongs to
+      let activeFam = 'apple';
+      for (const [famKey, fam] of Object.entries(THEME_FAMILIES)) {
+        if (fam.themes[lt]) { activeFam = famKey; break; }
+      }
+      updateFamButtons(activeFam);
+      buildSubThemeRow(activeFam, lt);
       document.getElementById('settingsModal').classList.remove('hidden');
     }
 
-    // Theme picker — live preview on tap
+    // ── THEME PICKER: Familie → Unter-Themes ──────────────────────────
+    function buildSubThemeRow(famKey, activeId) {
+      const row = document.getElementById('subThemeRow');
+      if (!row) return;
+      row.innerHTML = '';
+      const fam = THEME_FAMILIES[famKey];
+      if (!fam) return;
+      Object.entries(fam.themes).forEach(([id, t]) => {
+        const btn = document.createElement('button');
+        btn.className = 'app-btn theme-pick-btn';
+        btn.dataset.lt = id;
+        btn.textContent = t.name;
+        btn.style.flex = '1';
+        btn.style.minWidth = '90px';
+        if (id === activeId) {
+          btn.style.background = 'var(--accent-blue)';
+          btn.style.color = '#fff';
+        }
+        row.appendChild(btn);
+      });
+    }
+
+    function updateFamButtons(activeFam) {
+      document.querySelectorAll('.theme-fam-btn').forEach(b => {
+        b.style.background = b.dataset.fam === activeFam ? 'var(--accent-blue)' : '';
+        b.style.color = b.dataset.fam === activeFam ? '#fff' : '';
+      });
+    }
+
+    // Family button click → show sub-themes
     document.addEventListener('click', e => {
-      const btn = e.target.closest('.theme-pick-btn');
-      if (!btn) return;
-      const lt = btn.dataset.lt;
+      const famBtn = e.target.closest('.theme-fam-btn');
+      if (!famBtn) return;
+      const fam = famBtn.dataset.fam;
+      updateFamButtons(fam);
+      // Show first sub-theme of this family as default
+      const firstId = Object.keys(THEME_FAMILIES[fam].themes)[0];
+      buildSubThemeRow(fam, firstId);
+    });
+
+    // Sub-theme button click → apply immediately
+    document.addEventListener('click', e => {
+      const subBtn = e.target.closest('.theme-pick-btn');
+      if (!subBtn) return;
+      const lt = subBtn.dataset.lt;
       applyLayoutTheme(lt);
       saveToStorage();
       renderAll();
-      document.getElementById('activeThemeLabel').textContent = 'Aktiv: ' + (LAYOUT_THEMES[lt]?.name || lt);
+      // Update labels
+      const t = getThemeById(lt);
+      document.getElementById('activeThemeLabel').textContent = 'Aktiv: ' + t.name;
+      // Highlight active sub-theme button
       document.querySelectorAll('.theme-pick-btn').forEach(b => {
         b.style.background = b.dataset.lt === lt ? 'var(--accent-blue)' : '';
         b.style.color = b.dataset.lt === lt ? '#fff' : '';
@@ -1328,20 +1450,79 @@
       container.innerHTML = html;
     }
 
+    // Convert any Google Drive / Google Photos / Cloudinary share URL to a direct image URL
+    function convertToDirectImageUrl(url) {
+      url = url.trim();
+      if (!url) return null;
+
+      // Google Drive: https://drive.google.com/file/d/FILE_ID/view...
+      const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (driveMatch) {
+        return `https://drive.google.com/uc?export=view&id=${driveMatch[1]}`;
+      }
+
+      // Google Drive: https://drive.google.com/open?id=FILE_ID
+      const driveOpen = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+      if (driveOpen) {
+        return `https://drive.google.com/uc?export=view&id=${driveOpen[1]}`;
+      }
+
+      // Google Fotos: https://photos.google.com/photo/...
+      // Google Fotos direkte Bild-URL endet auf =w oder =h oder =d
+      // Teilen-Link: photos.app.goo.gl oder photos.google.com/share/...
+      // Direkter Download: URL mit =d am Ende erzwingen
+      if (url.includes('photos.google.com') || url.includes('photos.app.goo.gl')) {
+        // Wenn URL schon auf =d oder =w... endet → als direkte URL nutzen
+        if (url.match(/=d$|=w\d|=h\d/)) {
+          // Ersetze jeden Größenparameter durch =d für Original-Download
+          return url.replace(/=w\d+.*$|=h\d+.*$/, '=d');
+        }
+        // Geteilter Foto-Link → direkt anhängen =d
+        // Hinweis: Alben-Links funktionieren nicht direkt, nur Einzel-Fotos
+        if (url.includes('/photo/')) {
+          return url + '=d';
+        }
+        // Fallback: URL as-is zurückgeben
+        return url;
+      }
+
+      // Cloudinary URL — immer direkt nutzbar
+      if (url.includes('cloudinary.com')) return url;
+
+      // Already a direct image URL (jpg, png, webp, gif etc.)
+      if (url.match(/\.(jpg|jpeg|png|webp|gif|bmp|avif)(\?.*)?$/i)) return url;
+
+      // Any other https URL — try as-is
+      if (url.startsWith('http')) return url;
+
+      return null;
+    }
+
+    // Combine uploaded (local base64) + online URLs into one array for slideshow
+    function getAllSlideImages() {
+      const local = uploadedImages || [];
+      const onlineRaw = (userConfig.onlineImageUrls || '').split('\n');
+      const online = onlineRaw
+        .map(u => convertToDirectImageUrl(u))
+        .filter(Boolean);
+      return [...online, ...local]; // online first (more reliable), local as fallback
+    }
+
     function renderSlideshow(container) {
       container.style.overflow = 'hidden';
       container.style.position = 'relative';
-      if (!uploadedImages.length) {
+      const allImages = getAllSlideImages();
+      if (!allImages.length) {
         container.innerHTML = `
           <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;opacity:0.7;">
             <div style="font-size:5rem;animation:iconFloat 3s ease-in-out infinite;filter:drop-shadow(0 8px 18px rgba(0,0,0,0.22));">🖼️</div>
-            <div style="font-size:1rem;font-weight:600;">Bilder hochladen</div>
-            <div style="font-size:0.8rem;opacity:0.6;">oder Google Drive / Cloudinary URL in Einstellungen</div>
+            <div style="font-size:1rem;font-weight:600;">Noch keine Bilder</div>
+            <div style="font-size:0.8rem;opacity:0.6;text-align:center;padding:0 16px;">Bilder hochladen oder Google Drive / Cloudinary URLs in Einstellungen eintragen</div>
           </div>`;
         return;
       }
-      let idx = (parseInt(container.dataset.slideIndex) || 0) % uploadedImages.length;
-      container.innerHTML = `<img class="slideshow-full" src="${uploadedImages[idx]}" alt="Slide ${idx+1}">`;
+      let idx = (parseInt(container.dataset.slideIndex) || 0) % allImages.length;
+      container.innerHTML = `<img class="slideshow-full" src="${allImages[idx]}" alt="Slide ${idx+1}" onerror="this.style.display='none'">`;
       container.dataset.slideIndex = idx;
     }
 
@@ -1551,12 +1732,14 @@
       slideshowTimer = setInterval(() => {
         document.querySelectorAll('.tile').forEach(el => {
           const t = tiles.find(tt => tt.id == el.dataset.id);
-          if (t && t.type === 'slideshow' && uploadedImages.length) {
+          if (t && t.type === 'slideshow') {
+            const allImages = getAllSlideImages();
+            if (!allImages.length) return;
             const cont = el.querySelector('.tile-content');
             if (!cont) return;
-            let idx = (parseInt(cont.dataset.slideIndex || 0) + 1) % uploadedImages.length;
+            let idx = (parseInt(cont.dataset.slideIndex || 0) + 1) % allImages.length;
             cont.dataset.slideIndex = idx;
-            cont.innerHTML = `<img class="slideshow-full" src="${uploadedImages[idx]}" alt="Slide ${idx+1}">`;
+            cont.innerHTML = `<img class="slideshow-full" src="${allImages[idx]}" alt="Slide ${idx+1}" onerror="this.style.display='none'">`;
           }
         });
       }, userConfig.slideshowInterval * 1000);
@@ -1625,6 +1808,7 @@
       document.getElementById('saveSettingsBtn').onclick = () => {
         userConfig.city = document.getElementById('settingsCity').value;
         userConfig.slideshowInterval = parseInt(document.getElementById('settingsSlideshowSec').value) || 6;
+        userConfig.onlineImageUrls = document.getElementById('settingsOnlineUrls').value;
         userConfig.spotifyUrl = document.getElementById('settingsSpotify').value;
         userConfig.youtubeUrl = document.getElementById('settingsYoutube').value;
         userConfig.amazonMusicUrl = document.getElementById('settingsAmazonMusic').value;
