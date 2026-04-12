@@ -250,9 +250,9 @@
       box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.75), inset 0 -1px 0 rgba(0,0,0,0.04);
     }
     /* Real strong 3D: large perspective tilt that looks physically lifted */
-    .tile[data-3d="low"]    { transform: perspective(900px) rotateX(2deg)  rotateY(-1deg)  translateZ(4px);  }
-    .tile[data-3d="medium"] { transform: perspective(700px) rotateX(6deg)  rotateY(-3deg)  translateZ(10px); }
-    .tile[data-3d="high"]   { transform: perspective(500px) rotateX(11deg) rotateY(-5deg)  translateZ(18px); }
+    .tile:not(.edit-mode)[data-3d="low"]    { transform: perspective(900px) rotateX(2deg)  rotateY(-1deg)  translateZ(4px);  }
+    .tile:not(.edit-mode)[data-3d="medium"] { transform: perspective(700px) rotateX(6deg)  rotateY(-3deg)  translateZ(10px); }
+    .tile:not(.edit-mode)[data-3d="high"]   { transform: perspective(500px) rotateX(11deg) rotateY(-5deg)  translateZ(18px); }
 
     .tile:hover {
       transform: perspective(600px) rotateX(4deg) rotateY(-2deg) translateZ(28px) scale(1.025);
@@ -261,12 +261,16 @@
       border-color: rgba(255,255,255,0.7);
       z-index: 5;
     }
-    .tile:active {
+    /* Only animate press when NOT in edit mode — edit mode needs clean touch for buttons */
+    .tile:not(.edit-mode):active {
       transform: perspective(600px) rotateX(8deg) rotateY(-4deg) translateZ(6px) scale(0.98);
     }
     .tile.edit-mode {
       border: 2px dashed var(--accent-blue);
       cursor: grab;
+      /* Disable 3D hover/active transforms in edit mode so buttons are always tappable */
+      transform: none !important;
+      box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.75);
     }
     /* Pinch resize indicator shown during active pinch gesture */
     .tile.pinching {
@@ -284,7 +288,9 @@
       font-size: 1.3rem;
       letter-spacing: -0.02em;
       position: relative;
-      z-index: 2;
+      z-index: 20;
+      /* Isolate stacking context so buttons are above 3D tile */
+      isolation: isolate;
     }
     .tile-header span:first-child {
       display: flex;
@@ -325,26 +331,40 @@
     .tile:nth-child(7) .tile-big-icon { animation-delay: -0.4s; }
 
     .tile-icon { font-size: 1.6rem; line-height: 1; }
-    .tile-controls { display: flex; gap: 8px; }
+    .tile-controls { display: flex; gap: 8px; position: relative; z-index: 20; }
     .icon-btn {
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(255,255,255,0.85);
       backdrop-filter: blur(10px);
-      border: 0.5px solid var(--card-border);
-      color: var(--text-primary);
+      border: 1px solid rgba(0,0,0,0.12);
+      color: #1d1d1f;
       font-size: 1.2rem;
       cursor: pointer;
-      width: 40px;
-      height: 40px;
-      border-radius: 40px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: var(--shadow-sm);
-      transition: 0.15s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: transform 0.15s, background 0.15s;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: rgba(0,113,227,0.3);
+      position: relative;
+      z-index: 20;
+      /* Prevent parent 3D transform from eating touch events */
+      pointer-events: all;
     }
-    .icon-btn:hover {
-      background: rgba(0, 113, 227, 0.15);
-      color: var(--accent-blue);
+    .icon-btn:active {
+      transform: scale(0.9);
+      background: rgba(0,113,227,0.2);
+    }
+    .tile-delete-btn {
+      background: rgba(255,59,48,0.12) !important;
+      color: #ff3b30 !important;
+      border-color: rgba(255,59,48,0.25) !important;
+    }
+    .tile-delete-btn:active {
+      background: rgba(255,59,48,0.3) !important;
     }
 
     .tile-content {
@@ -618,21 +638,43 @@
 
 <!-- Kachel-Einstellungen Modal -->
 <div id="tileSettingsModal" class="settings-overlay hidden">
-  <div class="settings-card" style="width:550px;">
-    <h2>Kachel anpassen</h2>
+  <div class="settings-card" style="width:580px;">
+    <h2 style="margin-bottom:24px;font-weight:600;letter-spacing:-0.02em;">Kachel anpassen</h2>
     <input type="hidden" id="currentTileId">
     <div class="input-group"><label>Titel</label><input type="text" id="tileTitle"></div>
+
+    <!-- ICON PICKER -->
+    <div class="input-group">
+      <label>🎨 Icon wählen</label>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+        <div id="iconPreview" style="font-size:3rem;width:64px;height:64px;display:flex;align-items:center;justify-content:center;background:var(--glass-bg);border-radius:16px;border:1px solid var(--card-border);">📦</div>
+        <div>
+          <div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;">Eigenes Emoji eintragen:</div>
+          <input type="text" id="tileCustomIcon" placeholder="z.B. 🚀 oder 🎸" style="width:160px;font-size:1.4rem;text-align:center;padding:8px 12px;border-radius:12px;">
+        </div>
+      </div>
+      <div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:8px;">Oder schnell wählen:</div>
+      <div id="iconGrid" style="display:flex;flex-wrap:wrap;gap:8px;max-height:200px;overflow-y:auto;padding:4px;">
+      </div>
+    </div>
+
     <div class="input-group"><label>Hintergrundfarbe</label><div class="color-row"><input type="color" id="tileColor"><input type="text" id="tileColorText"></div></div>
     <div class="input-group"><label>Hintergrundbild</label><div class="flex-row"><button class="app-btn" id="uploadTileBgBtn">📸 Bild</button><button class="app-btn" id="removeTileBgBtn">🗑️</button></div></div>
     <div class="input-group"><label>Transparenz</label><input type="range" id="tileOpacity" min="0.1" max="1.0" step="0.05" value="0.75"><span id="tileOpacityVal">0.75</span></div>
     <div class="input-group">
       <label>Größe</label>
       <select id="tileSizeSelect">
-        <option value="1,1">Klein (1x1)</option>
-        <option value="2,2">Mittel (2x2)</option>
-        <option value="3,3">Groß (3x3)</option>
-        <option value="2,1">Breit (2x1)</option>
-        <option value="3,2">Extra (3x2)</option>
+        <option value="1,1">Klein (1×1)</option>
+        <option value="1,2">Schmal hoch (1×2)</option>
+        <option value="2,1">Breit flach (2×1)</option>
+        <option value="2,2">Mittel (2×2)</option>
+        <option value="3,1">Sehr breit (3×1)</option>
+        <option value="3,2">Extra breit (3×2)</option>
+        <option value="3,3">Groß (3×3)</option>
+        <option value="4,2">XL breit (4×2)</option>
+        <option value="4,3">XL groß (4×3)</option>
+        <option value="6,2">Voll breit (6×2)</option>
+        <option value="6,3">Voll groß (6×3)</option>
       </select>
     </div>
     <div id="appFields" class="hidden">
@@ -797,6 +839,8 @@
 
     // Derive a contextual big icon from the tile's title text (falls back to type icon)
     function getBigIconForTile(tile) {
+      // Custom icon always wins
+      if (tile.customIcon) return tile.customIcon;
       const t = (tile.title || '').toLowerCase();
       // Type-based overrides first (most reliable)
       const typeMap = {
@@ -1005,8 +1049,33 @@
 
       const controls = document.createElement('div'); controls.className = 'tile-controls';
       if (editMode) {
-        controls.innerHTML = `<button class="icon-btn tile-settings-btn" data-id="${tile.id}">⚙️</button>
-          <button class="icon-btn tile-delete-btn" data-id="${tile.id}">✕</button>`;
+        // Settings button
+        const settingsBtn = document.createElement('button');
+        settingsBtn.className = 'icon-btn tile-settings-btn';
+        settingsBtn.dataset.id = tile.id;
+        settingsBtn.textContent = '⚙️';
+        settingsBtn.title = 'Einstellungen';
+        const doSettings = (e) => { e.preventDefault(); e.stopPropagation(); openTileSettings(tile.id); };
+        settingsBtn.addEventListener('click', doSettings);
+        settingsBtn.addEventListener('touchend', doSettings, { passive: false });
+        controls.appendChild(settingsBtn);
+
+        // Delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'icon-btn tile-delete-btn';
+        deleteBtn.dataset.id = tile.id;
+        deleteBtn.textContent = '✕';
+        deleteBtn.title = 'Entfernen';
+        const doDelete = (e) => {
+          e.preventDefault(); e.stopPropagation();
+          if (confirm('Kachel entfernen?')) {
+            tiles = tiles.filter(t => t.id != tile.id);
+            saveToStorage(); renderAll();
+          }
+        };
+        deleteBtn.addEventListener('click', doDelete);
+        deleteBtn.addEventListener('touchend', doDelete, { passive: false });
+        controls.appendChild(deleteBtn);
       }
       header.appendChild(controls);
       div.appendChild(header);
@@ -1384,16 +1453,70 @@
     function handleDragEnd() { this.classList.remove('dragging'); }
 
     // ---------- TILE SETTINGS ----------
+    // All available quick-pick icons
+    const ICON_GRID = [
+      '🏠','🏡','🌤️','⛅','☀️','🌧️','❄️','⛈️','🕰️','⏰','📅','📋','📝','✅','📌',
+      '🎵','🎶','🎸','🎹','🎤','🎧','▶️','🎬','📺','📷','🖼️','🖥️','📱','💻','⌨️',
+      '🍳','🍕','🍔','☕','🍵','🥗','🛒','🚗','🚀','✈️','🚲','🏃','💪','⚽','🎮',
+      '💡','🔋','🔒','🔑','⚙️','🛠️','📡','🌍','🗺️','📰','📧','📞','💬','❤️','⭐',
+      '💰','📈','🏦','🎓','📚','🌱','🌺','🌙','🌈','🦋','🐶','🐱','🦊','🐻','🦁'
+    ];
+
+    function buildIconGrid(currentIcon) {
+      const grid = document.getElementById('iconGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      ICON_GRID.forEach(emoji => {
+        const btn = document.createElement('button');
+        btn.textContent = emoji;
+        btn.style.cssText = `font-size:1.8rem;width:48px;height:48px;border:2px solid ${emoji === currentIcon ? 'var(--accent-blue)' : 'transparent'};border-radius:12px;background:var(--glass-bg);cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;`;
+        btn.onclick = (e) => {
+          e.preventDefault(); e.stopPropagation();
+          document.getElementById('tileCustomIcon').value = emoji;
+          document.getElementById('iconPreview').textContent = emoji;
+          // Highlight selected
+          grid.querySelectorAll('button').forEach(b => b.style.borderColor = 'transparent');
+          btn.style.borderColor = 'var(--accent-blue)';
+          btn.style.transform = 'scale(1.15)';
+          setTimeout(() => btn.style.transform = '', 150);
+        };
+        grid.appendChild(btn);
+      });
+    }
+
     function openTileSettings(tileId) {
       const tile = tiles.find(t => t.id == tileId); if (!tile) return;
       currentEditingTileId = tileId;
       document.getElementById('currentTileId').value = tileId;
       document.getElementById('tileTitle').value = tile.title || '';
+      // Icon picker
+      const currentIcon = tile.customIcon || getBigIconForTile(tile);
+      document.getElementById('tileCustomIcon').value = tile.customIcon || '';
+      document.getElementById('iconPreview').textContent = currentIcon;
+      buildIconGrid(currentIcon);
+      // Live preview when typing custom emoji
+      document.getElementById('tileCustomIcon').oninput = (e) => {
+        const val = e.target.value.trim();
+        if (val) document.getElementById('iconPreview').textContent = val;
+      };
       document.getElementById('tileColor').value = tile.color || userConfig.globalAccent;
       document.getElementById('tileColorText').value = tile.color || userConfig.globalAccent;
       document.getElementById('tileOpacity').value = tile.opacity !== undefined ? tile.opacity : userConfig.tileOpacity;
       document.getElementById('tileOpacityVal').textContent = document.getElementById('tileOpacity').value;
-      document.getElementById('tileSizeSelect').value = `${tile.colSpan},${tile.rowSpan}`;
+      // Set size select — try exact match first, else select closest option
+      const sizeVal = `${tile.colSpan},${tile.rowSpan}`;
+      const sizeSelect = document.getElementById('tileSizeSelect');
+      const exactOption = Array.from(sizeSelect.options).find(o => o.value === sizeVal);
+      if (exactOption) {
+        sizeSelect.value = sizeVal;
+      } else {
+        // Add a custom option for the current size
+        const opt = document.createElement('option');
+        opt.value = sizeVal;
+        opt.textContent = `Aktuell (${tile.colSpan}×${tile.rowSpan})`;
+        sizeSelect.insertBefore(opt, sizeSelect.firstChild);
+        sizeSelect.value = sizeVal;
+      }
       const appFields = document.getElementById('appFields');
       if (tile.type === 'app') { appFields.classList.remove('hidden'); document.getElementById('tileAppLink').value = tile.appLink || ''; }
       else { appFields.classList.add('hidden'); }
@@ -1505,6 +1628,9 @@
           const [col, row] = document.getElementById('tileSizeSelect').value.split(',').map(Number);
           tile.colSpan = col; tile.rowSpan = row;
           if (tile.type === 'app') tile.appLink = document.getElementById('tileAppLink').value;
+          // Save custom icon
+          const customIcon = document.getElementById('tileCustomIcon').value.trim();
+          tile.customIcon = customIcon || null;
         }
         saveToStorage(); renderAll(); document.getElementById('tileSettingsModal').classList.add('hidden');
       };
@@ -1540,13 +1666,8 @@
         document.getElementById('addTileModal').classList.add('hidden');
       };
 
-      // Delegated tile button clicks (settings / delete)
-      document.addEventListener('click', e => {
-        const btn = e.target.closest('button'); if (!btn) return;
-        const id = btn.dataset.id;
-        if (btn.classList.contains('tile-settings-btn')) openTileSettings(id);
-        else if (btn.classList.contains('tile-delete-btn')) { tiles = tiles.filter(t => t.id != id); saveToStorage(); renderAll(); }
-      });
+      // Tile buttons: direct listeners added when buttons are created in createTileElement
+      // (see attachTileButtonListeners called from createTileElement)
 
       // Clock tick — only updates the flip digits, no full re-render
       setInterval(() => {
