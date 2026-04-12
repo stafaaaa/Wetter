@@ -234,6 +234,9 @@
       overflow: hidden;
       padding: 2px;
       align-content: stretch;
+      perspective: 1400px;
+      perspective-origin: center center;
+      transform-style: preserve-3d;
     }
 
     .tile {
@@ -252,9 +255,15 @@
       overflow: hidden;
       min-height: 0;
       transform-style: preserve-3d;
+      transform-origin: center center;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      translate: 0 0;
       transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1),
-                  box-shadow 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
-      will-change: transform, box-shadow;
+                  box-shadow 0.4s cubic-bezier(0.2, 0.9, 0.3, 1),
+                  filter 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+      will-change: transform, box-shadow, filter;
+      contain: layout paint style;
       /* Standard-Schatten wenn kein Effekt aktiv */
       box-shadow: 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
     }
@@ -263,30 +272,30 @@
 
     /* SCHWEBEN */
     .tile:not(.edit-mode)[data-fx="float-low"] {
-      transform: translateY(-6px);
-      box-shadow: 0 6px 0 rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.85);
+      transform: translateY(-6px) translateZ(0) !important;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.85) !important;
     }
     .tile:not(.edit-mode)[data-fx="float-medium"] {
-      transform: translateY(-12px);
-      box-shadow: 0 12px 0 rgba(0,0,0,0.10), 0 20px 44px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.9);
+      transform: translateY(-12px) translateZ(0) !important;
+      box-shadow: 0 12px 0 rgba(0,0,0,0.10), 0 20px 44px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.9) !important;
     }
     .tile:not(.edit-mode)[data-fx="float-high"] {
-      transform: translateY(-20px);
-      box-shadow: 0 20px 0 rgba(0,0,0,0.12), 0 32px 64px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.95);
+      transform: translateY(-20px) translateZ(0) !important;
+      box-shadow: 0 20px 0 rgba(0,0,0,0.12), 0 32px 64px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.95) !important;
     }
 
     /* KIPPEN */
     .tile:not(.edit-mode)[data-fx="tilt-low"] {
-      transform: perspective(800px) rotateX(4deg) rotateY(-2deg) translateZ(8px);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.85);
+      transform: perspective(800px) rotateX(4deg) rotateY(-2deg) translateZ(8px) !important;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.85) !important;
     }
     .tile:not(.edit-mode)[data-fx="tilt-medium"] {
-      transform: perspective(600px) rotateX(8deg) rotateY(-4deg) translateZ(16px);
-      box-shadow: 0 20px 48px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.9);
+      transform: perspective(600px) rotateX(8deg) rotateY(-4deg) translateZ(16px) !important;
+      box-shadow: 0 20px 48px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.9) !important;
     }
     .tile:not(.edit-mode)[data-fx="tilt-high"] {
-      transform: perspective(400px) rotateX(14deg) rotateY(-7deg) translateZ(24px);
-      box-shadow: 0 32px 64px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.95);
+      transform: perspective(400px) rotateX(14deg) rotateY(-7deg) translateZ(24px) !important;
+      box-shadow: 0 32px 64px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.95) !important;
     }
 
     /* PULSIEREN */
@@ -1215,7 +1224,7 @@
       const div = document.createElement('div');
       div.className = `tile ${editMode ? 'edit-mode' : ''} ${tile.type === 'slideshow' ? 'tile-slideshow' : ''}`;
       div.dataset.id = tile.id;
-      div.setAttribute('data-fx', userConfig.effect3D);
+      div.setAttribute('data-fx', userConfig.effect3D || 'float-medium');
       div.style.gridColumn = `span ${tile.colSpan || 2}`;
       div.style.gridRow = `span ${tile.rowSpan || 2}`;
       div.setAttribute('draggable', editMode);
@@ -1375,6 +1384,11 @@
       };
       const lbl = document.getElementById('active3dLabel');
       if (lbl) lbl.textContent = 'Aktiv: ' + (fxNames[fx] || fx);
+      document.querySelectorAll('.tile').forEach(el => {
+        el.style.animation = 'none';
+        void el.offsetHeight;
+        el.style.animation = '';
+      });
       saveToStorage();
     });
     function buildSubThemeRow(famKey, activeId) {
