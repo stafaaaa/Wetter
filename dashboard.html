@@ -1133,10 +1133,13 @@
         const savedTiles  = localStorage.getItem('apple_dash_tiles');
         const savedConfig = localStorage.getItem('apple_dash_config');
         const savedImages = localStorage.getItem('apple_dash_images');
+        const savedAppts  = localStorage.getItem('dash_appointments');
         if (savedTiles)  tiles = JSON.parse(savedTiles) || [...DEFAULT_TILES];
         else tiles = [...DEFAULT_TILES];
         if (savedConfig) userConfig = { ...userConfig, ...JSON.parse(savedConfig) };
         if (savedImages) uploadedImages = JSON.parse(savedImages);
+        // Termine direkt laden — eigener Key, immer zuverlässig
+        if (savedAppts !== null) userConfig.appointmentsText = savedAppts;
         if (!tiles.length) tiles = [...DEFAULT_TILES];
       } catch(e) { tiles = [...DEFAULT_TILES]; }
       ensureUniqueIds();
@@ -1183,15 +1186,20 @@
     }
 
     function saveToStorage() {
-      // localStorage (ohne große Bilder — nur als Schnell-Fallback)
+      // appointmentsText direkt in localStorage — klein genug, immer zuverlässig
+      try {
+        localStorage.setItem('dash_appointments', userConfig.appointmentsText || '');
+      } catch(e) {}
+
+      // localStorage (ohne große Bilder)
       try {
         const tilesLight = tiles.map(t => ({ ...t, bgImage: t.bgImage ? '__idb__' : '' }));
         localStorage.setItem('apple_dash_tiles', JSON.stringify(tilesLight));
         localStorage.setItem('apple_dash_config', JSON.stringify({ ...userConfig, dashboardBgImage: userConfig.dashboardBgImage ? '__idb__' : '' }));
-        localStorage.setItem('apple_dash_images', '[]'); // Bilder nur in IndexedDB
+        localStorage.setItem('apple_dash_images', '[]');
       } catch(e) {}
 
-      // IndexedDB — alles dauerhaft speichern
+      // IndexedDB — alles dauerhaft
       dbSave('config', 'tiles', tiles).catch(() => {});
       dbSave('config', 'userConfig', userConfig).catch(() => {});
       dbSave('images', 'uploadedImages', uploadedImages).catch(() => {});
@@ -1719,20 +1727,153 @@
     }
 
     function renderCalendar(container) {
-      const today = new Date(); const y = today.getFullYear(), m = today.getMonth();
-      const firstDay = new Date(y, m, 1).getDay(); const days = new Date(y, m+1, 0).getDate();
-      let html = `<div style="font-weight:600; margin-bottom:12px; font-size:1.2rem;">${today.toLocaleString('de',{month:'long'})} ${y}</div><div class="calendar-grid">`;
-      ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => html += `<div style="font-weight:600;opacity:0.5;text-align:center;font-size:0.8rem;">${d}</div>`);
+      const today = new Date();
+      let viewYear  = parseInt(container.dataset.viewYear)  || today.getFullYear();
+      let viewMonth = parseInt(container.dataset.viewMonth) || today.getMonth();
+      container.dataset.viewYear  = viewYear;
+      container.dataset.viewMonth = viewMonth;
+
+      const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+      const days     = new Date(viewYear, viewMonth + 1, 0).getDate();
+      const mName    = new Date(viewYear, viewMonth, 1).toLocaleString('de', {month:'long'});
+
+      // Termine für diesen Monat
+      function getAppts(ds) {
+        return userConfig.appointmentsText.split('\n').filter(l => l.trim().startsWith(ds));
+      }
+
+      let html = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-shrink:0;">
+          <button class="cal-nav-btn" data-dir="-1" style="background:var(--glass-bg);border:1px solid var(--card-border);border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1.1rem;">‹</button>
+          <div style="font-weight:600;font-size:1rem;">${mName} ${viewYear}</div>
+          <button class="cal-nav-btn" data-dir="1" style="background:var(--glass-bg);border:1px solid var(--card-border);border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1.1rem;">›</button>
+        </div>
+        <div class="calendar-grid">`;
+
+      ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d =>
+        html += `<div style="font-weight:600;opacity:0.5;text-align:center;font-size:0.75rem;">${d}</div>`
+      );
+
       let start = (firstDay === 0) ? 6 : firstDay - 1;
       for (let i = 0; i < start; i++) html += `<div></div>`;
+
       for (let d = 1; d <= days; d++) {
-        const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const isToday = (d === today.getDate() && m === today.getMonth());
-        const hasApp = userConfig.appointmentsText.split('\n').some(l => l.startsWith(ds));
-        html += `<div class="cal-day ${isToday?'today':''} ${hasApp?'has-event':''}">${d}</div>`;
+        const ds = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isToday = (d === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear());
+        const appts = getAppts(ds);
+        const hasApp = appts.length > 0;
+        html += `<div class="cal-day ${isToday?'today':''} ${hasApp?'has-event':''}" 
+          data-date="${ds}" 
+          style="cursor:pointer;position:relative;" 
+          title="${appts.map(a=>a.split('|')[1]||'').join(', ')}"
+        >${d}${hasApp ? `<span style="position:absolute;top:1px;right:2px;font-size:0.5rem;color:var(--accent-orange);">●</span>` : ''}</div>`;
       }
       html += `</div>`;
       container.innerHTML = html;
+
+      // Navigations-Buttons
+      container.querySelectorAll('.cal-nav-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          let nm = viewMonth + parseInt(btn.dataset.dir);
+          let ny = viewYear;
+          if (nm < 0)  { nm = 11; ny--; }
+          if (nm > 11) { nm = 0;  ny++; }
+          container.dataset.viewMonth = nm;
+          container.dataset.viewYear  = ny;
+          renderCalendar(container);
+        });
+      });
+
+      // Tag antippen → Termin-Dialog
+      container.querySelectorAll('.cal-day').forEach(dayEl => {
+        dayEl.addEventListener('click', e => {
+          e.stopPropagation();
+          openCalendarDialog(dayEl.dataset.date, container);
+        });
+      });
+    }
+
+    function openCalendarDialog(dateStr, calContainer) {
+      // Bestehende Termine für dieses Datum
+      const existing = userConfig.appointmentsText.split('\n').filter(l => l.trim().startsWith(dateStr));
+
+      // Dialog erstellen
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(10px);z-index:2000;display:flex;align-items:center;justify-content:center;';
+
+      const card = document.createElement('div');
+      card.style.cssText = 'background:var(--glass-bg);backdrop-filter:blur(40px);border:1px solid var(--card-border);border-radius:28px;padding:28px;width:360px;max-width:90vw;color:var(--text-primary);box-shadow:0 30px 60px rgba(0,0,0,0.3);';
+
+      const [y,mo,d] = dateStr.split('-');
+      const dateLabel = new Date(dateStr).toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+      let existingHtml = '';
+      if (existing.length) {
+        existingHtml = `<div style="margin-bottom:14px;">
+          <div style="font-weight:600;font-size:0.85rem;color:var(--text-secondary);margin-bottom:8px;">Bestehende Termine:</div>
+          ${existing.map((appt, i) => {
+            const parts = appt.split('|');
+            const time = parts[0].split(' ')[1] || '';
+            const desc = (parts[1] || '').trim();
+            return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--glass-bg);border-radius:12px;margin-bottom:6px;border:1px solid var(--card-border);">
+              <span style="font-size:0.9rem;">${time ? time+' — ' : ''}${desc}</span>
+              <button data-appt="${appt.replace(/"/g,'&quot;')}" class="del-appt-btn" style="background:rgba(255,59,48,0.15);color:#ff3b30;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:1rem;flex-shrink:0;">✕</button>
+            </div>`;
+          }).join('')}
+        </div>`;
+      }
+
+      card.innerHTML = `
+        <div style="font-weight:700;font-size:1.1rem;margin-bottom:4px;">📅 Termin</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:16px;">${dateLabel}</div>
+        ${existingHtml}
+        <div style="font-weight:600;font-size:0.85rem;color:var(--text-secondary);margin-bottom:8px;">Neuen Termin hinzufügen:</div>
+        <input id="calTimeInput" type="time" value="09:00" style="width:100%;padding:12px 16px;border-radius:14px;border:1px solid var(--card-border);background:rgba(255,255,255,0.5);color:var(--text-primary);font-size:1rem;margin-bottom:10px;box-sizing:border-box;">
+        <input id="calDescInput" type="text" placeholder="Beschreibung..." style="width:100%;padding:12px 16px;border-radius:14px;border:1px solid var(--card-border);background:rgba(255,255,255,0.5);color:var(--text-primary);font-size:1rem;margin-bottom:16px;box-sizing:border-box;">
+        <div style="display:flex;gap:10px;">
+          <button id="calSaveBtn" style="flex:1;padding:14px;border-radius:60px;border:none;background:var(--accent-blue);color:#fff;font-size:1rem;font-weight:600;cursor:pointer;">✓ Speichern</button>
+          <button id="calCancelBtn" style="flex:1;padding:14px;border-radius:60px;border:none;background:var(--glass-bg);border:1px solid var(--card-border);color:var(--text-primary);font-size:1rem;cursor:pointer;">Abbrechen</button>
+        </div>`;
+
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+
+      // Termin löschen
+      card.querySelectorAll('.del-appt-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const apptToRemove = btn.dataset.appt;
+          const lines = userConfig.appointmentsText.split('\n').filter(l => l.trim() !== apptToRemove.trim() && l.trim());
+          userConfig.appointmentsText = lines.join('\n');
+          saveToStorage();
+          renderCalendar(calContainer);
+          document.body.removeChild(overlay);
+        });
+      });
+
+      // Speichern
+      card.querySelector('#calSaveBtn').addEventListener('click', () => {
+        const time = card.querySelector('#calTimeInput').value;
+        const desc = card.querySelector('#calDescInput').value.trim();
+        if (!desc) { card.querySelector('#calDescInput').style.borderColor='#ff3b30'; return; }
+        const newAppt = `${dateStr} ${time} | ${desc}`;
+        const lines = userConfig.appointmentsText.split('\n').filter(l => l.trim());
+        lines.push(newAppt);
+        lines.sort();
+        userConfig.appointmentsText = lines.join('\n');
+        saveToStorage();
+        renderCalendar(calContainer);
+        renderAll();
+        document.body.removeChild(overlay);
+      });
+
+      // Abbrechen
+      card.querySelector('#calCancelBtn').addEventListener('click', () => document.body.removeChild(overlay));
+      overlay.addEventListener('click', e => { if (e.target === overlay) document.body.removeChild(overlay); });
+
+      // Fokus auf Beschreibung
+      setTimeout(() => card.querySelector('#calDescInput').focus(), 100);
     }
 
     // Convert share URLs to direct image URLs
