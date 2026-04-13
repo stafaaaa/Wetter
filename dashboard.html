@@ -110,8 +110,8 @@
       background: none !important;
       border: none !important;
       box-shadow: none !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
+      
+      -webkit-
       z-index: 500;
       display: flex;
       justify-content: space-around;
@@ -134,7 +134,7 @@
       border-radius: 12px;
       min-width: 44px;
       text-shadow: 0 1px 3px rgba(255,255,255,0.8), 0 -1px 3px rgba(255,255,255,0.8);
-      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
+      );
     }
     .nav-label {
       font-size: 0.55rem;
@@ -144,7 +144,7 @@
     }
     .nav-item.active {
       color: var(--accent-blue);
-      filter: drop-shadow(0 0 6px rgba(0,113,227,0.7));
+      );
     }
 
     .nav-burger { position: relative; }
@@ -157,7 +157,7 @@
       right: auto;
       min-width: 220px;
       background: var(--glass-bg);
-      backdrop-filter: blur(40px);
+      
       border: 1px solid var(--card-border);
       border-radius: 24px;
       padding: 8px;
@@ -172,7 +172,7 @@
     }
     .burger-menu {
       background: var(--glass-bg);
-      backdrop-filter: blur(20px);
+      
       border: 1px solid var(--card-border);
       border-radius: 18px;
       color: var(--text-primary);
@@ -195,7 +195,7 @@
       top: 60px;
       right: 0;
       background: var(--glass-bg);
-      backdrop-filter: blur(40px);
+      
       border: 1px solid var(--card-border);
       border-radius: 24px;
       padding: 8px;
@@ -241,8 +241,8 @@
 
     .tile {
       background: var(--card-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      
+      -webkit-
       border: 1px solid var(--card-border);
       border-radius: 28px;
       padding: 14px 16px;
@@ -258,7 +258,7 @@
       transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1),
                   box-shadow 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
       will-change: transform, box-shadow;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
     /* Innerer Clip damit Inhalte nicht rausragen */
     .tile-content, .tile-header {
@@ -313,7 +313,7 @@
     /* Glow Klassen */
     .tile[data-glow="pulse"] {
       border: 3px solid var(--tile-glow-color, rgba(0,113,227,1)) !important;
-      animation: glowPulse 2s ease-in-out infinite !important;
+      animation: glowPulse 3s ease-in-out infinite !important;
     }
     .tile[data-glow="static"] {
       border: 3px solid var(--tile-glow-color, rgba(0,113,227,1)) !important;
@@ -325,7 +325,7 @@
     }
     .tile[data-glow="rainbow"] {
       border: 3px solid rgba(255,0,100,1) !important;
-      animation: glowRainbow 3s linear infinite !important;
+      animation: glowRainbow 5s linear infinite !important;
     }
     .tile[data-glow="tap"] {
       border: 3px solid var(--tile-glow-color, rgba(0,113,227,1)) !important;
@@ -341,49 +341,10 @@
 
 
 
-    /* SCHWEBEN — kein box-shadow, damit Glow nicht überschrieben wird */
+    /* SCHWEBEN */
     .tile:not(.edit-mode)[data-fx="float-low"]    { transform: translateY(-6px) !important; }
     .tile:not(.edit-mode)[data-fx="float-medium"] { transform: translateY(-12px) !important; }
     .tile:not(.edit-mode)[data-fx="float-high"]   { transform: translateY(-20px) !important; }
-
-    /* KIPPEN */
-    .tile:not(.edit-mode)[data-fx="tilt-low"]    { transform: perspective(800px) rotateX(4deg)  rotateY(-2deg) translateZ(8px)  !important; }
-    .tile:not(.edit-mode)[data-fx="tilt-medium"] { transform: perspective(600px) rotateX(8deg)  rotateY(-4deg) translateZ(16px) !important; }
-    .tile:not(.edit-mode)[data-fx="tilt-high"]   { transform: perspective(400px) rotateX(14deg) rotateY(-7deg) translateZ(24px) !important; }
-
-    /* PULSIEREN */
-    @keyframes fxPulse {
-      0%,100% { transform: scale(1.00); }
-      50%      { transform: scale(1.06); }
-    }
-    .tile:not(.edit-mode)[data-fx="pulse"] {
-      animation: fxPulse 2s ease-in-out infinite !important;
-      transition: none !important;
-    }
-
-    /* PENDELN */
-    @keyframes fxSwing {
-      0%,100% { transform: translateY(-4px) rotate(-2deg); }
-      50%      { transform: translateY(-14px) rotate(2deg); }
-    }
-    .tile:not(.edit-mode)[data-fx="swing"] {
-      animation: fxSwing 2.5s ease-in-out infinite !important;
-      transition: none !important;
-      transform-origin: center top;
-    }
-
-    /* TAUMELN */
-    @keyframes fxWobble {
-      0%   { transform: translateY(-4px)  rotate(-1.5deg) scale(1.00); }
-      25%  { transform: translateY(-16px) rotate(1.5deg)  scale(1.04); }
-      50%  { transform: translateY(-8px)  rotate(-1deg)   scale(1.01); }
-      75%  { transform: translateY(-18px) rotate(2deg)    scale(1.04); }
-      100% { transform: translateY(-4px)  rotate(-1.5deg) scale(1.00); }
-    }
-    .tile:not(.edit-mode)[data-fx="wobble"] {
-      animation: fxWobble 3s ease-in-out infinite !important;
-      transition: none !important;
-    }
 
     /* KEIN EFFEKT */
     .tile:not(.edit-mode)[data-fx="none"] { transform: none; }
@@ -395,46 +356,16 @@
       animation: none !important;
       box-shadow: var(--shadow-md) !important;
     }
-    .tile.pinching {
-      outline: 2.5px solid var(--accent-blue);
-      outline-offset: 3px;
-    }
+    .tile.pinching { outline: 2.5px solid var(--accent-blue); outline-offset: 3px; }
 
-    /* Stagger — verschiedene Delays damit nicht alle gleich animieren */
-    .tile:nth-child(2)[data-fx="pulse"]  { animation-delay: -0.9s; }
-    .tile:nth-child(3)[data-fx="pulse"]  { animation-delay: -1.8s; }
-    .tile:nth-child(4)[data-fx="pulse"]  { animation-delay: -0.5s; }
-    .tile:nth-child(2)[data-fx="swing"]  { animation-delay: -1.1s; }
-    .tile:nth-child(3)[data-fx="swing"]  { animation-delay: -2.2s; }
-    .tile:nth-child(2)[data-fx="wobble"] { animation-delay: -1.3s; }
-    .tile:nth-child(3)[data-fx="wobble"] { animation-delay: -2.6s; }
-    .tile:nth-child(4)[data-fx="wobble"] { animation-delay: -0.8s; }
-
-    /* Hover: statische Effekte heben sich noch weiter */
-    .tile:not(.edit-mode)[data-fx="float-low"]:hover,
-    .tile:not(.edit-mode)[data-fx="float-medium"]:hover,
-    .tile:not(.edit-mode)[data-fx="float-high"]:hover,
-    .tile:not(.edit-mode)[data-fx="tilt-low"]:hover,
-    .tile:not(.edit-mode)[data-fx="tilt-medium"]:hover,
-    .tile:not(.edit-mode)[data-fx="tilt-high"]:hover,
-    .tile:not(.edit-mode)[data-fx="none"]:hover {
-      transform: translateY(-22px) scale(1.02) !important;
-      box-shadow: 0 24px 0 rgba(0,0,0,0.08), 0 36px 72px rgba(0,0,0,0.22),
-                  inset 0 1px 0 rgba(255,255,255,0.95) !important;
-      border-color: rgba(255,255,255,0.6);
+    /* Hover */
+    .tile:not(.edit-mode):hover {
+      transform: translateY(-18px) scale(1.02) !important;
       z-index: 5;
     }
     .tile:not(.edit-mode):active {
       transform: translateY(-2px) scale(0.97) !important;
-      animation-play-state: paused !important;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
-      transition: transform 0.08s, box-shadow 0.08s !important;
-    }
-    /* Pinch resize indicator shown during active pinch gesture */
-    .tile.pinching {
-      outline: 2.5px solid var(--accent-blue);
-      outline-offset: 3px;
-      transition: outline 0.1s;
+      transition: transform 0.08s !important;
     }
 
     .tile-header {
@@ -471,7 +402,7 @@
       line-height: 1;
       pointer-events: none;
       z-index: 1;
-      animation: iconFloat 3s ease-in-out infinite;
+      animation: iconFloat 5s ease-in-out infinite;
       will-change: transform;
       user-select: none;
       display: flex;
@@ -481,15 +412,15 @@
     .tile-big-icon svg {
       width: 100%;
       height: 100%;
-      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+      );
     }
     @keyframes iconFloat {
       0%   { transform: translateY(0px);
-             filter: drop-shadow(0 8px 16px rgba(0,0,0,0.20)); }
+             ); }
       50%  { transform: translateY(-8px);
-             filter: drop-shadow(0 16px 24px rgba(0,0,0,0.14)); }
+             ); }
       100% { transform: translateY(0px);
-             filter: drop-shadow(0 8px 16px rgba(0,0,0,0.20)); }
+             ); }
     }
     /* Stagger animation per tile so they don't all float in sync */
     .tile:nth-child(2) .tile-big-icon { animation-delay: -1.2s; }
@@ -503,7 +434,7 @@
     .tile-controls { display: flex; gap: 8px; position: relative; z-index: 20; }
     .icon-btn {
       background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(10px);
+      
       border: 1px solid rgba(0,0,0,0.12);
       color: #1d1d1f;
       font-size: 1.2rem;
@@ -552,7 +483,7 @@
       bottom: 16px;
       left: 16px;
       background: var(--glass-bg);
-      backdrop-filter: blur(10px);
+      
       padding: 4px 12px;
       border-radius: 40px;
       font-size: 0.75rem;
@@ -573,7 +504,7 @@
     }
     .flip-digit {
       background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(10px);
+      
       padding: 6px 10px;
       border-radius: 14px;
       box-shadow: var(--shadow-sm);
@@ -600,7 +531,7 @@
     }
     .forecast-item {
       background: var(--glass-bg);
-      backdrop-filter: blur(10px);
+      
       border-radius: 20px;
       padding: 10px 12px;
       text-align: center;
@@ -650,7 +581,7 @@
 
     .app-btn {
       background: var(--glass-bg);
-      backdrop-filter: blur(20px);
+      
       border: 0.5px solid var(--card-border);
       color: var(--text-primary);
       padding: 16px 24px;
@@ -675,7 +606,7 @@
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.2);
-      backdrop-filter: blur(20px);
+      
       display: flex;
       align-items: center;
       justify-content: center;
@@ -683,7 +614,7 @@
     }
     .settings-card {
       background: var(--glass-bg);
-      backdrop-filter: blur(50px);
+      
       border: 1px solid var(--card-border);
       border-radius: 40px;
       padding: 36px 40px;
@@ -708,7 +639,7 @@
       border-radius: 20px;
       border: 1px solid var(--card-border);
       background: rgba(255,255,255,0.5);
-      backdrop-filter: blur(10px);
+      
       color: var(--text-primary);
       font-size: 1rem;
     }
@@ -840,12 +771,12 @@
         <button class="app-btn effect3d-btn" data-fx="float-low"     style="flex:1;min-width:130px;">🫧 Schweben Leicht</button>
         <button class="app-btn effect3d-btn" data-fx="float-medium"  style="flex:1;min-width:130px;">🫧 Schweben Mittel</button>
         <button class="app-btn effect3d-btn" data-fx="float-high"    style="flex:1;min-width:130px;">🫧 Schweben Stark</button>
-        <button class="app-btn effect3d-btn" data-fx="tilt-low"      style="flex:1;min-width:130px;">↗️ Kippen Leicht</button>
-        <button class="app-btn effect3d-btn" data-fx="tilt-medium"   style="flex:1;min-width:130px;">↗️ Kippen Mittel</button>
-        <button class="app-btn effect3d-btn" data-fx="tilt-high"     style="flex:1;min-width:130px;">↗️ Kippen Stark</button>
-        <button class="app-btn effect3d-btn" data-fx="pulse"         style="flex:1;min-width:130px;">💓 Pulsieren</button>
-        <button class="app-btn effect3d-btn" data-fx="swing"         style="flex:1;min-width:130px;">🎭 Pendeln</button>
-        <button class="app-btn effect3d-btn" data-fx="wobble"        style="flex:1;min-width:130px;">🌀 Taumeln</button>
+        
+        
+        
+        
+        
+        
         <button class="app-btn effect3d-btn" data-fx="none"          style="flex:1;min-width:130px;">⬜ Kein Effekt</button>
       </div>
       <div id="active3dLabel" style="margin-top:8px;font-size:0.85rem;color:var(--text-secondary);">Aktiv: Schweben Mittel</div>
@@ -1015,13 +946,22 @@
     let slideshowTimer = null;
 
     const DEFAULT_TILES = [
-      { id: 1, type: 'clockweather', title: 'Start', colSpan: 3, rowSpan: 3, color: '#ffffff', bgImage: '', opacity: 0.75, view: 'home' },
-      { id: 4, type: 'slideshow', title: 'Slideshow', colSpan: 6, rowSpan: 4, color: '#ffffff', bgImage: '', opacity: 0.75, view: 'slideshow' },
-      { id: 5, type: 'calendar', title: 'Kalender', colSpan: 2, rowSpan: 2, color: '#ffffff', bgImage: '', opacity: 0.75, view: 'tools' },
-      { id: 6, type: 'appointments', title: 'Termine', colSpan: 2, rowSpan: 2, color: '#ffffff', bgImage: '', opacity: 0.75, view: 'tools' },
-      { id: 7, type: 'youtube', title: 'YouTube', colSpan: 2, rowSpan: 2, color: '#ffffff', bgImage: '', opacity: 0.75, view: 'media' },
-      { id: 8, type: 'amazonmusic', title: 'Amazon Music', colSpan: 2, rowSpan: 2, color: '#ffffff', bgImage: '', opacity: 0.75, view: 'media' },
-      { id: 9, type: 'recipe', title: 'Rezepte', colSpan: 2, rowSpan: 2, color: '#ffffff', bgImage: '', opacity: 0.75, view: 'tools' }
+      // ── STARTSEITE: 6 gleich große Kacheln (je 2x2, 6 Spalten = 3 pro Reihe) ──
+      { id: 1,  type: 'clockweather',  title: 'Uhr & Wetter',  colSpan: 2, rowSpan: 2, color: '#1c1c1e', bgImage: '', opacity: 0.85, view: 'home',      glowEffect: 'pulse',  glowColor: '#0071e3' },
+      { id: 2,  type: 'calendar',      title: 'Kalender',      colSpan: 2, rowSpan: 2, color: '#1c1c1e', bgImage: '', opacity: 0.85, view: 'home',      glowEffect: 'pulse',  glowColor: '#6c5ce7' },
+      { id: 3,  type: 'appointments',  title: 'Termine',       colSpan: 2, rowSpan: 2, color: '#1c1c1e', bgImage: '', opacity: 0.85, view: 'home',      glowEffect: 'pulse',  glowColor: '#fd79a8' },
+      { id: 4,  type: 'spotify',       title: 'Spotify',       colSpan: 2, rowSpan: 2, color: '#1c1c1e', bgImage: '', opacity: 0.85, view: 'home',      glowEffect: 'pulse',  glowColor: '#00b894' },
+      { id: 5,  type: 'recipe',        title: 'Rezepte',       colSpan: 2, rowSpan: 2, color: '#1c1c1e', bgImage: '', opacity: 0.85, view: 'home',      glowEffect: 'pulse',  glowColor: '#e17055' },
+      { id: 6,  type: 'app',           title: 'App',           colSpan: 2, rowSpan: 2, color: '#1c1c1e', bgImage: '', opacity: 0.85, view: 'home',      glowEffect: 'pulse',  glowColor: '#fdcb6e', appLink: '' },
+      // ── MEDIENSEITE: 3 gleich große Kacheln (je 2x3) ──
+      { id: 7,  type: 'youtube',       title: 'YouTube',       colSpan: 2, rowSpan: 3, color: '#1c1c1e', bgImage: '', opacity: 0.85, view: 'media',     glowEffect: 'static', glowColor: '#ff3b30' },
+      { id: 8,  type: 'spotify',       title: 'Spotify',       colSpan: 2, rowSpan: 3, color: '#1c1c1e', bgImage: '', opacity: 0.85, view: 'media',     glowEffect: 'static', glowColor: '#00b894' },
+      { id: 9,  type: 'amazonmusic',   title: 'Amazon Music',  colSpan: 2, rowSpan: 3, color: '#1c1c1e', bgImage: '', opacity: 0.85, view: 'media',     glowEffect: 'static', glowColor: '#0984e3' },
+      // ── SLIDESHOW SEITE ──
+      { id: 10, type: 'slideshow',     title: 'Slideshow',     colSpan: 6, rowSpan: 4, color: '#000000', bgImage: '', opacity: 1.0,  view: 'slideshow', glowEffect: 'rainbow',glowColor: '#0071e3' },
+      // ── TOOLS SEITE ──
+      { id: 11, type: 'calendar',      title: 'Kalender',      colSpan: 3, rowSpan: 3, color: '#1c1c1e', bgImage: '', opacity: 0.85, view: 'tools',     glowEffect: 'pulse',  glowColor: '#6c5ce7' },
+      { id: 12, type: 'appointments',  title: 'Termine',       colSpan: 3, rowSpan: 3, color: '#1c1c1e', bgImage: '', opacity: 0.85, view: 'tools',     glowEffect: 'pulse',  glowColor: '#fd79a8' },
     ];
 
     let userConfig = {
@@ -2282,10 +2222,10 @@
 
       // Dialog erstellen
       const overlay = document.createElement('div');
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(10px);z-index:2000;display:flex;align-items:center;justify-content:center;';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:2000;display:flex;align-items:center;justify-content:center;';
 
       const card = document.createElement('div');
-      card.style.cssText = 'background:var(--glass-bg);backdrop-filter:blur(40px);border:1px solid var(--card-border);border-radius:28px;padding:28px;width:360px;max-width:90vw;color:var(--text-primary);box-shadow:0 30px 60px rgba(0,0,0,0.3);';
+      card.style.cssText = 'background:var(--glass-bg);border:1px solid var(--card-border);border-radius:28px;padding:28px;width:360px;max-width:90vw;color:var(--text-primary);box-shadow:0 30px 60px rgba(0,0,0,0.3);';
 
       const [y,mo,d] = dateStr.split('-');
       const dateLabel = new Date(dateStr).toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
