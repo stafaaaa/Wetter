@@ -976,7 +976,7 @@
       layoutTheme: 'apple-dark',
       globalGlow: 'rainbow',
       globalGlowColor: '#0071e3',
-      globalGlowSize: 3,
+      globalGlowSize: 2,
       onlineImageUrls: '',
       driveUrls: '',
       photosUrls: '',
@@ -1257,10 +1257,23 @@
 
         if (changed) {
           applyAllSettings();
-          // Nur rendern wenn noch nicht initial gerendert wurde
-          if (document.querySelectorAll('.tile').length > 0) {
-            renderAll();
-          }
+          // Kachel-Inhalte still aktualisieren ohne kompletten rebuild (kein Flackern)
+          document.querySelectorAll('.tile').forEach(el => {
+            const tileId = parseInt(el.dataset.id);
+            const tile = tiles.find(t => t.id === tileId);
+            if (!tile) return;
+            // Hintergrundbild aktualisieren falls vorhanden
+            if (tile.bgImage) {
+              let img = el.querySelector('img[style*="object-fit"]');
+              if (!img) {
+                img = document.createElement('img');
+                img.style.cssText = `position:absolute;inset:0;width:100%;height:100%;object-fit:${tile.bgFit||'cover'};transform:scale(${(tile.bgZoom||100)/100}) translate(${tile.bgX||0}%, ${tile.bgY||0}%);transform-origin:center;border-radius:inherit;z-index:0;pointer-events:none;`;
+                el.insertBefore(img, el.firstChild);
+                el.classList.add('has-bgimage');
+              }
+              img.src = tile.bgImage;
+            }
+          });
         }
       }).catch(() => {});
     }
@@ -1852,19 +1865,20 @@
 
     // Glow-Breite als CSS Variable auf :root setzen
     function applyGlowSize(size) {
-      const s = parseInt(size) || 3;
-      // s: 1=schmal, 2=mittel, 3=breit, 4=sehr breit, 5=extrem wie LED-TV
-      const spread1 = [8,  16, 28,  45,  70 ][s-1];
-      const blur1   = [20, 40, 70,  110, 160][s-1];
-      const spread2 = [20, 40, 70,  110, 160][s-1];
-      const blur2   = [50, 90, 150, 220, 300][s-1];
+      const s = parseInt(size) || 2;
+      // s: 1=schmal, 2=mittel, 3=breit, 4=sehr breit, 5=extrem
+      // Werte klein genug damit Glow nicht auf Nachbarkacheln übermalt
+      const spread1 = [2,  4,  7,  12, 18][s-1];
+      const blur1   = [6,  12, 20, 32, 45][s-1];
+      const spread2 = [4,  8,  14, 22, 32][s-1];
+      const blur2   = [12, 22, 35, 55, 75][s-1];
       document.documentElement.style.setProperty('--gs1', spread1 + 'px');
       document.documentElement.style.setProperty('--gb1', blur1 + 'px');
       document.documentElement.style.setProperty('--gs2', spread2 + 'px');
       document.documentElement.style.setProperty('--gb2', blur2 + 'px');
       const labels = ['Schmal','Mittel','Breit','Sehr breit','Extrem'];
       const lbl = document.getElementById('globalGlowSizeLabel');
-      if (lbl) lbl.textContent = labels[s-1] || 'Breit';
+      if (lbl) lbl.textContent = labels[s-1] || 'Mittel';
     }
 
     function applyGlowToAllTiles(glowEffect, glowColor) {
