@@ -893,7 +893,7 @@
       </div>
       <div style="display:flex;gap:12px;align-items:center;margin-top:10px;">
         <label style="font-size:0.85rem;color:var(--text-secondary);white-space:nowrap;">💡 Breite:</label>
-        <input type="range" id="globalGlowSize" min="1" max="5" step="1" value="2" style="flex:1;">
+        <input type="range" id="globalGlowSize" min="1" max="5" step="1" value="3" style="flex:1;">
         <span id="globalGlowSizeLabel" style="font-size:0.85rem;color:var(--text-secondary);min-width:30px;">Mittel</span>
       </div>
     </div>
@@ -1021,13 +1021,13 @@
       recipeUrl: 'https://www.chefkoch.de/',
       appointmentsText: '',
       globalAccent: '#0071e3', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium',
-      tileOpacity: 0.75, dashboardBgImage: '', dashboardBgColor: '#f5f5f7',
+      tileOpacity: 0.75, dashboardBgImage: '', dashboardBgColor: '#0a0a0a',
       menuBtnColor: '#ffffff',
       effect3D: 'float-medium',
-      layoutTheme: 'apple-light',
-      globalGlow: 'none',
+      layoutTheme: 'apple-dark',
+      globalGlow: 'rainbow',
       globalGlowColor: '#0071e3',
-      globalGlowSize: 2,
+      globalGlowSize: 3,
       onlineImageUrls: '',
       driveUrls: '',
       photosUrls: '',
@@ -1840,19 +1840,19 @@
 
     // Glow-Breite als CSS Variable auf :root setzen
     function applyGlowSize(size) {
-      const s = parseInt(size) || 2;
-      // s: 1=sehr schmal, 2=mittel, 3=breit, 4=sehr breit, 5=extrem
-      const spread1 = [5,10,18,28,42][s-1];
-      const blur1   = [12,22,38,58,80][s-1];
-      const spread2 = [12,22,36,55,80][s-1];
-      const blur2   = [30,55,90,130,180][s-1];
+      const s = parseInt(size) || 3;
+      // s: 1=schmal, 2=mittel, 3=breit, 4=sehr breit, 5=extrem wie LED-TV
+      const spread1 = [8,  16, 28,  45,  70 ][s-1];
+      const blur1   = [20, 40, 70,  110, 160][s-1];
+      const spread2 = [20, 40, 70,  110, 160][s-1];
+      const blur2   = [50, 90, 150, 220, 300][s-1];
       document.documentElement.style.setProperty('--gs1', spread1 + 'px');
       document.documentElement.style.setProperty('--gb1', blur1 + 'px');
       document.documentElement.style.setProperty('--gs2', spread2 + 'px');
       document.documentElement.style.setProperty('--gb2', blur2 + 'px');
-      const labels = ['Sehr schmal','Mittel','Breit','Sehr breit','Extrem'];
+      const labels = ['Schmal','Mittel','Breit','Sehr breit','Extrem'];
       const lbl = document.getElementById('globalGlowSizeLabel');
-      if (lbl) lbl.textContent = labels[s-1] || 'Mittel';
+      if (lbl) lbl.textContent = labels[s-1] || 'Breit';
     }
 
     function applyGlowToAllTiles(glowEffect, glowColor) {
