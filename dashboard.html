@@ -261,34 +261,96 @@
       box-shadow: 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
     }
 
-    /* ── ALLE 3D-EFFEKTE ─────────────────────────────────────── */
+    /* ── DOPPELTIPP FALL-EFFEKT ──────────────────────────────── */
+    @keyframes tileRiseUp {
+      0%   { transform: translateY(-80px) scale(0.9); opacity: 0; }
+      60%  { transform: translateY(8px)   scale(1.02); opacity: 1; }
+      80%  { transform: translateY(-4px)  scale(1.0); opacity: 1; }
+      100% { transform: translateY(0px)   scale(1.0); opacity: 1; }
+    }
+    /* ─────────────────────────────────────────────────────────── */
+
+    /* Pulsierend */
+    @keyframes glowPulse {
+      0%,100% { box-shadow: 0 0 8px 2px var(--glow-color), 0 0 20px 4px var(--glow-color-dim), 0 4px 16px rgba(0,0,0,0.08); }
+      50%      { box-shadow: 0 0 20px 6px var(--glow-color), 0 0 50px 12px var(--glow-color-dim), 0 4px 16px rgba(0,0,0,0.08); }
+    }
+    /* Farbwechsel */
+    @keyframes glowRainbow {
+      0%   { --glow-color: rgba(255,0,100,0.9);   --glow-color-dim: rgba(255,0,100,0.3);   box-shadow: 0 0 14px 4px rgba(255,0,100,0.9),   0 0 40px 10px rgba(255,0,100,0.3); }
+      16%  { --glow-color: rgba(255,150,0,0.9);   --glow-color-dim: rgba(255,150,0,0.3);   box-shadow: 0 0 14px 4px rgba(255,150,0,0.9),   0 0 40px 10px rgba(255,150,0,0.3); }
+      33%  { --glow-color: rgba(0,255,100,0.9);   --glow-color-dim: rgba(0,255,100,0.3);   box-shadow: 0 0 14px 4px rgba(0,255,100,0.9),   0 0 40px 10px rgba(0,255,100,0.3); }
+      50%  { --glow-color: rgba(0,200,255,0.9);   --glow-color-dim: rgba(0,200,255,0.3);   box-shadow: 0 0 14px 4px rgba(0,200,255,0.9),   0 0 40px 10px rgba(0,200,255,0.3); }
+      66%  { --glow-color: rgba(100,0,255,0.9);   --glow-color-dim: rgba(100,0,255,0.3);   box-shadow: 0 0 14px 4px rgba(100,0,255,0.9),   0 0 40px 10px rgba(100,0,255,0.3); }
+      83%  { --glow-color: rgba(255,0,200,0.9);   --glow-color-dim: rgba(255,0,200,0.3);   box-shadow: 0 0 14px 4px rgba(255,0,200,0.9),   0 0 40px 10px rgba(255,0,200,0.3); }
+      100% { --glow-color: rgba(255,0,100,0.9);   --glow-color-dim: rgba(255,0,100,0.3);   box-shadow: 0 0 14px 4px rgba(255,0,100,0.9),   0 0 40px 10px rgba(255,0,100,0.3); }
+    }
+    /* Antippen */
+    @keyframes glowTap {
+      0%   { box-shadow: 0 0 30px 10px var(--glow-color), 0 0 80px 20px var(--glow-color-dim); }
+      100% { box-shadow: 0 0 8px 2px var(--glow-color), 0 0 20px 4px var(--glow-color-dim); }
+    }
+
+    /* Glow Klassen */
+    .tile[data-glow="pulse"] {
+      --glow-color: var(--tile-glow-color, rgba(0,113,227,0.8));
+      --glow-color-dim: var(--tile-glow-color-dim, rgba(0,113,227,0.25));
+      animation: glowPulse 2.5s ease-in-out infinite !important;
+      border: 1px solid var(--tile-glow-color, rgba(0,113,227,0.6)) !important;
+    }
+    .tile[data-glow="static"] {
+      --glow-color: var(--tile-glow-color, rgba(0,113,227,0.8));
+      --glow-color-dim: var(--tile-glow-color-dim, rgba(0,113,227,0.25));
+      box-shadow: 0 0 14px 4px var(--glow-color), 0 0 40px 10px var(--glow-color-dim) !important;
+      border: 1px solid var(--tile-glow-color, rgba(0,113,227,0.6)) !important;
+    }
+    .tile[data-glow="rainbow"] {
+      animation: glowRainbow 4s linear infinite !important;
+      border: 1px solid rgba(255,100,100,0.6) !important;
+    }
+    .tile[data-glow="tap"] {
+      --glow-color: var(--tile-glow-color, rgba(0,113,227,0.8));
+      --glow-color-dim: var(--tile-glow-color-dim, rgba(0,113,227,0.25));
+      box-shadow: 0 0 8px 2px var(--glow-color), 0 0 20px 4px var(--glow-color-dim) !important;
+      border: 1px solid var(--tile-glow-color, rgba(0,113,227,0.5)) !important;
+      transition: box-shadow 0.1s !important;
+    }
+    .tile[data-glow="tap"]:active {
+      animation: glowTap 0.8s ease-out forwards !important;
+    }
+    .tile[data-glow="none"] {
+      /* kein Glow */
+    }
+    /* ─────────────────────────────────────────────────────────── */
+
+
 
     /* SCHWEBEN */
     .tile:not(.edit-mode)[data-fx="float-low"] {
-      transform: translateY(-6px);
-      box-shadow: 0 6px 0 rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.85);
+      transform: translateY(-6px) !important;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.85) !important;
     }
     .tile:not(.edit-mode)[data-fx="float-medium"] {
-      transform: translateY(-12px);
-      box-shadow: 0 12px 0 rgba(0,0,0,0.10), 0 20px 44px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.9);
+      transform: translateY(-12px) !important;
+      box-shadow: 0 12px 0 rgba(0,0,0,0.10), 0 20px 44px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.9) !important;
     }
     .tile:not(.edit-mode)[data-fx="float-high"] {
-      transform: translateY(-20px);
-      box-shadow: 0 20px 0 rgba(0,0,0,0.12), 0 32px 64px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.95);
+      transform: translateY(-20px) !important;
+      box-shadow: 0 20px 0 rgba(0,0,0,0.12), 0 32px 64px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.95) !important;
     }
 
     /* KIPPEN */
     .tile:not(.edit-mode)[data-fx="tilt-low"] {
-      transform: perspective(800px) rotateX(4deg) rotateY(-2deg) translateZ(8px);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.85);
+      transform: perspective(800px) rotateX(4deg) rotateY(-2deg) translateZ(8px) !important;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.85) !important;
     }
     .tile:not(.edit-mode)[data-fx="tilt-medium"] {
-      transform: perspective(600px) rotateX(8deg) rotateY(-4deg) translateZ(16px);
-      box-shadow: 0 20px 48px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.9);
+      transform: perspective(600px) rotateX(8deg) rotateY(-4deg) translateZ(16px) !important;
+      box-shadow: 0 20px 48px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.9) !important;
     }
     .tile:not(.edit-mode)[data-fx="tilt-high"] {
-      transform: perspective(400px) rotateX(14deg) rotateY(-7deg) translateZ(24px);
-      box-shadow: 0 32px 64px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.95);
+      transform: perspective(400px) rotateX(14deg) rotateY(-7deg) translateZ(24px) !important;
+      box-shadow: 0 32px 64px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.95) !important;
     }
 
     /* PULSIEREN */
@@ -788,6 +850,23 @@
       <!-- Legacy hidden select für Kompatibilität -->
       <select id="settings3DEffect" style="display:none;"><option value="float-medium" selected>Schweben Mittel</option></select>
     </div>
+
+    <!-- GLOBALER LEUCHT-RAHMEN -->
+    <div class="input-group">
+      <label>💡 Leucht-Rahmen — Alle Kacheln</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+        <button class="app-btn glow-global-btn" data-glow="none"    style="flex:1;min-width:100px;">⬜ Aus</button>
+        <button class="app-btn glow-global-btn" data-glow="pulse"   style="flex:1;min-width:100px;">💓 Pulsieren</button>
+        <button class="app-btn glow-global-btn" data-glow="static"  style="flex:1;min-width:100px;">💡 Statisch</button>
+        <button class="app-btn glow-global-btn" data-glow="rainbow" style="flex:1;min-width:100px;">🌈 Farbwechsel</button>
+        <button class="app-btn glow-global-btn" data-glow="tap"     style="flex:1;min-width:100px;">👆 Antippen</button>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;margin-top:6px;">
+        <label style="font-size:0.85rem;color:var(--text-secondary);">Farbe:</label>
+        <input type="color" id="globalGlowColor" value="#0071e3" style="width:60px;height:40px;border-radius:12px;border:1px solid var(--card-border);">
+        <span id="globalGlowLabel" style="font-size:0.85rem;color:var(--text-secondary);">Aktiv: Aus</span>
+      </div>
+    </div>
     <div class="input-group"><label>🎨 Akzentfarbe</label><div class="color-row"><input type="color" id="globalAccentColor" value="#0071e3"><input type="text" id="globalAccentColorText"></div></div>
     <div class="input-group"><label>✏️ Schriftfarbe</label><div class="color-row"><input type="color" id="globalTextColor" value="#1d1d1f"><input type="text" id="globalTextColorText"></div></div>
     <div class="input-group"><label>🎨 Menü-Button</label><div class="color-row"><input type="color" id="menuBtnColor" value="#ffffff"><input type="text" id="menuBtnColorText"></div></div>
@@ -820,6 +899,22 @@
     <div class="input-group"><label>Hintergrundfarbe</label><div class="color-row"><input type="color" id="tileColor"><input type="text" id="tileColorText"></div></div>
     <div class="input-group"><label>Hintergrundbild</label><div class="flex-row"><button class="app-btn" id="uploadTileBgBtn">📸 Bild</button><button class="app-btn" id="removeTileBgBtn">🗑️</button></div></div>
     <div class="input-group"><label>Transparenz</label><input type="range" id="tileOpacity" min="0.1" max="1.0" step="0.05" value="0.75"><span id="tileOpacityVal">0.75</span></div>
+
+    <!-- PRO KACHEL LEUCHT-RAHMEN -->
+    <div class="input-group">
+      <label>💡 Leucht-Rahmen dieser Kachel</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+        <button class="app-btn glow-tile-btn" data-glow="none"    style="flex:1;min-width:80px;font-size:0.85rem;">⬜ Aus</button>
+        <button class="app-btn glow-tile-btn" data-glow="pulse"   style="flex:1;min-width:80px;font-size:0.85rem;">💓 Puls</button>
+        <button class="app-btn glow-tile-btn" data-glow="static"  style="flex:1;min-width:80px;font-size:0.85rem;">💡 Fix</button>
+        <button class="app-btn glow-tile-btn" data-glow="rainbow" style="flex:1;min-width:80px;font-size:0.85rem;">🌈 RGB</button>
+        <button class="app-btn glow-tile-btn" data-glow="tap"     style="flex:1;min-width:80px;font-size:0.85rem;">👆 Tap</button>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <label style="font-size:0.85rem;color:var(--text-secondary);">Farbe:</label>
+        <input type="color" id="tileGlowColor" value="#0071e3" style="width:55px;height:36px;border-radius:10px;border:1px solid var(--card-border);">
+      </div>
+    </div>
     <div class="input-group">
       <label>Größe</label>
       <select id="tileSizeSelect">
@@ -900,7 +995,9 @@
       menuBtnColor: '#ffffff',
       effect3D: 'float-medium',
       layoutTheme: 'apple-light',
-      onlineImageUrls: '',   // legacy — kept for backwards compat
+      globalGlow: 'none',
+      globalGlowColor: '#0071e3',
+      onlineImageUrls: '',
       driveUrls: '',
       photosUrls: '',
       cloudinaryUrls: ''
@@ -1239,6 +1336,18 @@
       applyLayoutTheme(userConfig.layoutTheme || 'apple-light');
       document.documentElement.style.setProperty('--menu-btn-bg', userConfig.menuBtnColor);
       document.documentElement.style.setProperty('--accent-blue', userConfig.globalAccent);
+      // 3D Effekt auf alle Tiles anwenden
+      const fx = userConfig.effect3D || 'float-medium';
+      document.querySelectorAll('.tile').forEach(el => {
+        el.setAttribute('data-fx', fx);
+        // Glow anwenden
+        const tileId = parseInt(el.dataset.id);
+        const tile = tiles.find(t => t.id === tileId);
+        const glow = (tile && tile.glowEffect) ? tile.glowEffect : (userConfig.globalGlow || 'none');
+        const color = (tile && tile.glowColor) ? tile.glowColor : (userConfig.globalGlowColor || '#0071e3');
+        el.setAttribute('data-glow', glow);
+        applyGlowColor(el, color);
+      });
     }
     function applyTheme(theme) { document.body.className = `theme-${theme}`; userConfig.theme = theme; }
     function applyFontSize(size) { document.documentElement.style.fontSize = size === 'small' ? '14px' : (size === 'large' ? '18px' : '16px'); }
@@ -1336,6 +1445,11 @@
       div.className = `tile ${editMode ? 'edit-mode' : ''} ${tile.type === 'slideshow' ? 'tile-slideshow' : ''}`;
       div.dataset.id = tile.id;
       div.setAttribute('data-fx', userConfig.effect3D);
+      // Glow: pro Kachel oder global
+      const glowEffect = tile.glowEffect || userConfig.globalGlow || 'none';
+      const glowColor  = tile.glowColor  || userConfig.globalGlowColor || '#0071e3';
+      div.setAttribute('data-glow', glowEffect);
+      applyGlowColor(div, glowColor);
       div.style.gridColumn = `span ${tile.colSpan || 2}`;
       div.style.gridRow = `span ${tile.rowSpan || 2}`;
       div.setAttribute('draggable', editMode);
@@ -1520,7 +1634,97 @@
       updateFamButtons(activeFam);
       buildSubThemeRow(activeFam, lt);
       document.getElementById('settingsModal').classList.remove('hidden');
+      // Globalen Glow laden
+      const gg = userConfig.globalGlow || 'none';
+      const gc = userConfig.globalGlowColor || '#0071e3';
+      document.getElementById('globalGlowColor').value = gc;
+      document.querySelectorAll('.glow-global-btn').forEach(b => {
+        b.style.background = b.dataset.glow === gg ? 'var(--accent-blue)' : '';
+        b.style.color      = b.dataset.glow === gg ? '#fff' : '';
+      });
+      const glbl = document.getElementById('globalGlowLabel');
+      if (glbl) glbl.textContent = 'Aktiv: ' + (glowNames[gg] || gg);
     }
+
+    // ── GLOW HELPER ─────────────────────────────────────────────
+    function applyGlowColor(el, hex) {
+      if (!hex) return;
+      const r = parseInt(hex.slice(1,3),16);
+      const g = parseInt(hex.slice(3,5),16);
+      const b = parseInt(hex.slice(5,7),16);
+      el.style.setProperty('--tile-glow-color',     `rgba(${r},${g},${b},0.85)`);
+      el.style.setProperty('--tile-glow-color-dim',  `rgba(${r},${g},${b},0.25)`);
+    }
+
+    function applyGlowToAllTiles(glowEffect, glowColor) {
+      document.querySelectorAll('.tile').forEach(el => {
+        const tileId = parseInt(el.dataset.id);
+        const tile = tiles.find(t => t.id === tileId);
+        // Pro-Kachel-Glow hat Vorrang
+        const fg = (tile && tile.glowEffect) ? tile.glowEffect : glowEffect;
+        const fc = (tile && tile.glowColor)  ? tile.glowColor  : glowColor;
+        el.setAttribute('data-glow', fg);
+        applyGlowColor(el, fc);
+      });
+    }
+
+    const glowNames = {
+      'none':'Aus','pulse':'Pulsieren','static':'Statisch','rainbow':'Farbwechsel','tap':'Antippen'
+    };
+
+    // Globaler Glow Picker
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.glow-global-btn');
+      if (!btn) return;
+      const glow = btn.dataset.glow;
+      const color = document.getElementById('globalGlowColor').value;
+      userConfig.globalGlow = glow;
+      userConfig.globalGlowColor = color;
+      // Button highlighting
+      document.querySelectorAll('.glow-global-btn').forEach(b => {
+        b.style.background = b.dataset.glow === glow ? 'var(--accent-blue)' : '';
+        b.style.color      = b.dataset.glow === glow ? '#fff' : '';
+      });
+      const lbl = document.getElementById('globalGlowLabel');
+      if (lbl) lbl.textContent = 'Aktiv: ' + (glowNames[glow] || glow);
+      applyGlowToAllTiles(glow, color);
+      saveToStorage();
+    });
+
+    // Globale Farbe live anwenden
+    document.addEventListener('input', e => {
+      if (e.target.id !== 'globalGlowColor') return;
+      userConfig.globalGlowColor = e.target.value;
+      applyGlowToAllTiles(userConfig.globalGlow, e.target.value);
+    });
+
+    // Pro-Kachel Glow Picker
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.glow-tile-btn');
+      if (!btn) return;
+      const glow = btn.dataset.glow;
+      document.querySelectorAll('.glow-tile-btn').forEach(b => {
+        b.style.background = b.dataset.glow === glow ? 'var(--accent-blue)' : '';
+        b.style.color      = b.dataset.glow === glow ? '#fff' : '';
+      });
+      // Vorschau im Modal — Tile noch nicht gespeichert
+      const tileId = parseInt(document.getElementById('currentTileId').value);
+      const el = document.querySelector(`.tile[data-id="${tileId}"]`);
+      if (el) {
+        const color = document.getElementById('tileGlowColor').value;
+        el.setAttribute('data-glow', glow);
+        applyGlowColor(el, color);
+      }
+    });
+
+    // Pro-Kachel Farbe live
+    document.addEventListener('input', e => {
+      if (e.target.id !== 'tileGlowColor') return;
+      const tileId = parseInt(document.getElementById('currentTileId').value);
+      const el = document.querySelector(`.tile[data-id="${tileId}"]`);
+      if (el) applyGlowColor(el, e.target.value);
+    });
+    // ─────────────────────────────────────────────────────────────
 
     // 3D-Effekt Picker — sofort live anwenden
     document.addEventListener('click', e => {
@@ -2186,6 +2390,14 @@
       const appFields = document.getElementById('appFields');
       if (tile.type === 'app') { appFields.classList.remove('hidden'); document.getElementById('tileAppLink').value = tile.appLink || ''; }
       else { appFields.classList.add('hidden'); }
+      // Glow laden
+      const tg = tile.glowEffect || 'none';
+      const tc = tile.glowColor  || userConfig.globalGlowColor || '#0071e3';
+      document.getElementById('tileGlowColor').value = tc;
+      document.querySelectorAll('.glow-tile-btn').forEach(b => {
+        b.style.background = b.dataset.glow === tg ? 'var(--accent-blue)' : '';
+        b.style.color      = b.dataset.glow === tg ? '#fff' : '';
+      });
       document.getElementById('tileSettingsModal').classList.remove('hidden');
     }
 
@@ -2331,7 +2543,9 @@
         userConfig.tileOpacity = parseFloat(document.getElementById('tileOpacitySlider').value);
         userConfig.dashboardBgColor = document.getElementById('dashboardBgColor').value;
         userConfig.menuBtnColor = document.getElementById('menuBtnColor').value;
-        userConfig.effect3D = document.getElementById('settings3DEffect').value || 'float-medium';
+        // effect3D wird vom Live-Picker direkt in userConfig gesetzt — nicht vom hidden select überschreiben
+        // userConfig.effect3D bleibt wie vom Picker gesetzt
+        userConfig.globalGlowColor = document.getElementById('globalGlowColor').value;
         applyAllSettings();
         saveToStorage();
         renderAll();
@@ -2356,6 +2570,13 @@
           // Save custom icon
           const customIcon = document.getElementById('tileCustomIcon').value.trim();
           tile.customIcon = customIcon || null;
+          // Glow speichern
+          const activeGlowBtn = document.querySelector('.glow-tile-btn[style*="accent-blue"], .glow-tile-btn[style*="rgb(0, 113, 227)"]');
+          const glowBtns = document.querySelectorAll('.glow-tile-btn');
+          let activeGlow = 'none';
+          glowBtns.forEach(b => { if (b.style.background && b.style.background !== '') activeGlow = b.dataset.glow; });
+          tile.glowEffect = activeGlow;
+          tile.glowColor  = document.getElementById('tileGlowColor').value;
         }
         saveToStorage(); renderAll(); document.getElementById('tileSettingsModal').classList.add('hidden');
       };
@@ -2470,6 +2691,173 @@
       }
     });
     // ─────────────────────────────────────────────────────────────────
+
+    // ── EFFEKT 1: DOPPELTIPPEN → KACHELN FALLEN ──────────────
+    let lastTapTime = 0;
+    let fallInProgress = false;
+
+    document.addEventListener('touchend', e => {
+      if (editMode || fallInProgress) return;
+      const now = Date.now();
+      const diff = now - lastTapTime;
+      lastTapTime = now;
+      if (diff > 50 && diff < 350) {
+        const tile = e.target.closest('.tile');
+        if (!tile) return;
+        e.preventDefault();
+        triggerTileFall();
+      }
+    }, { passive: false });
+
+    document.addEventListener('dblclick', e => {
+      if (editMode || fallInProgress) return;
+      const tile = e.target.closest('.tile');
+      if (!tile) return;
+      triggerTileFall();
+    });
+
+    function triggerTileFall() {
+      fallInProgress = true;
+      const allTiles = [...document.querySelectorAll('.tile:not(.edit-mode)')];
+      const vh = window.innerHeight;
+
+      allTiles.forEach((el, i) => {
+        const delay    = i * 100 + Math.random() * 60;
+        const swing    = (Math.random() > 0.5 ? 1 : -1) * (6 + Math.random() * 12);
+        const duration = 1400 + Math.random() * 300;
+
+        setTimeout(() => {
+          let start = null;
+          el.style.transformOrigin = 'top center';
+
+          function step(ts) {
+            if (!start) start = ts;
+            const p = Math.min((ts - start) / duration, 1); // 0→1
+            // Easing: langsam starten, dann beschleunigen
+            const ease = p * p * (3 - 2 * p);
+            // Y: 0 → 115vh
+            const y = ease * (vh * 1.15);
+            // Schwingen: Sinus-Kurve hin und her
+            const rot = swing * Math.sin(p * Math.PI * 2.5) * (1 - p * 0.3);
+            // Opacity: ab 60% verschwinden
+            const opacity = p < 0.6 ? 1 : 1 - ((p - 0.6) / 0.4);
+
+            el.style.transform = `translateY(${y}px) rotate(${rot}deg)`;
+            el.style.opacity   = opacity;
+
+            if (p < 1) {
+              requestAnimationFrame(step);
+            }
+          }
+          requestAnimationFrame(step);
+        }, delay);
+      });
+
+      const totalFall = allTiles.length * 100 + 1800;
+
+      // Wieder reinkommen
+      allTiles.forEach((el, i) => {
+        setTimeout(() => {
+          el.style.transition    = 'none';
+          el.style.transform     = 'translateY(-60px) scale(0.9)';
+          el.style.opacity       = '0';
+          el.style.transformOrigin = '';
+          setTimeout(() => {
+            el.style.animation  = 'tileRiseUp 0.9s cubic-bezier(0.2,0.9,0.3,1.3) forwards';
+            setTimeout(() => {
+              el.style.animation  = '';
+              el.style.transform  = '';
+              el.style.opacity    = '';
+              el.style.transition = '';
+            }, 950);
+          }, 30);
+        }, totalFall + i * 70);
+      });
+
+      setTimeout(() => { fallInProgress = false; }, totalFall + allTiles.length * 70 + 1000);
+    }
+    // ─────────────────────────────────────────────────────────
+
+    // ── EFFEKT 2: KACHEL ZIEHEN → ANDERE WEICHEN AUS ─────────
+    let pushTile     = null;
+    let pushStartPos = null;
+    let pushOrigPos  = null; // originale tile position
+
+    function startPush(clientX, clientY, target) {
+      if (editMode) return;
+      const tile = target.closest('.tile');
+      if (!tile) return;
+      pushTile     = tile;
+      pushStartPos = { x: clientX, y: clientY };
+      pushOrigPos  = { x: 0, y: 0 };
+      pushTile.style.transition = 'transform 0.1s ease-out';
+      pushTile.style.zIndex = '50';
+    }
+
+    function movePush(clientX, clientY) {
+      if (!pushTile || !pushStartPos) return;
+      const dx = clientX - pushStartPos.x;
+      const dy = clientY - pushStartPos.y;
+
+      // Die gezogene Kachel bewegt sich mit dem Finger
+      pushTile.style.transition = 'none';
+      pushTile.style.transform  = `translate(${dx}px, ${dy}px) scale(1.05)`;
+      pushTile.style.zIndex     = '50';
+
+      // Mittelpunkt der gezogenen Kachel (mit offset)
+      const dr  = pushTile.getBoundingClientRect();
+      const dcx = dr.left + dr.width  / 2;
+      const dcy = dr.top  + dr.height / 2;
+
+      // Andere Kacheln weichen aus
+      document.querySelectorAll('.tile:not(.edit-mode)').forEach(el => {
+        if (el === pushTile) return;
+        const r   = el.getBoundingClientRect();
+        const ecx = r.left + r.width  / 2;
+        const ecy = r.top  + r.height / 2;
+        const ex  = ecx - dcx;
+        const ey  = ecy - dcy;
+        const d   = Math.sqrt(ex*ex + ey*ey);
+        const maxR = (dr.width + r.width) * 0.65;
+        if (d < maxR && d > 1) {
+          const force = (1 - d / maxR) * 40;
+          el.style.transition = 'transform 0.15s ease-out';
+          el.style.transform  = `translate(${(ex/d)*force}px, ${(ey/d)*force}px) scale(0.95)`;
+        } else {
+          el.style.transition = 'transform 0.3s ease-out';
+          el.style.transform  = '';
+        }
+      });
+    }
+
+    function endPush() {
+      if (!pushTile) return;
+      // Gezogene Kachel zurück
+      pushTile.style.transition = 'transform 0.5s cubic-bezier(0.2,0.9,0.3,1.2)';
+      pushTile.style.transform  = '';
+      pushTile.style.zIndex     = '';
+      setTimeout(() => {
+        if (pushTile) { pushTile.style.transition = ''; pushTile = null; }
+      }, 550);
+      // Alle anderen zurück
+      document.querySelectorAll('.tile:not(.edit-mode)').forEach(el => {
+        el.style.transition = 'transform 0.5s cubic-bezier(0.2,0.9,0.3,1.2)';
+        el.style.transform  = '';
+        setTimeout(() => { el.style.transition = ''; }, 550);
+      });
+      pushStartPos = null;
+    }
+
+    document.addEventListener('touchstart', e => startPush(e.touches[0].clientX, e.touches[0].clientY, e.target), { passive: true });
+    document.addEventListener('touchmove',  e => movePush(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+    document.addEventListener('touchend',   () => endPush(), { passive: true });
+    document.addEventListener('mousedown',  e => startPush(e.clientX, e.clientY, e.target));
+    document.addEventListener('mousemove',  e => { if (e.buttons === 1) movePush(e.clientX, e.clientY); });
+    document.addEventListener('mouseup',    () => endPush());
+    // ─────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────
 
     window.onload = init;
   })();
