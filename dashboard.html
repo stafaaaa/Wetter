@@ -251,14 +251,18 @@
       color: var(--text-primary);
       background-size: cover;
       background-position: center;
-      overflow: hidden;
+      overflow: visible; /* Glow muss nach außen sichtbar sein */
       min-height: 0;
       transform-style: preserve-3d;
       transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1),
                   box-shadow 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
       will-change: transform, box-shadow;
-      /* Standard-Schatten wenn kein Effekt aktiv */
       box-shadow: 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
+    }
+    /* Innerer Clip damit Inhalte nicht rausragen */
+    .tile-content, .tile-header {
+      overflow: hidden;
+      border-radius: 24px;
     }
 
     /* ── DOPPELTIPP FALL-EFFEKT ──────────────────────────────── */
@@ -270,57 +274,68 @@
     }
     /* ─────────────────────────────────────────────────────────── */
 
+    /* ── LED RAHMEN EFFEKTE ──────────────────────────────────── */
+
     /* Pulsierend */
     @keyframes glowPulse {
-      0%,100% { box-shadow: 0 0 8px 2px var(--glow-color), 0 0 20px 4px var(--glow-color-dim), 0 4px 16px rgba(0,0,0,0.08); }
-      50%      { box-shadow: 0 0 20px 6px var(--glow-color), 0 0 50px 12px var(--glow-color-dim), 0 4px 16px rgba(0,0,0,0.08); }
+      0%,100% { box-shadow:
+        0 0 var(--gb1,20px) var(--gs1,8px) var(--tile-glow-color, rgba(0,113,227,1)),
+        0 0 var(--gb2,50px) var(--gs2,18px) var(--tile-glow-color-dim, rgba(0,113,227,0.7)),
+        0 0 calc(var(--gb2,50px) * 2) calc(var(--gs2,18px) * 2) var(--tile-glow-color-dim, rgba(0,113,227,0.35)),
+        inset 0 0 25px 5px var(--tile-glow-color-dim, rgba(0,113,227,0.2));
+      }
+      50% { box-shadow:
+        0 0 calc(var(--gb1,20px) * 2.5) calc(var(--gs1,8px) * 2.5) var(--tile-glow-color, rgba(0,113,227,1)),
+        0 0 calc(var(--gb2,50px) * 2) calc(var(--gs2,18px) * 2) var(--tile-glow-color-dim, rgba(0,113,227,0.8)),
+        0 0 calc(var(--gb2,50px) * 3.5) calc(var(--gs2,18px) * 3) var(--tile-glow-color-dim, rgba(0,113,227,0.4)),
+        inset 0 0 50px 10px var(--tile-glow-color-dim, rgba(0,113,227,0.3));
+      }
     }
+
     /* Farbwechsel */
     @keyframes glowRainbow {
-      0%   { --glow-color: rgba(255,0,100,0.9);   --glow-color-dim: rgba(255,0,100,0.3);   box-shadow: 0 0 14px 4px rgba(255,0,100,0.9),   0 0 40px 10px rgba(255,0,100,0.3); }
-      16%  { --glow-color: rgba(255,150,0,0.9);   --glow-color-dim: rgba(255,150,0,0.3);   box-shadow: 0 0 14px 4px rgba(255,150,0,0.9),   0 0 40px 10px rgba(255,150,0,0.3); }
-      33%  { --glow-color: rgba(0,255,100,0.9);   --glow-color-dim: rgba(0,255,100,0.3);   box-shadow: 0 0 14px 4px rgba(0,255,100,0.9),   0 0 40px 10px rgba(0,255,100,0.3); }
-      50%  { --glow-color: rgba(0,200,255,0.9);   --glow-color-dim: rgba(0,200,255,0.3);   box-shadow: 0 0 14px 4px rgba(0,200,255,0.9),   0 0 40px 10px rgba(0,200,255,0.3); }
-      66%  { --glow-color: rgba(100,0,255,0.9);   --glow-color-dim: rgba(100,0,255,0.3);   box-shadow: 0 0 14px 4px rgba(100,0,255,0.9),   0 0 40px 10px rgba(100,0,255,0.3); }
-      83%  { --glow-color: rgba(255,0,200,0.9);   --glow-color-dim: rgba(255,0,200,0.3);   box-shadow: 0 0 14px 4px rgba(255,0,200,0.9),   0 0 40px 10px rgba(255,0,200,0.3); }
-      100% { --glow-color: rgba(255,0,100,0.9);   --glow-color-dim: rgba(255,0,100,0.3);   box-shadow: 0 0 14px 4px rgba(255,0,100,0.9),   0 0 40px 10px rgba(255,0,100,0.3); }
+      0%   { border-color: rgba(255,0,100,1)  !important; box-shadow: 0 0 25px 10px rgba(255,0,100,1), 0 0 70px 25px rgba(255,0,100,0.7), 0 0 120px 40px rgba(255,0,100,0.35), inset 0 0 40px 8px rgba(255,0,100,0.25); }
+      16%  { border-color: rgba(255,150,0,1)  !important; box-shadow: 0 0 25px 10px rgba(255,150,0,1), 0 0 70px 25px rgba(255,150,0,0.7), 0 0 120px 40px rgba(255,150,0,0.35), inset 0 0 40px 8px rgba(255,150,0,0.25); }
+      33%  { border-color: rgba(0,255,100,1)  !important; box-shadow: 0 0 25px 10px rgba(0,255,100,1), 0 0 70px 25px rgba(0,255,100,0.7), 0 0 120px 40px rgba(0,255,100,0.35), inset 0 0 40px 8px rgba(0,255,100,0.25); }
+      50%  { border-color: rgba(0,200,255,1)  !important; box-shadow: 0 0 25px 10px rgba(0,200,255,1), 0 0 70px 25px rgba(0,200,255,0.7), 0 0 120px 40px rgba(0,200,255,0.35), inset 0 0 40px 8px rgba(0,200,255,0.25); }
+      66%  { border-color: rgba(150,0,255,1)  !important; box-shadow: 0 0 25px 10px rgba(150,0,255,1), 0 0 70px 25px rgba(150,0,255,0.7), 0 0 120px 40px rgba(150,0,255,0.35), inset 0 0 40px 8px rgba(150,0,255,0.25); }
+      83%  { border-color: rgba(255,0,200,1)  !important; box-shadow: 0 0 25px 10px rgba(255,0,200,1), 0 0 70px 25px rgba(255,0,200,0.7), 0 0 120px 40px rgba(255,0,200,0.35), inset 0 0 40px 8px rgba(255,0,200,0.25); }
+      100% { border-color: rgba(255,0,100,1)  !important; box-shadow: 0 0 25px 10px rgba(255,0,100,1), 0 0 70px 25px rgba(255,0,100,0.7), 0 0 120px 40px rgba(255,0,100,0.35), inset 0 0 40px 8px rgba(255,0,100,0.25); }
     }
+
     /* Antippen */
     @keyframes glowTap {
-      0%   { box-shadow: 0 0 30px 10px var(--glow-color), 0 0 80px 20px var(--glow-color-dim); }
-      100% { box-shadow: 0 0 8px 2px var(--glow-color), 0 0 20px 4px var(--glow-color-dim); }
+      0%   { box-shadow: 0 0 60px 22px var(--tile-glow-color, rgba(0,113,227,1)), 0 0 130px 45px var(--tile-glow-color-dim, rgba(0,113,227,0.7)), inset 0 0 70px 15px var(--tile-glow-color-dim, rgba(0,113,227,0.4)); }
+      100% { box-shadow: 0 0 var(--gb1,20px) var(--gs1,8px) var(--tile-glow-color, rgba(0,113,227,0.9)), 0 0 var(--gb2,50px) var(--gs2,18px) var(--tile-glow-color-dim, rgba(0,113,227,0.4)); }
     }
 
     /* Glow Klassen */
     .tile[data-glow="pulse"] {
-      --glow-color: var(--tile-glow-color, rgba(0,113,227,0.8));
-      --glow-color-dim: var(--tile-glow-color-dim, rgba(0,113,227,0.25));
-      animation: glowPulse 2.5s ease-in-out infinite !important;
-      border: 1px solid var(--tile-glow-color, rgba(0,113,227,0.6)) !important;
+      border: 3px solid var(--tile-glow-color, rgba(0,113,227,1)) !important;
+      animation: glowPulse 2s ease-in-out infinite !important;
     }
     .tile[data-glow="static"] {
-      --glow-color: var(--tile-glow-color, rgba(0,113,227,0.8));
-      --glow-color-dim: var(--tile-glow-color-dim, rgba(0,113,227,0.25));
-      box-shadow: 0 0 14px 4px var(--glow-color), 0 0 40px 10px var(--glow-color-dim) !important;
-      border: 1px solid var(--tile-glow-color, rgba(0,113,227,0.6)) !important;
+      border: 3px solid var(--tile-glow-color, rgba(0,113,227,1)) !important;
+      box-shadow:
+        0 0 var(--gb1,20px) var(--gs1,8px) var(--tile-glow-color, rgba(0,113,227,1)),
+        0 0 var(--gb2,50px) var(--gs2,18px) var(--tile-glow-color-dim, rgba(0,113,227,0.7)),
+        0 0 calc(var(--gb2,50px) * 2) calc(var(--gs2,18px) * 1.5) var(--tile-glow-color-dim, rgba(0,113,227,0.35)),
+        inset 0 0 30px 6px var(--tile-glow-color-dim, rgba(0,113,227,0.25)) !important;
     }
     .tile[data-glow="rainbow"] {
-      animation: glowRainbow 4s linear infinite !important;
-      border: 1px solid rgba(255,100,100,0.6) !important;
+      border: 3px solid rgba(255,0,100,1) !important;
+      animation: glowRainbow 3s linear infinite !important;
     }
     .tile[data-glow="tap"] {
-      --glow-color: var(--tile-glow-color, rgba(0,113,227,0.8));
-      --glow-color-dim: var(--tile-glow-color-dim, rgba(0,113,227,0.25));
-      box-shadow: 0 0 8px 2px var(--glow-color), 0 0 20px 4px var(--glow-color-dim) !important;
-      border: 1px solid var(--tile-glow-color, rgba(0,113,227,0.5)) !important;
-      transition: box-shadow 0.1s !important;
+      border: 3px solid var(--tile-glow-color, rgba(0,113,227,1)) !important;
+      box-shadow:
+        0 0 var(--gb1,20px) var(--gs1,8px) var(--tile-glow-color, rgba(0,113,227,1)),
+        0 0 var(--gb2,50px) var(--gs2,18px) var(--tile-glow-color-dim, rgba(0,113,227,0.6)) !important;
     }
     .tile[data-glow="tap"]:active {
       animation: glowTap 0.8s ease-out forwards !important;
     }
-    .tile[data-glow="none"] {
-      /* kein Glow */
-    }
+    .tile[data-glow="none"] { /* kein Glow */ }
     /* ─────────────────────────────────────────────────────────── */
 
 
@@ -464,8 +479,10 @@
     /* ── TILE BIG 3D ICON ── */
     .tile-big-icon {
       position: absolute;
-      bottom: 10px;
-      right: 12px;
+      bottom: 8px;
+      right: 10px;
+      width: clamp(44px, 5vw, 64px);
+      height: clamp(44px, 5vw, 64px);
       font-size: clamp(2rem, 4vw, 3.5rem);
       line-height: 1;
       pointer-events: none;
@@ -473,6 +490,14 @@
       animation: iconFloat 3s ease-in-out infinite;
       will-change: transform;
       user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tile-big-icon svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
     }
     @keyframes iconFloat {
       0%   { transform: translateY(0px);
@@ -866,6 +891,11 @@
         <input type="color" id="globalGlowColor" value="#0071e3" style="width:60px;height:40px;border-radius:12px;border:1px solid var(--card-border);">
         <span id="globalGlowLabel" style="font-size:0.85rem;color:var(--text-secondary);">Aktiv: Aus</span>
       </div>
+      <div style="display:flex;gap:12px;align-items:center;margin-top:10px;">
+        <label style="font-size:0.85rem;color:var(--text-secondary);white-space:nowrap;">💡 Breite:</label>
+        <input type="range" id="globalGlowSize" min="1" max="5" step="1" value="2" style="flex:1;">
+        <span id="globalGlowSizeLabel" style="font-size:0.85rem;color:var(--text-secondary);min-width:30px;">Mittel</span>
+      </div>
     </div>
     <div class="input-group"><label>🎨 Akzentfarbe</label><div class="color-row"><input type="color" id="globalAccentColor" value="#0071e3"><input type="text" id="globalAccentColorText"></div></div>
     <div class="input-group"><label>✏️ Schriftfarbe</label><div class="color-row"><input type="color" id="globalTextColor" value="#1d1d1f"><input type="text" id="globalTextColorText"></div></div>
@@ -997,6 +1027,7 @@
       layoutTheme: 'apple-light',
       globalGlow: 'none',
       globalGlowColor: '#0071e3',
+      globalGlowSize: 2,
       onlineImageUrls: '',
       driveUrls: '',
       photosUrls: '',
@@ -1336,6 +1367,7 @@
       applyLayoutTheme(userConfig.layoutTheme || 'apple-light');
       document.documentElement.style.setProperty('--menu-btn-bg', userConfig.menuBtnColor);
       document.documentElement.style.setProperty('--accent-blue', userConfig.globalAccent);
+      applyGlowSize(userConfig.globalGlowSize || 2);
       // 3D Effekt auf alle Tiles anwenden
       const fx = userConfig.effect3D || 'float-medium';
       document.querySelectorAll('.tile').forEach(el => {
@@ -1515,7 +1547,12 @@
       if (tile.type !== 'slideshow') {
         const bigIcon = document.createElement('div');
         bigIcon.className = 'tile-big-icon';
-        bigIcon.textContent = getBigIconForTile(tile);
+        const svgIcon = getModernIcon(tile);
+        if (svgIcon) {
+          bigIcon.innerHTML = svgIcon;
+        } else {
+          bigIcon.textContent = getBigIconForTile(tile);
+        }
         div.appendChild(bigIcon);
       }
 
@@ -1644,16 +1681,178 @@
       });
       const glbl = document.getElementById('globalGlowLabel');
       if (glbl) glbl.textContent = 'Aktiv: ' + (glowNames[gg] || gg);
+      // Glow-Breite laden
+      const gs = document.getElementById('globalGlowSize');
+      if (gs) { gs.value = userConfig.globalGlowSize || 2; applyGlowSize(gs.value); }
     }
 
-    // ── GLOW HELPER ─────────────────────────────────────────────
+    // ── MODERNE GLASSMORPHISM SVG ICONS ──────────────────────
+    function getModernIcon(tile) {
+      if (tile.customIcon) return null; // Custom Emoji hat Vorrang
+      const type = tile.type;
+
+      const icons = {
+        clock: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="cBg" cx="35%" cy="30%" r="65%"><stop offset="0%" stop-color="#7b9fff"/><stop offset="100%" stop-color="#3a4fd4"/></radialGradient>
+            <radialGradient id="cGlass" cx="30%" cy="20%" r="60%"><stop offset="0%" stop-color="rgba(255,255,255,0.5)"/><stop offset="100%" stop-color="rgba(255,255,255,0.05)"/></radialGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#cBg)"/>
+          <rect width="64" height="64" rx="16" fill="url(#cGlass)"/>
+          <circle cx="32" cy="32" r="18" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+          <circle cx="32" cy="32" r="2.5" fill="white"/>
+          <line x1="32" y1="32" x2="32" y2="19" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="32" y1="32" x2="41" y2="37" stroke="rgba(255,255,255,0.8)" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="32" cy="16" r="1.5" fill="rgba(255,255,255,0.6)"/>
+          <circle cx="48" cy="32" r="1.5" fill="rgba(255,255,255,0.6)"/>
+          <circle cx="32" cy="48" r="1.5" fill="rgba(255,255,255,0.6)"/>
+          <circle cx="16" cy="32" r="1.5" fill="rgba(255,255,255,0.6)"/>
+          <ellipse cx="28" cy="18" rx="6" ry="3" fill="rgba(255,255,255,0.2)"/>
+        </svg>`,
+
+        clockweather: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="cwBg" cx="30%" cy="25%" r="70%"><stop offset="0%" stop-color="#ff9f43"/><stop offset="100%" stop-color="#ee5a24"/></radialGradient>
+            <radialGradient id="cwG2" cx="70%" cy="70%" r="50%"><stop offset="0%" stop-color="#54a0ff"/><stop offset="100%" stop-color="#2e86de"/></radialGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#cwBg)"/>
+          <circle cx="44" cy="20" r="14" fill="url(#cwG2)" opacity="0.9"/>
+          <circle cx="20" cy="34" r="10" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+          <line x1="20" y1="34" x2="20" y2="26" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="20" y1="34" x2="26" y2="38" stroke="rgba(255,255,255,0.8)" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M30 52 Q32 46 38 46 Q34 40 40 38 Q46 36 48 42 Q52 40 54 44 Q56 48 52 50 Q50 54 44 54 Q36 56 30 52Z" fill="rgba(255,255,255,0.85)"/>
+          <ellipse cx="26" cy="22" rx="8" ry="4" fill="rgba(255,255,255,0.25)"/>
+        </svg>`,
+
+        weather: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="wBg" cx="25%" cy="20%" r="75%"><stop offset="0%" stop-color="#ffeaa7"/><stop offset="100%" stop-color="#fdcb6e"/></radialGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#wBg)"/>
+          <circle cx="26" cy="26" r="10" fill="#f9ca24" opacity="0.95"/>
+          <circle cx="26" cy="26" r="7" fill="#f0932b"/>
+          ${[0,45,90,135,180,225,270,315].map((a,i) => `<line x1="${26+Math.cos(a*Math.PI/180)*12}" y1="${26+Math.sin(a*Math.PI/180)*12}" x2="${26+Math.cos(a*Math.PI/180)*15}" y2="${26+Math.sin(a*Math.PI/180)*15}" stroke="#f9ca24" stroke-width="2" stroke-linecap="round"/>`).join('')}
+          <path d="M22 48 Q24 42 30 42 Q27 36 33 34 Q39 32 41 38 Q45 36 47 40 Q49 44 45 46 Q43 50 37 50 Q29 52 22 48Z" fill="rgba(255,255,255,0.9)"/>
+          <ellipse cx="22" cy="16" rx="7" ry="3.5" fill="rgba(255,255,255,0.3)"/>
+        </svg>`,
+
+        calendar: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="calBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a29bfe"/><stop offset="100%" stop-color="#6c5ce7"/></linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#calBg)"/>
+          <rect x="10" y="16" width="44" height="38" rx="8" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+          <rect x="10" y="16" width="44" height="14" rx="8" fill="rgba(255,255,255,0.25)"/>
+          <rect x="10" y="23" width="44" height="7" fill="rgba(255,255,255,0.25)"/>
+          <circle cx="22" cy="13" r="3" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>
+          <circle cx="42" cy="13" r="3" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>
+          ${[0,1,2,3,4,5,6].map(i => `<circle cx="${15+i*6}" cy="40" r="2" fill="rgba(255,255,255,${i===2?'0.9':'0.4'})"/>`).join('')}
+          ${[0,1,2,3,4,5,6].map(i => `<circle cx="${15+i*6}" cy="50" r="2" fill="rgba(255,255,255,0.4)"/>`).join('')}
+          <ellipse cx="22" cy="8" rx="6" ry="3" fill="rgba(255,255,255,0.2)"/>
+        </svg>`,
+
+        appointments: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="apBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fd79a8"/><stop offset="100%" stop-color="#e84393"/></linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#apBg)"/>
+          <rect x="12" y="14" width="40" height="36" rx="6" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+          <line x1="18" y1="24" x2="46" y2="24" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="18" y1="32" x2="46" y2="32" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="18" y1="40" x2="36" y2="40" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="48" cy="48" r="10" fill="#00b894"/>
+          <line x1="44" y1="48" x2="47" y2="51" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="47" y1="51" x2="52" y2="45" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <ellipse cx="20" cy="8" rx="7" ry="3" fill="rgba(255,255,255,0.2)"/>
+        </svg>`,
+
+        spotify: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="spBg" cx="30%" cy="25%" r="70%"><stop offset="0%" stop-color="#55efc4"/><stop offset="100%" stop-color="#00b894"/></radialGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#spBg)"/>
+          <circle cx="32" cy="32" r="18" fill="rgba(0,0,0,0.25)"/>
+          <path d="M20 26 Q32 22 44 26" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <path d="M22 32 Q32 28 42 32" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M24 38 Q32 35 40 38" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <ellipse cx="24" cy="18" rx="8" ry="4" fill="rgba(255,255,255,0.25)"/>
+        </svg>`,
+
+        youtube: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="ytBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff7675"/><stop offset="100%" stop-color="#d63031"/></linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#ytBg)"/>
+          <rect x="8" y="18" width="48" height="28" rx="8" fill="rgba(0,0,0,0.3)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+          <polygon points="26,24 26,40 44,32" fill="white" opacity="0.95"/>
+          <ellipse cx="22" cy="12" rx="8" ry="4" fill="rgba(255,255,255,0.2)"/>
+        </svg>`,
+
+        amazonmusic: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="amBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00cec9"/><stop offset="100%" stop-color="#0984e3"/></linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#amBg)"/>
+          <circle cx="32" cy="32" r="16" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+          <circle cx="32" cy="32" r="6" fill="rgba(255,255,255,0.3)" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+          <path d="M32 16 A16 16 0 0 1 48 32" stroke="rgba(255,255,255,0.8)" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <circle cx="40" cy="16" r="3" fill="white"/>
+          <ellipse cx="24" cy="14" rx="7" ry="3.5" fill="rgba(255,255,255,0.2)"/>
+        </svg>`,
+
+        recipe: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="reBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffeaa7"/><stop offset="100%" stop-color="#e17055"/></linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#reBg)"/>
+          <ellipse cx="32" cy="38" rx="20" ry="14" fill="rgba(0,0,0,0.2)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+          <ellipse cx="32" cy="36" rx="18" ry="12" fill="rgba(255,255,255,0.15)"/>
+          <path d="M22 18 Q22 10 26 10 Q26 14 24 18" stroke="rgba(255,255,255,0.7)" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M32 16 Q32 8 36 8 Q36 12 34 16" stroke="rgba(255,255,255,0.7)" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M42 18 Q42 10 46 10 Q46 14 44 18" stroke="rgba(255,255,255,0.7)" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <ellipse cx="22" cy="12" rx="7" ry="3" fill="rgba(255,255,255,0.2)"/>
+        </svg>`,
+
+        app: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="appBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a29bfe"/><stop offset="100%" stop-color="#fd79a8"/></linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#appBg)"/>
+          <rect x="10" y="10" width="18" height="18" rx="5" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+          <rect x="36" y="10" width="18" height="18" rx="5" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+          <rect x="10" y="36" width="18" height="18" rx="5" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+          <rect x="36" y="36" width="18" height="18" rx="5" fill="rgba(255,255,255,0.4)" stroke="rgba(255,255,255,0.7)" stroke-width="1"/>
+          <ellipse cx="20" cy="6" rx="7" ry="3" fill="rgba(255,255,255,0.2)"/>
+        </svg>`,
+      };
+
+      return icons[type] || null;
+    }
+    // ─────────────────────────────────────────────────────────
     function applyGlowColor(el, hex) {
       if (!hex) return;
       const r = parseInt(hex.slice(1,3),16);
       const g = parseInt(hex.slice(3,5),16);
       const b = parseInt(hex.slice(5,7),16);
-      el.style.setProperty('--tile-glow-color',     `rgba(${r},${g},${b},0.85)`);
-      el.style.setProperty('--tile-glow-color-dim',  `rgba(${r},${g},${b},0.25)`);
+      el.style.setProperty('--tile-glow-color',     `rgba(${r},${g},${b},0.9)`);
+      el.style.setProperty('--tile-glow-color-dim',  `rgba(${r},${g},${b},0.35)`);
+    }
+
+    // Glow-Breite als CSS Variable auf :root setzen
+    function applyGlowSize(size) {
+      const s = parseInt(size) || 2;
+      // s: 1=sehr schmal, 2=mittel, 3=breit, 4=sehr breit, 5=extrem
+      const spread1 = [5,10,18,28,42][s-1];
+      const blur1   = [12,22,38,58,80][s-1];
+      const spread2 = [12,22,36,55,80][s-1];
+      const blur2   = [30,55,90,130,180][s-1];
+      document.documentElement.style.setProperty('--gs1', spread1 + 'px');
+      document.documentElement.style.setProperty('--gb1', blur1 + 'px');
+      document.documentElement.style.setProperty('--gs2', spread2 + 'px');
+      document.documentElement.style.setProperty('--gb2', blur2 + 'px');
+      const labels = ['Sehr schmal','Mittel','Breit','Sehr breit','Extrem'];
+      const lbl = document.getElementById('globalGlowSizeLabel');
+      if (lbl) lbl.textContent = labels[s-1] || 'Mittel';
     }
 
     function applyGlowToAllTiles(glowEffect, glowColor) {
@@ -1671,6 +1870,13 @@
     const glowNames = {
       'none':'Aus','pulse':'Pulsieren','static':'Statisch','rainbow':'Farbwechsel','tap':'Antippen'
     };
+
+    // Glow-Breite Schieberegler — live
+    document.addEventListener('input', e => {
+      if (e.target.id !== 'globalGlowSize') return;
+      userConfig.globalGlowSize = parseInt(e.target.value);
+      applyGlowSize(e.target.value);
+    });
 
     // Globaler Glow Picker
     document.addEventListener('click', e => {
@@ -2546,6 +2752,8 @@
         // effect3D wird vom Live-Picker direkt in userConfig gesetzt — nicht vom hidden select überschreiben
         // userConfig.effect3D bleibt wie vom Picker gesetzt
         userConfig.globalGlowColor = document.getElementById('globalGlowColor').value;
+        userConfig.globalGlowSize  = parseInt(document.getElementById('globalGlowSize').value) || 2;
+        applyGlowSize(userConfig.globalGlowSize);
         applyAllSettings();
         saveToStorage();
         renderAll();
