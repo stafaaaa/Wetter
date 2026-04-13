@@ -2716,6 +2716,17 @@
       triggerTileFall();
     });
 
+    function restoreGlow(el) {
+      const tileId = parseInt(el.dataset.id);
+      const tile   = tiles.find(t => t.id === tileId);
+      const glow   = (tile && tile.glowEffect) ? tile.glowEffect : (userConfig.globalGlow || 'none');
+      const color  = (tile && tile.glowColor)  ? tile.glowColor  : (userConfig.globalGlowColor || '#0071e3');
+      const fx     = userConfig.effect3D || 'float-medium';
+      el.setAttribute('data-glow', glow);
+      el.setAttribute('data-fx', fx);
+      applyGlowColor(el, color);
+    }
+
     function triggerTileFall() {
       fallInProgress = true;
       const allTiles = [...document.querySelectorAll('.tile:not(.edit-mode)')];
@@ -2769,6 +2780,7 @@
               el.style.transform  = '';
               el.style.opacity    = '';
               el.style.transition = '';
+              restoreGlow(el);
             }, 950);
           }, 30);
         }, totalFall + i * 70);
@@ -2832,18 +2844,22 @@
 
     function endPush() {
       if (!pushTile) return;
-      // Gezogene Kachel zurück
       pushTile.style.transition = 'transform 0.5s cubic-bezier(0.2,0.9,0.3,1.2)';
       pushTile.style.transform  = '';
       pushTile.style.zIndex     = '';
+      const pt = pushTile;
       setTimeout(() => {
-        if (pushTile) { pushTile.style.transition = ''; pushTile = null; }
+        pt.style.transition = '';
+        restoreGlow(pt);
+        pushTile = null;
       }, 550);
-      // Alle anderen zurück
       document.querySelectorAll('.tile:not(.edit-mode)').forEach(el => {
         el.style.transition = 'transform 0.5s cubic-bezier(0.2,0.9,0.3,1.2)';
         el.style.transform  = '';
-        setTimeout(() => { el.style.transition = ''; }, 550);
+        setTimeout(() => {
+          el.style.transition = '';
+          restoreGlow(el);
+        }, 550);
       });
       pushStartPos = null;
     }
