@@ -1257,7 +1257,10 @@
 
         if (changed) {
           applyAllSettings();
-          renderAll();
+          // Nur rendern wenn noch nicht initial gerendert wurde
+          if (document.querySelectorAll('.tile').length > 0) {
+            renderAll();
+          }
         }
       }).catch(() => {});
     }
@@ -1379,11 +1382,8 @@
       if (!viewTiles.length) return;
       const totalRows = calcGridRowCount(viewTiles);
       if (totalRows < 1) return;
-      // Berechne verfügbare Höhe und teile durch Anzahl der Zeilen
-      const availH = grid.parentElement ? grid.parentElement.clientHeight : window.innerHeight;
-      const gap = 10;
-      const rowH = Math.floor((availH - gap * (totalRows - 1) - 8) / totalRows);
-      grid.style.gridTemplateRows = `repeat(${totalRows}, ${rowH}px)`;
+      // 1fr füllt die Höhe immer exakt — kein Wackeln
+      grid.style.gridTemplateRows = `repeat(${totalRows}, 1fr)`;
     }
 
     function calcGridRowCount(viewTiles) {
@@ -2881,8 +2881,6 @@
 
       // Bei Fenstergröße-Änderung Grid neu berechnen
       window.addEventListener('resize', () => renderAll());
-      // Nochmal nach kurzem Delay rendern (für Android Browser die langsam laden)
-      setTimeout(() => renderAll(), 300);
     }
 
     // ── IMMERSIVE FULLSCREEN ─────────────────────────────────────────
