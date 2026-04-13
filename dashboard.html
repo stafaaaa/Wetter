@@ -91,13 +91,13 @@
       display: none;
       flex: 1;
       min-height: 0;
-      overflow: visible;
+      overflow: hidden;
     }
     .view.active {
       display: flex;
       flex-direction: column;
       min-height: 0;
-      overflow: visible;
+      overflow: hidden;
     }
 
     /* ── NAV: komplett aus dem Fluss, schwebende Icons ── */
@@ -233,8 +233,9 @@
       gap: 10px;
       flex: 1;
       min-height: 0;
-      overflow: visible; /* Kacheln dürfen über den Rand schweben */
-      padding: 12px 4px 24px 4px; /* Platz für Schatten + Float-Bewegung */
+      overflow: hidden; /* verhindert Streifen */
+      padding: 20px 16px; /* Platz damit Glow nicht abgeschnitten wird */
+      margin: -8px; /* negativ damit Padding nicht Platz wegnimmt */
       align-content: stretch;
     }
 
@@ -251,15 +252,89 @@
       color: var(--text-primary);
       background-size: cover;
       background-position: center;
-      overflow: hidden;
+      overflow: visible; /* Glow muss nach außen sichtbar sein */
       min-height: 0;
       transform-style: preserve-3d;
       transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1),
                   box-shadow 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
       will-change: transform, box-shadow;
-      /* Standard-Schatten wenn kein Effekt aktiv */
       box-shadow: 0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
     }
+    /* Innerer Clip damit Inhalte nicht rausragen */
+    .tile-content, .tile-header {
+      overflow: hidden;
+      border-radius: 24px;
+    }
+
+    /* ── LIVE HINTERGRÜNDE ───────────────────────────────────── */
+
+    /* Basis: Canvas-Element füllt die Kachel */
+    .tile-livebg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .tile-livebg canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* AURORA — fließende Farbwellen */
+    @keyframes aurora1 { 0%,100%{transform:translate(-20%,-20%) scale(1.4) rotate(0deg)} 50%{transform:translate(20%,10%) scale(1.6) rotate(20deg)} }
+    @keyframes aurora2 { 0%,100%{transform:translate(20%,20%) scale(1.5) rotate(0deg)} 50%{transform:translate(-15%,-10%) scale(1.3) rotate(-15deg)} }
+    @keyframes aurora3 { 0%,100%{transform:translate(0%,-30%) scale(1.6) rotate(10deg)} 50%{transform:translate(10%,20%) scale(1.4) rotate(-10deg)} }
+    .livebg-aurora { background: #0a0020; }
+    .livebg-aurora::before, .livebg-aurora::after, .livebg-aurora .a3 {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0.7;
+    }
+    .livebg-aurora::before { width:80%; height:80%; background: radial-gradient(circle, #00ffcc, transparent); animation: aurora1 6s ease-in-out infinite; }
+    .livebg-aurora::after  { width:70%; height:70%; background: radial-gradient(circle, #ff00aa, transparent); animation: aurora2 8s ease-in-out infinite; }
+
+    /* FEUER */
+    @keyframes fireWave {
+      0%,100% { transform: translateY(0%) scaleX(1); opacity:0.9; }
+      33% { transform: translateY(-8%) scaleX(1.05); opacity:1; }
+      66% { transform: translateY(-4%) scaleX(0.95); opacity:0.85; }
+    }
+    @keyframes fireRise { 0%{transform:translateY(100%) scaleX(1.2)} 100%{transform:translateY(-120%) scaleX(0.6) rotate(5deg); opacity:0} }
+    .livebg-fire { background: linear-gradient(180deg, #1a0000 0%, #3d0000 40%, #8b1a00 70%, #ff4500 100%); }
+
+    /* OZEAN */
+    @keyframes wave1 { 0%,100%{transform:translateX(-25%) translateY(0px)} 50%{transform:translateX(25%) translateY(-12px)} }
+    @keyframes wave2 { 0%,100%{transform:translateX(25%) translateY(0px)} 50%{transform:translateX(-25%) translateY(8px)} }
+    .livebg-ocean { background: linear-gradient(180deg, #001a33 0%, #003366 40%, #0066cc 100%); }
+
+    /* MATRIX */
+    @keyframes matrixDrop { 0%{transform:translateY(-100%); opacity:1} 80%{opacity:0.6} 100%{transform:translateY(400%); opacity:0} }
+    .livebg-matrix { background: #000a00; }
+
+    /* BLASEN */
+    @keyframes bubbleRise {
+      0%   { transform: translateY(100%) translateX(0px) scale(0.5); opacity:0; }
+      20%  { opacity: 0.7; }
+      80%  { opacity: 0.4; }
+      100% { transform: translateY(-120%) translateX(20px) scale(1.2); opacity:0; }
+    }
+    .livebg-bubbles { background: linear-gradient(135deg, #001a2e, #003355); }
+
+    /* PULS */
+    @keyframes pulseRing {
+      0%   { transform: scale(0.3); opacity: 0.8; }
+      100% { transform: scale(3); opacity: 0; }
+    }
+    .livebg-pulse { background: radial-gradient(circle at center, #1a0033, #000); }
+
+    /* ─────────────────────────────────────────────────────────── */
 
     /* ── DOPPELTIPP FALL-EFFEKT ──────────────────────────────── */
     @keyframes tileRiseUp {
@@ -270,93 +345,86 @@
     }
     /* ─────────────────────────────────────────────────────────── */
 
+    /* ── LED RAHMEN EFFEKTE ──────────────────────────────────── */
+
     /* Pulsierend */
     @keyframes glowPulse {
-      0%,100% { box-shadow: 0 0 8px 2px var(--glow-color), 0 0 20px 4px var(--glow-color-dim), 0 4px 16px rgba(0,0,0,0.08); }
-      50%      { box-shadow: 0 0 20px 6px var(--glow-color), 0 0 50px 12px var(--glow-color-dim), 0 4px 16px rgba(0,0,0,0.08); }
+      0%,100% { box-shadow:
+        0 0 var(--gb1,20px) var(--gs1,8px) var(--tile-glow-color, rgba(0,113,227,1)),
+        0 0 var(--gb2,50px) var(--gs2,18px) var(--tile-glow-color-dim, rgba(0,113,227,0.7)),
+        0 0 calc(var(--gb2,50px) * 2) calc(var(--gs2,18px) * 2) var(--tile-glow-color-dim, rgba(0,113,227,0.35)),
+        inset 0 0 25px 5px var(--tile-glow-color-dim, rgba(0,113,227,0.2));
+      }
+      50% { box-shadow:
+        0 0 calc(var(--gb1,20px) * 2.5) calc(var(--gs1,8px) * 2.5) var(--tile-glow-color, rgba(0,113,227,1)),
+        0 0 calc(var(--gb2,50px) * 2) calc(var(--gs2,18px) * 2) var(--tile-glow-color-dim, rgba(0,113,227,0.8)),
+        0 0 calc(var(--gb2,50px) * 3.5) calc(var(--gs2,18px) * 3) var(--tile-glow-color-dim, rgba(0,113,227,0.4)),
+        inset 0 0 50px 10px var(--tile-glow-color-dim, rgba(0,113,227,0.3));
+      }
     }
+
     /* Farbwechsel */
     @keyframes glowRainbow {
-      0%   { --glow-color: rgba(255,0,100,0.9);   --glow-color-dim: rgba(255,0,100,0.3);   box-shadow: 0 0 14px 4px rgba(255,0,100,0.9),   0 0 40px 10px rgba(255,0,100,0.3); }
-      16%  { --glow-color: rgba(255,150,0,0.9);   --glow-color-dim: rgba(255,150,0,0.3);   box-shadow: 0 0 14px 4px rgba(255,150,0,0.9),   0 0 40px 10px rgba(255,150,0,0.3); }
-      33%  { --glow-color: rgba(0,255,100,0.9);   --glow-color-dim: rgba(0,255,100,0.3);   box-shadow: 0 0 14px 4px rgba(0,255,100,0.9),   0 0 40px 10px rgba(0,255,100,0.3); }
-      50%  { --glow-color: rgba(0,200,255,0.9);   --glow-color-dim: rgba(0,200,255,0.3);   box-shadow: 0 0 14px 4px rgba(0,200,255,0.9),   0 0 40px 10px rgba(0,200,255,0.3); }
-      66%  { --glow-color: rgba(100,0,255,0.9);   --glow-color-dim: rgba(100,0,255,0.3);   box-shadow: 0 0 14px 4px rgba(100,0,255,0.9),   0 0 40px 10px rgba(100,0,255,0.3); }
-      83%  { --glow-color: rgba(255,0,200,0.9);   --glow-color-dim: rgba(255,0,200,0.3);   box-shadow: 0 0 14px 4px rgba(255,0,200,0.9),   0 0 40px 10px rgba(255,0,200,0.3); }
-      100% { --glow-color: rgba(255,0,100,0.9);   --glow-color-dim: rgba(255,0,100,0.3);   box-shadow: 0 0 14px 4px rgba(255,0,100,0.9),   0 0 40px 10px rgba(255,0,100,0.3); }
+      0%   { border-color: rgba(255,0,100,1)  !important; box-shadow: 0 0 25px 10px rgba(255,0,100,1), 0 0 70px 25px rgba(255,0,100,0.7), 0 0 120px 40px rgba(255,0,100,0.35), inset 0 0 40px 8px rgba(255,0,100,0.25); }
+      16%  { border-color: rgba(255,150,0,1)  !important; box-shadow: 0 0 25px 10px rgba(255,150,0,1), 0 0 70px 25px rgba(255,150,0,0.7), 0 0 120px 40px rgba(255,150,0,0.35), inset 0 0 40px 8px rgba(255,150,0,0.25); }
+      33%  { border-color: rgba(0,255,100,1)  !important; box-shadow: 0 0 25px 10px rgba(0,255,100,1), 0 0 70px 25px rgba(0,255,100,0.7), 0 0 120px 40px rgba(0,255,100,0.35), inset 0 0 40px 8px rgba(0,255,100,0.25); }
+      50%  { border-color: rgba(0,200,255,1)  !important; box-shadow: 0 0 25px 10px rgba(0,200,255,1), 0 0 70px 25px rgba(0,200,255,0.7), 0 0 120px 40px rgba(0,200,255,0.35), inset 0 0 40px 8px rgba(0,200,255,0.25); }
+      66%  { border-color: rgba(150,0,255,1)  !important; box-shadow: 0 0 25px 10px rgba(150,0,255,1), 0 0 70px 25px rgba(150,0,255,0.7), 0 0 120px 40px rgba(150,0,255,0.35), inset 0 0 40px 8px rgba(150,0,255,0.25); }
+      83%  { border-color: rgba(255,0,200,1)  !important; box-shadow: 0 0 25px 10px rgba(255,0,200,1), 0 0 70px 25px rgba(255,0,200,0.7), 0 0 120px 40px rgba(255,0,200,0.35), inset 0 0 40px 8px rgba(255,0,200,0.25); }
+      100% { border-color: rgba(255,0,100,1)  !important; box-shadow: 0 0 25px 10px rgba(255,0,100,1), 0 0 70px 25px rgba(255,0,100,0.7), 0 0 120px 40px rgba(255,0,100,0.35), inset 0 0 40px 8px rgba(255,0,100,0.25); }
     }
+
     /* Antippen */
     @keyframes glowTap {
-      0%   { box-shadow: 0 0 30px 10px var(--glow-color), 0 0 80px 20px var(--glow-color-dim); }
-      100% { box-shadow: 0 0 8px 2px var(--glow-color), 0 0 20px 4px var(--glow-color-dim); }
+      0%   { box-shadow: 0 0 60px 22px var(--tile-glow-color, rgba(0,113,227,1)), 0 0 130px 45px var(--tile-glow-color-dim, rgba(0,113,227,0.7)), inset 0 0 70px 15px var(--tile-glow-color-dim, rgba(0,113,227,0.4)); }
+      100% { box-shadow: 0 0 var(--gb1,20px) var(--gs1,8px) var(--tile-glow-color, rgba(0,113,227,0.9)), 0 0 var(--gb2,50px) var(--gs2,18px) var(--tile-glow-color-dim, rgba(0,113,227,0.4)); }
     }
 
     /* Glow Klassen */
     .tile[data-glow="pulse"] {
-      --glow-color: var(--tile-glow-color, rgba(0,113,227,0.8));
-      --glow-color-dim: var(--tile-glow-color-dim, rgba(0,113,227,0.25));
-      animation: glowPulse 2.5s ease-in-out infinite !important;
-      border: 1px solid var(--tile-glow-color, rgba(0,113,227,0.6)) !important;
+      border: 3px solid var(--tile-glow-color, rgba(0,113,227,1)) !important;
+      animation: glowPulse 2s ease-in-out infinite !important;
     }
     .tile[data-glow="static"] {
-      --glow-color: var(--tile-glow-color, rgba(0,113,227,0.8));
-      --glow-color-dim: var(--tile-glow-color-dim, rgba(0,113,227,0.25));
-      box-shadow: 0 0 14px 4px var(--glow-color), 0 0 40px 10px var(--glow-color-dim) !important;
-      border: 1px solid var(--tile-glow-color, rgba(0,113,227,0.6)) !important;
+      border: 3px solid var(--tile-glow-color, rgba(0,113,227,1)) !important;
+      box-shadow:
+        0 0 var(--gb1,20px) var(--gs1,8px) var(--tile-glow-color, rgba(0,113,227,1)),
+        0 0 var(--gb2,50px) var(--gs2,18px) var(--tile-glow-color-dim, rgba(0,113,227,0.7)),
+        0 0 calc(var(--gb2,50px) * 2) calc(var(--gs2,18px) * 1.5) var(--tile-glow-color-dim, rgba(0,113,227,0.35)),
+        inset 0 0 30px 6px var(--tile-glow-color-dim, rgba(0,113,227,0.25)) !important;
     }
     .tile[data-glow="rainbow"] {
-      animation: glowRainbow 4s linear infinite !important;
-      border: 1px solid rgba(255,100,100,0.6) !important;
+      border: 3px solid rgba(255,0,100,1) !important;
+      animation: glowRainbow 3s linear infinite !important;
     }
     .tile[data-glow="tap"] {
-      --glow-color: var(--tile-glow-color, rgba(0,113,227,0.8));
-      --glow-color-dim: var(--tile-glow-color-dim, rgba(0,113,227,0.25));
-      box-shadow: 0 0 8px 2px var(--glow-color), 0 0 20px 4px var(--glow-color-dim) !important;
-      border: 1px solid var(--tile-glow-color, rgba(0,113,227,0.5)) !important;
-      transition: box-shadow 0.1s !important;
+      border: 3px solid var(--tile-glow-color, rgba(0,113,227,1)) !important;
+      box-shadow:
+        0 0 var(--gb1,20px) var(--gs1,8px) var(--tile-glow-color, rgba(0,113,227,1)),
+        0 0 var(--gb2,50px) var(--gs2,18px) var(--tile-glow-color-dim, rgba(0,113,227,0.6)) !important;
     }
     .tile[data-glow="tap"]:active {
       animation: glowTap 0.8s ease-out forwards !important;
     }
-    .tile[data-glow="none"] {
-      /* kein Glow */
-    }
+    .tile[data-glow="none"] { /* kein Glow */ }
     /* ─────────────────────────────────────────────────────────── */
 
 
 
-    /* SCHWEBEN */
-    .tile:not(.edit-mode)[data-fx="float-low"] {
-      transform: translateY(-6px) !important;
-      box-shadow: 0 6px 0 rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.85) !important;
-    }
-    .tile:not(.edit-mode)[data-fx="float-medium"] {
-      transform: translateY(-12px) !important;
-      box-shadow: 0 12px 0 rgba(0,0,0,0.10), 0 20px 44px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.9) !important;
-    }
-    .tile:not(.edit-mode)[data-fx="float-high"] {
-      transform: translateY(-20px) !important;
-      box-shadow: 0 20px 0 rgba(0,0,0,0.12), 0 32px 64px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.95) !important;
-    }
+    /* SCHWEBEN — kein box-shadow, damit Glow nicht überschrieben wird */
+    .tile:not(.edit-mode)[data-fx="float-low"]    { transform: translateY(-6px) !important; }
+    .tile:not(.edit-mode)[data-fx="float-medium"] { transform: translateY(-12px) !important; }
+    .tile:not(.edit-mode)[data-fx="float-high"]   { transform: translateY(-20px) !important; }
 
     /* KIPPEN */
-    .tile:not(.edit-mode)[data-fx="tilt-low"] {
-      transform: perspective(800px) rotateX(4deg) rotateY(-2deg) translateZ(8px) !important;
-      box-shadow: 0 12px 32px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.85) !important;
-    }
-    .tile:not(.edit-mode)[data-fx="tilt-medium"] {
-      transform: perspective(600px) rotateX(8deg) rotateY(-4deg) translateZ(16px) !important;
-      box-shadow: 0 20px 48px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.9) !important;
-    }
-    .tile:not(.edit-mode)[data-fx="tilt-high"] {
-      transform: perspective(400px) rotateX(14deg) rotateY(-7deg) translateZ(24px) !important;
-      box-shadow: 0 32px 64px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.95) !important;
-    }
+    .tile:not(.edit-mode)[data-fx="tilt-low"]    { transform: perspective(800px) rotateX(4deg)  rotateY(-2deg) translateZ(8px)  !important; }
+    .tile:not(.edit-mode)[data-fx="tilt-medium"] { transform: perspective(600px) rotateX(8deg)  rotateY(-4deg) translateZ(16px) !important; }
+    .tile:not(.edit-mode)[data-fx="tilt-high"]   { transform: perspective(400px) rotateX(14deg) rotateY(-7deg) translateZ(24px) !important; }
 
     /* PULSIEREN */
     @keyframes fxPulse {
-      0%,100% { transform: scale(1.00); box-shadow: 0 4px 16px rgba(0,0,0,0.10); }
-      50%      { transform: scale(1.06); box-shadow: 0 20px 50px rgba(0,0,0,0.22); }
+      0%,100% { transform: scale(1.00); }
+      50%      { transform: scale(1.06); }
     }
     .tile:not(.edit-mode)[data-fx="pulse"] {
       animation: fxPulse 2s ease-in-out infinite !important;
@@ -365,8 +433,8 @@
 
     /* PENDELN */
     @keyframes fxSwing {
-      0%,100% { transform: translateY(-4px) rotate(-2deg); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
-      50%      { transform: translateY(-14px) rotate(2deg); box-shadow: 0 18px 44px rgba(0,0,0,0.20); }
+      0%,100% { transform: translateY(-4px) rotate(-2deg); }
+      50%      { transform: translateY(-14px) rotate(2deg); }
     }
     .tile:not(.edit-mode)[data-fx="swing"] {
       animation: fxSwing 2.5s ease-in-out infinite !important;
@@ -385,14 +453,10 @@
     .tile:not(.edit-mode)[data-fx="wobble"] {
       animation: fxWobble 3s ease-in-out infinite !important;
       transition: none !important;
-      box-shadow: 0 14px 40px rgba(0,0,0,0.18);
     }
 
     /* KEIN EFFEKT */
-    .tile:not(.edit-mode)[data-fx="none"] {
-      transform: none;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    }
+    .tile:not(.edit-mode)[data-fx="none"] { transform: none; }
 
     .tile.edit-mode {
       border: 2px dashed var(--accent-blue) !important;
@@ -464,8 +528,10 @@
     /* ── TILE BIG 3D ICON ── */
     .tile-big-icon {
       position: absolute;
-      bottom: 10px;
-      right: 12px;
+      bottom: 8px;
+      right: 10px;
+      width: clamp(44px, 5vw, 64px);
+      height: clamp(44px, 5vw, 64px);
       font-size: clamp(2rem, 4vw, 3.5rem);
       line-height: 1;
       pointer-events: none;
@@ -473,6 +539,14 @@
       animation: iconFloat 3s ease-in-out infinite;
       will-change: transform;
       user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tile-big-icon svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
     }
     @keyframes iconFloat {
       0%   { transform: translateY(0px);
@@ -866,6 +940,11 @@
         <input type="color" id="globalGlowColor" value="#0071e3" style="width:60px;height:40px;border-radius:12px;border:1px solid var(--card-border);">
         <span id="globalGlowLabel" style="font-size:0.85rem;color:var(--text-secondary);">Aktiv: Aus</span>
       </div>
+      <div style="display:flex;gap:12px;align-items:center;margin-top:10px;">
+        <label style="font-size:0.85rem;color:var(--text-secondary);white-space:nowrap;">💡 Breite:</label>
+        <input type="range" id="globalGlowSize" min="1" max="5" step="1" value="3" style="flex:1;">
+        <span id="globalGlowSizeLabel" style="font-size:0.85rem;color:var(--text-secondary);min-width:30px;">Mittel</span>
+      </div>
     </div>
     <div class="input-group"><label>🎨 Akzentfarbe</label><div class="color-row"><input type="color" id="globalAccentColor" value="#0071e3"><input type="text" id="globalAccentColorText"></div></div>
     <div class="input-group"><label>✏️ Schriftfarbe</label><div class="color-row"><input type="color" id="globalTextColor" value="#1d1d1f"><input type="text" id="globalTextColorText"></div></div>
@@ -897,7 +976,53 @@
     </div>
 
     <div class="input-group"><label>Hintergrundfarbe</label><div class="color-row"><input type="color" id="tileColor"><input type="text" id="tileColorText"></div></div>
-    <div class="input-group"><label>Hintergrundbild</label><div class="flex-row"><button class="app-btn" id="uploadTileBgBtn">📸 Bild</button><button class="app-btn" id="removeTileBgBtn">🗑️</button></div></div>
+    <div class="input-group">
+      <label>Hintergrundbild</label>
+      <div class="flex-row" style="margin-bottom:10px;">
+        <button class="app-btn" id="uploadTileBgBtn">📸 Bild / GIF</button>
+        <button class="app-btn" id="removeTileBgBtn">🗑️</button>
+      </div>
+      <!-- Skalierung -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        <button class="app-btn bgfit-btn" data-fit="cover"   style="flex:1;font-size:0.8rem;">⬛ Füllen</button>
+        <button class="app-btn bgfit-btn" data-fit="contain" style="flex:1;font-size:0.8rem;">🔲 Anpassen</button>
+        <button class="app-btn bgfit-btn" data-fit="fill"    style="flex:1;font-size:0.8rem;">⤢ Strecken</button>
+        <button class="app-btn bgfit-btn" data-fit="none"    style="flex:1;font-size:0.8rem;">1:1 Original</button>
+      </div>
+      <!-- Zoom -->
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+        <label style="font-size:0.85rem;color:var(--text-secondary);white-space:nowrap;">🔍 Zoom:</label>
+        <input type="range" id="tileBgZoom" min="50" max="200" step="5" value="100" style="flex:1;">
+        <span id="tileBgZoomLabel" style="font-size:0.85rem;color:var(--text-secondary);min-width:40px;">100%</span>
+      </div>
+      <!-- Position X -->
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+        <label style="font-size:0.85rem;color:var(--text-secondary);white-space:nowrap;">↔ Links/Rechts:</label>
+        <input type="range" id="tileBgX" min="-100" max="100" step="5" value="0" style="flex:1;">
+        <span id="tileBgXLabel" style="font-size:0.85rem;color:var(--text-secondary);min-width:40px;">0%</span>
+      </div>
+      <!-- Position Y -->
+      <div style="display:flex;gap:10px;align-items:center;">
+        <label style="font-size:0.85rem;color:var(--text-secondary);white-space:nowrap;">↕ Oben/Unten:</label>
+        <input type="range" id="tileBgY" min="-100" max="100" step="5" value="0" style="flex:1;">
+        <span id="tileBgYLabel" style="font-size:0.85rem;color:var(--text-secondary);min-width:40px;">0%</span>
+      </div>
+    </div>
+
+    <!-- LIVE HINTERGRUND -->
+    <div class="input-group">
+      <label>✨ Live Hintergrund</label>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+        <button class="app-btn livebg-btn" data-livebg="none"     style="height:52px;font-size:1.3rem;" title="Keiner">⬜</button>
+        <button class="app-btn livebg-btn" data-livebg="stars"    style="height:52px;font-size:1.3rem;background:#0a0a1a;" title="Sterne">⭐</button>
+        <button class="app-btn livebg-btn" data-livebg="aurora"   style="height:52px;font-size:1.3rem;" title="Aurora">🌈</button>
+        <button class="app-btn livebg-btn" data-livebg="fire"     style="height:52px;font-size:1.3rem;" title="Feuer">🔥</button>
+        <button class="app-btn livebg-btn" data-livebg="ocean"    style="height:52px;font-size:1.3rem;" title="Ozean">🌊</button>
+        <button class="app-btn livebg-btn" data-livebg="matrix"   style="height:52px;font-size:1.3rem;background:#001a00;" title="Matrix">💻</button>
+        <button class="app-btn livebg-btn" data-livebg="bubbles"  style="height:52px;font-size:1.3rem;" title="Blasen">🫧</button>
+        <button class="app-btn livebg-btn" data-livebg="pulse"    style="height:52px;font-size:1.3rem;" title="Puls">💓</button>
+      </div>
+    </div>
     <div class="input-group"><label>Transparenz</label><input type="range" id="tileOpacity" min="0.1" max="1.0" step="0.05" value="0.75"><span id="tileOpacityVal">0.75</span></div>
 
     <!-- PRO KACHEL LEUCHT-RAHMEN -->
@@ -991,12 +1116,13 @@
       recipeUrl: 'https://www.chefkoch.de/',
       appointmentsText: '',
       globalAccent: '#0071e3', globalTextColor: '#1d1d1f', theme: 'light', fontSize: 'medium',
-      tileOpacity: 0.75, dashboardBgImage: '', dashboardBgColor: '#f5f5f7',
+      tileOpacity: 0.75, dashboardBgImage: '', dashboardBgColor: '#0a0a0a',
       menuBtnColor: '#ffffff',
       effect3D: 'float-medium',
-      layoutTheme: 'apple-light',
-      globalGlow: 'none',
+      layoutTheme: 'apple-dark',
+      globalGlow: 'rainbow',
       globalGlowColor: '#0071e3',
+      globalGlowSize: 3,
       onlineImageUrls: '',
       driveUrls: '',
       photosUrls: '',
@@ -1336,6 +1462,7 @@
       applyLayoutTheme(userConfig.layoutTheme || 'apple-light');
       document.documentElement.style.setProperty('--menu-btn-bg', userConfig.menuBtnColor);
       document.documentElement.style.setProperty('--accent-blue', userConfig.globalAccent);
+      applyGlowSize(userConfig.globalGlowSize || 2);
       // 3D Effekt auf alle Tiles anwenden
       const fx = userConfig.effect3D || 'float-medium';
       document.querySelectorAll('.tile').forEach(el => {
@@ -1450,22 +1577,34 @@
       const glowColor  = tile.glowColor  || userConfig.globalGlowColor || '#0071e3';
       div.setAttribute('data-glow', glowEffect);
       applyGlowColor(div, glowColor);
+      // Live-Hintergrund starten (nach DOM-Einfügung via setTimeout)
+      if (tile.liveBg && tile.liveBg !== 'none') {
+        setTimeout(() => startLiveBg(div, tile.liveBg), 50);
+      }
       div.style.gridColumn = `span ${tile.colSpan || 2}`;
       div.style.gridRow = `span ${tile.rowSpan || 2}`;
       div.setAttribute('draggable', editMode);
 
       const bgColor = tile.color || '#ffffff';
       const opacity = tile.opacity !== undefined ? tile.opacity : userConfig.tileOpacity;
+      const bgFit  = tile.bgFit  || 'cover';
+      const bgZoom = tile.bgZoom || 100;
+      const bgX    = tile.bgX    || 0;
+      const bgY    = tile.bgY    || 0;
+      const zoomScale = bgZoom / 100;
+
       if (tile.bgImage) {
-        div.style.backgroundImage = `url('${tile.bgImage}')`;
+        const bgImg = document.createElement('img');
+        bgImg.src = tile.bgImage;
+        bgImg.style.cssText = `position:absolute;inset:0;width:100%;height:100%;object-fit:${bgFit};transform:scale(${zoomScale}) translate(${bgX}%, ${bgY}%);transform-origin:center;border-radius:inherit;z-index:0;pointer-events:none;`;
+        div.appendChild(bgImg);
         div.style.backgroundColor = 'transparent';
+        div.style.backgroundImage = 'none';
         div.style.opacity = '1';
       } else {
         div.style.backgroundImage = 'none';
-        // Use rgba for background so backdrop-filter still works,
-        // but ALSO set element opacity so change is clearly visible
         div.style.backgroundColor = hexToRgba(bgColor, opacity);
-        div.style.opacity = String(0.3 + opacity * 0.7); // maps 0.1→0.37, 1.0→1.0
+        div.style.opacity = String(0.3 + opacity * 0.7);
       }
       div.style.color = userConfig.globalTextColor;
 
@@ -1515,7 +1654,12 @@
       if (tile.type !== 'slideshow') {
         const bigIcon = document.createElement('div');
         bigIcon.className = 'tile-big-icon';
-        bigIcon.textContent = getBigIconForTile(tile);
+        const svgIcon = getModernIcon(tile);
+        if (svgIcon) {
+          bigIcon.innerHTML = svgIcon;
+        } else {
+          bigIcon.textContent = getBigIconForTile(tile);
+        }
         div.appendChild(bigIcon);
       }
 
@@ -1644,16 +1788,496 @@
       });
       const glbl = document.getElementById('globalGlowLabel');
       if (glbl) glbl.textContent = 'Aktiv: ' + (glowNames[gg] || gg);
+      // Glow-Breite laden
+      const gs = document.getElementById('globalGlowSize');
+      if (gs) { gs.value = userConfig.globalGlowSize || 2; applyGlowSize(gs.value); }
     }
 
-    // ── GLOW HELPER ─────────────────────────────────────────────
+    // ── LIVE HINTERGRÜNDE ─────────────────────────────────────
+    const liveBgAnimations = {}; // tileId → animationFrameId
+
+    function startLiveBg(el, type) {
+      const tileId = el.dataset.id;
+      // Alten entfernen
+      stopLiveBg(el);
+      if (!type || type === 'none') return;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'tile-livebg';
+      wrap.dataset.livebgType = type;
+
+      if (type === 'stars') {
+        const canvas = document.createElement('canvas');
+        wrap.appendChild(canvas);
+        el.insertBefore(wrap, el.firstChild);
+        const ctx = canvas.getContext('2d');
+        const stars = Array.from({length:80}, () => ({
+          x: Math.random(), y: Math.random(),
+          r: Math.random()*1.5+0.3,
+          speed: Math.random()*0.0003+0.0001,
+          opacity: Math.random()
+        }));
+        function drawStars() {
+          canvas.width = el.offsetWidth; canvas.height = el.offsetHeight;
+          const w = canvas.width, h = canvas.height;
+          ctx.fillStyle = '#030318';
+          ctx.fillRect(0,0,w,h);
+          stars.forEach(s => {
+            s.opacity += s.speed * 20 * (Math.random()>0.5?1:-1);
+            s.opacity = Math.max(0.1, Math.min(1, s.opacity));
+            ctx.beginPath();
+            ctx.arc(s.x*w, s.y*h, s.r, 0, Math.PI*2);
+            ctx.fillStyle = `rgba(255,255,255,${s.opacity})`;
+            ctx.fill();
+          });
+          liveBgAnimations[tileId] = requestAnimationFrame(drawStars);
+        }
+        drawStars();
+
+      } else if (type === 'fire') {
+        const canvas = document.createElement('canvas');
+        wrap.appendChild(canvas);
+        el.insertBefore(wrap, el.firstChild);
+        const ctx = canvas.getContext('2d');
+        const particles = Array.from({length:40}, () => ({
+          x: Math.random(), y: 1+Math.random()*0.3,
+          vx: (Math.random()-0.5)*0.01, vy: -(Math.random()*0.015+0.008),
+          life: Math.random(), maxLife: Math.random()*0.6+0.4,
+          size: Math.random()*12+4
+        }));
+        function drawFire() {
+          canvas.width = el.offsetWidth; canvas.height = el.offsetHeight;
+          const w = canvas.width, h = canvas.height;
+          ctx.fillStyle = 'rgba(10,0,0,0.35)';
+          ctx.fillRect(0,0,w,h);
+          particles.forEach(p => {
+            p.life += 0.018;
+            if (p.life > p.maxLife) {
+              p.x = Math.random(); p.y = 1.1;
+              p.vx = (Math.random()-0.5)*0.01;
+              p.vy = -(Math.random()*0.015+0.008);
+              p.life = 0; p.size = Math.random()*12+4;
+            }
+            p.x += p.vx; p.y += p.vy;
+            const t = p.life/p.maxLife;
+            const r = Math.floor(255);
+            const g = Math.floor(200*(1-t));
+            const b = 0;
+            const a = (1-t)*0.8;
+            const grad = ctx.createRadialGradient(p.x*w, p.y*h, 0, p.x*w, p.y*h, p.size*(1-t*0.5));
+            grad.addColorStop(0, `rgba(${r},${g},${b},${a})`);
+            grad.addColorStop(1, `rgba(255,50,0,0)`);
+            ctx.beginPath();
+            ctx.arc(p.x*w, p.y*h, p.size*(1-t*0.5), 0, Math.PI*2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+          });
+          liveBgAnimations[tileId] = requestAnimationFrame(drawFire);
+        }
+        drawFire();
+
+      } else if (type === 'aurora') {
+        const canvas = document.createElement('canvas');
+        wrap.appendChild(canvas);
+        el.insertBefore(wrap, el.firstChild);
+        const ctx = canvas.getContext('2d');
+        let t = 0;
+        const colors = ['#00ffcc','#ff00aa','#0088ff','#ffaa00'];
+        function drawAurora() {
+          canvas.width = el.offsetWidth; canvas.height = el.offsetHeight;
+          const w = canvas.width, h = canvas.height;
+          ctx.fillStyle = '#080018';
+          ctx.fillRect(0,0,w,h);
+          colors.forEach((c, i) => {
+            const x = w*(0.3 + 0.4*Math.sin(t*0.7+i*1.5));
+            const y = h*(0.3 + 0.3*Math.cos(t*0.5+i*2));
+            const grad = ctx.createRadialGradient(x,y,0,x,y,w*0.6);
+            grad.addColorStop(0, c.replace(')', ',0.35)').replace('#','rgba(').replace(/([0-9a-f]{2})/gi, (m,p)=>parseInt(p,16)+','));
+            grad.addColorStop(0, `${c}55`);
+            grad.addColorStop(1, 'transparent');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0,0,w,h);
+          });
+          t += 0.012;
+          liveBgAnimations[tileId] = requestAnimationFrame(drawAurora);
+        }
+        drawAurora();
+
+      } else if (type === 'ocean') {
+        const canvas = document.createElement('canvas');
+        wrap.appendChild(canvas);
+        el.insertBefore(wrap, el.firstChild);
+        const ctx = canvas.getContext('2d');
+        let t = 0;
+        function drawOcean() {
+          canvas.width = el.offsetWidth; canvas.height = el.offsetHeight;
+          const w = canvas.width, h = canvas.height;
+          ctx.fillStyle = '#001a33';
+          ctx.fillRect(0,0,w,h);
+          for (let i=3; i>=0; i--) {
+            const yOff = h*(0.4+i*0.15) + Math.sin(t+i)*h*0.04;
+            ctx.beginPath();
+            ctx.moveTo(0, yOff);
+            for (let x=0; x<=w; x+=4) {
+              const y = yOff + Math.sin((x/w)*Math.PI*3 + t + i) * h*0.05;
+              ctx.lineTo(x, y);
+            }
+            ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
+            const alpha = 0.15+i*0.15;
+            ctx.fillStyle = `rgba(0,${80+i*40},${180+i*20},${alpha})`;
+            ctx.fill();
+          }
+          t += 0.025;
+          liveBgAnimations[tileId] = requestAnimationFrame(drawOcean);
+        }
+        drawOcean();
+
+      } else if (type === 'matrix') {
+        const canvas = document.createElement('canvas');
+        wrap.appendChild(canvas);
+        el.insertBefore(wrap, el.firstChild);
+        const ctx = canvas.getContext('2d');
+        const cols = 12;
+        const drops = Array.from({length:cols}, () => Math.random()*-20);
+        const chars = '01アイウエオカキ';
+        function drawMatrix() {
+          canvas.width = el.offsetWidth; canvas.height = el.offsetHeight;
+          const w = canvas.width, h = canvas.height;
+          const colW = w/cols;
+          ctx.fillStyle = 'rgba(0,10,0,0.18)';
+          ctx.fillRect(0,0,w,h);
+          ctx.font = `${Math.max(10, colW*0.7)}px monospace`;
+          ctx.fillStyle = '#00ff41';
+          drops.forEach((y, i) => {
+            const char = chars[Math.floor(Math.random()*chars.length)];
+            ctx.fillStyle = y<2 ? '#ffffff' : '#00ff41';
+            ctx.fillText(char, i*colW + colW*0.1, y*14);
+            if (y*14 > h && Math.random() > 0.975) drops[i] = 0;
+            drops[i] += 0.5;
+          });
+          liveBgAnimations[tileId] = requestAnimationFrame(drawMatrix);
+        }
+        drawMatrix();
+
+      } else if (type === 'bubbles') {
+        const canvas = document.createElement('canvas');
+        wrap.appendChild(canvas);
+        el.insertBefore(wrap, el.firstChild);
+        const ctx = canvas.getContext('2d');
+        const bubbles = Array.from({length:20}, () => ({
+          x: Math.random(), y: 1.1+Math.random()*0.5,
+          r: Math.random()*12+4, speed: Math.random()*0.004+0.002,
+          drift: (Math.random()-0.5)*0.003, opacity: Math.random()*0.5+0.2
+        }));
+        function drawBubbles() {
+          canvas.width = el.offsetWidth; canvas.height = el.offsetHeight;
+          const w = canvas.width, h = canvas.height;
+          ctx.fillStyle = 'rgba(0,20,40,0.15)';
+          ctx.fillRect(0,0,w,h);
+          bubbles.forEach(b => {
+            b.y -= b.speed; b.x += b.drift;
+            if (b.y < -0.1) { b.y=1.1; b.x=Math.random(); b.r=Math.random()*12+4; }
+            ctx.beginPath();
+            ctx.arc(b.x*w, b.y*h, b.r, 0, Math.PI*2);
+            ctx.strokeStyle = `rgba(100,200,255,${b.opacity})`;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.fillStyle = `rgba(150,220,255,${b.opacity*0.15})`;
+            ctx.fill();
+          });
+          liveBgAnimations[tileId] = requestAnimationFrame(drawBubbles);
+        }
+        drawBubbles();
+
+      } else if (type === 'pulse') {
+        const canvas = document.createElement('canvas');
+        wrap.appendChild(canvas);
+        el.insertBefore(wrap, el.firstChild);
+        const ctx = canvas.getContext('2d');
+        const rings = Array.from({length:5}, (_, i) => ({ r: i*0.2, opacity: 1-i*0.18 }));
+        let t = 0;
+        function drawPulse() {
+          canvas.width = el.offsetWidth; canvas.height = el.offsetHeight;
+          const w = canvas.width, h = canvas.height;
+          const cx = w/2, cy = h/2;
+          ctx.fillStyle = '#0d0018';
+          ctx.fillRect(0,0,w,h);
+          rings.forEach((ring, i) => {
+            ring.r += 0.005;
+            if (ring.r > 1) { ring.r = 0; ring.opacity = 0.9; }
+            ring.opacity -= 0.003;
+            const r = ring.r * Math.max(w,h) * 0.7;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI*2);
+            ctx.strokeStyle = `rgba(180,0,255,${Math.max(0,ring.opacity)})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          });
+          // Kern
+          const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,30);
+          grad.addColorStop(0, 'rgba(220,100,255,0.8)');
+          grad.addColorStop(1, 'rgba(100,0,200,0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(cx,cy,30,0,Math.PI*2); ctx.fill();
+          t += 0.02;
+          liveBgAnimations[tileId] = requestAnimationFrame(drawPulse);
+        }
+        drawPulse();
+      }
+    }
+
+    function stopLiveBg(el) {
+      const tileId = el.dataset.id;
+      if (liveBgAnimations[tileId]) {
+        cancelAnimationFrame(liveBgAnimations[tileId]);
+        delete liveBgAnimations[tileId];
+      }
+      el.querySelectorAll('.tile-livebg').forEach(e => e.remove());
+    }
+
+    function applyLiveBgToTile(el, type) {
+      const tileId = parseInt(el.dataset.id);
+      const tile = tiles.find(t => t.id === tileId);
+      if (tile) tile.liveBg = type;
+      startLiveBg(el, type);
+    }
+
+    // bgFit Buttons — live Vorschau
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.bgfit-btn');
+      if (!btn) return;
+      const fit = btn.dataset.fit;
+      document.querySelectorAll('.bgfit-btn').forEach(b => {
+        b.style.background = b.dataset.fit === fit ? 'var(--accent-blue)' : '';
+        b.style.color = b.dataset.fit === fit ? '#fff' : '';
+      });
+      // Live auf Kachel anwenden
+      const tileId = parseInt(document.getElementById('currentTileId').value);
+      const el = document.querySelector(`.tile[data-id="${tileId}"]`);
+      if (el) {
+        const img = el.querySelector('img[style*="object-fit"]');
+        if (img) img.style.objectFit = fit;
+      }
+    });
+
+    // bgZoom Schieberegler — live Vorschau
+    document.addEventListener('input', e => {
+      const tileId = parseInt(document.getElementById('currentTileId').value);
+      const el = document.querySelector(`.tile[data-id="${tileId}"]`);
+      const img = el ? el.querySelector('img[style*="object-fit"]') : null;
+
+      if (e.target.id === 'tileBgZoom') {
+        const zoom = parseInt(e.target.value);
+        document.getElementById('tileBgZoomLabel').textContent = zoom + '%';
+        if (img) {
+          const x = parseInt(document.getElementById('tileBgX').value) || 0;
+          const y = parseInt(document.getElementById('tileBgY').value) || 0;
+          img.style.transform = `scale(${zoom/100}) translate(${x}%, ${y}%)`;
+        }
+      }
+      if (e.target.id === 'tileBgX') {
+        const x = parseInt(e.target.value);
+        document.getElementById('tileBgXLabel').textContent = x + '%';
+        if (img) {
+          const zoom = parseInt(document.getElementById('tileBgZoom').value) || 100;
+          const y = parseInt(document.getElementById('tileBgY').value) || 0;
+          img.style.transform = `scale(${zoom/100}) translate(${x}%, ${y}%)`;
+        }
+      }
+      if (e.target.id === 'tileBgY') {
+        const y = parseInt(e.target.value);
+        document.getElementById('tileBgYLabel').textContent = y + '%';
+        if (img) {
+          const zoom = parseInt(document.getElementById('tileBgZoom').value) || 100;
+          const x = parseInt(document.getElementById('tileBgX').value) || 0;
+          img.style.transform = `scale(${zoom/100}) translate(${x}%, ${y}%)`;
+        }
+      }
+    });
+
+    // Live-Bg Picker Handler
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.livebg-btn');
+      if (!btn) return;
+      const type = btn.dataset.livebg;
+      const tileId = parseInt(document.getElementById('currentTileId').value);
+      const el = document.querySelector(`.tile[data-id="${tileId}"]`);
+      if (el) applyLiveBgToTile(el, type);
+      // Highlighting
+      document.querySelectorAll('.livebg-btn').forEach(b => {
+        b.style.outline = b.dataset.livebg === type ? '3px solid var(--accent-blue)' : '';
+      });
+      saveToStorage();
+    });
+    // ─────────────────────────────────────────────────────────
+
+    // ── MODERNE GLASSMORPHISM SVG ICONS ──────────────────────
+    function getModernIcon(tile) {
+      if (tile.customIcon) return null; // Custom Emoji hat Vorrang
+      const type = tile.type;
+
+      const icons = {
+        clock: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="cBg" cx="35%" cy="30%" r="65%"><stop offset="0%" stop-color="#7b9fff"/><stop offset="100%" stop-color="#3a4fd4"/></radialGradient>
+            <radialGradient id="cGlass" cx="30%" cy="20%" r="60%"><stop offset="0%" stop-color="rgba(255,255,255,0.5)"/><stop offset="100%" stop-color="rgba(255,255,255,0.05)"/></radialGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#cBg)"/>
+          <rect width="64" height="64" rx="16" fill="url(#cGlass)"/>
+          <circle cx="32" cy="32" r="18" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+          <circle cx="32" cy="32" r="2.5" fill="white"/>
+          <line x1="32" y1="32" x2="32" y2="19" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="32" y1="32" x2="41" y2="37" stroke="rgba(255,255,255,0.8)" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="32" cy="16" r="1.5" fill="rgba(255,255,255,0.6)"/>
+          <circle cx="48" cy="32" r="1.5" fill="rgba(255,255,255,0.6)"/>
+          <circle cx="32" cy="48" r="1.5" fill="rgba(255,255,255,0.6)"/>
+          <circle cx="16" cy="32" r="1.5" fill="rgba(255,255,255,0.6)"/>
+          <ellipse cx="28" cy="18" rx="6" ry="3" fill="rgba(255,255,255,0.2)"/>
+        </svg>`,
+
+        clockweather: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="cwBg" cx="30%" cy="25%" r="70%"><stop offset="0%" stop-color="#ff9f43"/><stop offset="100%" stop-color="#ee5a24"/></radialGradient>
+            <radialGradient id="cwG2" cx="70%" cy="70%" r="50%"><stop offset="0%" stop-color="#54a0ff"/><stop offset="100%" stop-color="#2e86de"/></radialGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#cwBg)"/>
+          <circle cx="44" cy="20" r="14" fill="url(#cwG2)" opacity="0.9"/>
+          <circle cx="20" cy="34" r="10" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+          <line x1="20" y1="34" x2="20" y2="26" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="20" y1="34" x2="26" y2="38" stroke="rgba(255,255,255,0.8)" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M30 52 Q32 46 38 46 Q34 40 40 38 Q46 36 48 42 Q52 40 54 44 Q56 48 52 50 Q50 54 44 54 Q36 56 30 52Z" fill="rgba(255,255,255,0.85)"/>
+          <ellipse cx="26" cy="22" rx="8" ry="4" fill="rgba(255,255,255,0.25)"/>
+        </svg>`,
+
+        weather: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="wBg" cx="25%" cy="20%" r="75%"><stop offset="0%" stop-color="#ffeaa7"/><stop offset="100%" stop-color="#fdcb6e"/></radialGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#wBg)"/>
+          <circle cx="26" cy="26" r="10" fill="#f9ca24" opacity="0.95"/>
+          <circle cx="26" cy="26" r="7" fill="#f0932b"/>
+          ${[0,45,90,135,180,225,270,315].map((a,i) => `<line x1="${26+Math.cos(a*Math.PI/180)*12}" y1="${26+Math.sin(a*Math.PI/180)*12}" x2="${26+Math.cos(a*Math.PI/180)*15}" y2="${26+Math.sin(a*Math.PI/180)*15}" stroke="#f9ca24" stroke-width="2" stroke-linecap="round"/>`).join('')}
+          <path d="M22 48 Q24 42 30 42 Q27 36 33 34 Q39 32 41 38 Q45 36 47 40 Q49 44 45 46 Q43 50 37 50 Q29 52 22 48Z" fill="rgba(255,255,255,0.9)"/>
+          <ellipse cx="22" cy="16" rx="7" ry="3.5" fill="rgba(255,255,255,0.3)"/>
+        </svg>`,
+
+        calendar: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="calBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a29bfe"/><stop offset="100%" stop-color="#6c5ce7"/></linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#calBg)"/>
+          <rect x="10" y="16" width="44" height="38" rx="8" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+          <rect x="10" y="16" width="44" height="14" rx="8" fill="rgba(255,255,255,0.25)"/>
+          <rect x="10" y="23" width="44" height="7" fill="rgba(255,255,255,0.25)"/>
+          <circle cx="22" cy="13" r="3" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>
+          <circle cx="42" cy="13" r="3" fill="rgba(255,255,255,0.7)" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>
+          ${[0,1,2,3,4,5,6].map(i => `<circle cx="${15+i*6}" cy="40" r="2" fill="rgba(255,255,255,${i===2?'0.9':'0.4'})"/>`).join('')}
+          ${[0,1,2,3,4,5,6].map(i => `<circle cx="${15+i*6}" cy="50" r="2" fill="rgba(255,255,255,0.4)"/>`).join('')}
+          <ellipse cx="22" cy="8" rx="6" ry="3" fill="rgba(255,255,255,0.2)"/>
+        </svg>`,
+
+        appointments: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="apBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fd79a8"/><stop offset="100%" stop-color="#e84393"/></linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#apBg)"/>
+          <rect x="12" y="14" width="40" height="36" rx="6" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+          <line x1="18" y1="24" x2="46" y2="24" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="18" y1="32" x2="46" y2="32" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="18" y1="40" x2="36" y2="40" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="48" cy="48" r="10" fill="#00b894"/>
+          <line x1="44" y1="48" x2="47" y2="51" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="47" y1="51" x2="52" y2="45" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <ellipse cx="20" cy="8" rx="7" ry="3" fill="rgba(255,255,255,0.2)"/>
+        </svg>`,
+
+        spotify: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="spBg" cx="30%" cy="25%" r="70%"><stop offset="0%" stop-color="#55efc4"/><stop offset="100%" stop-color="#00b894"/></radialGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#spBg)"/>
+          <circle cx="32" cy="32" r="18" fill="rgba(0,0,0,0.25)"/>
+          <path d="M20 26 Q32 22 44 26" stroke="white" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <path d="M22 32 Q32 28 42 32" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M24 38 Q32 35 40 38" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <ellipse cx="24" cy="18" rx="8" ry="4" fill="rgba(255,255,255,0.25)"/>
+        </svg>`,
+
+        youtube: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="ytBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff7675"/><stop offset="100%" stop-color="#d63031"/></linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#ytBg)"/>
+          <rect x="8" y="18" width="48" height="28" rx="8" fill="rgba(0,0,0,0.3)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+          <polygon points="26,24 26,40 44,32" fill="white" opacity="0.95"/>
+          <ellipse cx="22" cy="12" rx="8" ry="4" fill="rgba(255,255,255,0.2)"/>
+        </svg>`,
+
+        amazonmusic: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="amBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00cec9"/><stop offset="100%" stop-color="#0984e3"/></linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#amBg)"/>
+          <circle cx="32" cy="32" r="16" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+          <circle cx="32" cy="32" r="6" fill="rgba(255,255,255,0.3)" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+          <path d="M32 16 A16 16 0 0 1 48 32" stroke="rgba(255,255,255,0.8)" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <circle cx="40" cy="16" r="3" fill="white"/>
+          <ellipse cx="24" cy="14" rx="7" ry="3.5" fill="rgba(255,255,255,0.2)"/>
+        </svg>`,
+
+        recipe: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="reBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffeaa7"/><stop offset="100%" stop-color="#e17055"/></linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#reBg)"/>
+          <ellipse cx="32" cy="38" rx="20" ry="14" fill="rgba(0,0,0,0.2)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+          <ellipse cx="32" cy="36" rx="18" ry="12" fill="rgba(255,255,255,0.15)"/>
+          <path d="M22 18 Q22 10 26 10 Q26 14 24 18" stroke="rgba(255,255,255,0.7)" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M32 16 Q32 8 36 8 Q36 12 34 16" stroke="rgba(255,255,255,0.7)" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M42 18 Q42 10 46 10 Q46 14 44 18" stroke="rgba(255,255,255,0.7)" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <ellipse cx="22" cy="12" rx="7" ry="3" fill="rgba(255,255,255,0.2)"/>
+        </svg>`,
+
+        app: `<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="appBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a29bfe"/><stop offset="100%" stop-color="#fd79a8"/></linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="url(#appBg)"/>
+          <rect x="10" y="10" width="18" height="18" rx="5" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+          <rect x="36" y="10" width="18" height="18" rx="5" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+          <rect x="10" y="36" width="18" height="18" rx="5" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+          <rect x="36" y="36" width="18" height="18" rx="5" fill="rgba(255,255,255,0.4)" stroke="rgba(255,255,255,0.7)" stroke-width="1"/>
+          <ellipse cx="20" cy="6" rx="7" ry="3" fill="rgba(255,255,255,0.2)"/>
+        </svg>`,
+      };
+
+      return icons[type] || null;
+    }
+    // ─────────────────────────────────────────────────────────
     function applyGlowColor(el, hex) {
       if (!hex) return;
       const r = parseInt(hex.slice(1,3),16);
       const g = parseInt(hex.slice(3,5),16);
       const b = parseInt(hex.slice(5,7),16);
-      el.style.setProperty('--tile-glow-color',     `rgba(${r},${g},${b},0.85)`);
-      el.style.setProperty('--tile-glow-color-dim',  `rgba(${r},${g},${b},0.25)`);
+      el.style.setProperty('--tile-glow-color',     `rgba(${r},${g},${b},0.9)`);
+      el.style.setProperty('--tile-glow-color-dim',  `rgba(${r},${g},${b},0.35)`);
+    }
+
+    // Glow-Breite als CSS Variable auf :root setzen
+    function applyGlowSize(size) {
+      const s = parseInt(size) || 3;
+      // s: 1=schmal, 2=mittel, 3=breit, 4=sehr breit, 5=extrem wie LED-TV
+      const spread1 = [8,  16, 28,  45,  70 ][s-1];
+      const blur1   = [20, 40, 70,  110, 160][s-1];
+      const spread2 = [20, 40, 70,  110, 160][s-1];
+      const blur2   = [50, 90, 150, 220, 300][s-1];
+      document.documentElement.style.setProperty('--gs1', spread1 + 'px');
+      document.documentElement.style.setProperty('--gb1', blur1 + 'px');
+      document.documentElement.style.setProperty('--gs2', spread2 + 'px');
+      document.documentElement.style.setProperty('--gb2', blur2 + 'px');
+      const labels = ['Schmal','Mittel','Breit','Sehr breit','Extrem'];
+      const lbl = document.getElementById('globalGlowSizeLabel');
+      if (lbl) lbl.textContent = labels[s-1] || 'Breit';
     }
 
     function applyGlowToAllTiles(glowEffect, glowColor) {
@@ -1671,6 +2295,13 @@
     const glowNames = {
       'none':'Aus','pulse':'Pulsieren','static':'Statisch','rainbow':'Farbwechsel','tap':'Antippen'
     };
+
+    // Glow-Breite Schieberegler — live
+    document.addEventListener('input', e => {
+      if (e.target.id !== 'globalGlowSize') return;
+      userConfig.globalGlowSize = parseInt(e.target.value);
+      applyGlowSize(e.target.value);
+    });
 
     // Globaler Glow Picker
     document.addEventListener('click', e => {
@@ -2398,6 +3029,26 @@
         b.style.background = b.dataset.glow === tg ? 'var(--accent-blue)' : '';
         b.style.color      = b.dataset.glow === tg ? '#fff' : '';
       });
+      // Live-Bg markieren
+      const tlb = tile.liveBg || 'none';
+      document.querySelectorAll('.livebg-btn').forEach(b => {
+        b.style.outline = b.dataset.livebg === tlb ? '3px solid var(--accent-blue)' : '';
+      });
+      // bgFit + bgZoom laden
+      const fit = tile.bgFit || 'cover';
+      document.querySelectorAll('.bgfit-btn').forEach(b => {
+        b.style.background = b.dataset.fit === fit ? 'var(--accent-blue)' : '';
+        b.style.color = b.dataset.fit === fit ? '#fff' : '';
+      });
+      const zoom = tile.bgZoom || 100;
+      document.getElementById('tileBgZoom').value = zoom;
+      document.getElementById('tileBgZoomLabel').textContent = zoom + '%';
+      const bx = tile.bgX || 0;
+      const by = tile.bgY || 0;
+      document.getElementById('tileBgX').value = bx;
+      document.getElementById('tileBgXLabel').textContent = bx + '%';
+      document.getElementById('tileBgY').value = by;
+      document.getElementById('tileBgYLabel').textContent = by + '%';
       document.getElementById('tileSettingsModal').classList.remove('hidden');
     }
 
@@ -2546,6 +3197,8 @@
         // effect3D wird vom Live-Picker direkt in userConfig gesetzt — nicht vom hidden select überschreiben
         // userConfig.effect3D bleibt wie vom Picker gesetzt
         userConfig.globalGlowColor = document.getElementById('globalGlowColor').value;
+        userConfig.globalGlowSize  = parseInt(document.getElementById('globalGlowSize').value) || 2;
+        applyGlowSize(userConfig.globalGlowSize);
         applyAllSettings();
         saveToStorage();
         renderAll();
@@ -2577,6 +3230,12 @@
           glowBtns.forEach(b => { if (b.style.background && b.style.background !== '') activeGlow = b.dataset.glow; });
           tile.glowEffect = activeGlow;
           tile.glowColor  = document.getElementById('tileGlowColor').value;
+          // bgFit + bgZoom speichern
+          const activeFitBtn = [...document.querySelectorAll('.bgfit-btn')].find(b => b.style.background && b.style.background !== '');
+          tile.bgFit  = activeFitBtn ? activeFitBtn.dataset.fit : 'cover';
+          tile.bgZoom = parseInt(document.getElementById('tileBgZoom').value) || 100;
+          tile.bgX    = parseInt(document.getElementById('tileBgX').value) || 0;
+          tile.bgY    = parseInt(document.getElementById('tileBgY').value) || 0;
         }
         saveToStorage(); renderAll(); document.getElementById('tileSettingsModal').classList.add('hidden');
       };
@@ -2716,6 +3375,24 @@
       triggerTileFall();
     });
 
+    function restoreGlow(el) {
+      // Alle Inline-Styles die Glow blockieren könnten entfernen
+      el.style.removeProperty('animation');
+      el.style.removeProperty('transition');
+      el.style.removeProperty('transform');
+      el.style.removeProperty('opacity');
+      el.style.removeProperty('transform-origin');
+      // Glow neu setzen
+      const tileId = parseInt(el.dataset.id);
+      const tile   = tiles.find(t => t.id === tileId);
+      const glow   = (tile && tile.glowEffect) ? tile.glowEffect : (userConfig.globalGlow || 'none');
+      const color  = (tile && tile.glowColor)  ? tile.glowColor  : (userConfig.globalGlowColor || '#0071e3');
+      const fx     = userConfig.effect3D || 'float-medium';
+      el.setAttribute('data-glow', glow);
+      el.setAttribute('data-fx', fx);
+      applyGlowColor(el, color);
+    }
+
     function triggerTileFall() {
       fallInProgress = true;
       const allTiles = [...document.querySelectorAll('.tile:not(.edit-mode)')];
@@ -2765,10 +3442,18 @@
           setTimeout(() => {
             el.style.animation  = 'tileRiseUp 0.9s cubic-bezier(0.2,0.9,0.3,1.3) forwards';
             setTimeout(() => {
-              el.style.animation  = '';
-              el.style.transform  = '';
-              el.style.opacity    = '';
-              el.style.transition = '';
+              // Erst alle inline styles entfernen
+              el.style.removeProperty('animation');
+              el.style.removeProperty('transform');
+              el.style.removeProperty('opacity');
+              el.style.removeProperty('transition');
+              el.style.removeProperty('transform-origin');
+              // Kurze Pause damit Browser den Style-Reset verarbeitet
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  restoreGlow(el);
+                });
+              });
             }, 950);
           }, 30);
         }, totalFall + i * 70);
@@ -2832,25 +3517,118 @@
 
     function endPush() {
       if (!pushTile) return;
-      // Gezogene Kachel zurück
       pushTile.style.transition = 'transform 0.5s cubic-bezier(0.2,0.9,0.3,1.2)';
       pushTile.style.transform  = '';
       pushTile.style.zIndex     = '';
+      const pt = pushTile;
       setTimeout(() => {
-        if (pushTile) { pushTile.style.transition = ''; pushTile = null; }
+        pt.style.transition = '';
+        restoreGlow(pt);
+        pushTile = null;
       }, 550);
-      // Alle anderen zurück
       document.querySelectorAll('.tile:not(.edit-mode)').forEach(el => {
         el.style.transition = 'transform 0.5s cubic-bezier(0.2,0.9,0.3,1.2)';
         el.style.transform  = '';
-        setTimeout(() => { el.style.transition = ''; }, 550);
+        setTimeout(() => {
+          el.style.removeProperty('transition');
+          el.style.removeProperty('transform');
+          requestAnimationFrame(() => requestAnimationFrame(() => restoreGlow(el)));
+        }, 550);
       });
       pushStartPos = null;
     }
 
-    document.addEventListener('touchstart', e => startPush(e.touches[0].clientX, e.touches[0].clientY, e.target), { passive: true });
-    document.addEventListener('touchmove',  e => movePush(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
-    document.addEventListener('touchend',   () => endPush(), { passive: true });
+    // ── BILD DIREKT VERSCHIEBEN (Langer Druck) ────────────────
+    let imgDragTile    = null;
+    let imgDragStart   = null;
+    let imgDragInitial = null; // Anfangs bgX/bgY
+    let imgDragTimer   = null;
+    let imgDragActive  = false;
+
+    // Langer Druck = 600ms → Bild-Drag-Modus
+    document.addEventListener('touchstart', e => {
+      if (editMode) return;
+      const tile = e.target.closest('.tile');
+      if (!tile) return;
+      const tileId = parseInt(tile.dataset.id);
+      const tileData = tiles.find(t => t.id === tileId);
+      if (!tileData || !tileData.bgImage) return; // nur bei Kacheln mit Bild
+
+      imgDragTimer = setTimeout(() => {
+        imgDragActive  = true;
+        imgDragTile    = tile;
+        imgDragStart   = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        imgDragInitial = { x: tileData.bgX || 0, y: tileData.bgY || 0 };
+        // Visuelles Feedback
+        tile.style.outline = '3px solid var(--accent-blue)';
+        tile.style.outlineOffset = '3px';
+        // Kleiner Hinweis
+        const hint = document.createElement('div');
+        hint.id = 'imgDragHint';
+        hint.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:white;padding:8px 18px;border-radius:20px;font-size:0.85rem;z-index:9999;pointer-events:none;';
+        hint.textContent = '✋ Bild verschieben — Finger loslassen zum Speichern';
+        document.body.appendChild(hint);
+      }, 600);
+    }, { passive: true });
+
+    document.addEventListener('touchmove', e => {
+      if (!imgDragActive || !imgDragTile) return;
+      const dx = e.touches[0].clientX - imgDragStart.x;
+      const dy = e.touches[0].clientY - imgDragStart.y;
+      const rect = imgDragTile.getBoundingClientRect();
+      // Umrechnung px → %
+      const newX = Math.max(-100, Math.min(100, imgDragInitial.x + (dx / rect.width  * 100)));
+      const newY = Math.max(-100, Math.min(100, imgDragInitial.y + (dy / rect.height * 100)));
+      // Live anwenden
+      const img = imgDragTile.querySelector('img[style*="object-fit"]');
+      if (img) {
+        const tileId = parseInt(imgDragTile.dataset.id);
+        const tileData = tiles.find(t => t.id === tileId);
+        const zoom = (tileData && tileData.bgZoom) ? tileData.bgZoom / 100 : 1;
+        img.style.transform = `scale(${zoom}) translate(${newX}%, ${newY}%)`;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+      // Langer-Druck Timer abbrechen wenn zu früh losgelassen
+      if (imgDragTimer) { clearTimeout(imgDragTimer); imgDragTimer = null; }
+      if (!imgDragActive || !imgDragTile) return;
+
+      // Position speichern
+      const img = imgDragTile.querySelector('img[style*="object-fit"]');
+      if (img) {
+        const match = img.style.transform.match(/translate\(([-\d.]+)%,\s*([-\d.]+)%\)/);
+        if (match) {
+          const tileId = parseInt(imgDragTile.dataset.id);
+          const tileData = tiles.find(t => t.id === tileId);
+          if (tileData) {
+            tileData.bgX = Math.round(parseFloat(match[1]));
+            tileData.bgY = Math.round(parseFloat(match[2]));
+            saveToStorage();
+          }
+        }
+      }
+
+      // Cleanup
+      imgDragTile.style.outline = '';
+      imgDragTile.style.outlineOffset = '';
+      const hint = document.getElementById('imgDragHint');
+      if (hint) hint.remove();
+      imgDragTile   = null;
+      imgDragStart  = null;
+      imgDragActive = false;
+    }, { passive: true });
+    // ─────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────
+    document.addEventListener('touchstart', e => {
+      if (imgDragActive) return;
+      startPush(e.touches[0].clientX, e.touches[0].clientY, e.target);
+    }, { passive: true });
+    document.addEventListener('touchmove',  e => {
+      if (imgDragActive) return;
+      movePush(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    document.addEventListener('touchend',   () => { if (!imgDragActive) endPush(); }, { passive: true });
     document.addEventListener('mousedown',  e => startPush(e.clientX, e.clientY, e.target));
     document.addEventListener('mousemove',  e => { if (e.buttons === 1) movePush(e.clientX, e.clientY); });
     document.addEventListener('mouseup',    () => endPush());
