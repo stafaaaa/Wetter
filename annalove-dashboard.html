@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>AnnaLove</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0a0a0a;--c1:#141414;--c2:#1c1c1c;--c3:#242424;--bdr:#2c2c2c;--txt:#f0f0f0;--sub:#666;--ac:#22c55e;--ac2:#3b82f6;--gold:#c8a96e}
+html,body{width:100%;height:100%;overflow:hidden}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--txt);display:grid;grid-template-rows:56px 1fr 64px}
+
+/* ── HEADER ── */
+header{
+  display:grid;grid-template-columns:1fr auto 1fr;
+  align-items:center;padding:0 20px;
+  border-bottom:1px solid var(--bdr);
+  background:var(--c1);
+}
+.h-left{display:flex;align-items:center;gap:10px}
+.h-logo{width:32px;height:32px;background:var(--ac);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.h-title{font-size:15px;font-weight:600;letter-spacing:.3px}
+.h-center{text-align:center}
+.h-clock{font-size:24px;font-weight:200;letter-spacing:2px}
+.h-date{font-size:10px;color:var(--sub);margin-top:1px}
+.h-right{display:flex;justify-content:flex-end;align-items:center;gap:6px}
+.h-sync{background:var(--c2);border:1px solid var(--bdr);color:var(--sub);border-radius:8px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Outfit',sans-serif;transition:.2s}
+.h-sync:hover{color:var(--txt);border-color:var(--ac)}
+.h-sync.syncing{color:var(--ac);border-color:var(--ac)}
+
+/* ── MAIN ── */
+main{
+  display:grid;
+  grid-template-columns:300px 1fr 260px 180px;
+  gap:10px;padding:10px;
+  overflow:hidden;
+}
+
+/* ── CARD ── */
+.card{background:var(--c1);border-radius:14px;border:1px solid var(--bdr);overflow:hidden;display:flex;flex-direction:column}
+
+/* ── SLIDESHOW ── */
+.sl-wrap{flex:1;position:relative;background:#0d0d0d;min-height:0;overflow:hidden}
+.sl-slide{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.8s ease}
+.sl-slide.on{opacity:1}
+.sl-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--sub);cursor:pointer;gap:10px;transition:.2s}
+.sl-empty:hover{color:var(--txt)}
+.sl-empty-ico{font-size:48px}
+.sl-empty-txt{font-size:12px}
+.sl-overlay{position:absolute;bottom:0;left:0;right:0;padding:14px 14px 10px;background:linear-gradient(transparent,rgba(0,0,0,.7));z-index:2}
+.sl-name{font-size:13px;font-weight:500;margin-bottom:6px}
+.sl-bottom{display:flex;align-items:center;justify-content:space-between}
+.sl-dots{display:flex;gap:4px;align-items:center}
+.sl-dot{height:3px;border-radius:2px;background:rgba(255,255,255,.3);transition:.3s;cursor:pointer}
+.sl-dot.on{background:#fff;width:20px!important}
+.sl-right{display:flex;align-items:center;gap:8px}
+.sl-counter{font-size:11px;color:rgba(255,255,255,.5)}
+.sl-pause{background:rgba(255,255,255,.15);border:none;color:#fff;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.sl-add{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:20px;padding:4px 12px;font-size:11px;cursor:pointer;z-index:3;display:none;backdrop-filter:blur(4px)}
+
+/* ── KALENDER ── */
+.cal-card{padding:14px}
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0}
+.cal-title{font-size:15px;font-weight:600}
+.cal-title-sub{font-size:10px;color:var(--sub);margin-top:1px}
+.cal-nav{display:flex;gap:4px}
+.cal-nav button{width:28px;height:28px;border-radius:8px;background:var(--c2);border:1px solid var(--bdr);color:var(--txt);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.15s}
+.cal-nav button:hover{background:var(--c3)}
+.cal-nav .today-btn{width:auto;padding:0 10px;font-size:10px;font-weight:600;color:var(--ac);border-color:var(--ac)}
+.cal-wds{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px;flex-shrink:0}
+.cal-wd{text-align:center;font-size:10px;color:var(--sub);padding:4px 0;font-weight:500}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;flex:1}
+.cday{text-align:center;padding:7px 2px;border-radius:8px;cursor:pointer;font-size:12px;position:relative;transition:.15s;display:flex;align-items:center;justify-content:center}
+.cday:hover:not(.today){background:var(--c2)}
+.cday.today{background:var(--ac);color:#000;font-weight:700;border-radius:10px}
+.cday.sel:not(.today){background:var(--ac2)}
+.cday.gcal::after,.cday.local::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%}
+.cday.gcal::after{background:var(--ac2)}
+.cday.local::after{background:var(--ac)}
+.cday.today.local::after,.cday.today.gcal::after{background:#000}
+
+/* ── TERMINE ── */
+.termine-card{padding:14px}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0}
+.sec-title{font-size:14px;font-weight:600}
+.sec-badge{font-size:10px;color:var(--sub);background:var(--c2);border:1px solid var(--bdr);border-radius:20px;padding:2px 8px}
+.add-fab{width:26px;height:26px;border-radius:50%;background:var(--ac);border:none;color:#000;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700}
+.ev-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.ev-list::-webkit-scrollbar{width:2px}
+.ev-list::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
+.ev-item{background:var(--c2);border-radius:10px;padding:9px 12px;display:flex;align-items:flex-start;gap:9px;border:1px solid var(--bdr);transition:.15s}
+.ev-item:hover{border-color:var(--ac)}
+.ev-item.gcal-item:hover{border-color:var(--ac2)}
+.ev-dot{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.ev-body{flex:1;min-width:0}
+.ev-t{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-m{font-size:10px;color:var(--sub);margin-top:2px}
+.ev-del{background:none;border:none;color:var(--sub);cursor:pointer;font-size:11px;padding:0 2px;flex-shrink:0;margin-top:1px;transition:.15s}
+.ev-del:hover{color:#ff5555}
+.no-ev{font-size:12px;color:var(--sub);text-align:center;padding:20px 0}
+
+/* ── WETTER ── */
+.weather-card{padding:14px;gap:10px}
+.w-loc{font-size:9px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;flex-shrink:0}
+.w-main{display:flex;align-items:flex-end;justify-content:space-between;flex-shrink:0}
+.w-temp{font-size:56px;font-weight:200;line-height:1;letter-spacing:-3px}
+.w-temp sup{font-size:20px;vertical-align:top;margin-top:10px;font-weight:300}
+.w-ico{font-size:42px;line-height:1}
+.w-meta{flex-shrink:0}
+.w-desc{font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.w-stats{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.w-s{background:var(--c2);border-radius:8px;padding:6px 8px;border:1px solid var(--bdr)}
+.w-s-l{font-size:8px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.w-s-v{font-size:13px;font-weight:500}
+.divider{height:1px;background:var(--bdr);flex-shrink:0}
+.fc-lbl{font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;flex-shrink:0}
+.fc-row{display:flex;gap:4px;flex-shrink:0}
+.fc-d{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--c2);border-radius:8px;padding:6px 3px;border:1px solid var(--bdr)}
+.fc-n{font-size:9px;color:var(--sub)}
+.fc-i{font-size:15px}
+.fc-h{font-size:11px;font-weight:600}
+.fc-l{font-size:9px;color:var(--sub)}
+
+/* ── FOOTER ── */
+footer{display:flex;align-items:center;justify-content:center;gap:8px;border-top:1px solid var(--bdr);background:var(--c1);padding:0 20px}
+.f-btn{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;background:none;border:none;color:var(--sub);font-family:'Outfit',sans-serif;padding:6px 16px;border-radius:10px;transition:.2s}
+.f-btn:hover{color:var(--txt);background:var(--c2)}
+.f-ico{font-size:20px}
+.f-lbl{font-size:9px;font-weight:500;letter-spacing:.5px}
+
+/* ── MODAL ── */
+.modal{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.88);align-items:center;justify-content:center}
+.modal.open{display:flex}
+.mbox{background:var(--c1);border:1px solid var(--bdr);border-radius:16px;padding:24px;width:360px;max-width:92vw}
+.mbox h3{font-size:16px;font-weight:600;margin-bottom:18px}
+.lbl{font-size:9px;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
+.inp{width:100%;background:var(--c2);border:1px solid var(--bdr);border-radius:9px;color:var(--txt);padding:9px 12px;font-size:13px;margin-bottom:12px;font-family:'Outfit',sans-serif;outline:none;transition:.15s}
+.inp:focus{border-color:var(--ac)}
+.brow{display:flex;gap:8px;margin-top:4px}
+.btn{flex:1;border:none;border-radius:9px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:.15s}
+.btn-g{background:var(--ac);color:#000}
+.btn-g:hover{opacity:.9}
+.btn-w{background:var(--c2);color:var(--txt);border:1px solid var(--bdr)}
+.btn-w:hover{background:var(--c3)}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;max-height:180px;overflow-y:auto}
+.pthumb{position:relative;aspect-ratio:3/2;border-radius:8px;overflow:hidden;background:var(--c2)}
+.pthumb img{width:100%;height:100%;object-fit:cover}
+.pdel{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.8);border:none;color:#fff;border-radius:50%;width:17px;height:17px;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.padd{aspect-ratio:3/2;border-radius:8px;background:var(--c2);border:2px dashed var(--bdr);color:var(--sub);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+.padd:hover{border-color:var(--ac);color:var(--ac)}
+.status-msg{font-size:11px;color:var(--ac);min-height:16px;margin-bottom:8px}
+.legend{display:flex;gap:14px;margin-bottom:10px}
+.leg{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--sub)}
+.leg-dot{width:8px;height:8px;border-radius:50%}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-left">
+    <div class="h-logo">⊞</div>
+    <div class="h-title">AnnaLove</div>
+  </div>
+  <div class="h-center">
+    <div class="h-clock" id="hclk">--:--</div>
+    <div class="h-date" id="hdate"></div>
+  </div>
+  <div class="h-right">
+    <button class="h-sync" id="sync-btn" onclick="loadGCal()">🔄 Google Sync</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- 1: SLIDESHOW -->
+  <div class="card">
+    <div class="sl-wrap" id="sl-wrap">
+      <div class="sl-empty" id="sl-empty" onclick="document.getElementById('file-in').click()">
+        <div class="sl-empty-ico">🏔️</div>
+        <div class="sl-empty-txt">Fotos hinzufügen</div>
+      </div>
+      <button class="sl-add" id="sl-add" onclick="document.getElementById('file-in').click()">+ Foto</button>
+      <div class="sl-overlay" id="sl-overlay" style="display:none">
+        <div class="sl-name" id="sl-name"></div>
+        <div class="sl-bottom">
+          <div class="sl-dots" id="sl-dots"></div>
+          <div class="sl-right">
+            <div class="sl-counter" id="sl-cnt"></div>
+            <button class="sl-pause" id="sl-pause" onclick="togglePause()">⏸</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2: KALENDER -->
+  <div class="card cal-card">
+    <div class="cal-hdr">
+      <div>
+        <div class="cal-title" id="cal-month"></div>
+        <div class="cal-title-sub" id="cal-sub">Tippe auf Tag für Termine</div>
+      </div>
+      <div class="cal-nav">
+        <button onclick="prevM()">‹</button>
+        <button class="today-btn" onclick="todayM()">Heute</button>
+        <button onclick="nextM()">›</button>
+      </div>
+    </div>
+    <div class="cal-wds">
+      <div class="cal-wd">Mo</div><div class="cal-wd">Di</div><div class="cal-wd">Mi</div>
+      <div class="cal-wd">Do</div><div class="cal-wd">Fr</div>
+      <div class="cal-wd" style="color:var(--gold)">Sa</div>
+      <div class="cal-wd" style="color:var(--gold)">So</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+
+  <!-- 3: TERMINE -->
+  <div class="card termine-card">
+    <div class="sec-hdr">
+      <div>
+        <div class="sec-title">Termine</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span class="sec-badge" id="ev-count">0</span>
+        <button class="add-fab" onclick="openEvModal()">+</button>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--ac)"></div>Lokal</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--ac2)"></div>Google</div>
+    </div>
+    <div class="ev-list" id="ev-list"></div>
+  </div>
+
+  <!-- 4: WETTER -->
+  <div class="card weather-card">
+    <div class="w-loc">Düsseldorf</div>
+    <div class="w-main">
+      <div class="w-temp" id="w-temp">--<sup>°</sup></div>
+      <div class="w-ico" id="w-ico">⛅</div>
+    </div>
+    <div class="w-meta">
+      <div class="w-desc" id="w-desc">Laden...</div>
+      <div class="w-stats">
+        <div class="w-s"><div class="w-s-l">Gefühlt</div><div class="w-s-v" id="w-feel">--</div></div>
+        <div class="w-s"><div class="w-s-l">Feuchte</div><div class="w-s-v" id="w-hum">--</div></div>
+        <div class="w-s"><div class="w-s-l">Wind</div><div class="w-s-v" id="w-wind">--</div></div>
+        <div class="w-s"><div class="w-s-l">Regen</div><div class="w-s-v" id="w-rain">--</div></div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="fc-lbl">5 Tage</div>
+    <div class="fc-row" id="w-fc"></div>
+  </div>
+
+</main>
+
+<footer>
+  <button class="f-btn" onclick="openFotoModal()"><div class="f-ico">📷</div><div class="f-lbl">Fotos</div></button>
+  <button class="f-btn" onclick="window.open('https://open.spotify.com','_blank')"><div class="f-ico">🎵</div><div class="f-lbl">Spotify</div></button>
+  <button class="f-btn" onclick="openEvModal()"><div class="f-ico">➕</div><div class="f-lbl">Termin</div></button>
+  <button class="f-btn" onclick="loadGCal()"><div class="f-ico">🔄</div><div class="f-lbl">Sync</div></button>
+</footer>
+
+<input type="file" id="file-in" accept="image/*" multiple style="display:none" onchange="uploadPhotos(this)">
+
+<!-- TERMIN MODAL -->
+<div class="modal" id="ev-modal">
+  <div class="mbox">
+    <h3>Termin hinzufügen</h3>
+    <div class="lbl">Datum</div><input type="date" class="inp" id="ev-date">
+    <div class="lbl">Uhrzeit (optional)</div><input type="time" class="inp" id="ev-time">
+    <div class="lbl">Titel</div><input type="text" class="inp" id="ev-title" placeholder="z.B. Zahnarzt...">
+    <div class="brow">
+      <button class="btn btn-g" onclick="saveEv()">Speichern</button>
+      <button class="btn btn-w" onclick="closeEvModal()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOTO MODAL -->
+<div class="modal" id="foto-modal">
+  <div class="mbox">
+    <h3>📷 Fotos verwalten</h3>
+    <div class="status-msg" id="up-status"></div>
+    <div class="pgrid" id="pgrid"></div>
+    <button class="btn btn-g" onclick="document.getElementById('file-in').click()">+ Fotos hinzufügen</button>
+    <button class="btn btn-w" style="margin-top:7px" onclick="clearAllPhotos()">Alle löschen</button>
+    <button class="btn btn-w" style="margin-top:7px" onclick="closeFotoModal()">Schließen</button>
+  </div>
+</div>
+
+<script>
+// ===== FOTOS =====
+var photos=JSON.parse(localStorage.getItem('al-photos')||'[]');
+var slIdx=0,slTimer=null,slPaused=false;
+function saveP(){localStorage.setItem('al-photos',JSON.stringify(photos));}
+
+function uploadPhotos(input){
+  var files=Array.from(input.files);if(!files.length)return;
+  var st=document.getElementById('up-status');st.textContent='Laden...';
+  var done=0;
+  files.forEach(function(file){
+    var r=new FileReader();
+    r.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement('canvas');
+        var max=1400,w=img.width,h=img.height;
+        if(w>max){h=Math.round(h*max/w);w=max;}
+        if(h>max){w=Math.round(w*max/h);h=max;}
+        c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        photos.push({url:c.toDataURL('image/jpeg',.75),name:file.name.replace(/\.[^.]+$/,'')});
+        saveP();done++;
+        if(done===files.length){st.textContent=done+' Foto(s) gespeichert ✓';buildSl();renderPG();}
+      };img.src=e.target.result;
+    };r.readAsDataURL(file);
+  });input.value='';
+}
+
+function clearAllPhotos(){if(!confirm('Alle Fotos löschen?'))return;photos=[];saveP();buildSl();renderPG();}
+function removePhoto(i){photos.splice(i,1);saveP();buildSl();renderPG();}
+
+function renderPG(){
+  var g=document.getElementById('pgrid');g.innerHTML='';
+  photos.forEach(function(p,i){
+    var d=document.createElement('div');d.className='pthumb';
+    d.innerHTML='<img src="'+p.url+'"><button class="pdel" onclick="removePhoto('+i+')">✕</button>';
+    g.appendChild(d);
+  });
+  var a=document.createElement('div');a.className='padd';a.innerHTML='+';
+  a.onclick=function(){document.getElementById('file-in').click();};g.appendChild(a);
+}
+
+function buildSl(){
+  var wrap=document.getElementById('sl-wrap');
+  wrap.querySelectorAll('.sl-slide').forEach(function(e){e.remove();});
+  var dots=document.getElementById('sl-dots');dots.innerHTML='';
+  var empty=document.getElementById('sl-empty');
+  var addBtn=document.getElementById('sl-add');
+  var overlay=document.getElementById('sl-overlay');
+  slIdx=0;if(slTimer){clearInterval(slTimer);slTimer=null;}
+  if(!photos.length){
+    empty.style.display='flex';addBtn.style.display='none';overlay.style.display='none';return;
+  }
+  empty.style.display='none';addBtn.style.display='block';overlay.style.display='block';
+  photos.forEach(function(p,i){
+    var d=document.createElement('div');
+    d.className='sl-slide'+(i===0?' on':'');
+    d.style.backgroundImage='url('+p.url+')';
+    wrap.insertBefore(d,empty);
+    var dot=document.createElement('div');
+    dot.className='sl-dot'+(i===0?' on':'');
+    dot.style.width=Math.max(12,Math.min(20,200/photos.length))+'px';
+    dot.onclick=(function(n){return function(){slGoTo(n);};})(i);
+    dots.appendChild(dot);
+  });
+  updateSlInfo();
+  if(photos.length>1){slTimer=setInterval(function(){if(!slPaused)slGoTo(slIdx+1);},6000);}
+}
+
+function slGoTo(n){
+  var sls=document.querySelectorAll('.sl-slide'),dts=document.querySelectorAll('.sl-dot');
+  if(!sls.length)return;
+  sls[slIdx].classList.remove('on');dts[slIdx].classList.remove('on');
+  slIdx=(n+sls.length)%sls.length;
+  sls[slIdx].classList.add('on');dts[slIdx].classList.add('on');updateSlInfo();
+}
+function updateSlInfo(){
+  if(!photos.length)return;
+  document.getElementById('sl-name').textContent=photos[slIdx].name||('Foto '+(slIdx+1));
+  document.getElementById('sl-cnt').textContent=(slIdx+1)+' / '+photos.length;
+}
+function togglePause(){slPaused=!slPaused;document.getElementById('sl-pause').textContent=slPaused?'▶':'⏸';}
+
+// ===== UHR =====
+function getKW(d){var dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));var dn=dt.getUTCDay()||7;dt.setUTCDate(dt.getUTCDate()+4-dn);var ys=new Date(Date.UTC(dt.getUTCFullYear(),0,1));return Math.ceil((((dt-ys)/86400000)+1)/7);}
+var DAYS=['So','Mo','Di','Mi','Do','Fr','Sa'];
+var MONTHS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+var MONSHT=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+function tick(){
+  var now=new Date();
+  document.getElementById('hclk').textContent=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('hdate').textContent=DAYS[now.getDay()]+', '+now.getDate()+'. '+MONSHT[now.getMonth()]+' '+now.getFullYear()+' · KW '+getKW(now);
+}
+
+// ===== WETTER =====
+var WMO={0:'Klar',1:'Überw. klar',2:'Teilw. bewölkt',3:'Bewölkt',45:'Nebel',51:'Nieselregen',53:'Nieselregen',55:'Nieselregen',61:'Regen',63:'Regen',65:'Starkregen',71:'Schnee',73:'Schnee',75:'Starker Schnee',80:'Schauer',81:'Schauer',82:'Starke Schauer',95:'Gewitter',99:'Gewitter'};
+var WIC={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',51:'🌦️',53:'🌦️',55:'🌦️',61:'🌧️',63:'🌧️',65:'🌧️',71:'❄️',73:'❄️',75:'❄️',80:'🌧️',81:'🌧️',82:'🌧️',95:'⛈️',99:'⛈️'};
+var FDS=['So','Mo','Di','Mi','Do','Fr','Sa'];
+function loadWeather(){
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=51.2217&longitude=6.7762&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min&wind_speed_unit=kmh&timezone=Europe%2FBerlin&forecast_days=6')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var c=d.current;
+    var wt=document.getElementById('w-temp');if(wt)wt.innerHTML=Math.round(c.temperature_2m)+'<sup>°</sup>';
+    var wi=document.getElementById('w-ico');if(wi)wi.textContent=WIC[c.weather_code]||'⛅';
+    var wd=document.getElementById('w-desc');if(wd)wd.textContent=WMO[c.weather_code]||'';
+    var wf=document.getElementById('w-feel');if(wf)wf.textContent=Math.round(c.apparent_temperature)+'°C';
+    var wh=document.getElementById('w-hum');if(wh)wh.textContent=c.relative_humidity_2m+'%';
+    var ww=document.getElementById('w-wind');if(ww)ww.textContent=Math.round(c.wind_speed_10m)+' km/h';
+    var wr=document.getElementById('w-rain');if(wr)wr.textContent=(c.precipitation_probability||0)+'%';
+    var fc='';
+    for(var i=1;i<6;i++){
+      var dt=new Date(d.daily.time[i]);
+      fc+='<div class="fc-d"><div class="fc-n">'+FDS[dt.getDay()]+'</div><div class="fc-i">'+(WIC[d.daily.weather_code[i]]||'⛅')+'</div><div class="fc-h">'+Math.round(d.daily.temperature_2m_max[i])+'°</div><div class="fc-l">'+Math.round(d.daily.temperature_2m_min[i])+'°</div></div>';
+    }
+    var wfc=document.getElementById('w-fc');if(wfc)wfc.innerHTML=fc;
+  })
+  .catch(function(){var wd=document.getElementById('w-desc');if(wd)wd.textContent='Nicht verfügbar';});
+}
+
+// ===== KALENDER =====
+var cY=new Date().getFullYear(),cM=new Date().getMonth(),selD=null;
+var gcalEvs=[];
+var ICS='https://calendar.google.com/calendar/ical/bee6bd50fed6997d7a4b9ad5a26e274fafe8499c2685da0f8dd13abfb18bf159%40group.calendar.google.com/public/basic.ics';
+var PROXY='https://corsproxy.io/?';
+
+function getLocalEvs(){try{return JSON.parse(localStorage.getItem('al-evs')||'[]');}catch(e){return[];}}
+function saveLocalEvs(e){localStorage.setItem('al-evs',JSON.stringify(e));}
+function dKey(y,m,d){return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');}
+function getAllEvs(){return getLocalEvs().concat(gcalEvs);}
+
+function parseICS(txt){
+  var evts=[];var e=null;
+  txt.replace(/\r\n /g,'').split(/\r?\n/).forEach(function(line){
+    if(line==='BEGIN:VEVENT'){e={};}
+    else if(line==='END:VEVENT'&&e){if(e.date&&e.title)evts.push(e);e=null;}
+    else if(e){
+      if(line.startsWith('SUMMARY:'))e.title=line.slice(8).trim();
+      else if(line.match(/^DTSTART/)){
+        var v=(line.split(':').slice(1).join(':'));
+        if(v){e.date=v.slice(0,4)+'-'+v.slice(4,6)+'-'+v.slice(6,8);e.time=v.includes('T')?(v.slice(9,11)+':'+v.slice(11,13)):'';}
+      }
+    }
+  });
+  return evts;
+}
+
+function loadGCal(){
+  var btn=document.getElementById('sync-btn');
+  btn.textContent='⏳ Sync...';btn.classList.add('syncing');
+  fetch(PROXY+encodeURIComponent(ICS))
+  .then(function(r){return r.text();})
+  .then(function(txt){
+    gcalEvs=parseICS(txt);
+    btn.textContent='✓ Synchronisiert';btn.classList.remove('syncing');
+    setTimeout(function(){btn.textContent='🔄 Google Sync';},3000);
+    renderCal();
+  })
+  .catch(function(){
+    btn.textContent='✗ Fehler';btn.classList.remove('syncing');
+    setTimeout(function(){btn.textContent='🔄 Google Sync';},3000);
+    renderCal();
+  });
+}
+
+function renderCal(){
+  document.getElementById('cal-month').textContent=MONTHS[cM]+' '+cY;
+  var grid=document.getElementById('cal-grid');grid.innerHTML='';
+  var localEvs=getLocalEvs(),allEvs=getAllEvs(),today=new Date();
+  var fd=(new Date(cY,cM,1).getDay()+6)%7;
+  var dim=new Date(cY,cM+1,0).getDate();
+  for(var i=0;i<fd;i++)grid.appendChild(document.createElement('div'));
+  for(var d=1;d<=dim;d++){
+    var k=dKey(cY,cM,d);
+    var hasLocal=localEvs.some(function(e){return e.date===k;});
+    var hasGcal=gcalEvs.some(function(e){return e.date===k;});
+    var isT=today.getFullYear()===cY&&today.getMonth()===cM&&today.getDate()===d;
+    var div=document.createElement('div');
+    var cls='cday';
+    if(isT)cls+=' today';else if(selD===k)cls+=' sel';
+    if(hasLocal)cls+=' local';
+    if(hasGcal&&!hasLocal)cls+=' gcal';
+    div.className=cls;div.textContent=d;
+    div.onclick=(function(key,dv){return function(){selD=key;renderCal();renderTermine(key,dv);};})(k,d);
+    grid.appendChild(div);
+  }
+  renderTermine(selD,selD?parseInt(selD.split('-')[2]):null);
+}
+
+function renderTermine(filterDate,dayNum){
+  var localEvs=getLocalEvs();
+  var evs;
+  if(filterDate){
+    evs=getAllEvs().filter(function(e){return e.date===filterDate;});
+    document.getElementById('cal-sub').textContent=dayNum?dayNum+'. '+MONSHT[cM]+' — '+evs.length+' Termin(e)':'';
+  } else {
+    var today=new Date();today.setHours(0,0,0,0);
+    evs=getAllEvs().filter(function(e){return new Date(e.date)>=today;});
+    evs.sort(function(a,b){return(a.date+(a.time||''))>(b.date+(b.time||''))?1:-1;});
+    evs=evs.slice(0,12);
+  }
+  var list=document.getElementById('ev-list');list.innerHTML='';
+  document.getElementById('ev-count').textContent=evs.length;
+  if(!evs.length){list.innerHTML='<div class="no-ev">Keine Termine</div>';return;}
+  evs.forEach(function(ev){
+    var isLocal=localEvs.some(function(e){return e.date===ev.date&&e.title===ev.title;});
+    var dt=new Date(ev.date);
+    var ds=dt.getDate()+'. '+MONSHT[dt.getMonth()];
+    var ts=ev.time?ev.time+' Uhr':'Ganztag';
+    var item=document.createElement('div');
+    item.className='ev-item'+(isLocal?'':' gcal-item');
+    item.innerHTML='<div class="ev-dot" style="background:'+(isLocal?'var(--ac)':'var(--ac2)')+'"></div><div class="ev-body"><div class="ev-t">'+ev.title+'</div><div class="ev-m">'+ds+' · '+ts+'</div></div>'+(isLocal?'<button class="ev-del" onclick="delLocalEv(\''+ev.date+'\',\''+ev.title+'\',event)">✕</button>':'');
+    list.appendChild(item);
+  });
+}
+
+function delLocalEv(date,title,ev){
+  ev.stopPropagation();
+  saveLocalEvs(getLocalEvs().filter(function(e){return!(e.date===date&&e.title===title);}));
+  renderCal();
+}
+
+function prevM(){cM--;if(cM<0){cM=11;cY--;}selD=null;renderCal();}
+function nextM(){cM++;if(cM>11){cM=0;cY++;}selD=null;renderCal();}
+function todayM(){cY=new Date().getFullYear();cM=new Date().getMonth();selD=null;renderCal();}
+
+function openEvModal(){
+  var tk=dKey(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
+  document.getElementById('ev-date').value=selD||tk;
+  document.getElementById('ev-time').value='';
+  document.getElementById('ev-title').value='';
+  document.getElementById('ev-modal').classList.add('open');
+  setTimeout(function(){document.getElementById('ev-title').focus();},100);
+}
+function closeEvModal(){document.getElementById('ev-modal').classList.remove('open');}
+function saveEv(){
+  var date=document.getElementById('ev-date').value;
+  var time=document.getElementById('ev-time').value;
+  var title=document.getElementById('ev-title').value.trim();
+  if(!date||!title){alert('Datum und Titel eingeben!');return;}
+  var evs=getLocalEvs();evs.push({date:date,time:time,title:title});saveLocalEvs(evs);
+  closeEvModal();
+  var p=date.split('-');cY=parseInt(p[0]);cM=parseInt(p[1])-1;selD=date;renderCal();
+}
+
+function openFotoModal(){renderPG();document.getElementById('foto-modal').classList.add('open');}
+function closeFotoModal(){document.getElementById('foto-modal').classList.remove('open');}
+document.querySelectorAll('.modal').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');});});
+
+// ===== START =====
+tick();setInterval(tick,1000);
+loadWeather();setInterval(loadWeather,600000);
+renderCal();
+buildSl();
+loadGCal();setInterval(loadGCal,300000);
+</script>
+</body>
+</html>
