@@ -10,19 +10,6 @@
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- React 18 + ReactDOM (UMD) -->
-  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
-
-  <!-- date-fns v2 (exposes window.dateFns global) -->
-  <script src="https://cdn.jsdelivr.net/npm/date-fns@2.30.0/index.min.js"></script>
-
-  <!-- ical.js for parsing iCal feeds in browser (exposes window.ICAL) -->
-  <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
-
-  <!-- Babel for in-browser JSX -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
   <style>
     html, body, #root {
       height: 100%;
@@ -40,26 +27,118 @@
     .shadow-well { box-shadow: 0 0 100px rgba(0,0,0,1), inset 0 0 50px rgba(255,255,255,0.02); }
     input[type='range']::-webkit-slider-thumb {
       -webkit-appearance: none;
-      height: 24px;
-      width: 24px;
-      border-radius: 50%;
-      background: #3b82f6;
-      box-shadow: 0 0 15px rgba(59,130,246,0.5);
-      cursor: pointer;
+      height: 24px; width: 24px; border-radius: 50%;
+      background: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.5); cursor: pointer;
     }
     input[type='range']::-moz-range-thumb {
-      height: 24px;
-      width: 24px;
-      border-radius: 50%;
-      background: #3b82f6;
-      border: none;
-      box-shadow: 0 0 15px rgba(59,130,246,0.5);
-      cursor: pointer;
+      height: 24px; width: 24px; border-radius: 50%;
+      background: #3b82f6; border: none; box-shadow: 0 0 15px rgba(59,130,246,0.5); cursor: pointer;
+    }
+    /* Loading + error screens (visible BEFORE React mounts so user always sees something) */
+    #loading-screen {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 20px; z-index: 9999;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      color: rgba(255,255,255,0.6); font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
+    }
+    #loading-screen.hidden { display: none; }
+    .spinner {
+      width: 40px; height: 40px; border: 2px solid rgba(255,255,255,0.1);
+      border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #error-screen {
+      position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px; z-index: 9999; padding: 30px;
+      background: #1a0a0a; color: #fca5a5; font-family: monospace; font-size: 13px;
+    }
+    #error-screen.shown { display: flex; }
+    #error-screen pre {
+      max-width: 600px; max-height: 60vh; overflow: auto; background: rgba(0,0,0,0.4);
+      padding: 16px; border-radius: 12px; border: 1px solid rgba(255,100,100,0.2);
+      white-space: pre-wrap; word-break: break-word;
     }
   </style>
 </head>
 <body>
+  <!-- Loading screen — visible immediately, hidden once React mounts -->
+  <div id="loading-screen">
+    <div class="spinner"></div>
+    <div id="loading-status">Lade Dashboard…</div>
+  </div>
+
+  <!-- Error screen — shown if anything fails -->
+  <div id="error-screen">
+    <h2 style="color:#fca5a5; margin:0;">Fehler beim Laden</h2>
+    <pre id="error-detail"></pre>
+    <div style="font-size:11px; opacity:0.6;">Prüfe die Internetverbindung. Tippe und halte hier zum Neuladen.</div>
+  </div>
+
   <div id="root"></div>
+
+  <script>
+    // Global error display
+    window.__showError = function(msg) {
+      var s = document.getElementById('error-screen');
+      var d = document.getElementById('error-detail');
+      if (d) d.textContent = String(msg);
+      if (s) s.classList.add('shown');
+      var l = document.getElementById('loading-screen');
+      if (l) l.classList.add('hidden');
+    };
+    window.addEventListener('error', function(e) {
+      // Only show error screen if root is still empty (i.e. app didn't mount)
+      var root = document.getElementById('root');
+      if (root && root.innerHTML.length === 0) {
+        window.__showError((e.message || 'Unknown error') + '\n\n' + (e.filename || '') + ':' + (e.lineno || ''));
+      }
+    });
+    // Status updates while loading
+    function setStatus(msg) {
+      var el = document.getElementById('loading-status');
+      if (el) el.textContent = msg;
+    }
+    setStatus('Lade React…');
+  </script>
+
+  <!-- React 18 + ReactDOM (UMD) — loaded synchronously so they're ready before app script -->
+  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"
+          onerror="window.__showError('React konnte nicht geladen werden (CDN nicht erreichbar)')"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"
+          onerror="window.__showError('ReactDOM konnte nicht geladen werden')"></script>
+
+  <!-- Day.js + German locale (real UMD bundle, exposes window.dayjs) -->
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"
+          onerror="window.__showError('dayjs konnte nicht geladen werden')"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/locale/de.js"
+          onerror="window.__showError('dayjs DE locale konnte nicht geladen werden')"></script>
+
+  <!-- ical.js (exposes window.ICAL) -->
+  <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"
+          onerror="window.__showError('ical.js konnte nicht geladen werden')"></script>
+
+  <!-- Babel for in-browser JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"
+          onerror="window.__showError('Babel konnte nicht geladen werden')"></script>
+
+  <script>
+    setStatus('Initialisiere App…');
+    (function() {
+      var missing = [];
+      if (typeof React === 'undefined') missing.push('React');
+      if (typeof ReactDOM === 'undefined') missing.push('ReactDOM');
+      if (typeof window.dayjs === 'undefined') missing.push('dayjs');
+      if (typeof ICAL === 'undefined') missing.push('ICAL');
+      if (typeof Babel === 'undefined') missing.push('Babel');
+      if (missing.length) {
+        window.__showError('Fehlende Bibliotheken: ' + missing.join(', ') +
+          '\n\nMögliche Ursachen:\n• Keine Internetverbindung\n• CDN blockiert (Firewall/Adblocker)\n• Tablet-Browser sehr alt');
+      } else {
+        // Activate German locale globally
+        try { dayjs.locale('de'); } catch(e) {}
+      }
+    })();
+  </script>
 
   <script type="text/babel" data-presets="react">
     const { useState, useEffect, useRef } = React;
@@ -90,36 +169,55 @@
     // Exit animations are skipped (acceptable trade-off for single-file build).
     const AnimatePresence = ({ children }) => <>{children}</>;
 
-    // date-fns globals
-    const {
-      format, addDays, startOfWeek, isSameDay, isToday,
-      startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth
-    } = window.dateFns;
+    // ---------------- date utilities (powered by Day.js) ----------------
+    // Wrappers with date-fns-compatible signatures so the rest of the app stays untouched.
+    // dayjs.locale('de') was already activated globally before Babel ran.
 
-    // Minimal German locale for date-fns v2 (only what format() needs here)
-    const de = {
-      code: 'de',
-      formatDistance: () => '',
-      formatRelative: () => '',
-      localize: {
-        ordinalNumber: (n) => n + '.',
-        era: () => '',
-        quarter: () => '',
-        month: (n) => ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'][n],
-        day: (n) => ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'][n],
-        dayPeriod: () => ''
-      },
-      formatLong: {
-        date: () => 'dd.MM.yyyy',
-        time: () => 'HH:mm',
-        dateTime: () => 'dd.MM.yyyy HH:mm'
-      },
-      match: {
-        ordinalNumber: () => null, era: () => null, quarter: () => null,
-        month: () => null, day: () => null, dayPeriod: () => null
-      },
-      options: { weekStartsOn: 1, firstWeekContainsDate: 4 }
+    // date-fns format token → dayjs format token
+    // Single-pass replacement so longer tokens don't get clobbered by their substrings.
+    // (The naive sequential approach turned 'dddd' into 'DDDD' because the 'dd→DD' rule fired again.)
+    function _convertFmt(t) {
+      return t.replace(/yyyy|yy|EEEE|EEE|MMMM|MMM|dd|d|HH|H|mm|m|ss|s/g, function(m) {
+        switch (m) {
+          case 'yyyy': return 'YYYY';
+          case 'yy':   return 'YY';
+          case 'EEEE': return 'dddd';
+          case 'EEE':  return 'ddd';
+          case 'dd':   return 'DD';
+          case 'd':    return 'D';
+          // Day.js already uses MMMM/MMM/HH/H/mm/m/ss/s — return unchanged
+          default:     return m;
+        }
+      });
+    }
+    const format = (d, fmt /*, opts (locale ignored, set globally) */) =>
+      dayjs(d).locale('de').format(_convertFmt(fmt));
+
+    const addDays         = (d, n)   => dayjs(d).add(n, 'day').toDate();
+    const startOfMonth    = (d)      => dayjs(d).startOf('month').toDate();
+    const endOfMonth      = (d)      => dayjs(d).endOf('month').toDate();
+    const startOfWeek     = (d, opt) => {
+      const ws = (opt && typeof opt.weekStartsOn === 'number') ? opt.weekStartsOn : 0;
+      const m = dayjs(d);
+      const day = m.day();                    // 0..6 (Sun..Sat)
+      const diff = (day - ws + 7) % 7;
+      return m.subtract(diff, 'day').startOf('day').toDate();
     };
+    const isSameDay       = (a, b) => dayjs(a).isSame(dayjs(b), 'day');
+    const isSameMonth     = (a, b) => dayjs(a).isSame(dayjs(b), 'month');
+    const isToday         = (d)    => dayjs(d).isSame(dayjs(), 'day');
+    const eachDayOfInterval = ({ start, end }) => {
+      const out = [];
+      let cur = dayjs(start).startOf('day');
+      const last = dayjs(end).startOf('day');
+      while (!cur.isAfter(last, 'day')) {
+        out.push(cur.toDate());
+        cur = cur.add(1, 'day');
+      }
+      return out;
+    };
+    // Locale object kept as a no-op stub so existing { locale: de } calls don't break
+    const de = {};
 
     const DEFAULT_BG = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop";
 
@@ -693,8 +791,18 @@
       );
     }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
+    try {
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+      // hide loading screen once React has scheduled the first render
+      requestAnimationFrame(() => {
+        var l = document.getElementById('loading-screen');
+        if (l) l.classList.add('hidden');
+      });
+    } catch (err) {
+      window.__showError('Render-Fehler: ' + (err && err.message ? err.message : err) +
+        (err && err.stack ? '\n\n' + err.stack : ''));
+    }
   </script>
 </body>
 </html>
