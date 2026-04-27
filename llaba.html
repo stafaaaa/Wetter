@@ -36,7 +36,7 @@ const CONFIG = {
   calendarRefresh: 30 * 60 * 1000,
 };
 
-/* ============= INDEXED-DB FÜR FOTOS (leer, ohne Defaults) ============= */
+/* ============= INDEXED-DB FÜR FOTOS ============= */
 const DB_NAME = 'annalove_photos';
 const STORE = 'photos';
 let dbPromise = null;
@@ -122,7 +122,7 @@ const IconTrash   = ({ className }) => <Icon className={className} d={<><polylin
 const IconX       = ({ className }) => <Icon className={className} d={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />;
 const IconPlus    = ({ className }) => <Icon className={className} d={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />;
 
-/* Wetter-Icons farbig (gekürzt, wie zuvor) */
+/* ============= WETTER-ICONS ============= */
 const WIcon = ({ code, isNight, size = 32 }) => {
   if (code === 0) return isNight
     ? <svg width={size} height={size} viewBox="0 0 64 64"><path d="M44 12 a20 20 0 1 0 8 32 a16 16 0 0 1 -8 -32 z" fill="#dadce0"/></svg>
@@ -138,8 +138,8 @@ const WIcon = ({ code, isNight, size = 32 }) => {
   return <svg width={size} height={size} viewBox="0 0 64 64"><path d="M48 38 a10 10 0 0 0 -10 -10 a14 14 0 0 0 -27 4 a8 8 0 0 0 1 16 l36 0 a5 5 0 0 0 0 -10 z" fill="#9aa0a6"/></svg>;
 };
 
-/* ============= CLOCK (unverändert) ============= */
-function Clock() { /* ... identisch zu deiner letzten funktionierenden Version ... */
+/* ============= CLOCK ============= */
+function Clock() {
   const [time, setTime] = useState(new Date());
   useEffect(() => { const t = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(t); }, []);
   const h = time.getHours(), m = String(time.getMinutes()).padStart(2,'0'), s = String(time.getSeconds()).padStart(2,'0');
@@ -158,8 +158,27 @@ function Clock() { /* ... identisch zu deiner letzten funktionierenden Version .
   );
 }
 
-/* ============= MUSIC ICONS (unverändert) ============= */
-function MusicIcons() { /* ... */ return ( <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2 z-20"> ... </div> ); }
+/* ============= MUSIC ICONS ============= */
+function MusicIcons() {
+  const openSpotify = () => {
+    try { window.location.href = 'intent://open.spotify.com/#Intent;scheme=https;package=com.spotify.music;end'; }
+    catch { window.location.href = 'https://open.spotify.com'; }
+  };
+  const openAmazon = () => {
+    try { window.location.href = 'intent://music.amazon.de/#Intent;scheme=https;package=com.amazon.mp3;end'; }
+    catch { window.location.href = 'https://music.amazon.de'; }
+  };
+  return (
+    <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2 z-20">
+      <button onClick={openSpotify} title="Spotify" className="w-9 h-9 rounded-full bg-[#1DB954] hover:scale-110 transition-transform flex items-center justify-center shadow-lg">
+        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#000"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.871 7.077-.496 9.713 1.115a.623.623 0 0 1 .206.857zm1.223-2.722a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 1 1-.452-1.494c3.632-1.102 8.147-.568 11.232 1.328a.78.78 0 0 1 .257 1.075zm.105-2.835c-3.223-1.914-8.54-2.09-11.618-1.156a.935.935 0 1 1-.542-1.79c3.532-1.072 9.404-.865 13.115 1.338a.936.936 0 1 1-.955 1.608z"/></svg>
+      </button>
+      <button onClick={openAmazon} title="Amazon Music" className="w-9 h-9 rounded-full bg-[#25D1DA] hover:scale-110 transition-transform flex items-center justify-center shadow-lg">
+        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#000"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM8 7l3 5-3 5h2l3-5-3-5H8zm6 0l3 5-3 5h2l3-5-3-5h-2z"/></svg>
+      </button>
+    </div>
+  );
+}
 
 /* ============= TODO LIST ============= */
 function TodoList() {
@@ -198,11 +217,174 @@ function TodoList() {
   );
 }
 
-/* ============= WEATHER (unverändert) ============= */
-function Weather() { /* ... */ }
+/* ============= WEATHER (live, OpenMeteo) ============= */
+function Weather() {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.weatherLat}&longitude=${CONFIG.weatherLon}&current=temperature_2m,apparent_temperature,weather_code,is_day&hourly=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=6`);
+        setData(await r.json());
+      } catch (e) { console.error(e); }
+    };
+    load();
+    const t = setInterval(load, CONFIG.weatherRefresh);
+    return () => clearInterval(t);
+  }, []);
 
-/* ============= CALENDAR (unverändert) ============= */
-function Calendar() { /* ... */ }
+  if (!data) return <div className="text-white/60 text-sm">Lade Wetter…</div>;
+  const desc = c => { if (c===0) return 'Klar'; if (c===1) return 'Überwiegend klar'; if (c===2) return 'Teils bewölkt'; if (c===3) return 'Bewölkt'; if (c<=48) return 'Nebel'; if (c<=57) return 'Nieselregen'; if (c<=67) return 'Regen'; if (c<=77) return 'Schnee'; if (c<=82) return 'Schauer'; if (c>=95) return 'Gewitter'; return ''; };
+  const cur = data.current;
+  const labels = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  const now = new Date();
+  let s = data.hourly.time.findIndex(t => new Date(t) >= now); if (s === -1) s = 0;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-5xl md:text-6xl font-light text-white">{Math.round(cur.temperature_2m)}°</span>
+          <WIcon code={cur.weather_code} isNight={cur.is_day === 0} size={36}/>
+        </div>
+        <div className="flex flex-col text-sm text-white/80">
+          <span>Gefühlt {Math.round(cur.apparent_temperature)}°</span>
+          <span>{desc(cur.weather_code)}</span>
+        </div>
+      </div>
+      <div className="flex gap-3 overflow-x-auto pb-1">
+        {data.daily.time.slice(0,5).map((t, i) => {
+          const dt = new Date(t);
+          const lbl = i === 0 ? 'Heute' : labels[dt.getDay()];
+          return (
+            <div key={i} className="flex flex-col items-center gap-1 min-w-[60px]">
+              <span className="text-xs text-white/70">{lbl}</span>
+              <WIcon code={data.daily.weather_code[i]} isNight={false} size={24}/>
+              <div className="flex flex-col items-center">
+                <span className="text-sm text-white font-medium">{Math.round(data.daily.temperature_2m_max[i])}°</span>
+                <span className="text-xs text-white/60">{Math.round(data.daily.temperature_2m_min[i])}°</span>
+              </div>
+              {(data.daily.precipitation_probability_max[i] || 0) > 0 && <span className="text-[10px] text-blue-300">{data.daily.precipitation_probability_max[i]}%</span>}
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {Array.from({length: 11}).map((_, i) => {
+          const idx = s + i; if (idx >= data.hourly.time.length) return null;
+          const t = new Date(data.hourly.time[idx]);
+          return (
+            <div key={i} className="flex flex-col items-center gap-1 min-w-[40px]">
+              <span className="text-[10px] text-white/60">{t.getHours()}</span>
+              <WIcon code={data.hourly.weather_code[idx]} isNight={data.hourly.is_day[idx] === 0} size={20}/>
+              <span className="text-xs text-white">{Math.round(data.hourly.temperature_2m[idx])}°</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ============= CALENDAR (iCal-Sync) ============= */
+function Calendar() {
+  const [events, setEvents] = useState([]);
+  const [status, setStatus] = useState('Lade Termine…');
+  const [currentDate] = useState(new Date());
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        let text;
+        try {
+          const r = await fetch(CONFIG.icalUrl);
+          if (!r.ok) throw new Error();
+          text = await r.text();
+        } catch {
+          const r = await fetch(CONFIG.corsProxy + encodeURIComponent(CONFIG.icalUrl));
+          text = await r.text();
+        }
+        setEvents(parseICal(text));
+        setStatus(`Aktualisiert ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`);
+      } catch { setStatus('Kalender offline'); }
+    };
+    load();
+    const t = setInterval(load, CONFIG.calendarRefresh);
+    return () => clearInterval(t);
+  }, []);
+
+  const parseICal = text => {
+    const lines = text.replace(/\r\n /g,'').replace(/\r\n\t/g,'').split(/\r?\n/);
+    const evs = []; let cur = null;
+    for (const line of lines) {
+      if (line === 'BEGIN:VEVENT') cur = {};
+      else if (line === 'END:VEVENT') { if (cur?.start) evs.push(cur); cur = null; }
+      else if (cur) {
+        const m = line.match(/^([A-Z\-]+)(?:;[^:]*)?:(.*)$/);
+        if (!m) continue;
+        if (m[1] === 'SUMMARY') cur.title = m[2].replace(/\\,/g,',').replace(/\\n/g,' ');
+        else if (m[1] === 'DTSTART') {
+          const dm = line.match(/:(\d{8})(?:T(\d{6})Z?)?/);
+          if (dm) {
+            const d = dm[1], t = dm[2];
+            const y = +d.substring(0,4), mo = +d.substring(4,6) - 1, da = +d.substring(6,8);
+            cur.start = t ? new Date(y, mo, da, +t.substring(0,2), +t.substring(2,4)) : new Date(y, mo, da);
+          }
+        }
+      }
+    }
+    return evs;
+  };
+
+  const colorFor = title => {
+    const t = (title||'').toLowerCase();
+    if (/catering|markt|caravan|coffee|kaffee|salon|event/.test(t)) return 'bg-blue-500/90';
+    if (/werkstatt|reparatur|service|cnc|lieferung|montage/.test(t)) return 'bg-orange-500/90';
+    if (/geburtstag|familie|urlaub|feier/.test(t)) return 'bg-emerald-500/90';
+    return 'bg-purple-500/90';
+  };
+
+  const monthNames = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  const dayNames = ['M','D','M','D','F','S','S'];
+
+  const renderMonth = (monthOffset) => {
+    const display = new Date(currentDate.getFullYear(), currentDate.getMonth() + monthOffset, 1);
+    const month = display.getMonth(), year = display.getFullYear();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
+    const today = new Date();
+    const isCurr = today.getMonth() === month && today.getFullYear() === year;
+
+    const cells = [];
+    cells.push(<div key="h" className="col-span-7 flex items-center gap-2 mb-2"><span className="text-xl font-medium text-white/90">{monthNames[month]} {year}</span></div>);
+    dayNames.forEach((d, i) => cells.push(<div key={'dn'+i} className="text-center text-xs text-white/50 py-1">{d}</div>));
+    for (let i = 0; i < firstDay; i++) cells.push(<div key={'e'+i}/>);
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isToday = isCurr && day === today.getDate();
+      const dayEvents = events.filter(e => e.start && e.start.getFullYear() === year && e.start.getMonth() === month && e.start.getDate() === day).slice(0, 3);
+      cells.push(
+        <div key={day} className="relative min-h-[48px] md:min-h-[56px]">
+          <div className={`w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-full text-sm md:text-base mb-1 ${isToday ? 'bg-red-500 text-white font-medium' : 'text-white/90'}`}>{day}</div>
+          <div className="flex flex-col gap-[2px]">
+            {dayEvents.map((e, j) => (
+              <div key={j} className={`text-[8px] md:text-[10px] px-1 py-[2px] rounded leading-tight ${colorFor(e.title)} text-white truncate`}>
+                {e.start.getHours() ? `${String(e.start.getHours()).padStart(2,'0')}:${String(e.start.getMinutes()).padStart(2,'0')} ` : ''}{e.title}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return cells;
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="grid grid-cols-7 gap-1 auto-rows-min">{renderMonth(0)}</div>
+      <div className="grid grid-cols-7 gap-1 auto-rows-min mt-4">{renderMonth(1)}</div>
+      <div className="text-[10px] text-white/40 mt-2 text-right">{status}</div>
+    </div>
+  );
+}
 
 /* ============= HOME ============= */
 function Home() {
@@ -260,7 +442,6 @@ function Home() {
   const prevBg = () => { if (backgrounds.length) setBgIndex(p => (p - 1 + backgrounds.length) % backgrounds.length); };
   const cur = backgrounds[bgIndex];
 
-  /* Fallback-Hintergrund: dunkler, eleganter Verlauf */
   const bgStyle = cur
     ? { backgroundImage: `url(${cur.url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     : { background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)' };
