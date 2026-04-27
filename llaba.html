@@ -57,6 +57,7 @@
             const [currentTime, setCurrentTime] = useState(new Date());
             const [isSettingsOpen, setIsSettingsOpen] = useState(false);
             const [viewedMonth, setViewedMonth] = useState(new Date());
+            const [icalUrl, setIcalUrl] = useState(() => localStorage.getItem('alpine-ical-url') || '');
 
             // Slideshow State
             const [bgImages, setBgImages] = useState(() => {
@@ -126,6 +127,7 @@
             };
 
             const saveSettings = () => {
+                localStorage.setItem('alpine-ical-url', icalUrl);
                 localStorage.setItem('alpine-bg-images', JSON.stringify(bgImages));
                 localStorage.setItem('alpine-brightness', brightness.toString());
                 localStorage.setItem('alpine-blur', bgBlur.toString());
@@ -262,6 +264,10 @@
 
                                         {/* Inputs */}
                                         <div className="grid grid-cols-2 gap-8">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">Kalender URL</label>
+                                                <input type="text" value={icalUrl} onChange={e => setIcalUrl(e.target.value)} className="w-full p-3 rounded-xl outline-none" placeholder="https://..." />
+                                            </div>
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">Intervall (Sek)</label>
                                                 <input type="number" value={slideshowInterval} onChange={e => setSlideshowInterval(e.target.value)} className="w-full p-3 rounded-xl outline-none" />
