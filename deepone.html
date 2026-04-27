@@ -37,19 +37,19 @@
   .clock-time sup { font-size: 0.4em; font-weight: 300; vertical-align: super; margin-left: 2px; }
   .clock-date { font-size: clamp(11px, 1.6vh, 16px); opacity: 0.95; margin-top: 0.6vh; }
 
-  /* WETTER – Icons jetzt NOCH GRÖSSER */
+  /* WETTER – Icons jetzt exakt wie im Screenshot (sehr groß) */
   .weather-overlay { position: absolute; bottom: 2vh; left: 3vw; right: 3vw; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
   body.layout-landscape .weather-overlay { position: relative; bottom: auto; margin-top: auto; padding: 0 2vw 1.5vh; flex-direction: column; align-items: stretch; gap: 8px; }
   .weather-now { display: flex; flex-direction: column; }
   .weather-now-row { display: flex; align-items: center; gap: 8px; }
-  .weather-now-temp { font-size: clamp(32px, 5.6vh, 52px); font-weight: 400; line-height: 1; }
-  .weather-now-icon { width: clamp(40px, 6.5vh, 60px); height: clamp(40px, 6.5vh, 60px); }
-  .weather-now-meta { font-size: clamp(11px, 1.5vh, 14px); opacity: 0.9; margin-top: 2px; }
+  .weather-now-temp { font-size: clamp(38px, 7vh, 64px); font-weight: 400; line-height: 1; }
+  .weather-now-icon { width: clamp(52px, 8.5vh, 80px); height: clamp(52px, 8.5vh, 80px); }
+  .weather-now-meta { font-size: clamp(12px, 1.6vh, 16px); opacity: 0.9; margin-top: 2px; }
 
-  .forecast-5 { display: grid; grid-template-columns: repeat(5, auto); gap: clamp(10px, 1.8vw, 20px); font-size: clamp(11px, 1.4vh, 13px); text-align: center; }
+  .forecast-5 { display: grid; grid-template-columns: repeat(5, auto); gap: clamp(12px, 2vw, 24px); font-size: clamp(12px, 1.5vh, 14px); text-align: center; }
   body.layout-landscape .forecast-5 { grid-template-columns: repeat(5, 1fr); gap: 4px; font-size: clamp(10px, 1.3vh, 12px); }
   .forecast-5 .col { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-  .forecast-5 svg { width: clamp(30px, 4vh, 38px); height: clamp(30px, 4vh, 38px); }
+  .forecast-5 svg { width: clamp(38px, 5vh, 52px); height: clamp(38px, 5vh, 52px); }
   .forecast-5 .pop { opacity: 0.7; font-size: 0.85em; }
   .forecast-5 .pop-dot { color: #4285f4; }
   .forecast-5 .hi { font-weight: 500; }
@@ -57,14 +57,14 @@
 
   .hourly { padding: 1.4vh 2vw 1vh; display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; font-size: clamp(9px, 1.2vh, 11px); text-align: center; background: rgba(0,0,0,0.35); }
   .hourly .col { display: flex; flex-direction: column; align-items: center; gap: 1px; }
-  .hourly svg { width: clamp(22px, 3vh, 28px); height: clamp(22px, 3vh, 28px); }
+  .hourly svg { width: clamp(26px, 3.8vh, 34px); height: clamp(26px, 3.8vh, 34px); }
   .hourly .h-temp { font-weight: 500; }
   .hourly .h-time { opacity: 0.85; }
 
   body.layout-landscape .hourly { display: none; }
   .hourly-landscape { display: none; padding: 0 2vw; grid-template-columns: repeat(11, 1fr); gap: 2px; font-size: clamp(8px, 1.1vh, 10px); text-align: center; }
   .hourly-landscape .col { display: flex; flex-direction: column; align-items: center; }
-  .hourly-landscape svg { width: clamp(20px, 2.8vh, 26px); height: clamp(20px, 2.8vh, 26px); }
+  .hourly-landscape svg { width: clamp(24px, 3.6vh, 32px); height: clamp(24px, 3.6vh, 32px); }
   body.layout-landscape .hourly-landscape { display: grid; }
 
   /* Kalender */
@@ -85,7 +85,7 @@
   .cal-day .event-dot { width: 6px; height: 6px; border-radius: 50%; background: #1DB954; margin: 1px 0; box-shadow: 0 0 6px rgba(29,185,84,0.8); }
   .event-detail-panel { background: rgba(0,0,0,0.7); padding: 8px 12px; font-size: 13px; border-top: 1px solid rgba(255,255,255,0.1); min-height: 40px; display: flex; align-items: center; justify-content: center; text-align: center; flex-shrink: 0; }
 
-  /* Foto-Picker (unverändert) */
+  /* Foto-Picker */
   #photo-picker { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 100; display: none; flex-direction: column; padding: 24px; overflow: auto; }
   #photo-picker.show { display: flex; }
   .pp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
@@ -209,7 +209,7 @@
 
 <script>
 const CONFIG = {
-  weatherLat: 51.2277,  // Düsseldorf
+  weatherLat: 51.2277,
   weatherLon: 6.7735,
   icalUrl: 'https://calendar.google.com/calendar/ical/mosgab69%40gmail.com/private-6764b611852313b8771e92c125eddb88/basic.ics',
   corsProxy: 'https://corsproxy.io/?',
