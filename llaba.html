@@ -1,582 +1,309 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<title>AnnaLove Dashboard</title>
-
-<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-
-<style>
-  body { margin: 0; background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; overflow: hidden; }
-  .glass-panel { background: rgba(0,0,0,0.30); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.10); border-radius: 16px; }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpin Dashboard - Portable Edition</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Framer Motion -->
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { background-color: black; margin: 0; overflow: hidden; color: white; -webkit-font-smoothing: antialiased; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        input[type="range"] { accent-color: #3b82f6; }
+        select { background-color: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
+    </style>
 </head>
 <body>
-<div id="root"></div>
+    <div id="root"></div>
 
-<script type="text/babel" data-presets="react">
-const { useState, useEffect, useRef } = React;
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+        const { motion, AnimatePresence } = window.Motion;
 
-/* ============= CONFIG ============= */
-const CONFIG = {
-  weatherLat: 51.2277,
-  weatherLon: 6.7735,
-  icalUrl: 'https://calendar.google.com/calendar/ical/mosgab69%40gmail.com/private-6764b611852313b8771e92c125eddb88/basic.ics',
-  corsProxy: 'https://corsproxy.io/?',
-  weatherRefresh: 15 * 60 * 1000,
-  calendarRefresh: 30 * 60 * 1000,
-};
+        const DEFAULT_BG = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=3540";
 
-/* ============= INDEXED-DB FÜR FOTOS ============= */
-const DB_NAME = 'annalove_photos';
-const STORE = 'photos';
-let dbPromise = null;
+        // Simple SVG Icons since Lucide in CDN needs careful use as components
+        const SunIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>;
+        const CloudIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19x3.5a4.5 4.5 0 0 0 0-9 5 5 0 0 0-9.5-2.5 5 5 0 0 0-5 6.5A4.5 4.5 0 0 0 7.5 19z"/></svg>;
+        const ChevronLeft = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>;
+        const ChevronRight = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
+        const SettingsIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.72l-.22-.39a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>;
+        const MusicIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="#1DB954" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>;
 
-function openDB() {
-  if (dbPromise) return dbPromise;
-  dbPromise = new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' });
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-  return dbPromise;
-}
+        function App() {
+            const [currentTime, setCurrentTime] = useState(new Date());
+            const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+            const [viewedMonth, setViewedMonth] = useState(new Date());
 
-async function resizeImage(file, maxSide = 1600, quality = 0.82) {
-  const img = await new Promise((resolve, reject) => {
-    const i = new Image();
-    i.onload = () => resolve(i);
-    i.onerror = reject;
-    i.src = URL.createObjectURL(file);
-  });
-  let { width, height } = img;
-  if (width > maxSide || height > maxSide) {
-    if (width > height) { height = Math.round(height * maxSide / width); width = maxSide; }
-    else { width = Math.round(width * maxSide / height); height = maxSide; }
-  }
-  const canvas = document.createElement('canvas');
-  canvas.width = width; canvas.height = height;
-  canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-  URL.revokeObjectURL(img.src);
-  return new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', quality));
-}
+            // Slideshow State
+            const [bgImages, setBgImages] = useState(() => {
+                const saved = localStorage.getItem('alpine-bg-images');
+                return saved ? JSON.parse(saved) : [DEFAULT_BG];
+            });
+            const [currentBgIndex, setCurrentBgIndex] = useState(0);
+            const [slideshowInterval, setSlideshowInterval] = useState(() => Number(localStorage.getItem('alpine-interval')) || 30);
+            const [transitionType, setTransitionType] = useState(() => localStorage.getItem('alpine-transition') || 'fade');
+            const [brightness, setBrightness] = useState(() => Number(localStorage.getItem('alpine-brightness')) || 100);
+            const [bgBlur, setBgBlur] = useState(() => Number(localStorage.getItem('alpine-blur')) || 0);
 
-async function dbAddPhoto(file) {
-  const [blob, thumbnail] = await Promise.all([resizeImage(file, 1600, 0.82), resizeImage(file, 300, 0.7)]);
-  const photo = { id: 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,8), name: file.name, blob, thumbnail, createdAt: Date.now() };
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).put(photo);
-    tx.oncomplete = () => resolve(photo);
-    tx.onerror = () => reject(tx.error);
-  });
-}
-async function dbGetAll() {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readonly');
-    const r = tx.objectStore(STORE).getAll();
-    r.onsuccess = () => { const a = r.result; a.sort((x,y) => y.createdAt - x.createdAt); resolve(a); };
-    r.onerror = () => reject(r.error);
-  });
-}
-async function dbDelete(id) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).delete(id);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-async function getStorageInfo() {
-  if (!navigator.storage?.estimate) return { usageMB: 0, quotaMB: 0, percent: 0 };
-  const e = await navigator.storage.estimate();
-  const u = (e.usage || 0) / 1024 / 1024, q = (e.quota || 0) / 1024 / 1024;
-  return { usageMB: Math.round(u*10)/10, quotaMB: Math.round(q), percent: q > 0 ? Math.round(u/q*100) : 0 };
-}
+            useEffect(() => {
+                const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+                return () => clearInterval(timer);
+            }, []);
 
-/* ============= ICONS (inline SVG) ============= */
-const Icon = ({ d, className = "w-5 h-5" }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{d}</svg>
-);
-const IconImage   = ({ className }) => <Icon className={className} d={<><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.5-3.5L9 20"/></>} />;
-const IconChevLeft  = ({ className }) => <Icon className={className} d={<path d="m15 18-6-6 6-6"/>} />;
-const IconChevRight = ({ className }) => <Icon className={className} d={<path d="m9 18 6-6-6-6"/>} />;
-const IconUpload  = ({ className }) => <Icon className={className} d={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>} />;
-const IconTrash   = ({ className }) => <Icon className={className} d={<><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></>} />;
-const IconX       = ({ className }) => <Icon className={className} d={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />;
+            useEffect(() => {
+                if (bgImages.length <= 1) return;
+                const timer = setInterval(() => {
+                    setCurrentBgIndex((prev) => (prev + 1) % bgImages.length);
+                }, slideshowInterval * 1000);
+                return () => clearInterval(timer);
+            }, [bgImages, slideshowInterval]);
 
-/* ============= WETTER-ICONS ============= */
-const WIcon = ({ code, isNight, size = 32 }) => {
-  if (code === 0) return isNight
-    ? <svg width={size} height={size} viewBox="0 0 64 64"><path d="M44 12 a20 20 0 1 0 8 32 a16 16 0 0 1 -8 -32 z" fill="#dadce0"/></svg>
-    : <svg width={size} height={size} viewBox="0 0 64 64"><g fill="#fbbc04"><circle cx="32" cy="32" r="13"/><path d="M32 6 l3 7 -6 0 z"/><path d="M32 58 l-3 -7 6 0 z"/><path d="M6 32 l7 -3 0 6 z"/><path d="M58 32 l-7 3 0 -6 z"/><path d="M14 14 l7 2 -5 5 z"/><path d="M50 14 l-2 7 -5 -5 z"/><path d="M14 50 l2 -7 5 5 z"/><path d="M50 50 l-7 -2 5 -5 z"/></g></svg>;
-  if (code <= 2) return isNight
-    ? <svg width={size} height={size} viewBox="0 0 64 64"><path d="M40 10 a16 16 0 1 0 6 26 a13 13 0 0 1 -6 -26 z" fill="#dadce0"/><path d="M52 44 a9 9 0 0 0 -9 -9 a13 13 0 0 0 -25 4 a7 7 0 0 0 1 14 l33 0 a5 5 0 0 0 0 -9 z" fill="#9aa0a6"/></svg>
-    : <svg width={size} height={size} viewBox="0 0 64 64"><g fill="#fbbc04"><circle cx="22" cy="24" r="8"/><path d="M22 9 l2 5 -4 0 z"/><path d="M7 24 l5 -2 0 4 z"/><path d="M11 13 l5 1 -3 4 z"/><path d="M33 13 l-1 5 -4 -3 z"/><path d="M11 35 l1 -5 4 3 z"/></g><path d="M52 44 a9 9 0 0 0 -9 -9 a13 13 0 0 0 -25 4 a7 7 0 0 0 1 14 l33 0 a5 5 0 0 0 0 -9 z" fill="#9aa0a6"/></svg>;
-  if (code === 3) return <svg width={size} height={size} viewBox="0 0 64 64"><path d="M48 38 a10 10 0 0 0 -10 -10 a14 14 0 0 0 -27 4 a8 8 0 0 0 1 16 l36 0 a5 5 0 0 0 0 -10 z" fill="#9aa0a6"/></svg>;
-  if (code <= 48) return <svg width={size} height={size} viewBox="0 0 64 64"><path d="M10 22 l44 0" stroke="#9aa0a6" strokeWidth="4" strokeLinecap="round"/><path d="M6 32 l52 0" stroke="#9aa0a6" strokeWidth="4" strokeLinecap="round"/><path d="M10 42 l44 0" stroke="#9aa0a6" strokeWidth="4" strokeLinecap="round"/></svg>;
-  if (code <= 67 || (code >= 80 && code <= 82)) return <svg width={size} height={size} viewBox="0 0 64 64"><path d="M48 32 a10 10 0 0 0 -10 -10 a14 14 0 0 0 -27 4 a8 8 0 0 0 1 16 l36 0 a5 5 0 0 0 0 -10 z" fill="#9aa0a6"/><path d="M22 48 q -2 4 0 6 q 2 2 4 0 q 2 -2 0 -6 z" fill="#4285f4"/><path d="M40 50 q -2 4 0 6 q 2 2 4 0 q 2 -2 0 -6 z" fill="#4285f4"/></svg>;
-  if (code <= 77 || code === 85 || code === 86) return <svg width={size} height={size} viewBox="0 0 64 64"><path d="M48 32 a10 10 0 0 0 -10 -10 a14 14 0 0 0 -27 4 a8 8 0 0 0 1 16 l36 0 a5 5 0 0 0 0 -10 z" fill="#9aa0a6"/><g fill="#dadce0"><circle cx="22" cy="50" r="2"/><circle cx="32" cy="54" r="2"/><circle cx="42" cy="50" r="2"/></g></svg>;
-  if (code >= 95) return <svg width={size} height={size} viewBox="0 0 64 64"><path d="M48 32 a10 10 0 0 0 -10 -10 a14 14 0 0 0 -27 4 a8 8 0 0 0 1 16 l36 0 a5 5 0 0 0 0 -10 z" fill="#5f6368"/><path d="M30 42 l -6 10 5 0 -3 8 9 -12 -5 0 3 -6 z" fill="#fbbc04"/></svg>;
-  return <svg width={size} height={size} viewBox="0 0 64 64"><path d="M48 38 a10 10 0 0 0 -10 -10 a14 14 0 0 0 -27 4 a8 8 0 0 0 1 16 l36 0 a5 5 0 0 0 0 -10 z" fill="#9aa0a6"/></svg>;
-};
+            const daysInMonth = useMemo(() => {
+                const year = viewedMonth.getFullYear();
+                const month = viewedMonth.getMonth();
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const startDay = (firstDay.getDay() + 6) % 7;
+                
+                const days = [];
+                for (let i = 0; i < startDay; i++) {
+                    const d = new Date(year, month, -i);
+                    days.unshift({ date: d, isCurrentMonth: false });
+                }
+                for (let i = 1; i <= lastDay.getDate(); i++) {
+                    days.push({ date: new Date(year, month, i), isCurrentMonth: true });
+                }
+                const remaining = 42 - days.length;
+                for (let i = 1; i <= remaining; i++) {
+                    days.push({ date: new Date(year, month + 1, i), isCurrentMonth: false });
+                }
+                return days;
+            }, [viewedMonth]);
 
-/* ============= CLOCK ============= */
-function Clock() {
-  const [time, setTime] = useState(new Date());
-  useEffect(() => { const t = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(t); }, []);
-  const h = time.getHours(), m = String(time.getMinutes()).padStart(2,'0'), s = String(time.getSeconds()).padStart(2,'0');
-  const days = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
-  const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  return (
-    <div className="flex flex-col items-start select-none">
-      <div className="flex items-start leading-none">
-        <span className="text-7xl md:text-8xl font-light tracking-tight text-white drop-shadow-lg">{h}:{m}</span>
-        <span className="text-2xl md:text-3xl font-light text-white/80 mt-1 ml-1">{s}</span>
-      </div>
-      <div className="mt-2 text-xl md:text-2xl font-light text-white/90 drop-shadow-md">
-        {days[time.getDay()]}, {time.getDate()}. {months[time.getMonth()]}
-      </div>
-    </div>
-  );
-}
+            const handleImageUpload = (e) => {
+                const files = e.target.files;
+                if (files) {
+                    Array.from(files).forEach(file => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            setBgImages(prev => [...prev, reader.result]);
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
+            };
 
-/* ============= MUSIC ICONS (richtige Links) ============= */
-function MusicIcons() {
-  return (
-    <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2 z-20">
-      <a href="https://open.spotify.com" target="_blank" rel="noopener noreferrer" title="Spotify" className="w-9 h-9 rounded-full bg-[#1DB954] hover:scale-110 transition-transform flex items-center justify-center shadow-lg">
-        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#000"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.871 7.077-.496 9.713 1.115a.623.623 0 0 1 .206.857zm1.223-2.722a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 1 1-.452-1.494c3.632-1.102 8.147-.568 11.232 1.328a.78.78 0 0 1 .257 1.075zm.105-2.835c-3.223-1.914-8.54-2.09-11.618-1.156a.935.935 0 1 1-.542-1.79c3.532-1.072 9.404-.865 13.115 1.338a.936.936 0 1 1-.955 1.608z"/></svg>
-      </a>
-      <a href="https://music.amazon.de" target="_blank" rel="noopener noreferrer" title="Amazon Music" className="w-9 h-9 rounded-full bg-[#25D1DA] hover:scale-110 transition-transform flex items-center justify-center shadow-lg">
-        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#000"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM8 7l3 5-3 5h2l3-5-3-5H8zm6 0l3 5-3 5h2l3-5-3-5h-2z"/></svg>
-      </a>
-    </div>
-  );
-}
+            const removeImage = (index) => {
+                if (bgImages.length <= 1) return;
+                const newBgs = bgImages.filter((_, i) => i !== index);
+                setBgImages(newBgs);
+                localStorage.setItem('alpine-bg-images', JSON.stringify(newBgs));
+                if (currentBgIndex >= index) setCurrentBgIndex(prev => Math.max(0, prev - 1));
+            };
 
-/* ============= WOCHE TERMINE (ersetzt TodoList) ============= */
-function WeekView({ events, selectedDate, onSelectDate }) {
-  const today = new Date();
-  const dayOfWeek = today.getDay(); // 0=So, 1=Mo ...
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-  const days = [];
-  const dayNames = ['Mo','Di','Mi','Do','Fr','Sa','So'];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    const year = d.getFullYear();
-    const month = d.getMonth();
-    const day = d.getDate();
-    const isToday = d.toDateString() === today.toDateString();
-    const isSelected = selectedDate && selectedDate.year === year && selectedDate.month === month && selectedDate.day === day;
-    const dayEvents = events.filter(e => e.start && e.start.getFullYear() === year && e.start.getMonth() === month && e.start.getDate() === day);
-    days.push({ date: d, label: dayNames[i], isToday, isSelected, events: dayEvents });
-  }
+            const saveSettings = () => {
+                localStorage.setItem('alpine-bg-images', JSON.stringify(bgImages));
+                localStorage.setItem('alpine-brightness', brightness.toString());
+                localStorage.setItem('alpine-blur', bgBlur.toString());
+                localStorage.setItem('alpine-interval', slideshowInterval.toString());
+                localStorage.setItem('alpine-transition', transitionType);
+                setIsSettingsOpen(false);
+            };
 
-  const handleClick = (d) => {
-    onSelectDate({ year: d.getFullYear(), month: d.getMonth(), day: d.getDate() });
-  };
+            const getAnimationProps = () => {
+                switch (transitionType) {
+                    case 'slide': return { initial: { x: '100%', opacity: 0 }, animate: { x: 0, opacity: 1 }, exit: { x: '-100%', opacity: 0 }, transition: { duration: 1 } };
+                    case 'zoom': return { initial: { scale: 1.2, opacity: 0 }, animate: { scale: 1, opacity: 1 }, exit: { scale: 0.8, opacity: 0 }, transition: { duration: 1.5 } };
+                    default: return { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 1 } };
+                }
+            };
 
-  return (
-    <div className="flex flex-col gap-1">
-      <h3 className="text-lg font-medium text-white/90 mb-1">Woche</h3>
-      <div className="grid grid-cols-7 gap-1">
-        {days.map((item, idx) => (
-          <button
-            key={idx}
-            onClick={() => handleClick(item.date)}
-            className={`flex flex-col items-center p-1 rounded-lg transition-colors ${item.isToday ? 'bg-red-500/30' : 'hover:bg-white/10'} ${item.isSelected ? 'ring-2 ring-white/70' : ''}`}
-          >
-            <div className="text-xs text-white/70">{item.label}</div>
-            <div className={`text-sm font-medium ${item.isToday ? 'text-white' : 'text-white/90'}`}>{item.date.getDate()}</div>
-            <div className="flex gap-[2px] mt-1">
-              {item.events.slice(0, 3).map((e, j) => (
-                <div key={j} className="w-2 h-2 rounded-full bg-blue-400 shadow-sm" />
-              ))}
-            </div>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+            return (
+                <div className="relative h-screen w-full bg-black text-white font-sans overflow-hidden">
+                    {/* Background */}
+                    <div className="fixed inset-0 z-0 bg-black pointer-events-none">
+                        <AnimatePresence mode="popLayout" initial={false}>
+                            <motion.div 
+                                key={currentBgIndex}
+                                {...getAnimationProps()}
+                                className="absolute inset-0 bg-cover bg-center"
+                                style={{ 
+                                    backgroundImage: `url(${bgImages[currentBgIndex]})`,
+                                    filter: `brightness(${brightness}%) blur(${bgBlur}px)`
+                                }}
+                            />
+                        </AnimatePresence>
+                    </div>
 
-/* ============= WEATHER (unverändert) ============= */
-function Weather() {
-  const [data, setData] = useState(null);
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.weatherLat}&longitude=${CONFIG.weatherLon}&current=temperature_2m,apparent_temperature,weather_code,is_day&hourly=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=6`);
-        setData(await r.json());
-      } catch (e) { console.error(e); }
-    };
-    load();
-    const t = setInterval(load, CONFIG.weatherRefresh);
-    return () => clearInterval(t);
-  }, []);
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30 z-1 pointer-events-none" />
 
-  if (!data) return <div className="text-white/60 text-sm">Lade Wetter…</div>;
-  const desc = c => { if (c===0) return 'Klar'; if (c===1) return 'Überwiegend klar'; if (c===2) return 'Teils bewölkt'; if (c===3) return 'Bewölkt'; if (c<=48) return 'Nebel'; if (c<=57) return 'Nieselregen'; if (c<=67) return 'Regen'; if (c<=77) return 'Schnee'; if (c<=82) return 'Schauer'; if (c>=95) return 'Gewitter'; return ''; };
-  const cur = data.current;
-  const labels = ['So','Mo','Di','Mi','Do','Fr','Sa'];
-  const now = new Date();
-  let s = data.hourly.time.findIndex(t => new Date(t) >= now); if (s === -1) s = 0;
+                    {/* TOP NAV */}
+                    <div className="absolute top-6 left-10 z-30">
+                        <div className="flex items-center gap-1 px-4 py-2 bg-black/30 backdrop-blur-xl rounded-2xl border border-white/5 shadow-2xl">
+                            <button onClick={() => setViewedMonth(new Date(viewedMonth.setMonth(viewedMonth.getMonth() - 1)))} className="p-2 hover:bg-white/10 rounded-full transition-colors"><ChevronLeft/></button>
+                            <span className="text-[11px] font-bold px-3 w-[160px] text-center tracking-widest uppercase">
+                                {viewedMonth.toLocaleString('de-DE', { month: 'long', year: 'numeric' })}
+                            </span>
+                            <button onClick={() => setViewedMonth(new Date(viewedMonth.setMonth(viewedMonth.getMonth() + 1)))} className="p-2 hover:bg-white/10 rounded-full transition-colors"><ChevronRight/></button>
+                        </div>
+                    </div>
 
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-5xl md:text-6xl font-light text-white">{Math.round(cur.temperature_2m)}°</span>
-          <WIcon code={cur.weather_code} isNight={cur.is_day === 0} size={36}/>
-        </div>
-        <div className="flex flex-col text-sm text-white/80">
-          <span>Gefühlt {Math.round(cur.apparent_temperature)}°</span>
-          <span>{desc(cur.weather_code)}</span>
-        </div>
-      </div>
-      <div className="flex gap-3 overflow-x-auto pb-1">
-        {data.daily.time.slice(0,5).map((t, i) => {
-          const dt = new Date(t);
-          const lbl = i === 0 ? 'Heute' : labels[dt.getDay()];
-          return (
-            <div key={i} className="flex flex-col items-center gap-1 min-w-[60px]">
-              <span className="text-xs text-white/70">{lbl}</span>
-              <WIcon code={data.daily.weather_code[i]} isNight={false} size={24}/>
-              <div className="flex flex-col items-center">
-                <span className="text-sm text-white font-medium">{Math.round(data.daily.temperature_2m_max[i])}°</span>
-                <span className="text-xs text-white/60">{Math.round(data.daily.temperature_2m_min[i])}°</span>
-              </div>
-              {(data.daily.precipitation_probability_max[i] || 0) > 0 && <span className="text-[10px] text-blue-300">{data.daily.precipitation_probability_max[i]}%</span>}
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {Array.from({length: 11}).map((_, i) => {
-          const idx = s + i; if (idx >= data.hourly.time.length) return null;
-          const t = new Date(data.hourly.time[idx]);
-          return (
-            <div key={i} className="flex flex-col items-center gap-1 min-w-[40px]">
-              <span className="text-[10px] text-white/60">{t.getHours()}</span>
-              <WIcon code={data.hourly.weather_code[idx]} isNight={data.hourly.is_day[idx] === 0} size={20}/>
-              <span className="text-xs text-white">{Math.round(data.hourly.temperature_2m[idx])}°</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+                    <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center">
+                        <h1 className="text-7xl font-light tracking-tighter tabular-nums">
+                            {currentTime.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                        </h1>
+                        <p className="text-[10px] font-bold tracking-[0.3em] uppercase opacity-60 mt-2">
+                             {currentTime.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long' })}
+                        </p>
+                    </div>
 
-/* ============= CALENDAR (empfängt Events und selectedDate als Props) ============= */
-function Calendar({ events, status, selectedDate, onSelectDate }) {
-  const [currentDate] = useState(new Date());
-  const monthNames = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
-  const dayNames = ['M','D','M','D','F','S','S'];
+                    <div className="absolute top-6 right-10 z-30 flex items-center gap-4">
+                        <div className="flex items-center gap-3 bg-black/20 backdrop-blur-xl p-1.5 rounded-[2rem] border border-white/5">
+                            <a href="https://open.spotify.com" target="_blank" className="p-3 bg-white/5 rounded-2xl flex hover:bg-white/10 transition-all"><MusicIcon/></a>
+                            <a href="https://music.amazon.de" target="_blank" className="p-3 bg-white/5 rounded-2xl flex hover:bg-white/10 transition-all">
+                                <svg viewBox="0 0 24 24" className="w-8 h-8" fill="#00A8E1"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><path d="M7 13.5s2 2 5 2 5-2 5-2" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"/><path d="M16 14.5c1 1 2 2.5 1 4" fill="none" stroke="#00A8E1" strokeWidth="2" strokeLinecap="round"/></svg>
+                            </a>
+                        </div>
+                    </div>
 
-  const colorFor = title => {
-    const t = (title||'').toLowerCase();
-    if (/catering|markt|caravan|coffee|kaffee|salon|event/.test(t)) return 'bg-blue-500/90';
-    if (/werkstatt|reparatur|service|cnc|lieferung|montage/.test(t)) return 'bg-orange-500/90';
-    if (/geburtstag|familie|urlaub|feier/.test(t)) return 'bg-emerald-500/90';
-    return 'bg-purple-500/90';
-  };
+                    {/* MAIN CONTENT */}
+                    <div className="relative z-10 grid grid-cols-12 h-screen pt-24">
+                        {/* LEFT PANEL */}
+                        <div className="col-span-4 p-12 flex flex-col justify-center">
+                            <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="space-y-4">
+                                <span className="text-blue-400 text-xs font-bold uppercase tracking-[0.3em]">Aktuelles Wetter</span>
+                                <h2 className="text-6xl font-light">Sonnig</h2>
+                                <h3 className="text-8xl font-thin tracking-tighter">21°</h3>
+                                <div className="mt-8 flex gap-8">
+                                    {[1,2,3,4,5].map(i => (
+                                        <div key={i} className="flex flex-col items-center gap-2 opacity-60">
+                                            <span className="text-[10px] font-bold">Mo</span>
+                                            <div className="w-4 h-4"><SunIcon/></div>
+                                            <span className="text-xs">22°</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </div>
 
-  const selectedEvents = selectedDate
-    ? events.filter(e => e.start && e.start.getFullYear() === selectedDate.year && e.start.getMonth() === selectedDate.month && e.start.getDate() === selectedDate.day)
-    : [];
+                        {/* RIGHT PANEL: CALENDAR */}
+                        <div className="col-span-8 bg-black/10 backdrop-blur-sm border-l border-white/5 p-12 overflow-hidden">
+                            <div className="grid grid-cols-7 gap-4 mb-8">
+                                {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(d => (
+                                    <div key={d} className="text-center text-[10px] font-bold uppercase tracking-widest text-white/30">{d}</div>
+                                ))}
+                            </div>
+                            <div className="grid grid-cols-7 gap-2">
+                                {daysInMonth.map((d, i) => (
+                                    <div key={i} className={`p-4 h-24 rounded-2xl border transition-all ${d.isCurrentMonth ? 'bg-white/5 border-white/5 hover:bg-white/10' : 'bg-transparent border-transparent opacity-20'}`}>
+                                        <span className="text-sm font-light">{d.date.getDate()}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
 
-  const renderMonth = (monthOffset) => {
-    const display = new Date(currentDate.getFullYear(), currentDate.getMonth() + monthOffset, 1);
-    const month = display.getMonth(), year = display.getFullYear();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
-    const today = new Date();
-    const isCurr = today.getMonth() === month && today.getFullYear() === year;
+                    {/* SETTINGS BUTTON */}
+                    <button onClick={() => setIsSettingsOpen(true)} className="absolute bottom-10 left-10 z-40 p-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl hover:bg-white/5 transition-all outline-none">
+                        <div className="w-6 h-6 text-white/60"><SettingsIcon/></div>
+                    </button>
 
-    const cells = [];
-    cells.push(<div key="h" className="col-span-7 flex items-center gap-2 mb-2"><span className="text-xl font-medium text-white/90">{monthNames[month]} {year}</span></div>);
-    dayNames.forEach((d, i) => cells.push(<div key={'dn'+i} className="text-center text-xs text-white/50 py-1">{d}</div>));
-    for (let i = 0; i < firstDay; i++) cells.push(<div key={'e'+i}/>);
-    for (let day = 1; day <= daysInMonth; day++) {
-      const isToday = isCurr && day === today.getDate();
-      const dayEvents = events.filter(e => e.start && e.start.getFullYear() === year && e.start.getMonth() === month && e.start.getDate() === day).slice(0, 3);
-      const isSelected = selectedDate && selectedDate.year === year && selectedDate.month === month && selectedDate.day === day;
-      cells.push(
-        <div key={day} className={`relative min-h-[48px] md:min-h-[56px] cursor-pointer ${isSelected ? 'ring-2 ring-white/70 rounded-lg' : ''}`} onClick={() => onSelectDate({ year, month, day })}>
-          <div className={`w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-full text-sm md:text-base mb-1 ${isToday ? 'bg-red-500 text-white font-medium' : 'text-white/90'}`}>{day}</div>
-          <div className="flex flex-col gap-[2px]">
-            {dayEvents.map((e, j) => (
-              <div key={j} className={`text-[8px] md:text-[10px] px-1 py-[2px] rounded leading-tight ${colorFor(e.title)} text-white truncate`}>
-                {e.start.getHours() ? `${String(e.start.getHours()).padStart(2,'0')}:${String(e.start.getMinutes()).padStart(2,'0')} ` : ''}{e.title}
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-    return cells;
-  };
+                    {/* SETTINGS MODAL */}
+                    <AnimatePresence>
+                        {isSettingsOpen && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/70 backdrop-blur-xl">
+                                <div className="bg-[#111] w-full max-w-2xl rounded-[3rem] border border-white/10 p-12 overflow-y-auto max-h-[90vh] no-scrollbar">
+                                    <div className="flex justify-between items-center mb-12">
+                                        <h2 className="text-3xl font-light">Einstellungen</h2>
+                                        <button onClick={saveSettings} className="px-6 py-2 bg-blue-600 rounded-full text-sm font-bold">Speichern</button>
+                                    </div>
 
-  return (
-    <div className="flex flex-col h-full">
-      <div className="grid grid-cols-7 gap-1 auto-rows-min">{renderMonth(0)}</div>
-      <div className="grid grid-cols-7 gap-1 auto-rows-min mt-4">{renderMonth(1)}</div>
-      <div className="mt-4 p-3 rounded-lg bg-white/10 min-h-[4rem]">
-        {selectedDate ? (
-          <div>
-            <div className="text-sm font-medium text-white/80 mb-1">
-              {selectedDate.day}. {monthNames[selectedDate.month]} {selectedDate.year}
-            </div>
-            {selectedEvents.length === 0 ? (
-              <div className="text-xs text-white/50">Keine Termine</div>
-            ) : (
-              <ul className="space-y-1">
-                {selectedEvents.map((e, i) => (
-                  <li key={i} className="text-xs text-white/80 flex items-start gap-2">
-                    <span className="font-mono text-white/60 min-w-[3.5rem]">
-                      {e.start ? `${String(e.start.getHours()).padStart(2,'0')}:${String(e.start.getMinutes()).padStart(2,'0')}` : 'ganztägig'}
-                    </span>
-                    <span>{e.title || '(ohne Titel)'}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ) : (
-          <div className="text-xs text-white/50 text-center">Tippe auf einen Tag, um Details zu sehen</div>
-        )}
-      </div>
-      <div className="text-[10px] text-white/40 mt-2 text-right">{status}</div>
-    </div>
-  );
-}
+                                    <div className="space-y-12">
+                                        {/* BG Images */}
+                                        <section className="space-y-4">
+                                            <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">Hintergrund Slideshow</label>
+                                            <div className="grid grid-cols-4 gap-4">
+                                                {bgImages.map((img, i) => (
+                                                    <div key={i} className="relative aspect-square rounded-2xl overflow-hidden border border-white/10 group">
+                                                        <img src={img} className="w-full h-full object-cover" />
+                                                        <button onClick={() => removeImage(i)} className="absolute top-2 right-2 p-1 bg-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">X</button>
+                                                    </div>
+                                                ))}
+                                                <label className="aspect-square rounded-2xl border-2 border-dashed border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/5">
+                                                    <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
+                                                    <span className="text-2xl text-white/20">+</span>
+                                                </label>
+                                            </div>
+                                        </section>
 
-/* ============= HOME ============= */
-function Home() {
-  const [bgIndex, setBgIndex] = useState(0);
-  const [showBgPicker, setShowBgPicker] = useState(false);
-  const [showFullPicker, setShowFullPicker] = useState(false);
-  const [showOverlaySlider, setShowOverlaySlider] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [backgrounds, setBackgrounds] = useState([]);
-  const [storageInfo, setStorageInfo] = useState({ usageMB: 0, quotaMB: 0, percent: 0 });
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
-  const [allEvents, setAllEvents] = useState([]);
-  const [calendarStatus, setCalendarStatus] = useState('Lade Termine…');
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [overlayOpacity, setOverlayOpacity] = useState(() => {
-    const saved = localStorage.getItem('overlayOpacity');
-    return saved ? parseFloat(saved) : 0.5;
-  });
+                                        {/* Inputs */}
+                                        <div className="grid grid-cols-2 gap-8">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">Intervall (Sek)</label>
+                                                <input type="number" value={slideshowInterval} onChange={e => setSlideshowInterval(e.target.value)} className="w-full p-3 rounded-xl outline-none" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">Animation</label>
+                                                <select value={transitionType} onChange={e => setTransitionType(e.target.value)} className="w-full p-4 rounded-xl outline-none">
+                                                    <option value="fade">Fade</option>
+                                                    <option value="slide">Slide</option>
+                                                    <option value="zoom">Zoom</option>
+                                                </select>
+                                            </div>
+                                        </div>
 
-  const folderInput = useRef(null);
-  const fileInput = useRef(null);
-
-  useEffect(() => {
-    const c = () => setIsMobile(window.innerWidth < 1024);
-    c(); window.addEventListener('resize', c); return () => window.removeEventListener('resize', c);
-  }, []);
-
-  useEffect(() => {
-    if (navigator.storage?.persist) navigator.storage.persist();
-    loadStored();
-    loadCalendarEvents();
-  }, []);
-
-  const loadStored = async () => {
-    const photos = await dbGetAll();
-    const userBgs = photos.map(p => ({ id: p.id, url: URL.createObjectURL(p.blob), thumbnailUrl: URL.createObjectURL(p.thumbnail), isUserPhoto: true, photoId: p.id }));
-    setBackgrounds(userBgs);
-    setStorageInfo(await getStorageInfo());
-  };
-
-  const loadCalendarEvents = async () => {
-    try {
-      let text;
-      try {
-        const r = await fetch(CONFIG.icalUrl);
-        if (!r.ok) throw new Error();
-        text = await r.text();
-      } catch {
-        const r = await fetch(CONFIG.corsProxy + encodeURIComponent(CONFIG.icalUrl));
-        text = await r.text();
-      }
-      const parseICal = text => {
-        const lines = text.replace(/\r\n /g,'').replace(/\r\n\t/g,'').split(/\r?\n/);
-        const evs = []; let cur = null;
-        for (const line of lines) {
-          if (line === 'BEGIN:VEVENT') cur = {};
-          else if (line === 'END:VEVENT') { if (cur?.start) evs.push(cur); cur = null; }
-          else if (cur) {
-            const m = line.match(/^([A-Z\-]+)(?:;[^:]*)?:(.*)$/);
-            if (!m) continue;
-            if (m[1] === 'SUMMARY') cur.title = m[2].replace(/\\,/g,',').replace(/\\n/g,' ');
-            else if (m[1] === 'DTSTART') {
-              const dm = line.match(/:(\d{8})(?:T(\d{6})Z?)?/);
-              if (dm) {
-                const d = dm[1], t = dm[2];
-                const y = +d.substring(0,4), mo = +d.substring(4,6) - 1, da = +d.substring(6,8);
-                cur.start = t ? new Date(y, mo, da, +t.substring(0,2), +t.substring(2,4)) : new Date(y, mo, da);
-              }
-            }
-          }
+                                        {/* Sliders */}
+                                        <div className="space-y-8">
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between">
+                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">Helligkeit</label>
+                                                    <span className="text-blue-400">{brightness}%</span>
+                                                </div>
+                                                <input type="range" min="20" max="150" value={brightness} onChange={e => setBrightness(e.target.value)} className="w-full" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between">
+                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-white/40">Blur</label>
+                                                    <span className="text-blue-400">{bgBlur}px</span>
+                                                </div>
+                                                <input type="range" min="0" max="40" value={bgBlur} onChange={e => setBgBlur(e.target.value)} className="w-full" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            );
         }
-        return evs;
-      };
-      setAllEvents(parseICal(text));
-      setCalendarStatus(`Aktualisiert ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`);
-    } catch { setCalendarStatus('Kalender offline'); }
-  };
 
-  const handleFiles = async (files) => {
-    if (!files.length) return;
-    setUploading(true); setUploadProgress({ done: 0, total: files.length });
-    const errors = [];
-    for (let i = 0; i < files.length; i++) {
-      if (!files[i].type.startsWith('image/')) continue;
-      try { await dbAddPhoto(files[i]); }
-      catch (e) { errors.push(files[i].name); }
-      setUploadProgress({ done: i + 1, total: files.length });
-    }
-    setUploading(false);
-    await loadStored();
-    if (errors.length) alert(`${errors.length} Datei(en) übersprungen`);
-  };
-
-  const handleDelete = async (id) => {
-    if (!confirm('Foto wirklich löschen?')) return;
-    await dbDelete(id);
-    await loadStored();
-    if (bgIndex >= backgrounds.length) setBgIndex(0);
-  };
-
-  const nextBg = () => { if (backgrounds.length) setBgIndex(p => (p + 1) % backgrounds.length); };
-  const prevBg = () => { if (backgrounds.length) setBgIndex(p => (p - 1 + backgrounds.length) % backgrounds.length); };
-  const cur = backgrounds[bgIndex];
-
-  const bgStyle = cur
-    ? { backgroundImage: `url(${cur.url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-    : { background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)' };
-
-  const handleOverlayChange = (val) => {
-    setOverlayOpacity(val);
-    localStorage.setItem('overlayOpacity', val);
-  };
-
-  return (
-    <div className="relative w-full min-h-screen overflow-hidden" style={bgStyle}>
-      {/* Overlay mit einstellbarem Schleier */}
-      <div className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }}></div>
-      <div className="relative z-10 w-full min-h-screen p-4 md:p-6 lg:p-8 flex flex-col">
-        <MusicIcons/>
-
-        <div className="absolute top-4 left-4 md:top-6 md:left-6 flex items-center gap-2">
-          <button onClick={() => setShowBgPicker(!showBgPicker)} className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-sm hover:bg-black/50 transition-all">
-            <IconImage className="w-4 h-4"/><span>Photos</span>
-          </button>
-          <button onClick={() => setShowOverlaySlider(!showOverlaySlider)} className="flex items-center justify-center w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white hover:bg-black/50 transition-all" title="Schleier einstellen">
-            <span className="text-lg">🔅</span>
-          </button>
-          {showOverlaySlider && (
-            <div className="flex items-center gap-2 p-2 rounded-xl bg-black/60 backdrop-blur-md border border-white/20">
-              <input
-                type="range"
-                min="0"
-                max="0.9"
-                step="0.05"
-                value={overlayOpacity}
-                onChange={e => handleOverlayChange(parseFloat(e.target.value))}
-                className="w-24 h-2 bg-white/30 rounded-lg appearance-none cursor-pointer accent-white"
-              />
-              <span className="text-xs text-white/70">{Math.round(overlayOpacity * 100)}%</span>
-            </div>
-          )}
-          {showBgPicker && (
-            <div className="flex items-center gap-2 p-2 rounded-xl bg-black/60 backdrop-blur-md border border-white/20">
-              <button onClick={prevBg} className="p-1 rounded-full hover:bg-white/10 text-white" disabled={!backgrounds.length}><IconChevLeft className="w-5 h-5"/></button>
-              <div className="flex gap-2 max-w-[400px] overflow-x-auto">
-                {backgrounds.slice(0, 8).map((bg, i) => (
-                  <button key={bg.id} onClick={() => setBgIndex(i)} className={`flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${i === bgIndex ? 'border-white scale-110' : 'border-transparent opacity-70 hover:opacity-100'}`}>
-                    <img src={bg.thumbnailUrl} alt="" className="w-full h-full object-cover"/>
-                  </button>
-                ))}
-              </div>
-              <button onClick={nextBg} className="p-1 rounded-full hover:bg-white/10 text-white" disabled={!backgrounds.length}><IconChevRight className="w-5 h-5"/></button>
-              <button onClick={() => setShowFullPicker(true)} className="ml-1 px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-xs whitespace-nowrap">Alle / Hochladen</button>
-            </div>
-          )}
-        </div>
-
-        <div className={`flex-1 flex ${isMobile ? 'flex-col gap-6' : 'flex-row gap-8'} mt-12 md:mt-16`}>
-          <div className={`${isMobile ? 'w-full' : 'w-1/2 max-w-md'} flex flex-col gap-6`}>
-            <Clock/>
-            <div className="glass-panel p-4 md:p-5">
-              <WeekView events={allEvents} selectedDate={selectedDate} onSelectDate={setSelectedDate} />
-            </div>
-            <div className="glass-panel p-4 md:p-5"><Weather/></div>
-          </div>
-          <div className={`${isMobile ? 'w-full' : 'flex-1'} glass-panel p-4 md:p-5 overflow-auto max-h-[85vh]`}>
-            <Calendar events={allEvents} status={calendarStatus} selectedDate={selectedDate} onSelectDate={setSelectedDate} />
-          </div>
-        </div>
-      </div>
-
-      {showFullPicker && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex flex-col p-4 md:p-6 overflow-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl text-white font-medium">Hintergrundbilder</h2>
-            <button onClick={() => setShowFullPicker(false)} className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center"><IconX className="w-5 h-5"/></button>
-          </div>
-          <div className="flex flex-wrap gap-3 mb-4 items-center">
-            <button onClick={() => folderInput.current?.click()} disabled={uploading} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm">
-              <IconUpload className="w-4 h-4"/>{uploading ? `${uploadProgress.done}/${uploadProgress.total}` : 'Ordner hochladen'}
-            </button>
-            <input ref={folderInput} type="file" accept="image/*" multiple {...{webkitdirectory: '', directory: '', mozdirectory: ''}} onChange={e => { handleFiles(e.target.files); e.target.value = ''; }} style={{display: 'none'}}/>
-            <button onClick={() => fileInput.current?.click()} disabled={uploading} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm">
-              <IconUpload className="w-4 h-4"/>Mehrere Fotos auswählen
-            </button>
-            <input ref={fileInput} type="file" accept="image/*" multiple onChange={e => { handleFiles(e.target.files); e.target.value = ''; }} style={{display: 'none'}}/>
-            <span className="text-white/60 text-xs ml-auto">Speicher: {storageInfo.usageMB} MB / {storageInfo.quotaMB} MB ({storageInfo.percent}%)</span>
-          </div>
-          {storageInfo.percent > 80 && <div className="mb-4 p-3 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-100 text-sm">⚠ Speicher fast voll – bitte alte Fotos löschen.</div>}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {backgrounds.map((bg, i) => (
-              <div key={bg.id} className={`relative aspect-[16/10] rounded-lg overflow-hidden border-2 cursor-pointer ${i === bgIndex ? 'border-white' : 'border-transparent'}`} onClick={() => { setBgIndex(i); setShowFullPicker(false); setShowBgPicker(false); }}>
-                <img src={bg.thumbnailUrl} alt="" className="w-full h-full object-cover"/>
-                {bg.isUserPhoto && bg.photoId && (
-                  <button onClick={e => { e.stopPropagation(); handleDelete(bg.photoId); }} className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/70 hover:bg-red-600 text-white flex items-center justify-center"><IconTrash className="w-3.5 h-3.5"/></button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById('root')).render(<Home/>);
-</script>
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
