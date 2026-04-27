@@ -37,6 +37,7 @@
   .clock-time sup { font-size: 0.4em; font-weight: 300; vertical-align: super; margin-left: 2px; }
   .clock-date { font-size: clamp(11px, 1.6vh, 16px); opacity: 0.95; margin-top: 0.6vh; }
 
+  /* WETTER */
   .weather-overlay { position: absolute; bottom: 2vh; left: 3vw; right: 3vw; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
   body.layout-landscape .weather-overlay { position: relative; bottom: auto; margin-top: auto; padding: 0 2vw 1.5vh; flex-direction: column; align-items: stretch; gap: 8px; }
   .weather-now { display: flex; flex-direction: column; }
@@ -66,42 +67,80 @@
   .hourly-landscape svg { width: clamp(24px, 3.6vh, 32px); height: clamp(24px, 3.6vh, 32px); }
   body.layout-landscape .hourly-landscape { display: grid; }
 
+  /* Kalender */
   .cal-container { flex: 1; position: relative; overflow: hidden; min-height: 0; display: flex; flex-direction: column; background: rgba(0,0,0, var(--cal-bg-opacity, 0.45)); transition: background 0.2s ease; }
-  .cal-controls { display: flex; align-items: center; gap: 8px; padding: 4px 10px; background: rgba(0,0,0,0.2); flex-shrink: 0; }
-  .cal-controls button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 14px; cursor: pointer; }
+  .cal-controls { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(0,0,0,0.2); flex-shrink: 0; }
+  .cal-controls button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); color: #fff; border-radius: 8px; padding: 6px 12px; font-size: 16px; cursor: pointer; min-width: 44px; }
   .cal-controls button:active { background: rgba(255,255,255,0.25); }
-  #cal-month-year { font-weight: 500; font-size: clamp(12px, 1.5vh, 16px); flex: 1; text-align: center; }
-  .cal-slider { display: flex; align-items: center; gap: 4px; font-size: 11px; opacity: 0.8; }
-  .cal-slider input[type=range] { width: 60px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; }
+  #cal-month-year { font-weight: 500; font-size: clamp(14px, 1.8vh, 18px); flex: 1; text-align: center; }
+  .cal-slider { display: flex; align-items: center; gap: 6px; font-size: 12px; opacity: 0.9; }
+  .cal-slider input[type=range] { width: 70px; height: 6px; background: rgba(255,255,255,0.3); border-radius: 3px; }
 
   .cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: clamp(10px, 1.3vh, 12px); opacity: 0.7; padding: 4px 6px 2px; flex-shrink: 0; }
   .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; padding: 4px 6px; flex: 1; overflow: hidden; }
-  .cal-day { position: relative; text-align: center; font-size: clamp(11px, 1.4vh, 14px); border-radius: 6px; padding: 4px 2px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: rgba(255,255,255,0.03); overflow: hidden; cursor: pointer; }
-  .cal-day.today { background: rgba(255,255,255,0.18); font-weight: 600; }
-  .cal-day.today .day-num { background: rgba(255,255,255,0.25); border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+  .cal-day { position: relative; text-align: center; font-size: clamp(12px, 1.5vh, 15px); border-radius: 8px; padding: 6px 2px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: rgba(255,255,255,0.03); overflow: hidden; cursor: pointer; min-height: 44px; }
+  .cal-day.today { background: rgba(255,255,255,0.2); font-weight: 700; }
+  .cal-day.today .day-num { background: rgba(255,255,255,0.3); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
   .day-num { margin-bottom: 2px; }
-  .cal-day .event-dot { width: 6px; height: 6px; border-radius: 50%; background: #1DB954; margin: 1px 0; box-shadow: 0 0 6px rgba(29,185,84,0.8); }
-  .event-detail-panel { background: rgba(0,0,0,0.7); padding: 8px 12px; font-size: 13px; border-top: 1px solid rgba(255,255,255,0.1); min-height: 40px; display: flex; align-items: center; justify-content: center; text-align: center; flex-shrink: 0; }
+  .cal-day .event-dot { width: 7px; height: 7px; border-radius: 50%; background: #1DB954; margin: 1px 0; box-shadow: 0 0 6px rgba(29,185,84,0.8); }
+  .event-detail-panel { background: rgba(0,0,0,0.7); padding: 10px 14px; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.15); min-height: 40px; display: flex; align-items: center; justify-content: center; text-align: center; flex-shrink: 0; }
 
-  #photo-picker { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 100; display: none; flex-direction: column; padding: 24px; overflow: auto; }
+  /* ===== FOTO-PICKER (OPTIMIERT FÜR TOUCH) ===== */
+  #photo-picker {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 100;
+    display: none; flex-direction: column; padding: 32px 24px; overflow: auto;
+  }
   #photo-picker.show { display: flex; }
-  .pp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-  .pp-header h2 { font-weight: 400; font-size: 22px; }
-  .pp-close { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; }
-  .pp-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
-  .pp-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  .pp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .pp-header h2 { font-weight: 400; font-size: 26px; }
+  .pp-close {
+    background: rgba(255,255,255,0.2); border: none; color: #fff;
+    width: 48px; height: 48px; border-radius: 50%; font-size: 28px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .pp-controls {
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 24px;
+  }
+  .pp-btn {
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
+    color: #fff; padding: 12px 20px; border-radius: 12px; font-size: 16px;
+    cursor: pointer; min-width: 60px; text-align: center;
+  }
   .pp-btn.active { background: #1d9e75; border-color: #1d9e75; }
-  .pp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
-  .pp-thumb { position: relative; aspect-ratio: 16/10; background-size: cover; background-position: center; border-radius: 8px; cursor: pointer; border: 2px solid transparent; overflow: hidden; }
+  select {
+    background: rgba(255,255,255,0.15); color: #fff;
+    border: 1px solid rgba(255,255,255,0.3); padding: 12px 14px;
+    border-radius: 10px; font-size: 16px; font-family: inherit;
+  }
+  .pp-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .pp-thumb {
+    position: relative; aspect-ratio: 16/10; background-size: cover;
+    background-position: center; border-radius: 12px; cursor: pointer;
+    border: 3px solid transparent; overflow: hidden;
+  }
   .pp-thumb.current { border-color: #4285f4; }
-  .pp-thumb-check { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.85); display: flex; align-items: center; justify-content: center; font-size: 12px; color: transparent; }
+  .pp-thumb-check {
+    position: absolute; top: 6px; right: 6px; width: 28px; height: 28px;
+    border-radius: 50%; background: rgba(255,255,255,0.9); display: flex;
+    align-items: center; justify-content: center; font-size: 16px; color: transparent;
+  }
   .pp-thumb.in-rotation .pp-thumb-check { background: #1d9e75; color: #fff; }
-  .pp-upload { display: flex; flex-direction: column; align-items: center; justify-content: center; aspect-ratio: 16/10; background: rgba(255,255,255,0.08); border: 2px dashed rgba(255,255,255,0.3); border-radius: 8px; cursor: pointer; font-size: 13px; gap: 4px; color: #fff; }
-  select { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.25); padding: 6px 10px; border-radius: 8px; font-family: inherit; }
+  .pp-upload {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    aspect-ratio: 16/10; background: rgba(255,255,255,0.08);
+    border: 2px dashed rgba(255,255,255,0.4); border-radius: 12px;
+    cursor: pointer; font-size: 16px; gap: 6px; color: #fff;
+  }
+  #rotation-info { font-size: 14px; opacity: 0.9; margin-left: 12px; }
 
-  #mode-toggle { position: fixed; top: 8px; left: 8px; display: flex; gap: 4px; z-index: 50; opacity: 0.3; }
+  /* Layout-Toggle */
+  #mode-toggle { position: fixed; top: 8px; left: 8px; display: flex; gap: 6px; z-index: 50; opacity: 0.3; }
   #mode-toggle:hover { opacity: 1; }
-  #mode-toggle button { background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; }
+  #mode-toggle button { background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
   #mode-toggle button.active { background: rgba(255,255,255,0.25); }
 </style>
 </head>
@@ -175,8 +214,8 @@
     <button class="pp-close" onclick="closePhotoPicker()">×</button>
   </div>
   <div class="pp-controls">
-    <button class="pp-btn" id="slide-btn" onclick="toggleSlideshow()">▶ Slideshow starten</button>
-    <span style="opacity: 0.6;">Intervall:</span>
+    <button class="pp-btn" id="slide-btn" onclick="toggleSlideshow()">▶ Slideshow</button>
+    <span style="opacity:0.7;">Intervall:</span>
     <select id="interval-select" onchange="updateInterval()">
       <option value="10000">10 s</option>
       <option value="30000" selected>30 s</option>
@@ -184,7 +223,7 @@
       <option value="300000">5 min</option>
       <option value="900000">15 min</option>
     </select>
-    <span id="rotation-info" style="opacity: 0.7; font-size: 12px;"></span>
+    <span id="rotation-info"></span>
   </div>
   <div class="pp-grid" id="pp-grid"></div>
 </div>
@@ -223,7 +262,6 @@ const PLACEHOLDERS = [
 ];
 const svg2url = svg => `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 500' preserveAspectRatio='xMidYMid slice'>${svg}</svg>`)}`;
 
-// Alten localStorage-Müll sofort entfernen
 localStorage.removeItem('annalove_photos');
 
 // ======== INDEXEDDB FÜR FOTOS ========
@@ -333,18 +371,17 @@ async function deletePhoto(indexInPhotos) {
 function renderThumbs() {
   const grid = document.getElementById('pp-grid');
   if (!grid) return;
-  let html = `<label class="pp-upload" for="upload-input"><span style="font-size:24px;">+</span><span>Foto hochladen</span></label><input type="file" id="upload-input" accept="image/*" style="display:none;" onchange="handleUpload(event)">`;
+  let html = `<label class="pp-upload" for="upload-input"><span>+</span><span>Foto hochladen</span></label><input type="file" id="upload-input" accept="image/*" style="display:none;" onchange="handleUpload(event)">`;
   html += photos.map((p, i) => {
     const isCurrent = i === currentIdx;
     const isRotated = inRotation.has(i);
-    const deleteBtn = p.user ? `<button onclick="event.stopPropagation();deletePhoto(${i})" style="position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.6);color:#fff;border:none;cursor:pointer;">×</button>` : '';
+    const deleteBtn = p.user ? `<button onclick="event.stopPropagation();deletePhoto(${i})" style="position:absolute;top:6px;left:6px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.6);color:#fff;border:none;cursor:pointer;font-size:18px;">×</button>` : '';
     return `<div class="pp-thumb ${isCurrent ? 'current' : ''} ${isRotated ? 'in-rotation' : ''}" style="background-image:url('${p.url}');" onclick="pickPhoto(${i})"><div class="pp-thumb-check" onclick="event.stopPropagation();toggleRotation(${i})">✓</div>${deleteBtn}</div>`;
   }).join('');
   grid.innerHTML = html;
   document.getElementById('rotation-info').textContent = `${inRotation.size} Bild${inRotation.size === 1 ? '' : 'er'} aktiv`;
 }
 
-// Restliche Hilfsfunktionen wie zuvor ...
 function applyBg(idx) {
   if (!photos[idx]) return;
   currentIdx = idx;
@@ -368,7 +405,7 @@ function openPhotoPicker() { document.getElementById('photo-picker').classList.a
 function closePhotoPicker() { document.getElementById('photo-picker').classList.remove('show'); }
 
 function startSlideshow() {
-  document.getElementById('slide-btn').textContent = '⏸ Stoppen';
+  document.getElementById('slide-btn').textContent = '⏸ Stopp';
   document.getElementById('slide-btn').classList.add('active');
   slideshowTimer = setInterval(() => {
     const arr = [...inRotation].sort((a,b) => a-b);
@@ -381,7 +418,7 @@ function startSlideshow() {
 
 function stopSlideshow() {
   clearInterval(slideshowTimer); slideshowTimer = null;
-  document.getElementById('slide-btn').textContent = '▶ Slideshow starten';
+  document.getElementById('slide-btn').textContent = '▶ Slideshow';
   document.getElementById('slide-btn').classList.remove('active');
   localStorage.setItem('annalove_slideshow', '0');
 }
@@ -394,7 +431,7 @@ function updateInterval() {
   if (slideshowTimer) { stopSlideshow(); startSlideshow(); }
 }
 
-// Uhr, Wetter, Kalender (wie zuvor, hier aus Platzgründen gekürzt, aber voll funktionsfähig)
+// ======== UHR, WETTER, KALENDER ========
 const TAGE = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 const MONATE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 function tickClock() {
@@ -406,15 +443,231 @@ function tickClock() {
 }
 tickClock(); setInterval(tickClock, 1000);
 
-// ... Wetter- und Kalenderfunktionen (identisch zu vorherigen Versionen) ...
-// (Der vollständige Code kann aus dem vorherigen Verlauf ergänzt werden, ich belasse es hier bei dem Platzhalter, da der Fokus auf der Speicherlösung liegt.)
+function wmoIcon(code, night) {
+  if (code === 0) return night ? 'ic-night' : 'ic-sun';
+  if (code <= 2) return night ? 'ic-night-cloud' : 'ic-partly';
+  if (code === 3) return 'ic-cloud';
+  if (code <= 48) return 'ic-fog';
+  if (code <= 67 || (code >= 80 && code <= 82)) return 'ic-rain';
+  if (code <= 77 || code <= 86) return 'ic-snow';
+  if (code >= 95) return 'ic-storm';
+  return 'ic-cloud';
+}
+function wmoDesc(code) {
+  if (code === 0) return 'Klar'; if (code === 1) return 'Überwiegend klar';
+  if (code === 2) return 'Teils bewölkt'; if (code === 3) return 'Bewölkt';
+  if (code <= 48) return 'Nebel'; if (code <= 57) return 'Nieselregen';
+  if (code <= 67) return 'Regen'; if (code <= 77) return 'Schnee';
+  if (code <= 82) return 'Schauer'; if (code >= 95) return 'Gewitter';
+  return '';
+}
+async function loadWeather() {
+  try {
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.weatherLat}&longitude=${CONFIG.weatherLon}&current=temperature_2m,apparent_temperature,weather_code,is_day&hourly=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=6`);
+    renderWeather(await r.json());
+  } catch (e) { console.error(e); document.getElementById('now-desc').textContent = 'Wetter offline'; }
+}
+function renderWeather(data) {
+  const cur = data.current; const night = cur.is_day === 0;
+  document.getElementById('now-temp').textContent = Math.round(cur.temperature_2m) + '°';
+  document.getElementById('now-feels').textContent = `Gefühlt ${Math.round(cur.apparent_temperature)}°`;
+  document.getElementById('now-desc').textContent = wmoDesc(cur.weather_code);
+  document.getElementById('now-icon').innerHTML = `<use href="#${wmoIcon(cur.weather_code, night)}"/>`;
+  const labels = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  let fc = '';
+  for (let i = 0; i < 5; i++) {
+    const dt = new Date(data.daily.time[i]);
+    const lbl = i === 0 ? 'Heute' : labels[dt.getDay()];
+    fc += `<div class="col"><div>${lbl}</div><svg><use href="#${wmoIcon(data.daily.weather_code[i], false)}"/></svg><div class="pop"><span class="pop-dot">◆</span> ${data.daily.precipitation_probability_max[i] ?? 0}%</div><div class="hi">${Math.round(data.daily.temperature_2m_max[i])}°</div><div class="lo">${Math.round(data.daily.temperature_2m_min[i])}°</div></div>`;
+  }
+  document.getElementById('forecast-5').innerHTML = fc;
+  const now = new Date();
+  let s = data.hourly.time.findIndex(t => new Date(t) >= now); if (s === -1) s = 0;
+  let h = '', hl = '';
+  for (let i = 0; i < 12; i++) {
+    const idx = s + i; if (idx >= data.hourly.time.length) break;
+    const t = new Date(data.hourly.time[idx]);
+    const code = data.hourly.weather_code[idx];
+    const isn = data.hourly.is_day[idx] === 0;
+    const col = `<div class="col"><div class="h-time">${t.getHours()}</div><svg><use href="#${wmoIcon(code, isn)}"/></svg><div class="h-temp">${Math.round(data.hourly.temperature_2m[idx])}°</div></div>`;
+    h += col; if (i < 11) hl += col;
+  }
+  document.getElementById('hourly').innerHTML = h;
+  document.getElementById('hourly-landscape').innerHTML = hl;
+}
 
-// Initialisierung
+// Kalender
+let calDate = new Date();
+let calendarEvents = {};
+
+function updateCalOpacity(val) {
+  document.getElementById('cal-container').style.setProperty('--cal-bg-opacity', val);
+  localStorage.setItem('annalove_cal_opacity', val);
+}
+
+function parseICS(text) {
+  const events = [];
+  const lines = text.split(/\r?\n/);
+  let event = null;
+  let inAlarm = false;
+  for (let line of lines) {
+    line = line.trim();
+    if (line === 'BEGIN:VEVENT') { event = {}; inAlarm = false; }
+    else if (line === 'END:VEVENT') { if (event && event.start) events.push(event); event = null; }
+    else if (line === 'BEGIN:VALARM' || line === 'BEGIN:ALARM') inAlarm = true;
+    else if (line === 'END:VALARM' || line === 'END:ALARM') inAlarm = false;
+    else if (event && !inAlarm) {
+      const [key, ...rest] = line.split(':');
+      const value = rest.join(':');
+      if (key === 'DTSTART') event.start = parseICalDate(value);
+      else if (key === 'DTEND') event.end = parseICalDate(value);
+      else if (key === 'SUMMARY') event.summary = value;
+    }
+  }
+  return events;
+}
+
+function parseICalDate(str) {
+  const cleaned = str.replace(/[^0-9T]/g, '');
+  const year = parseInt(cleaned.substring(0,4));
+  const month = parseInt(cleaned.substring(4,6)) - 1;
+  const day = parseInt(cleaned.substring(6,8));
+  if (cleaned.length > 8) {
+    const hour = parseInt(cleaned.substring(9,11));
+    const min = parseInt(cleaned.substring(11,13));
+    const sec = parseInt(cleaned.substring(13,15) || '0');
+    return new Date(year, month, day, hour, min, sec);
+  }
+  return new Date(year, month, day);
+}
+
+function dateKey(year, month, day) {
+  return `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+}
+
+async function fetchCalendar() {
+  try {
+    const proxyUrl = CONFIG.corsProxy + encodeURIComponent(CONFIG.icalUrl);
+    const resp = await fetch(proxyUrl);
+    if (!resp.ok) throw new Error('Fehler beim Laden: ' + resp.status);
+    const text = await resp.text();
+    const events = parseICS(text);
+    const map = {};
+    for (const ev of events) {
+      const start = ev.start;
+      const end = ev.end || start;
+      const key = dateKey(start.getFullYear(), start.getMonth(), start.getDate());
+      if (!map[key]) map[key] = [];
+      map[key].push(ev);
+      if (end && end.toDateString() !== start.toDateString()) {
+        const cur = new Date(start);
+        while (cur <= end) {
+          const k = dateKey(cur.getFullYear(), cur.getMonth(), cur.getDate());
+          if (!map[k]) map[k] = [];
+          map[k].push(ev);
+          cur.setDate(cur.getDate() + 1);
+        }
+      }
+    }
+    calendarEvents = map;
+    renderCalendar();
+  } catch (err) {
+    console.error('Kalender-Fehler:', err);
+    document.getElementById('cal-days').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;">⚠️ Kalender konnte nicht geladen werden</div>';
+  }
+}
+
+function changeMonth(delta) {
+  calDate.setMonth(calDate.getMonth() + delta);
+  renderCalendar();
+}
+
+let selectedDayKey = null;
+
+function showEventDetails(key) {
+  const panel = document.getElementById('event-detail-panel');
+  const events = calendarEvents[key] || [];
+  if (events.length === 0) {
+    panel.textContent = '';
+    return;
+  }
+  selectedDayKey = key;
+  const titles = events.map(e => e.summary || '(ohne Titel)');
+  panel.innerHTML = titles.join(', ');
+}
+
+function renderCalendar() {
+  const year = calDate.getFullYear();
+  const month = calDate.getMonth();
+  const today = new Date();
+  const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+  document.getElementById('cal-month-year').textContent = `${MONATE[month]} ${year}`;
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const daysInMonth = lastDay.getDate();
+  let startDay = firstDay.getDay() - 1;
+  if (startDay < 0) startDay = 6;
+
+  let html = '';
+  for (let i = 0; i < startDay; i++) {
+    html += '<div class="cal-day"></div>';
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = dateKey(year, month, d);
+    const isToday = key === todayKey;
+    const events = calendarEvents[key] || [];
+    let dotsHtml = '';
+    const maxDots = 3;
+    for (let i = 0; i < Math.min(events.length, maxDots); i++) {
+      dotsHtml += '<div class="event-dot"></div>';
+    }
+    if (events.length > maxDots) {
+      dotsHtml += `<div style="font-size:9px;opacity:0.8;">+${events.length - maxDots}</div>`;
+    }
+    html += `<div class="cal-day${isToday ? ' today' : ''}" data-key="${key}" onclick="showEventDetails('${key}')">
+      <div class="day-num">${d}</div>
+      ${dotsHtml}
+    </div>`;
+  }
+  document.getElementById('cal-days').innerHTML = html;
+
+  if (selectedDayKey && calendarEvents[selectedDayKey]) {
+    showEventDetails(selectedDayKey);
+  } else {
+    document.getElementById('event-detail-panel').textContent = '';
+  }
+}
+
+function setLayout(mode) {
+  document.body.classList.remove('layout-portrait', 'layout-landscape');
+  if (mode === 'auto') {
+    document.body.classList.add(window.innerWidth > window.innerHeight ? 'layout-landscape' : 'layout-portrait');
+  } else document.body.classList.add('layout-' + mode);
+  document.querySelectorAll('#mode-toggle button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  localStorage.setItem('annalove_layout', mode);
+}
+document.querySelectorAll('#mode-toggle button').forEach(b => b.addEventListener('click', () => setLayout(b.dataset.mode)));
+window.addEventListener('resize', () => {
+  const m = localStorage.getItem('annalove_layout') || 'auto';
+  if (m === 'auto') setLayout('auto');
+});
+
 let activeBg = 1;
+setLayout(localStorage.getItem('annalove_layout') || 'auto');
 initPhotos();
 loadWeather();
 setInterval(loadWeather, CONFIG.weatherRefresh);
 if (localStorage.getItem('annalove_slideshow') === '1') startSlideshow();
+
+const savedOpacity = localStorage.getItem('annalove_cal_opacity');
+if (savedOpacity !== null) {
+  document.getElementById('cal-bg-slider').value = savedOpacity;
+  updateCalOpacity(savedOpacity);
+} else {
+  updateCalOpacity(0.45);
+}
 fetchCalendar();
 setInterval(fetchCalendar, 60 * 60 * 1000);
 </script>
