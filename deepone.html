@@ -20,24 +20,68 @@
   body.layout-portrait #app { flex-direction: column; }
   body.layout-portrait .top-area { flex: 0 0 58%; position: relative; }
   body.layout-portrait .bottom-area { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-  body.layout-portrait .photos-btn { display: none; }
+  body.layout-portrait .photos-btn { display: none; }  /* nur im Landscape-Modus */
 
   body.layout-landscape #app { flex-direction: row; }
   body.layout-landscape .top-area { flex: 0 0 42%; position: relative; display: flex; flex-direction: column; }
   body.layout-landscape .bottom-area { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 1.5vh 1.5vw; }
 
-  .header { position: relative; padding: 2.2vh 3vw; display: flex; justify-content: space-between; align-items: flex-start; }
-  .photos-btn { border: 1px solid rgba(255,255,255,0.7); border-radius: 100px; padding: 0.5vh 1.4vw; font-size: clamp(11px, 1.5vh, 14px); color: #fff; background: rgba(0,0,0,0.15); cursor: pointer; }
+  /* ===== HEADER (überarbeitet) ===== */
+  .header {
+    position: relative;
+    padding: 2.2vh 3vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 3vw;
+    flex-wrap: wrap;
+  }
 
-  .clock-row { display: flex; align-items: flex-start; gap: 10px; }
-  .spotify-btn { display: inline-flex; align-items: center; justify-content: center; width: clamp(28px, 4vh, 40px); height: clamp(28px, 4vh, 40px); border-radius: 50%; background: #1DB954; margin-top: 0.6vh; flex-shrink: 0; cursor: pointer; text-decoration: none; }
+  .photos-btn {
+    border: 2px solid rgba(255,255,255,0.8);
+    border-radius: 100px;
+    padding: 1.2vh 2.5vw;
+    font-size: clamp(14px, 2vh, 18px);
+    color: #fff;
+    background: rgba(0,0,0,0.25);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .clock-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .spotify-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #1DB954;
+    flex-shrink: 0;
+    cursor: pointer;
+    text-decoration: none;
+  }
   .spotify-btn svg { width: 60%; height: 60%; }
-  .clock { text-align: right; }
-  .clock-time { font-size: clamp(36px, 5.8vh, 60px); font-weight: 300; line-height: 1; letter-spacing: -1.5px; white-space: nowrap; }
-  .clock-time sup { font-size: 0.4em; font-weight: 300; vertical-align: super; margin-left: 2px; }
-  .clock-date { font-size: clamp(11px, 1.6vh, 16px); opacity: 0.95; margin-top: 0.6vh; }
 
-  /* WETTER */
+  .clock { text-align: right; }
+  .clock-time {
+    font-size: clamp(32px, 5vh, 52px);
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -1px;
+    white-space: nowrap;
+  }
+  .clock-time sup { font-size: 0.4em; font-weight: 300; vertical-align: super; margin-left: 2px; }
+  .clock-date { font-size: clamp(11px, 1.5vh, 14px); opacity: 0.9; margin-top: 0.5vh; }
+
+  /* WETTER (unverändert groß) */
   .weather-overlay { position: absolute; bottom: 2vh; left: 3vw; right: 3vw; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
   body.layout-landscape .weather-overlay { position: relative; bottom: auto; margin-top: auto; padding: 0 2vw 1.5vh; flex-direction: column; align-items: stretch; gap: 8px; }
   .weather-now { display: flex; flex-direction: column; }
@@ -69,8 +113,8 @@
 
   /* Kalender */
   .cal-container { flex: 1; position: relative; overflow: hidden; min-height: 0; display: flex; flex-direction: column; background: rgba(0,0,0, var(--cal-bg-opacity, 0.45)); transition: background 0.2s ease; }
-  .cal-controls { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(0,0,0,0.2); flex-shrink: 0; }
-  .cal-controls button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); color: #fff; border-radius: 8px; padding: 6px 12px; font-size: 16px; cursor: pointer; min-width: 44px; }
+  .cal-controls { display: flex; align-items: center; gap: 10px; padding: 6px 12px; background: rgba(0,0,0,0.2); flex-shrink: 0; }
+  .cal-controls button { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); color: #fff; border-radius: 10px; padding: 8px 14px; font-size: 16px; cursor: pointer; min-width: 48px; }
   .cal-controls button:active { background: rgba(255,255,255,0.25); }
   #cal-month-year { font-weight: 500; font-size: clamp(14px, 1.8vh, 18px); flex: 1; text-align: center; }
   .cal-slider { display: flex; align-items: center; gap: 6px; font-size: 12px; opacity: 0.9; }
@@ -85,37 +129,37 @@
   .cal-day .event-dot { width: 7px; height: 7px; border-radius: 50%; background: #1DB954; margin: 1px 0; box-shadow: 0 0 6px rgba(29,185,84,0.8); }
   .event-detail-panel { background: rgba(0,0,0,0.7); padding: 10px 14px; font-size: 14px; border-top: 1px solid rgba(255,255,255,0.15); min-height: 40px; display: flex; align-items: center; justify-content: center; text-align: center; flex-shrink: 0; }
 
-  /* ===== FOTO-PICKER (OPTIMIERT FÜR TOUCH) ===== */
+  /* ===== FOTO-PICKER (weiterhin optimiert) ===== */
   #photo-picker {
     position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 100;
-    display: none; flex-direction: column; padding: 32px 24px; overflow: auto;
+    display: none; flex-direction: column; padding: 36px 28px; overflow: auto;
   }
   #photo-picker.show { display: flex; }
-  .pp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-  .pp-header h2 { font-weight: 400; font-size: 26px; }
+  .pp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+  .pp-header h2 { font-weight: 400; font-size: 28px; }
   .pp-close {
     background: rgba(255,255,255,0.2); border: none; color: #fff;
-    width: 48px; height: 48px; border-radius: 50%; font-size: 28px;
+    width: 52px; height: 52px; border-radius: 50%; font-size: 30px;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
   }
   .pp-controls {
-    display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
-    margin-bottom: 24px;
+    display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 28px;
   }
   .pp-btn {
     background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
-    color: #fff; padding: 12px 20px; border-radius: 12px; font-size: 16px;
-    cursor: pointer; min-width: 60px; text-align: center;
+    color: #fff; padding: 14px 24px; border-radius: 14px; font-size: 18px;
+    cursor: pointer; min-width: 70px; text-align: center;
   }
   .pp-btn.active { background: #1d9e75; border-color: #1d9e75; }
   select {
     background: rgba(255,255,255,0.15); color: #fff;
-    border: 1px solid rgba(255,255,255,0.3); padding: 12px 14px;
-    border-radius: 10px; font-size: 16px; font-family: inherit;
+    border: 1px solid rgba(255,255,255,0.3); padding: 14px 16px;
+    border-radius: 12px; font-size: 18px; font-family: inherit;
   }
   .pp-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 14px;
   }
   .pp-thumb {
     position: relative; aspect-ratio: 16/10; background-size: cover;
@@ -124,20 +168,19 @@
   }
   .pp-thumb.current { border-color: #4285f4; }
   .pp-thumb-check {
-    position: absolute; top: 6px; right: 6px; width: 28px; height: 28px;
+    position: absolute; top: 8px; right: 8px; width: 30px; height: 30px;
     border-radius: 50%; background: rgba(255,255,255,0.9); display: flex;
-    align-items: center; justify-content: center; font-size: 16px; color: transparent;
+    align-items: center; justify-content: center; font-size: 18px; color: transparent;
   }
   .pp-thumb.in-rotation .pp-thumb-check { background: #1d9e75; color: #fff; }
   .pp-upload {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     aspect-ratio: 16/10; background: rgba(255,255,255,0.08);
     border: 2px dashed rgba(255,255,255,0.4); border-radius: 12px;
-    cursor: pointer; font-size: 16px; gap: 6px; color: #fff;
+    cursor: pointer; font-size: 18px; gap: 8px; color: #fff;
   }
-  #rotation-info { font-size: 14px; opacity: 0.9; margin-left: 12px; }
+  #rotation-info { font-size: 16px; opacity: 0.9; margin-left: 16px; }
 
-  /* Layout-Toggle */
   #mode-toggle { position: fixed; top: 8px; left: 8px; display: flex; gap: 6px; z-index: 50; opacity: 0.3; }
   #mode-toggle:hover { opacity: 1; }
   #mode-toggle button { background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer; }
@@ -159,7 +202,7 @@
 <div id="app">
   <div class="top-area">
     <div class="header">
-      <button class="photos-btn" onclick="openPhotoPicker()">Photos</button>
+      <button class="photos-btn" onclick="openPhotoPicker()">📷 Photos</button>
       <div class="clock-row">
         <a href="https://open.spotify.com" target="_blank" class="spotify-btn" title="Spotify">
           <svg viewBox="0 0 24 24" fill="#000"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.871 7.077-.496 9.713 1.115a.623.623 0 0 1 .206.857zm1.223-2.722a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 1 1-.452-1.494c3.632-1.102 8.147-.568 11.232 1.328a.78.78 0 0 1 .257 1.075zm.105-2.835c-3.223-1.914-8.54-2.09-11.618-1.156a.935.935 0 1 1-.542-1.79c3.532-1.072 9.404-.865 13.115 1.338a.936.936 0 1 1-.955 1.608z"/></svg>
@@ -215,7 +258,7 @@
   </div>
   <div class="pp-controls">
     <button class="pp-btn" id="slide-btn" onclick="toggleSlideshow()">▶ Slideshow</button>
-    <span style="opacity:0.7;">Intervall:</span>
+    <span style="opacity:0.7; font-size:16px;">Intervall:</span>
     <select id="interval-select" onchange="updateInterval()">
       <option value="10000">10 s</option>
       <option value="30000" selected>30 s</option>
