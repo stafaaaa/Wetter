@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>AnnaLove Dashboard</title>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+  body { margin: 0; background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; overflow: hidden; }
+  .glass-panel { background: rgba(0,0,0,0.30); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.10); border-radius: 16px; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+
+/* ============= CONFIG ============= */
+const CONFIG = {
+  weatherLat: 51.2277,
+  weatherLon: 6.7735,
+  icalUrl: 'https://calendar.google.com/calendar/ical/mosgab69%40gmail.com/private-6764b611852313b8771e92c125eddb88/basic.ics',
+  corsProxy: 'https://corsproxy.io/?',
+  weatherRefresh: 15 * 60 * 1000,
+  calendarRefresh: 30 * 60 * 1000,
+};
+
+/* ============= INDEXED-DB FÜR FOTOS (ohne Defaults) ============= */
+const DB_NAME = 'annalove_photos';
+const STORE = 'photos';
+let dbPromise = null;
+
+function openDB() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return dbPromise;
+}
+
+async function resizeImage(file, maxSide = 1600, quality = 0.82) {
+  const img = await new Promise((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = reject;
+    i.src = URL.createObjectURL(file);
+  });
+  let { width, height } = img;
+  if (width > maxSide || height > maxSide) {
+    if (width > height) { height = Math.round(height * maxSide / width); width = maxSide; }
+    else { width = Math.round(width * maxSide / height); height = maxSide; }
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+  URL.revokeObjectURL(img.src);
+  return new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', quality));
+}
+
+async function dbAddPhoto(file) {
+  const [blob, thumbnail] = await Promise.all([resizeImage(file, 1600, 0.82), resizeImage(file, 300, 0.7)]);
+  const photo = { id: 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,8), name: file.name, blob, thumbnail, createdAt: Date.now() };
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put(photo);
+    tx.oncomplete = () => resolve(photo);
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function dbGetAll() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const r = tx.objectStore(STORE).getAll();
+    r.onsuccess = () => { const a = r.result; a.sort((x,y) => y.createdAt - x.createdAt); resolve(a); };
+    r.onerror = () => reject(r.error);
+  });
+}
+async function dbDelete(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function getStorageInfo() {
+  if (!navigator.storage?.estimate) return { usageMB: 0, quotaMB: 0, percent: 0 };
+  const e = await navigator.storage.estimate();
+  const u = (e.usage || 0) / 1024 / 1024, q = (e.quota || 0) / 1024 / 1024;
+  return { usageMB: Math.round(u*10)/10, quotaMB: Math.round(q), percent: q > 0 ? Math.round(u/q*100) : 0 };
+}
+
+/* ============= ICONS (inline SVG) ============= */
+const Icon = ({ d, className = "w-5 h-5" }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{d}</svg>
+);
+const IconImage = ({ className }) => <Icon className={className} d={<><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.5-3.5L9 20"/></>} />;
+const IconChevLeft = ({ className }) => <Icon className={className} d={<path d="m15 18-6-6 6-6"/>} />;
+const IconChevRight = ({ className }) => <Icon className={className} d={<path d="m9 18 6-6-6-6"/>} />;
+const IconUpload = ({ className }) => <Icon className={className} d={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>} />;
+const IconTrash = ({ className }) => <Icon className={className} d={<><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></>} />;
+const IconX = ({ className }) => <Icon className={className} d={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />;
+
+/* Wetter-Icons farbig */
+const WIcon = ({ code, isNight, size = 32 }) => {
+  if (code === 0) return isNight
+    ? <svg width={size} height={size} viewBox="0 0 64 64"><path d="M44 12 a20 20 0 1 0 8 32 a16 16 0 0 1 -8 -32 z" fill="#dadce0"/></svg>
+    : <svg width={size} height={size} viewBox="0 0 64 64"><g fill="#fbbc04"><circle cx="32" cy="32" r="13"/><path d="M32 6 l3 7 -6 0 z"/><path d="M32 58 l-3 -7 6 0 z"/><path d="M6 32 l7 -3 0 6 z"/><path d="M58 32 l-7 3 0 -6 z"/><path d="M14 14 l7 2 -5 5 z"/><path d="M50 14 l-2 7 -5 -5 z"/><path d="M14 50 l2 -7 5 5 z"/><path d="M50 50 l-7 -2 5 -5 z"/></g></svg>;
+  if (code <= 2) return isNight
+    ? <svg width={size} height={size} viewBox="0 0 64 64"><path d="M40 10 a16 16 0 1 0 6 26 a13 13 0 0 1 -6 -26 z" fill="#dadce0"/><path d="M52 44 a9 9 0 0 0 -9 -9 a13 13 0 0 0 -25 4 a7 7 0 0 0 1 14 l33 0 a5 5 0 0 0 0 -9 z" fill="#9aa0a6"/></svg>
+    : <svg width={size} height={size} viewBox="0 0 64 64"><g fill="#fbbc04"><circle cx="22" cy="24" r="8"/><path d="M22 9 l2 5 -4 0 z"/><path d="M7 24 l5 -2 0 4 z"/><path d="M11 13 l5 1 -3 4 z"/><path d="M33 13 l-1 5 -4 -3 z"/><path d="M11 35 l1 -5 4 3 z"/></g><path d="M52 44 a9 9 0 0 0 -9 -9 a13 13 0 0 0 -25 4 a7 7 0 0 0 1 14 l33 0 a5 5 0 0 0 0 -9 z" fill="#9aa0a6"/></svg>;
+  if (code === 3) return <svg width={size} height={size} viewBox="0 0 64 64"><path d="M48 38 a10 10 0 0 0 -10 -10 a14 14 0 0 0 -27 4 a8 8 0 0 0 1 16 l36 0 a5 5 0 0 0 0 -10 z" fill="#9aa0a6"/></svg>;
+  if (code <= 48) return <svg width={size} height={size} viewBox="0 0 64 64"><path d="M10 22 l44 0" stroke="#9aa0a6" strokeWidth="4" strokeLinecap="round"/><path d="M6 32 l52 0" stroke="#9aa0a6" strokeWidth="4" strokeLinecap="round"/><path d="M10 42 l44 0" stroke="#9aa0a6" strokeWidth="4" strokeLinecap="round"/></svg>;
+  if (code <= 67 || (code >= 80 && code <= 82)) return <svg width={size} height={size} viewBox="0 0 64 64"><path d="M48 32 a10 10 0 0 0 -10 -10 a14 14 0 0 0 -27 4 a8 8 0 0 0 1 16 l36 0 a5 5 0 0 0 0 -10 z" fill="#9aa0a6"/><path d="M22 48 q -2 4 0 6 q 2 2 4 0 q 2 -2 0 -6 z" fill="#4285f4"/><path d="M40 50 q -2 4 0 6 q 2 2 4 0 q 2 -2 0 -6 z" fill="#4285f4"/></svg>;
+  if (code <= 77 || code === 85 || code === 86) return <svg width={size} height={size} viewBox="0 0 64 64"><path d="M48 32 a10 10 0 0 0 -10 -10 a14 14 0 0 0 -27 4 a8 8 0 0 0 1 16 l36 0 a5 5 0 0 0 0 -10 z" fill="#9aa0a6"/><g fill="#dadce0"><circle cx="22" cy="50" r="2"/><circle cx="32" cy="54" r="2"/><circle cx="42" cy="50" r="2"/></g></svg>;
+  if (code >= 95) return <svg width={size} height={size} viewBox="0 0 64 64"><path d="M48 32 a10 10 0 0 0 -10 -10 a14 14 0 0 0 -27 4 a8 8 0 0 0 1 16 l36 0 a5 5 0 0 0 0 -10 z" fill="#5f6368"/><path d="M30 42 l -6 10 5 0 -3 8 9 -12 -5 0 3 -6 z" fill="#fbbc04"/></svg>;
+  return <svg width={size} height={size} viewBox="0 0 64 64"><path d="M48 38 a10 10 0 0 0 -10 -10 a14 14 0 0 0 -27 4 a8 8 0 0 0 1 16 l36 0 a5 5 0 0 0 0 -10 z" fill="#9aa0a6"/></svg>;
+};
+
+/* ============= CLOCK ============= */
+function Clock() {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => { const t = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(t); }, []);
+  const h = time.getHours(), m = String(time.getMinutes()).padStart(2,'0'), s = String(time.getSeconds()).padStart(2,'0');
+  const days = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+  const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  return (
+    <div className="flex flex-col items-start select-none">
+      <div className="flex items-start leading-none">
+        <span className="text-7xl md:text-8xl font-light tracking-tight text-white drop-shadow-lg">{h}:{m}</span>
+        <span className="text-2xl md:text-3xl font-light text-white/80 mt-1 ml-1">{s}</span>
+      </div>
+      <div className="mt-2 text-xl md:text-2xl font-light text-white/90 drop-shadow-md">
+        {days[time.getDay()]}, {time.getDate()}. {months[time.getMonth()]}
+      </div>
+    </div>
+  );
+}
+
+/* ============= MUSIC ICONS ============= */
+function MusicIcons() {
+  const openSpotify = () => {
+    try { window.location.href = 'intent://open.spotify.com/#Intent;scheme=https;package=com.spotify.music;end'; }
+    catch { window.location.href = 'https://open.spotify.com'; }
+  };
+  const openAmazon = () => {
+    try { window.location.href = 'intent://music.amazon.de/#Intent;scheme=https;package=com.amazon.mp3;end'; }
+    catch { window.location.href = 'https://music.amazon.de'; }
+  };
+  return (
+    <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2 z-20">
+      <button onClick={openSpotify} title="Spotify" className="w-9 h-9 rounded-full bg-[#1DB954] hover:scale-110 transition-transform flex items-center justify-center shadow-lg">
+        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#000"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.871 7.077-.496 9.713 1.115a.623.623 0 0 1 .206.857zm1.223-2.722a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.78.78 0 1 1-.452-1.494c3.632-1.102 8.147-.568 11.232 1.328a.78.78 0 0 1 .257 1.075zm.105-2.835c-3.223-1.914-8.54-2.09-11.618-1.156a.935.935 0 1 1-.542-1.79c3.532-1.072 9.404-.865 13.115 1.338a.936.936 0 1 1-.955 1.608z"/></svg>
+      </button>
+      <button onClick={openAmazon} title="Amazon Music" className="w-9 h-9 rounded-full bg-[#25D1DA] hover:scale-110 transition-transform flex items-center justify-center shadow-lg">
+        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="#000"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM8 7l3 5-3 5h2l3-5-3-5H8zm6 0l3 5-3 5h2l3-5-3-5h-2z"/></svg>
+      </button>
+    </div>
+  );
+}
+
+/* ============= TODO LIST ============= */
+function TodoList() {
+  const [todos, setTodos] = useState(() => {
+    const s = localStorage.getItem('dashboard-todos');
+    if (s) return JSON.parse(s);
+    return [
+      { id: '1', text: 'Wohnzimmer staubsaugen', completed: false },
+      { id: '2', text: 'Küche wischen', completed: false },
+      { id: '3', text: 'Müll rausbringen', completed: true },
+      { id: '4', text: 'Pflanzen gießen', completed: false },
+    ];
+  });
+  const [newTodo, setNewTodo] = useState('');
+  useEffect(() => { localStorage.setItem('dashboard-todos', JSON.stringify(todos)); }, [todos]);
+  const toggle = id => setTodos(p => p.map(t => t.id === id ? {...t, completed: !t.completed} : t));
+  const add = () => { if (!newTodo.trim()) return; setTodos(p => [...p, {id: Date.now().toString(), text: newTodo.trim(), completed: false}]); setNewTodo(''); };
+  const del = id => setTodos(p => p.filter(t => t.id !== id));
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className="text-lg font-medium text-white/90 mb-1">Aufgaben</h3>
+      {todos.map(t => (
+        <div key={t.id} className="flex items-center gap-2 group">
+          <button onClick={() => toggle(t.id)} className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${t.completed ? 'bg-white/80 border-white/80' : 'border-white/40 hover:border-white/70'}`}>
+            {t.completed && <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>}
+          </button>
+          <span className={`text-sm text-white/90 flex-1 ${t.completed ? 'line-through text-white/50' : ''}`}>{t.text}</span>
+          <button onClick={() => del(t.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-white/50 hover:text-red-400"><IconTrash className="w-4 h-4"/></button>
+        </div>
+      ))}
+      <div className="flex items-center gap-2 mt-1">
+        <button onClick={add} className="text-white/60 hover:text-white"><IconPlus className="w-4 h-4"/></button>
+        <input type="text" value={newTodo} onChange={e => setNewTodo(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} placeholder="Neue Aufgabe" className="bg-transparent text-sm text-white/80 placeholder:text-white/40 outline-none flex-1"/>
+      </div>
+    </div>
+  );
+}
+
+/* ============= WEATHER (live, OpenMeteo) ============= */
+function Weather() {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.weatherLat}&longitude=${CONFIG.weatherLon}&current=temperature_2m,apparent_temperature,weather_code,is_day&hourly=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=6`);
+        setData(await r.json());
+      } catch (e) { console.error(e); }
+    };
+    load();
+    const t = setInterval(load, CONFIG.weatherRefresh);
+    return () => clearInterval(t);
+  }, []);
+
+  if (!data) return <div className="text-white/60 text-sm">Lade Wetter…</div>;
+  const desc = c => { if (c===0) return 'Klar'; if (c===1) return 'Überwiegend klar'; if (c===2) return 'Teils bewölkt'; if (c===3) return 'Bewölkt'; if (c<=48) return 'Nebel'; if (c<=57) return 'Nieselregen'; if (c<=67) return 'Regen'; if (c<=77) return 'Schnee'; if (c<=82) return 'Schauer'; if (c>=95) return 'Gewitter'; return ''; };
+  const cur = data.current;
+  const labels = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  const now = new Date();
+  let s = data.hourly.time.findIndex(t => new Date(t) >= now); if (s === -1) s = 0;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-5xl md:text-6xl font-light text-white">{Math.round(cur.temperature_2m)}°</span>
+          <WIcon code={cur.weather_code} isNight={cur.is_day === 0} size={36}/>
+        </div>
+        <div className="flex flex-col text-sm text-white/80">
+          <span>Gefühlt {Math.round(cur.apparent_temperature)}°</span>
+          <span>{desc(cur.weather_code)}</span>
+        </div>
+      </div>
+      <div className="flex gap-3 overflow-x-auto pb-1">
+        {data.daily.time.slice(0,5).map((t, i) => {
+          const dt = new Date(t);
+          const lbl = i === 0 ? 'Heute' : labels[dt.getDay()];
+          return (
+            <div key={i} className="flex flex-col items-center gap-1 min-w-[60px]">
+              <span className="text-xs text-white/70">{lbl}</span>
+              <WIcon code={data.daily.weather_code[i]} isNight={false} size={24}/>
+              <div className="flex flex-col items-center">
+                <span className="text-sm text-white font-medium">{Math.round(data.daily.temperature_2m_max[i])}°</span>
+                <span className="text-xs text-white/60">{Math.round(data.daily.temperature_2m_min[i])}°</span>
+              </div>
+              {(data.daily.precipitation_probability_max[i] || 0) > 0 && <span className="text-[10px] text-blue-300">{data.daily.precipitation_probability_max[i]}%</span>}
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {Array.from({length: 11}).map((_, i) => {
+          const idx = s + i; if (idx >= data.hourly.time.length) return null;
+          const t = new Date(data.hourly.time[idx]);
+          return (
+            <div key={i} className="flex flex-col items-center gap-1 min-w-[40px]">
+              <span className="text-[10px] text-white/60">{t.getHours()}</span>
+              <WIcon code={data.hourly.weather_code[idx]} isNight={data.hourly.is_day[idx] === 0} size={20}/>
+              <span className="text-xs text-white">{Math.round(data.hourly.temperature_2m[idx])}°</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ============= CALENDAR (iCal-Sync) ============= */
+function Calendar() {
+  const [events, setEvents] = useState([]);
+  const [status, setStatus] = useState('Lade Termine…');
+  const [currentDate] = useState(new Date());
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        let text;
+        try {
+          const r = await fetch(CONFIG.icalUrl);
+          if (!r.ok) throw new Error();
+          text = await r.text();
+        } catch {
+          const r = await fetch(CONFIG.corsProxy + encodeURIComponent(CONFIG.icalUrl));
+          text = await r.text();
+        }
+        setEvents(parseICal(text));
+        setStatus(`Aktualisiert ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`);
+      } catch { setStatus('Kalender offline'); }
+    };
+    load();
+    const t = setInterval(load, CONFIG.calendarRefresh);
+    return () => clearInterval(t);
+  }, []);
+
+  const parseICal = text => {
+    const lines = text.replace(/\r\n /g,'').replace(/\r\n\t/g,'').split(/\r?\n/);
+    const evs = []; let cur = null;
+    for (const line of lines) {
+      if (line === 'BEGIN:VEVENT') cur = {};
+      else if (line === 'END:VEVENT') { if (cur?.start) evs.push(cur); cur = null; }
+      else if (cur) {
+        const m = line.match(/^([A-Z\-]+)(?:;[^:]*)?:(.*)$/);
+        if (!m) continue;
+        if (m[1] === 'SUMMARY') cur.title = m[2].replace(/\\,/g,',').replace(/\\n/g,' ');
+        else if (m[1] === 'DTSTART') {
+          const dm = line.match(/:(\d{8})(?:T(\d{6})Z?)?/);
+          if (dm) {
+            const d = dm[1], t = dm[2];
+            const y = +d.substring(0,4), mo = +d.substring(4,6) - 1, da = +d.substring(6,8);
+            cur.start = t ? new Date(y, mo, da, +t.substring(0,2), +t.substring(2,4)) : new Date(y, mo, da);
+          }
+        }
+      }
+    }
+    return evs;
+  };
+
+  const colorFor = title => {
+    const t = (title||'').toLowerCase();
+    if (/catering|markt|caravan|coffee|kaffee|salon|event/.test(t)) return 'bg-blue-500/90';
+    if (/werkstatt|reparatur|service|cnc|lieferung|montage/.test(t)) return 'bg-orange-500/90';
+    if (/geburtstag|familie|urlaub|feier/.test(t)) return 'bg-emerald-500/90';
+    return 'bg-purple-500/90';
+  };
+
+  const monthNames = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  const dayNames = ['M','D','M','D','F','S','S'];
+
+  const renderMonth = (monthOffset) => {
+    const display = new Date(currentDate.getFullYear(), currentDate.getMonth() + monthOffset, 1);
+    const month = display.getMonth(), year = display.getFullYear();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
+    const today = new Date();
+    const isCurr = today.getMonth() === month && today.getFullYear() === year;
+
+    const cells = [];
+    cells.push(<div key="h" className="col-span-7 flex items-center gap-2 mb-2"><span className="text-xl font-medium text-white/90">{monthNames[month]} {year}</span></div>);
+    dayNames.forEach((d, i) => cells.push(<div key={'dn'+i} className="text-center text-xs text-white/50 py-1">{d}</div>));
+    for (let i = 0; i < firstDay; i++) cells.push(<div key={'e'+i}/>);
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isToday = isCurr && day === today.getDate();
+      const dayEvents = events.filter(e => e.start && e.start.getFullYear() === year && e.start.getMonth() === month && e.start.getDate() === day).slice(0, 3);
+      cells.push(
+        <div key={day} className="relative min-h-[48px] md:min-h-[56px]">
+          <div className={`w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-full text-sm md:text-base mb-1 ${isToday ? 'bg-red-500 text-white font-medium' : 'text-white/90'}`}>{day}</div>
+          <div className="flex flex-col gap-[2px]">
+            {dayEvents.map((e, j) => (
+              <div key={j} className={`text-[8px] md:text-[10px] px-1 py-[2px] rounded leading-tight ${colorFor(e.title)} text-white truncate`}>
+                {e.start.getHours() ? `${String(e.start.getHours()).padStart(2,'0')}:${String(e.start.getMinutes()).padStart(2,'0')} ` : ''}{e.title}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return cells;
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="grid grid-cols-7 gap-1 auto-rows-min">{renderMonth(0)}</div>
+      <div className="grid grid-cols-7 gap-1 auto-rows-min mt-4">{renderMonth(1)}</div>
+      <div className="text-[10px] text-white/40 mt-2 text-right">{status}</div>
+    </div>
+  );
+}
+
+/* ============= HOME ============= */
+function Home() {
+  const [bgIndex, setBgIndex] = useState(0);
+  const [showBgPicker, setShowBgPicker] = useState(false);
+  const [showFullPicker, setShowFullPicker] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [backgrounds, setBackgrounds] = useState([]);
+  const [storageInfo, setStorageInfo] = useState({ usageMB: 0, quotaMB: 0, percent: 0 });
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
+  const folderInput = useRef(null);
+  const fileInput = useRef(null);
+
+  useEffect(() => {
+    const c = () => setIsMobile(window.innerWidth < 1024);
+    c(); window.addEventListener('resize', c); return () => window.removeEventListener('resize', c);
+  }, []);
+
+  useEffect(() => {
+    if (navigator.storage?.persist) navigator.storage.persist();
+    loadStored();
+  }, []);
+
+  const loadStored = async () => {
+    const photos = await dbGetAll();
+    const userBgs = photos.map(p => ({ id: p.id, url: URL.createObjectURL(p.blob), thumbnailUrl: URL.createObjectURL(p.thumbnail), isUserPhoto: true, photoId: p.id }));
+    setBackgrounds(userBgs);
+    setStorageInfo(await getStorageInfo());
+  };
+
+  const handleFiles = async (files) => {
+    if (!files.length) return;
+    setUploading(true); setUploadProgress({ done: 0, total: files.length });
+    const errors = [];
+    for (let i = 0; i < files.length; i++) {
+      if (!files[i].type.startsWith('image/')) continue;
+      try { await dbAddPhoto(files[i]); }
+      catch (e) { errors.push(files[i].name); }
+      setUploadProgress({ done: i + 1, total: files.length });
+    }
+    setUploading(false);
+    await loadStored();
+    if (errors.length) alert(`${errors.length} Datei(en) übersprungen`);
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Foto wirklich löschen?')) return;
+    await dbDelete(id);
+    await loadStored();
+    if (bgIndex >= backgrounds.length) setBgIndex(0);
+  };
+
+  const nextBg = () => { if (backgrounds.length) setBgIndex(p => (p + 1) % backgrounds.length); };
+  const prevBg = () => { if (backgrounds.length) setBgIndex(p => (p - 1 + backgrounds.length) % backgrounds.length); };
+  const cur = backgrounds[bgIndex];
+
+  return (
+    <div className="relative w-full min-h-screen overflow-hidden" style={{ backgroundImage: cur ? `url(${cur.url})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: cur ? 'transparent' : '#111' }}>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40"/>
+      <div className="relative z-10 w-full min-h-screen p-4 md:p-6 lg:p-8 flex flex-col">
+        <MusicIcons/>
+
+        <div className="absolute top-4 left-4 md:top-6 md:left-6">
+          <button onClick={() => setShowBgPicker(!showBgPicker)} className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-sm hover:bg-black/50 transition-all">
+            <IconImage className="w-4 h-4"/><span>Photos</span>
+          </button>
+          {showBgPicker && (
+            <div className="mt-2 flex items-center gap-2 p-2 rounded-xl bg-black/60 backdrop-blur-md border border-white/20">
+              <button onClick={prevBg} className="p-1 rounded-full hover:bg-white/10 text-white" disabled={!backgrounds.length}><IconChevLeft className="w-5 h-5"/></button>
+              <div className="flex gap-2 max-w-[400px] overflow-x-auto">
+                {backgrounds.slice(0, 8).map((bg, i) => (
+                  <button key={bg.id} onClick={() => setBgIndex(i)} className={`flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${i === bgIndex ? 'border-white scale-110' : 'border-transparent opacity-70 hover:opacity-100'}`}>
+                    <img src={bg.thumbnailUrl} alt="" className="w-full h-full object-cover"/>
+                  </button>
+                ))}
+              </div>
+              <button onClick={nextBg} className="p-1 rounded-full hover:bg-white/10 text-white" disabled={!backgrounds.length}><IconChevRight className="w-5 h-5"/></button>
+              <button onClick={() => setShowFullPicker(true)} className="ml-1 px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-xs whitespace-nowrap">Alle / Hochladen</button>
+            </div>
+          )}
+        </div>
+
+        <div className={`flex-1 flex ${isMobile ? 'flex-col gap-6' : 'flex-row gap-8'} mt-12 md:mt-16`}>
+          <div className={`${isMobile ? 'w-full' : 'w-1/2 max-w-md'} flex flex-col gap-6`}>
+            <Clock/>
+            <div className="glass-panel p-4 md:p-5"><TodoList/></div>
+            <div className="glass-panel p-4 md:p-5"><Weather/></div>
+          </div>
+          <div className={`${isMobile ? 'w-full' : 'flex-1'} glass-panel p-4 md:p-5 overflow-auto max-h-[85vh]`}>
+            <Calendar/>
+          </div>
+        </div>
+      </div>
+
+      {showFullPicker && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex flex-col p-4 md:p-6 overflow-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl text-white font-medium">Hintergrundbilder</h2>
+            <button onClick={() => setShowFullPicker(false)} className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center"><IconX className="w-5 h-5"/></button>
+          </div>
+          <div className="flex flex-wrap gap-3 mb-4 items-center">
+            <button onClick={() => folderInput.current?.click()} disabled={uploading} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm">
+              <IconUpload className="w-4 h-4"/>{uploading ? `${uploadProgress.done}/${uploadProgress.total}` : 'Ordner hochladen'}
+            </button>
+            <input ref={folderInput} type="file" accept="image/*" multiple {...{webkitdirectory: '', directory: '', mozdirectory: ''}} onChange={e => { handleFiles(e.target.files); e.target.value = ''; }} style={{display: 'none'}}/>
+            <button onClick={() => fileInput.current?.click()} disabled={uploading} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm">
+              <IconUpload className="w-4 h-4"/>Mehrere Fotos auswählen
+            </button>
+            <input ref={fileInput} type="file" accept="image/*" multiple onChange={e => { handleFiles(e.target.files); e.target.value = ''; }} style={{display: 'none'}}/>
+            <span className="text-white/60 text-xs ml-auto">Speicher: {storageInfo.usageMB} MB / {storageInfo.quotaMB} MB ({storageInfo.percent}%)</span>
+          </div>
+          {storageInfo.percent > 80 && <div className="mb-4 p-3 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-100 text-sm">⚠ Speicher fast voll – bitte alte Fotos löschen.</div>}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {backgrounds.map((bg, i) => (
+              <div key={bg.id} className={`relative aspect-[16/10] rounded-lg overflow-hidden border-2 cursor-pointer ${i === bgIndex ? 'border-white' : 'border-transparent'}`} onClick={() => { setBgIndex(i); setShowFullPicker(false); setShowBgPicker(false); }}>
+                <img src={bg.thumbnailUrl} alt="" className="w-full h-full object-cover"/>
+                {bg.isUserPhoto && bg.photoId && (
+                  <button onClick={e => { e.stopPropagation(); handleDelete(bg.photoId); }} className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/70 hover:bg-red-600 text-white flex items-center justify-center"><IconTrash className="w-3.5 h-3.5"/></button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Home/>);
+</script>
+</body>
+</html>
