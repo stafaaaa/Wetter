@@ -120,7 +120,6 @@ const IconChevRight = ({ className }) => <Icon className={className} d={<path d=
 const IconUpload  = ({ className }) => <Icon className={className} d={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>} />;
 const IconTrash   = ({ className }) => <Icon className={className} d={<><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></>} />;
 const IconX       = ({ className }) => <Icon className={className} d={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />;
-const IconPlus    = ({ className }) => <Icon className={className} d={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />;
 
 /* ============= WETTER-ICONS ============= */
 const WIcon = ({ code, isNight, size = 32 }) => {
@@ -158,7 +157,7 @@ function Clock() {
   );
 }
 
-/* ============= MUSIC ICONS (jetzt als richtige Links) ============= */
+/* ============= MUSIC ICONS (richtige Links) ============= */
 function MusicIcons() {
   return (
     <div className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-2 z-20">
@@ -172,44 +171,55 @@ function MusicIcons() {
   );
 }
 
-/* ============= TODO LIST ============= */
-function TodoList() {
-  const [todos, setTodos] = useState(() => {
-    const s = localStorage.getItem('dashboard-todos');
-    if (s) return JSON.parse(s);
-    return [
-      { id: '1', text: 'Wohnzimmer staubsaugen', completed: false },
-      { id: '2', text: 'Küche wischen', completed: false },
-      { id: '3', text: 'Müll rausbringen', completed: true },
-      { id: '4', text: 'Pflanzen gießen', completed: false },
-    ];
-  });
-  const [newTodo, setNewTodo] = useState('');
-  useEffect(() => { localStorage.setItem('dashboard-todos', JSON.stringify(todos)); }, [todos]);
-  const toggle = id => setTodos(p => p.map(t => t.id === id ? {...t, completed: !t.completed} : t));
-  const add = () => { if (!newTodo.trim()) return; setTodos(p => [...p, {id: Date.now().toString(), text: newTodo.trim(), completed: false}]); setNewTodo(''); };
-  const del = id => setTodos(p => p.filter(t => t.id !== id));
+/* ============= WOCHE TERMINE (ersetzt TodoList) ============= */
+function WeekView({ events, selectedDate, onSelectDate }) {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0=So, 1=Mo ...
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  const days = [];
+  const dayNames = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const year = d.getFullYear();
+    const month = d.getMonth();
+    const day = d.getDate();
+    const isToday = d.toDateString() === today.toDateString();
+    const isSelected = selectedDate && selectedDate.year === year && selectedDate.month === month && selectedDate.day === day;
+    const dayEvents = events.filter(e => e.start && e.start.getFullYear() === year && e.start.getMonth() === month && e.start.getDate() === day);
+    days.push({ date: d, label: dayNames[i], isToday, isSelected, events: dayEvents });
+  }
+
+  const handleClick = (d) => {
+    onSelectDate({ year: d.getFullYear(), month: d.getMonth(), day: d.getDate() });
+  };
+
   return (
-    <div className="flex flex-col gap-2">
-      <h3 className="text-lg font-medium text-white/90 mb-1">Aufgaben</h3>
-      {todos.map(t => (
-        <div key={t.id} className="flex items-center gap-2 group">
-          <button onClick={() => toggle(t.id)} className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${t.completed ? 'bg-white/80 border-white/80' : 'border-white/40 hover:border-white/70'}`}>
-            {t.completed && <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>}
+    <div className="flex flex-col gap-1">
+      <h3 className="text-lg font-medium text-white/90 mb-1">Woche</h3>
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((item, idx) => (
+          <button
+            key={idx}
+            onClick={() => handleClick(item.date)}
+            className={`flex flex-col items-center p-1 rounded-lg transition-colors ${item.isToday ? 'bg-red-500/30' : 'hover:bg-white/10'} ${item.isSelected ? 'ring-2 ring-white/70' : ''}`}
+          >
+            <div className="text-xs text-white/70">{item.label}</div>
+            <div className={`text-sm font-medium ${item.isToday ? 'text-white' : 'text-white/90'}`}>{item.date.getDate()}</div>
+            <div className="flex gap-[2px] mt-1">
+              {item.events.slice(0, 3).map((e, j) => (
+                <div key={j} className="w-2 h-2 rounded-full bg-blue-400 shadow-sm" />
+              ))}
+            </div>
           </button>
-          <span className={`text-sm text-white/90 flex-1 ${t.completed ? 'line-through text-white/50' : ''}`}>{t.text}</span>
-          <button onClick={() => del(t.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-white/50 hover:text-red-400"><IconTrash className="w-4 h-4"/></button>
-        </div>
-      ))}
-      <div className="flex items-center gap-2 mt-1">
-        <button onClick={add} className="text-white/60 hover:text-white"><IconPlus className="w-4 h-4"/></button>
-        <input type="text" value={newTodo} onChange={e => setNewTodo(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} placeholder="Neue Aufgabe" className="bg-transparent text-sm text-white/80 placeholder:text-white/40 outline-none flex-1"/>
+        ))}
       </div>
     </div>
   );
 }
 
-/* ============= WEATHER (live, OpenMeteo) ============= */
+/* ============= WEATHER (unverändert) ============= */
 function Weather() {
   const [data, setData] = useState(null);
   useEffect(() => {
@@ -277,56 +287,11 @@ function Weather() {
   );
 }
 
-/* ============= CALENDAR (iCal-Sync mit Detailansicht) ============= */
-function Calendar() {
-  const [events, setEvents] = useState([]);
-  const [status, setStatus] = useState('Lade Termine…');
+/* ============= CALENDAR (empfängt Events und selectedDate als Props) ============= */
+function Calendar({ events, status, selectedDate, onSelectDate }) {
   const [currentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(null);  // NEU: ausgewähltes Datum
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        let text;
-        try {
-          const r = await fetch(CONFIG.icalUrl);
-          if (!r.ok) throw new Error();
-          text = await r.text();
-        } catch {
-          const r = await fetch(CONFIG.corsProxy + encodeURIComponent(CONFIG.icalUrl));
-          text = await r.text();
-        }
-        setEvents(parseICal(text));
-        setStatus(`Aktualisiert ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`);
-      } catch { setStatus('Kalender offline'); }
-    };
-    load();
-    const t = setInterval(load, CONFIG.calendarRefresh);
-    return () => clearInterval(t);
-  }, []);
-
-  const parseICal = text => {
-    const lines = text.replace(/\r\n /g,'').replace(/\r\n\t/g,'').split(/\r?\n/);
-    const evs = []; let cur = null;
-    for (const line of lines) {
-      if (line === 'BEGIN:VEVENT') cur = {};
-      else if (line === 'END:VEVENT') { if (cur?.start) evs.push(cur); cur = null; }
-      else if (cur) {
-        const m = line.match(/^([A-Z\-]+)(?:;[^:]*)?:(.*)$/);
-        if (!m) continue;
-        if (m[1] === 'SUMMARY') cur.title = m[2].replace(/\\,/g,',').replace(/\\n/g,' ');
-        else if (m[1] === 'DTSTART') {
-          const dm = line.match(/:(\d{8})(?:T(\d{6})Z?)?/);
-          if (dm) {
-            const d = dm[1], t = dm[2];
-            const y = +d.substring(0,4), mo = +d.substring(4,6) - 1, da = +d.substring(6,8);
-            cur.start = t ? new Date(y, mo, da, +t.substring(0,2), +t.substring(2,4)) : new Date(y, mo, da);
-          }
-        }
-      }
-    }
-    return evs;
-  };
+  const monthNames = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  const dayNames = ['M','D','M','D','F','S','S'];
 
   const colorFor = title => {
     const t = (title||'').toLowerCase();
@@ -336,10 +301,6 @@ function Calendar() {
     return 'bg-purple-500/90';
   };
 
-  const monthNames = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
-  const dayNames = ['M','D','M','D','F','S','S'];
-
-  // Filtere Events für den ausgewählten Tag
   const selectedEvents = selectedDate
     ? events.filter(e => e.start && e.start.getFullYear() === selectedDate.year && e.start.getMonth() === selectedDate.month && e.start.getDate() === selectedDate.day)
     : [];
@@ -361,7 +322,7 @@ function Calendar() {
       const dayEvents = events.filter(e => e.start && e.start.getFullYear() === year && e.start.getMonth() === month && e.start.getDate() === day).slice(0, 3);
       const isSelected = selectedDate && selectedDate.year === year && selectedDate.month === month && selectedDate.day === day;
       cells.push(
-        <div key={day} className={`relative min-h-[48px] md:min-h-[56px] cursor-pointer ${isSelected ? 'ring-2 ring-white/70 rounded-lg' : ''}`} onClick={() => setSelectedDate({ year, month, day })}>
+        <div key={day} className={`relative min-h-[48px] md:min-h-[56px] cursor-pointer ${isSelected ? 'ring-2 ring-white/70 rounded-lg' : ''}`} onClick={() => onSelectDate({ year, month, day })}>
           <div className={`w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-full text-sm md:text-base mb-1 ${isToday ? 'bg-red-500 text-white font-medium' : 'text-white/90'}`}>{day}</div>
           <div className="flex flex-col gap-[2px]">
             {dayEvents.map((e, j) => (
@@ -380,7 +341,6 @@ function Calendar() {
     <div className="flex flex-col h-full">
       <div className="grid grid-cols-7 gap-1 auto-rows-min">{renderMonth(0)}</div>
       <div className="grid grid-cols-7 gap-1 auto-rows-min mt-4">{renderMonth(1)}</div>
-      {/* Detailbereich für ausgewählten Tag */}
       <div className="mt-4 p-3 rounded-lg bg-white/10 min-h-[4rem]">
         {selectedDate ? (
           <div>
@@ -416,11 +376,20 @@ function Home() {
   const [bgIndex, setBgIndex] = useState(0);
   const [showBgPicker, setShowBgPicker] = useState(false);
   const [showFullPicker, setShowFullPicker] = useState(false);
+  const [showOverlaySlider, setShowOverlaySlider] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [backgrounds, setBackgrounds] = useState([]);
   const [storageInfo, setStorageInfo] = useState({ usageMB: 0, quotaMB: 0, percent: 0 });
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
+  const [allEvents, setAllEvents] = useState([]);
+  const [calendarStatus, setCalendarStatus] = useState('Lade Termine…');
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [overlayOpacity, setOverlayOpacity] = useState(() => {
+    const saved = localStorage.getItem('overlayOpacity');
+    return saved ? parseFloat(saved) : 0.5;
+  });
+
   const folderInput = useRef(null);
   const fileInput = useRef(null);
 
@@ -432,6 +401,7 @@ function Home() {
   useEffect(() => {
     if (navigator.storage?.persist) navigator.storage.persist();
     loadStored();
+    loadCalendarEvents();
   }, []);
 
   const loadStored = async () => {
@@ -439,6 +409,44 @@ function Home() {
     const userBgs = photos.map(p => ({ id: p.id, url: URL.createObjectURL(p.blob), thumbnailUrl: URL.createObjectURL(p.thumbnail), isUserPhoto: true, photoId: p.id }));
     setBackgrounds(userBgs);
     setStorageInfo(await getStorageInfo());
+  };
+
+  const loadCalendarEvents = async () => {
+    try {
+      let text;
+      try {
+        const r = await fetch(CONFIG.icalUrl);
+        if (!r.ok) throw new Error();
+        text = await r.text();
+      } catch {
+        const r = await fetch(CONFIG.corsProxy + encodeURIComponent(CONFIG.icalUrl));
+        text = await r.text();
+      }
+      const parseICal = text => {
+        const lines = text.replace(/\r\n /g,'').replace(/\r\n\t/g,'').split(/\r?\n/);
+        const evs = []; let cur = null;
+        for (const line of lines) {
+          if (line === 'BEGIN:VEVENT') cur = {};
+          else if (line === 'END:VEVENT') { if (cur?.start) evs.push(cur); cur = null; }
+          else if (cur) {
+            const m = line.match(/^([A-Z\-]+)(?:;[^:]*)?:(.*)$/);
+            if (!m) continue;
+            if (m[1] === 'SUMMARY') cur.title = m[2].replace(/\\,/g,',').replace(/\\n/g,' ');
+            else if (m[1] === 'DTSTART') {
+              const dm = line.match(/:(\d{8})(?:T(\d{6})Z?)?/);
+              if (dm) {
+                const d = dm[1], t = dm[2];
+                const y = +d.substring(0,4), mo = +d.substring(4,6) - 1, da = +d.substring(6,8);
+                cur.start = t ? new Date(y, mo, da, +t.substring(0,2), +t.substring(2,4)) : new Date(y, mo, da);
+              }
+            }
+          }
+        }
+        return evs;
+      };
+      setAllEvents(parseICal(text));
+      setCalendarStatus(`Aktualisiert ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`);
+    } catch { setCalendarStatus('Kalender offline'); }
   };
 
   const handleFiles = async (files) => {
@@ -471,18 +479,41 @@ function Home() {
     ? { backgroundImage: `url(${cur.url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
     : { background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)' };
 
+  const handleOverlayChange = (val) => {
+    setOverlayOpacity(val);
+    localStorage.setItem('overlayOpacity', val);
+  };
+
   return (
     <div className="relative w-full min-h-screen overflow-hidden" style={bgStyle}>
-      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40"/>
+      {/* Overlay mit einstellbarem Schleier */}
+      <div className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }}></div>
       <div className="relative z-10 w-full min-h-screen p-4 md:p-6 lg:p-8 flex flex-col">
         <MusicIcons/>
 
-        <div className="absolute top-4 left-4 md:top-6 md:left-6">
+        <div className="absolute top-4 left-4 md:top-6 md:left-6 flex items-center gap-2">
           <button onClick={() => setShowBgPicker(!showBgPicker)} className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white text-sm hover:bg-black/50 transition-all">
             <IconImage className="w-4 h-4"/><span>Photos</span>
           </button>
+          <button onClick={() => setShowOverlaySlider(!showOverlaySlider)} className="flex items-center justify-center w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white hover:bg-black/50 transition-all" title="Schleier einstellen">
+            <span className="text-lg">🔅</span>
+          </button>
+          {showOverlaySlider && (
+            <div className="flex items-center gap-2 p-2 rounded-xl bg-black/60 backdrop-blur-md border border-white/20">
+              <input
+                type="range"
+                min="0"
+                max="0.9"
+                step="0.05"
+                value={overlayOpacity}
+                onChange={e => handleOverlayChange(parseFloat(e.target.value))}
+                className="w-24 h-2 bg-white/30 rounded-lg appearance-none cursor-pointer accent-white"
+              />
+              <span className="text-xs text-white/70">{Math.round(overlayOpacity * 100)}%</span>
+            </div>
+          )}
           {showBgPicker && (
-            <div className="mt-2 flex items-center gap-2 p-2 rounded-xl bg-black/60 backdrop-blur-md border border-white/20">
+            <div className="flex items-center gap-2 p-2 rounded-xl bg-black/60 backdrop-blur-md border border-white/20">
               <button onClick={prevBg} className="p-1 rounded-full hover:bg-white/10 text-white" disabled={!backgrounds.length}><IconChevLeft className="w-5 h-5"/></button>
               <div className="flex gap-2 max-w-[400px] overflow-x-auto">
                 {backgrounds.slice(0, 8).map((bg, i) => (
@@ -500,11 +531,13 @@ function Home() {
         <div className={`flex-1 flex ${isMobile ? 'flex-col gap-6' : 'flex-row gap-8'} mt-12 md:mt-16`}>
           <div className={`${isMobile ? 'w-full' : 'w-1/2 max-w-md'} flex flex-col gap-6`}>
             <Clock/>
-            <div className="glass-panel p-4 md:p-5"><TodoList/></div>
+            <div className="glass-panel p-4 md:p-5">
+              <WeekView events={allEvents} selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+            </div>
             <div className="glass-panel p-4 md:p-5"><Weather/></div>
           </div>
           <div className={`${isMobile ? 'w-full' : 'flex-1'} glass-panel p-4 md:p-5 overflow-auto max-h-[85vh]`}>
-            <Calendar/>
+            <Calendar events={allEvents} status={calendarStatus} selectedDate={selectedDate} onSelectDate={setSelectedDate} />
           </div>
         </div>
       </div>
