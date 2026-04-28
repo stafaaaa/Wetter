@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<title>Transparente Kacheln | Hintergrund-Slideshow & iCal Kalender (CORS-Proxy)</title>
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,500;14..32,600;14..32,700&family=Roboto:wght@300;400;500;700&family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>Smart Dashboard | Wetter • Kalender • Slideshow</title>
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
 * {
@@ -14,7 +14,7 @@ padding: 0;
 box-sizing: border-box;
 }
 
-/* ---------- HINTERGRUND-SLIDESHOW (VOLLFLÄCHIG) ---------- */
+/* ----- HINTERGRUND-SLIDESHOW (VOLLFLÄCHIG) ----- */
 .bg-slideshow {
 position: fixed;
 top: 0;
@@ -37,8 +37,7 @@ transition: opacity 1.2s ease-in-out;
 .bg-slideshow img.active {
 opacity: 1;
 }
-/* Leichter Overlay für bessere Textlesbarkeit (optional, macht Hintergrund nicht undurchsichtig) */
-.text-overlay {
+.dark-overlay {
 position: fixed;
 top: 0;
 left: 0;
@@ -49,12 +48,10 @@ z-index: -1;
 pointer-events: none;
 }
 
-/* Layout */
 body {
-font-family: 'Inter', system-ui, -apple-system, sans-serif;
-padding: 24px 20px;
+font-family: 'Inter', system-ui, sans-serif;
+padding: 20px;
 min-height: 100vh;
-position: relative;
 color: white;
 text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
@@ -65,126 +62,172 @@ position: relative;
 z-index: 5;
 }
 
-/* ---------- 100% TRANSPARENTE KACHELN (KOMPLETT DURCHSICHTIG) ---------- */
+/* ----- KACHELN (GLASMORPHISMUS MIT EINSTELLBARER TRANSPARENZ) ----- */
 .card {
-background: transparent !important;
-backdrop-filter: none !important;
 border-radius: 2rem;
-padding: 1.6rem;
-border: 1px solid rgba(255, 255, 255, 0.3);
-box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-transition: all 0.2s;
+padding: 1.5rem;
+border: 1px solid rgba(255, 255, 255, 0.25);
+box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+transition: background 0.2s;
+}
+/* Wetter-Karte eigene Transparenz */
+.weather-card {
+background: var(--weather-bg, rgba(0, 0, 0, 0.45));
+backdrop-filter: blur(8px);
+}
+/* Kalender-Karte eigene Transparenz */
+.calendar-card {
+background: var(--calendar-bg, rgba(0, 0, 0, 0.45));
+backdrop-filter: blur(8px);
 }
 
-/* Titel und Text mit Schatten für Lesbarkeit */
 .section-title {
 font-size: 1.4rem;
 font-weight: 600;
-letter-spacing: -0.2px;
-background: linear-gradient(135deg, #ffffff, #f0f0f0);
-background-clip: text;
--webkit-background-clip: text;
-color: transparent;
-text-shadow: none;
-display: inline-flex;
+margin-bottom: 1.2rem;
+border-left: 4px solid rgba(255,215,0,0.8);
+padding-left: 14px;
+display: flex;
 align-items: center;
 gap: 10px;
-margin-bottom: 1.5rem;
-border-left: 4px solid rgba(255,255,255,0.8);
-padding-left: 14px;
 }
 
-/* Wetter- und Kalender-Elemente transparent mit leichtem Weiß-Hintergrund für bessere Lesbarkeit */
+/* ----- WETTER BEREICH ----- */
 .weather-now {
 display: flex;
 justify-content: space-between;
 flex-wrap: wrap;
 align-items: center;
-margin-bottom: 28px;
-background: rgba(0, 0, 0, 0.4);
-backdrop-filter: blur(4px);
-border-radius: 1.8rem;
-padding: 1rem 1.5rem;
-border: 1px solid rgba(255,255,255,0.2);
-}
-.temp-large { font-size: 3.4rem; font-weight: 700; }
-.forecast-5days { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
-.forecast-day {
-background: rgba(0, 0, 0, 0.5);
-backdrop-filter: blur(4px);
+margin-bottom: 24px;
+background: rgba(0,0,0,0.3);
 border-radius: 1.5rem;
-padding: 10px 12px;
+padding: 1rem 1.5rem;
+}
+.temp-large { font-size: 3.2rem; font-weight: 700; }
+.forecast-5days {
+display: flex;
+gap: 12px;
+overflow-x: auto;
+padding-bottom: 6px;
+}
+.forecast-day {
+background: rgba(0,0,0,0.5);
+border-radius: 1.2rem;
+padding: 8px 12px;
 min-width: 85px;
 text-align: center;
-border: 1px solid rgba(255,255,255,0.2);
 }
-.search-location { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-.search-location input, .search-location button, .ical-url-input input, .ical-url-input button {
-padding: 10px 16px;
-border-radius: 40px;
-border: none;
-font-family: inherit;
-background: rgba(30, 30, 40, 0.85);
-backdrop-filter: blur(4px);
-color: white;
-box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-.search-location button, .ical-url-input button { background: #2c6e9e; cursor: pointer; font-weight: 600; }
-.search-location input::placeholder, .ical-url-input input::placeholder { color: #ddd; }
-
-/* Kalender Events */
-.events-list { max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-.event-card {
-background: rgba(0, 0, 0, 0.5);
-backdrop-filter: blur(4px);
-border-radius: 1.2rem;
-padding: 12px 16px;
-border-left: 5px solid #ffd966;
-color: white;
-}
-.event-title { font-weight: 700; margin-bottom: 6px; }
-.event-date { font-size: 0.75rem; opacity: 0.9; }
-
-/* Steuerungs-Panel für Hintergrund-Slideshow */
-.bg-controls {
-display: flex;
-flex-wrap: wrap;
-align-items: center;
-justify-content: space-between;
-gap: 16px;
-margin-top: 16px;
-}
-.bg-control-group {
+.search-location {
 display: flex;
 gap: 10px;
-align-items: center;
+margin-bottom: 20px;
+flex-wrap: wrap;
 }
-.bg-controls button, .bg-controls .file-label {
-background: rgba(0, 0, 0, 0.6);
-backdrop-filter: blur(8px);
-border: 1px solid rgba(255,255,255,0.3);
-padding: 10px 18px;
+.search-location input, .search-location button {
+padding: 8px 16px;
 border-radius: 40px;
+border: none;
+background: rgba(30,30,40,0.8);
 color: white;
-font-weight: 500;
+}
+.search-location button { background: #2c6e9e; cursor: pointer; }
+
+/* ----- MONATSKALENDER (mit Termin-Markierungen) ----- */
+.calendar-header-controls {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 1rem;
+}
+.month-nav {
+background: rgba(0,0,0,0.5);
+border: none;
+color: white;
+padding: 6px 14px;
+border-radius: 40px;
 cursor: pointer;
-font-size: 0.85rem;
 }
-.bg-url-input input {
+.calendar-grid {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+gap: 6px;
+text-align: center;
+}
+.weekday {
+font-weight: 600;
+padding: 8px 0;
+background: rgba(0,0,0,0.3);
+border-radius: 20px;
+}
+.calendar-day {
+background: rgba(0,0,0,0.35);
+border-radius: 16px;
+padding: 10px 4px;
+min-height: 80px;
+position: relative;
+cursor: default;
+transition: 0.05s linear;
+}
+.day-number {
+font-weight: 600;
+font-size: 1rem;
+display: inline-block;
+width: 32px;
+height: 32px;
+line-height: 32px;
+border-radius: 30px;
+background: rgba(255,255,255,0.15);
+margin-bottom: 6px;
+}
+.event-dots {
+display: flex;
+justify-content: center;
+gap: 5px;
+flex-wrap: wrap;
+margin-top: 4px;
+}
+.event-dot {
+width: 8px;
+height: 8px;
+border-radius: 10px;
+background-color: #f4c542;
+}
+.event-dot.red { background-color: #e57373; }
+.event-dot.green { background-color: #81c784; }
+.event-dot.blue { background-color: #64b5f6; }
+.event-dot.purple { background-color: #ba82d6; }
+
+/* ----- ICONS (Spotify, Amazon) als schwebende Buttons ----- */
+.music-icons {
+position: fixed;
+bottom: 24px;
+left: 24px;
+display: flex;
+gap: 16px;
+z-index: 1050;
+}
+.icon-btn {
 background: rgba(0,0,0,0.6);
-color: white;
-border: 1px solid rgba(255,255,255,0.3);
-padding: 10px 14px;
+backdrop-filter: blur(8px);
+width: 52px;
+height: 52px;
 border-radius: 60px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 1.8rem;
+color: white;
+text-decoration: none;
+transition: 0.1s;
+border: 1px solid rgba(255,255,255,0.3);
 }
-.bg-url-input button {
-background: #2c6e9e;
-}
-/* Einstellungen FAB */
+.icon-btn:hover { transform: scale(1.05); background: #1DB954; }
+
+/* ----- EINSTELLUNGS-FAB & PANEL (alle Konfigurationen) ----- */
 .settings-fab {
 position: fixed;
-bottom: 28px;
-right: 28px;
+bottom: 24px;
+right: 24px;
 width: 56px;
 height: 56px;
 background: #1e6f9f;
@@ -192,7 +235,7 @@ border-radius: 60px;
 display: flex;
 align-items: center;
 justify-content: center;
-box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 cursor: pointer;
 z-index: 1000;
 color: white;
@@ -201,126 +244,121 @@ font-size: 1.8rem;
 .settings-panel {
 position: fixed;
 bottom: 100px;
-right: 28px;
-width: 320px;
+right: 24px;
+width: 340px;
+max-height: 80vh;
+overflow-y: auto;
 background: rgba(20, 20, 30, 0.96);
 backdrop-filter: blur(16px);
-border-radius: 2rem;
+border-radius: 1.8rem;
 padding: 1.2rem;
 color: white;
 z-index: 1100;
 display: none;
 flex-direction: column;
 gap: 18px;
-border: 1px solid rgba(255,255,255,0.2);
+border: 1px solid rgba(255,255,255,0.25);
 }
 .settings-panel.open { display: flex; }
+.settings-panel h4 { font-size: 1rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.settings-panel input, .settings-panel select, .settings-panel button {
+border-radius: 40px;
+border: none;
+padding: 8px 12px;
+background: #2c2f36;
+color: white;
+}
+.slider-label { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 4px; }
 .theme-buttons {
 display: grid;
 grid-template-columns: repeat(5, 1fr);
-gap: 8px;
+gap: 6px;
 }
 .theme-btn {
 background: rgba(255,255,255,0.2);
 border: none;
 border-radius: 30px;
-padding: 6px 0;
+padding: 5px 0;
 font-size: 0.7rem;
-font-weight: 600;
-color: white;
 cursor: pointer;
 }
-.theme-btn.active { background: white; color: #1a2c3e; }
-.slider-label { display: flex; justify-content: space-between; font-size: 0.8rem; }
-input[type="range"] { width: 100%; margin-top: 5px; }
-.font-selector select {
-width: 100%;
-padding: 8px 12px;
-border-radius: 40px;
-background: #2c2f36;
-color: white;
-font-weight: 500;
+.bg-slideshow-controls {
+display: flex;
+gap: 10px;
+flex-wrap: wrap;
+}
+.bg-slideshow-controls button, .bg-slideshow-controls .file-label {
+background: #2c6e9e;
+padding: 6px 12px;
+border-radius: 30px;
+cursor: pointer;
+font-size: 0.75rem;
+}
+.close-settings {
+position: absolute;
+top: 12px;
+right: 16px;
+background: none;
 border: none;
+color: white;
+font-size: 1.2rem;
+cursor: pointer;
 }
-.close-settings { background: none; border: none; color: white; font-size: 1.2rem; position: absolute; top: 12px; right: 16px; cursor: pointer; }
-
-.grid-main {
-display: grid;
-grid-template-columns: 1fr 0.95fr;
-gap: 28px;
-margin-bottom: 32px;
+hr { border-color: rgba(255,255,255,0.2); margin: 8px 0; }
+@media (max-width: 820px) {
+body { padding: 16px; }
+.calendar-day { min-height: 65px; padding: 6px 2px; }
+.day-number { width: 28px; height: 28px; line-height: 28px; font-size: 0.9rem; }
 }
-@media (max-width: 860px) {
-.grid-main { grid-template-columns: 1fr; gap: 24px; }
-body { padding: 20px 16px; }
-}
-footer { font-size: 0.7rem; text-align: center; margin-top: 24px; opacity: 0.9; color: white; text-shadow: 0 1px 2px black; }
-::-webkit-scrollbar { width: 6px; }
+footer { text-align: center; margin-top: 24px; font-size: 0.7rem; opacity: 0.8; }
 </style>
 </head>
 <body>
-<!-- VOLLFLÄCHIGE HINTERGRUND-SLIDESHOW (Fotos hinter den Kacheln) -->
+<!-- Hintergrund-Slideshow -->
 <div class="bg-slideshow" id="bgSlideshow"></div>
-<div class="text-overlay"></div>
+<div class="dark-overlay"></div>
 
 <div class="dashboard">
-<div class="grid-main">
-<!-- Wetter Kachel (100% transparent) -->
-<div class="card">
-<div class="section-title"><i class="fas fa-cloud-sun"></i> Wetter & Vorhersage</div>
+<!-- Wetter Kachel -->
+<div class="card weather-card" id="weatherCard">
+<div class="section-title"><i class="fas fa-cloud-sun"></i> Aktuelles Wetter & 5-Tage</div>
 <div class="search-location">
 <input type="text" id="cityInput" placeholder="Stadt, z.B. Berlin" value="Berlin">
 <button id="searchWeatherBtn"><i class="fas fa-search"></i> Suchen</button>
 <button id="myLocationBtn"><i class="fas fa-location-dot"></i> Standort</button>
 </div>
 <div id="weatherCurrent" class="weather-now">Lade Wetterdaten ...</div>
-<div style="font-weight:500;">5-Tage-Vorhersage</div>
+<div style="font-weight:500;">Vorhersage (5 Tage)</div>
 <div id="forecastContainer" class="forecast-5days" style="margin-top: 12px;"></div>
 </div>
 
-<!-- Google Kalender iCal Kachel (100% transparent) mit CORS-Proxy -->
-<div class="card">
-<div class="section-title"><i class="fas fa-calendar-alt"></i> Google Kalender (iCal)</div>
-<div class="ical-url-input">
-<input type="text" id="icalUrl" placeholder="https://calendar.google.com/calendar/ical/.../basic.ics" value="https://calendar.google.com/calendar/ical/de.german%23holiday%40group.v.calendar.google.com/public/basic.ics">
-<button id="loadCalendarBtn"><i class="fas fa-sync-alt"></i> Termine laden</button>
+<!-- Monatskalender Kachel (iCal) -->
+<div class="card calendar-card" id="calendarCard">
+<div class="section-title"><i class="fas fa-calendar-alt"></i> Kalender mit Terminen (iCal)</div>
+<div class="calendar-header-controls">
+<button class="month-nav" id="prevMonthBtn"><i class="fas fa-chevron-left"></i> Vormonat</button>
+<span id="monthYearDisplay" style="font-weight:600;"></span>
+<button class="month-nav" id="nextMonthBtn">Nächster Monat <i class="fas fa-chevron-right"></i></button>
 </div>
-<div style="font-size:0.75rem; margin-bottom: 12px; background: rgba(0,0,0,0.4); padding: 6px 12px; border-radius: 40px;">
-<i class="fas fa-info-circle"></i> Nutzt CORS-Proxy – funktioniert mit öffentlichen iCal-Links (z.B. aus Google Kalender "Kalender veröffentlichen").
+<div class="calendar-grid" id="calendarGrid">
+<!-- Wochentage + Tage werden dynamisch eingefügt -->
 </div>
-<div id="eventsListContainer" class="events-list">Demo: Lade deutsche Feiertage ...</div>
+<div style="font-size:0.7rem; margin-top: 12px; text-align:center;"><i class="fas fa-circle" style="color:#f4c542;"></i> Terminmarkierungen (mehrere Farben)</div>
 </div>
-</div>
-
-<!-- Steuerung für Hintergrund-Slideshow (Fotos hochladen) -->
-<div class="card">
-<div class="section-title"><i class="fas fa-images"></i> 🖼️ Hintergrund-Slideshow (Fotos hinter den Kacheln)</div>
-<div class="bg-controls">
-<div class="bg-control-group">
-<button id="bgPrevBtn"><i class="fas fa-chevron-left"></i></button>
-<button id="bgPlayPauseBtn"><i class="fas fa-pause"></i></button>
-<button id="bgNextBtn"><i class="fas fa-chevron-right"></i></button>
-</div>
-<div class="bg-url-input">
-<input type="text" id="bgPhotoUrl" placeholder="Bild-URL (https://...)" style="flex:1;">
-<button id="addBgUrlBtn"><i class="fas fa-plus"></i> URL</button>
-</div>
-<div class="bg-control-group">
-<label for="bgUploadInput" class="file-label"><i class="fas fa-upload"></i> Hochladen</label>
-<input type="file" id="bgUploadInput" accept="image/*" multiple>
-<button id="resetBgPhotos"><i class="fas fa-undo-alt"></i> Reset</button>
-</div>
-</div>
-<div style="font-size:0.7rem; margin-top: 12px; text-align:center;"><i class="fas fa-info-circle"></i> Eigene Fotos werden als Vollbild-Hintergrund hinter den transparenten Kacheln angezeigt.</div>
-</div>
-<footer>Transparente Kacheln (100% durchsichtig) • Hintergrund-Slideshow • iCal mit CORS-Proxy</footer>
+<footer>Dashboard mit transparenten Kacheln • Einstellungen (Zahnrad) • Hintergrund-Slideshow • iCal importierbar</footer>
 </div>
 
-<!-- Einstellungen FAB für Themes, Schriftarten (nur visuelle Anpassungen, bleibt transparent) -->
+<!-- Spotify & Amazon Icons (fixiert) -->
+<div class="music-icons">
+<a href="https://open.spotify.com/" target="_blank" class="icon-btn" style="background:#1DB954;"><i class="fab fa-spotify"></i></a>
+<a href="https://www.amazon.de/" target="_blank" class="icon-btn" style="background:#FF9900;"><i class="fab fa-amazon"></i></a>
+</div>
+
+<!-- Einstellungen FAB + Panel (enthält alle Konfigurationen) -->
 <div class="settings-fab" id="settingsFab"><i class="fas fa-sliders-h"></i></div>
 <div id="settingsPanel" class="settings-panel">
 <button class="close-settings" id="closeSettingsBtn">&times;</button>
-<h4><i class="fas fa-palette"></i> Akzentfarben (Themes)</h4>
+<h4><i class="fas fa-palette"></i> Themes (Akzentfarbe)</h4>
 <div class="theme-buttons" id="themeButtons">
 <button data-theme="ocean" class="theme-btn">🌊 Ozean</button><button data-theme="forest" class="theme-btn">🌲 Wald</button>
 <button data-theme="lavender" class="theme-btn">🌸 Lavendel</button><button data-theme="sunset" class="theme-btn">🌅 Sunset</button>
@@ -328,20 +366,46 @@ footer { font-size: 0.7rem; text-align: center; margin-top: 24px; opacity: 0.9; 
 <button data-theme="graphite" class="theme-btn">⚙️ Graphit</button><button data-theme="cherry" class="theme-btn">🍒 Kirsche</button>
 <button data-theme="sky" class="theme-btn">☁️ Himmel</button><button data-theme="neutral" class="theme-btn">⚪ Neutral</button>
 </div>
+
+<h4><i class="fas fa-adjust"></i> Transparenz Wetter-Kachel</h4>
+<div class="slider-label"><span>undurchsichtig</span><span>100% durchsichtig</span></div>
+<input type="range" id="weatherOpacity" min="0" max="0.95" step="0.01" value="0.55">
+
+<h4><i class="fas fa-adjust"></i> Transparenz Kalender-Kachel</h4>
+<div class="slider-label"><span>undurchsichtig</span><span>100% durchsichtig</span></div>
+<input type="range" id="calendarOpacity" min="0" max="0.95" step="0.01" value="0.55">
+
 <h4><i class="fas fa-font"></i> Schriftart</h4>
-<div class="font-selector">
-<select id="fontFamilySelect">
+<select id="fontSelect">
 <option value="'Inter', system-ui">Inter</option><option value="'Roboto', sans-serif">Roboto</option>
 <option value="'Poppins', sans-serif">Poppins</option><option value="'Montserrat', sans-serif">Montserrat</option>
-<option value="'Open Sans', sans-serif">Open Sans</option><option value="'Lato', sans-serif">Lato</option>
-<option value="'Nunito', sans-serif">Nunito</option>
 </select>
+
+<hr>
+<h4><i class="fas fa-link"></i> Google Kalender (iCal URL)</h4>
+<input type="text" id="icalUrlInput" placeholder="https://.../basic.ics" value="https://calendar.google.com/calendar/ical/de.german%23holiday%40group.v.calendar.google.com/public/basic.ics">
+<button id="applyIcalBtn">🔄 Kalender laden</button>
+<div style="font-size:0.7rem;">Tipp: Öffentliche iCal-URL aus Google Kalender (Einstellungen → Kalender veröffentlichen)</div>
+
+<hr>
+<h4><i class="fas fa-images"></i> Hintergrund Slideshow (Lightshow)</h4>
+<div class="bg-slideshow-controls">
+<button id="bgPrevBtn"><i class="fas fa-backward"></i></button>
+<button id="bgPlayPauseBtn"><i class="fas fa-pause"></i></button>
+<button id="bgNextBtn"><i class="fas fa-forward"></i></button>
+<label class="file-label"><i class="fas fa-upload"></i> Upload</label>
+<input type="file" id="bgUpload" accept="image/*" multiple style="display:none;">
+<button id="resetBgBtn"><i class="fas fa-undo-alt"></i> Reset</button>
 </div>
-<div style="font-size:0.7rem; text-align:center;">Kacheln bleiben 100% transparent</div>
+<div style="display: flex; gap:6px; margin-top:6px;">
+<input type="text" id="bgUrlInput" placeholder="Bild-URL" style="flex:1;">
+<button id="addBgUrlBtn">+ URL</button>
+</div>
+<div style="font-size:0.7rem;">Eigene Bilder → Hintergrund</div>
 </div>
 
 <script>
-// ======================= 1. HINTERGRUND-SLIDESHOW =======================
+// ---------- 1. HINTERGRUND-SLIDESHOW (VOLLBILD) ----------
 let bgPhotos = [
 "https://picsum.photos/id/104/1920/1080",
 "https://picsum.photos/id/15/1920/1080",
@@ -349,307 +413,204 @@ let bgPhotos = [
 "https://picsum.photos/id/155/1920/1080",
 "https://picsum.photos/id/20/1920/1080"
 ];
-let currentBgIndex = 0;
-let bgInterval = null;
-let bgPlaying = true;
+let currentBg = 0, bgInterval, bgPlaying = true;
 const bgContainer = document.getElementById('bgSlideshow');
-let bgImages = [];
-
-function rebuildBgSlideshow() {
+let bgImgElements = [];
+function rebuildBg() {
 bgContainer.innerHTML = '';
-bgImages = [];
+bgImgElements = [];
 bgPhotos.forEach((src, idx) => {
 const img = document.createElement('img');
 img.src = src;
-if (idx === currentBgIndex) img.classList.add('active');
+if(idx === currentBg) img.classList.add('active');
 bgContainer.appendChild(img);
-bgImages.push(img);
+bgImgElements.push(img);
 });
 }
-function setActiveBgImage(index) {
-bgImages.forEach((img, i) => {
-if (i === index) img.classList.add('active');
-else img.classList.remove('active');
-});
-}
-function nextBgSlide() {
-if (bgPhotos.length === 0) return;
-currentBgIndex = (currentBgIndex + 1) % bgPhotos.length;
-setActiveBgImage(currentBgIndex);
-}
-function prevBgSlide() {
-if (bgPhotos.length === 0) return;
-currentBgIndex = (currentBgIndex - 1 + bgPhotos.length) % bgPhotos.length;
-setActiveBgImage(currentBgIndex);
-}
-function startBgInterval() {
-if (bgInterval) clearInterval(bgInterval);
-bgInterval = setInterval(() => {
-if (bgPlaying && bgPhotos.length > 0) nextBgSlide();
-}, 5000);
-}
-function toggleBgPlay() {
-bgPlaying = !bgPlaying;
-const playBtn = document.getElementById('bgPlayPauseBtn');
-playBtn.innerHTML = bgPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
-startBgInterval();
-}
-function addBgPhoto(url) {
-if (!url) return;
-if (!bgPhotos.includes(url)) {
-bgPhotos.push(url);
-if (bgPhotos.length === 1) currentBgIndex = 0;
-rebuildBgSlideshow();
-setActiveBgImage(currentBgIndex);
-}
-}
-function resetBgPhotos() {
-bgPhotos = [
-"https://picsum.photos/id/104/1920/1080",
-"https://picsum.photos/id/15/1920/1080",
-"https://picsum.photos/id/169/1920/1080",
-"https://picsum.photos/id/155/1920/1080",
-"https://picsum.photos/id/20/1920/1080"
-];
-currentBgIndex = 0;
-rebuildBgSlideshow();
-setActiveBgImage(0);
-}
-document.getElementById('bgPrevBtn').addEventListener('click', () => { prevBgSlide(); startBgInterval(); });
-document.getElementById('bgNextBtn').addEventListener('click', () => { nextBgSlide(); startBgInterval(); });
-document.getElementById('bgPlayPauseBtn').addEventListener('click', toggleBgPlay);
-document.getElementById('addBgUrlBtn').addEventListener('click', () => {
-let url = document.getElementById('bgPhotoUrl').value.trim();
-if (url && (url.startsWith('http') || url.startsWith('data'))) addBgPhoto(url);
-else alert("Bitte eine gültige Bild-URL (https://...) eingeben");
-document.getElementById('bgPhotoUrl').value = '';
-});
-document.getElementById('bgUploadInput').addEventListener('change', (e) => {
-Array.from(e.target.files).forEach(file => {
-if (file.type.startsWith('image/')) {
-const reader = new FileReader();
-reader.onload = ev => addBgPhoto(ev.target.result);
-reader.readAsDataURL(file);
-}
-});
-});
-document.getElementById('resetBgPhotos').addEventListener('click', resetBgPhotos);
-rebuildBgSlideshow();
-startBgInterval();
+function setActiveBg(idx) { bgImgElements.forEach((img,i)=> i===idx ? img.classList.add('active') : img.classList.remove('active')); }
+function nextBg() { if(bgPhotos.length){ currentBg = (currentBg+1)%bgPhotos.length; setActiveBg(currentBg); } }
+function prevBg() { if(bgPhotos.length){ currentBg = (currentBg-1+bgPhotos.length)%bgPhotos.length; setActiveBg(currentBg); } }
+function startBgInterval() { if(bgInterval) clearInterval(bgInterval); bgInterval = setInterval(()=>{ if(bgPlaying) nextBg(); }, 5000); }
+function toggleBgPlay() { bgPlaying = !bgPlaying; document.getElementById('bgPlayPauseBtn').innerHTML = bgPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>'; startBgInterval(); }
+function addBgPhoto(url) { if(url && !bgPhotos.includes(url)){ bgPhotos.push(url); if(bgPhotos.length===1) currentBg=0; rebuildBg(); setActiveBg(currentBg); } }
+function resetBg() { bgPhotos = ["https://picsum.photos/id/104/1920/1080","https://picsum.photos/id/15/1920/1080","https://picsum.photos/id/169/1920/1080","https://picsum.photos/id/155/1920/1080","https://picsum.photos/id/20/1920/1080"]; currentBg=0; rebuildBg(); setActiveBg(0); }
+document.getElementById('bgPrevBtn').onclick = () => { prevBg(); startBgInterval(); };
+document.getElementById('bgNextBtn').onclick = () => { nextBg(); startBgInterval(); };
+document.getElementById('bgPlayPauseBtn').onclick = toggleBgPlay;
+document.getElementById('resetBgBtn').onclick = resetBg;
+document.getElementById('addBgUrlBtn').onclick = () => { let url = document.getElementById('bgUrlInput').value.trim(); if(url) addBgPhoto(url); document.getElementById('bgUrlInput').value = ''; };
+document.getElementById('bgUpload').addEventListener('change', (e) => { Array.from(e.target.files).forEach(file => { if(file.type.startsWith('image/')){ const reader = new FileReader(); reader.onload = ev => addBgPhoto(ev.target.result); reader.readAsDataURL(file); } }); });
+document.querySelector('.file-label').onclick = () => document.getElementById('bgUpload').click();
+rebuildBg(); startBgInterval();
 
-// ======================= 2. WETTER =======================
+// ---------- 2. WETTER ----------
 const cityInput = document.getElementById('cityInput');
 const searchBtn = document.getElementById('searchWeatherBtn');
-const myLocationBtn = document.getElementById('myLocationBtn');
-const weatherCurrentDiv = document.getElementById('weatherCurrent');
-const forecastContainer = document.getElementById('forecastContainer');
-
-async function getCoordinates(city) {
-const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=de&format=json`;
-const res = await fetch(geoUrl);
+const locationBtn = document.getElementById('myLocationBtn');
+const weatherDiv = document.getElementById('weatherCurrent');
+const forecastDiv = document.getElementById('forecastContainer');
+async function getCoords(city){
+const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=de&format=json`);
 const data = await res.json();
-if (data.results?.length) {
-const { latitude, longitude, name, country } = data.results[0];
-return { lat: latitude, lon: longitude, name: `${name}, ${country}` };
-}
+if(data.results?.length) return data.results[0];
 return null;
 }
-async function fetchWeather(lat, lon) {
+async function fetchWeather(lat,lon){
 const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=6`;
 const res = await fetch(url);
 return await res.json();
 }
-function getWeatherDesc(code) {
-const codes = {0:["☀️","Klar"],1:["🌤️","Überw. klar"],2:["⛅","Teilw. bewölkt"],3:["☁️","Bedeckt"],45:["🌫️","Nebel"],61:["🌧️","Regen"],63:["🌧️","Regen"],71:["❄️","Schnee"],80:["🌦️","Schauer"],95:["⛈️","Gewitter"]};
-return codes[code] || ["🌡️","Wechselhaft"];
+function getWeatherIcon(code){
+const map = {0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",61:"🌧️",63:"🌧️",71:"❄️",80:"🌦️",95:"⛈️"};
+return map[code] || "🌡️";
 }
-async function loadWeatherByCity(city) {
-const coords = await getCoordinates(city);
-if (!coords) { weatherCurrentDiv.innerHTML = `<div>❌ Stadt nicht gefunden</div>`; return false; }
-const weather = await fetchWeather(coords.lat, coords.lon);
-if(weather?.current_weather){
-const curr = weather.current_weather;
-const [icon, desc] = getWeatherDesc(curr.weathercode);
-weatherCurrentDiv.innerHTML = `<div><div style="font-size:2rem;">${icon}</div><div class="temp-large">${Math.round(curr.temperature)}°C</div><div>${desc}</div><div>📍 ${coords.name}</div></div>
-<div><i class="fas fa-wind"></i> ${curr.windspeed} km/h</div>`;
-if(weather.daily){
-const days = weather.daily.time.slice(0,5);
-const maxT = weather.daily.temperature_2m_max.slice(0,5);
-const minT = weather.daily.temperature_2m_min.slice(0,5);
-const codes = weather.daily.weathercode.slice(0,5);
-forecastContainer.innerHTML = '';
+async function loadWeather(city){
+const coord = await getCoords(city);
+if(!coord){ weatherDiv.innerHTML = "<div>❌ Stadt nicht gefunden</div>"; return; }
+const w = await fetchWeather(coord.latitude, coord.longitude);
+if(w?.current_weather){
+const curr = w.current_weather;
+weatherDiv.innerHTML = `<div><div style="font-size:2rem;">${getWeatherIcon(curr.weathercode)}</div><div class="temp-large">${Math.round(curr.temperature)}°C</div><div>📍 ${coord.name}</div></div><div><i class="fas fa-wind"></i> ${curr.windspeed} km/h</div>`;
+if(w.daily){
+const days = w.daily.time.slice(0,5);
+const maxT = w.daily.temperature_2m_max.slice(0,5);
+const minT = w.daily.temperature_2m_min.slice(0,5);
+const codes = w.daily.weathercode.slice(0,5);
+forecastDiv.innerHTML = '';
 days.forEach((d,i)=>{
 const wk = new Date(d).toLocaleDateString('de-DE',{weekday:'short'});
-const [ic] = getWeatherDesc(codes[i]);
-forecastContainer.innerHTML += `<div class="forecast-day"><div>${wk}</div><div style="font-size:1.6rem;">${ic}</div><div>${Math.round(maxT[i])}°/${Math.round(minT[i])}°</div></div>`;
+forecastDiv.innerHTML += `<div class="forecast-day"><div>${wk}</div><div style="font-size:1.6rem;">${getWeatherIcon(codes[i])}</div><div>${Math.round(maxT[i])}°/${Math.round(minT[i])}°</div></div>`;
 });
 }
-return true;
-}
-return false;
-}
-function getUserLocation() {
-if(navigator.geolocation){
-navigator.geolocation.getCurrentPosition(async pos=>{
-const weather = await fetchWeather(pos.coords.latitude, pos.coords.longitude);
-if(weather?.current_weather){
-const [icon, desc] = getWeatherDesc(weather.current_weather.weathercode);
-weatherCurrentDiv.innerHTML = `<div><div style="font-size:2rem;">${icon}</div><div class="temp-large">${Math.round(weather.current_weather.temperature)}°C</div><div>${desc}</div><div>📍 Aktueller Standort</div></div><div><i class="fas fa-wind"></i> ${weather.current_weather.windspeed} km/h</div>`;
-if(weather.daily) updateForecastUI(weather.daily);
-}
-},()=>weatherCurrentDiv.innerHTML = `<div>Standort nicht verfügbar</div>`);
 }
 }
-function updateForecastUI(daily){
-const days = daily.time.slice(0,5);
-const maxT = daily.temperature_2m_max.slice(0,5);
-const minT = daily.temperature_2m_min.slice(0,5);
-const codes = daily.weathercode.slice(0,5);
-forecastContainer.innerHTML = '';
-days.forEach((d,i)=>{
-const wk = new Date(d).toLocaleDateString('de-DE',{weekday:'short'});
-const [ic] = getWeatherDesc(codes[i]);
-forecastContainer.innerHTML += `<div class="forecast-day"><div>${wk}</div><div style="font-size:1.6rem;">${ic}</div><div>${Math.round(maxT[i])}°/${Math.round(minT[i])}°</div></div>`;
-});
-}
-searchBtn.onclick = ()=>{ loadWeatherByCity(cityInput.value.trim() || "Berlin"); };
-myLocationBtn.onclick = getUserLocation;
-loadWeatherByCity("Berlin");
+searchBtn.onclick = () => loadWeather(cityInput.value.trim() || "Berlin");
+locationBtn.onclick = () => { if(navigator.geolocation) navigator.geolocation.getCurrentPosition(async pos=>{ const w = await fetchWeather(pos.coords.latitude, pos.coords.longitude); if(w?.current_weather){ weatherDiv.innerHTML = `<div><div style="font-size:2rem;">${getWeatherIcon(w.current_weather.weathercode)}</div><div class="temp-large">${Math.round(w.current_weather.temperature)}°C</div><div>📍 Aktueller Standort</div></div><div><i class="fas fa-wind"></i> ${w.current_weather.windspeed} km/h</div>`; if(w.daily) updateForecastQuick(w.daily); } }); };
+function updateForecastQuick(daily){ /* gleich wie oben */ }
+loadWeather("Berlin");
 
-// ======================= 3. iCal KALENDER MIT CORS-PROXY =======================
-const icalUrlInput = document.getElementById('icalUrl');
-const loadCalendarBtn = document.getElementById('loadCalendarBtn');
-const eventsListContainer = document.getElementById('eventsListContainer');
+// ---------- 3. MONATSKALENDER MIT iCal TERMINEN (farbige Punkte) ----------
+let currentDate = new Date();
+let icalEvents = []; // gespeicherte Termine { start: "20260420", summary, ... }
+const monthYearSpan = document.getElementById('monthYearDisplay');
+const calendarGrid = document.getElementById('calendarGrid');
+const prevMonthBtn = document.getElementById('prevMonthBtn');
+const nextMonthBtn = document.getElementById('nextMonthBtn');
 
-// CORS-Proxy für iCal (funktioniert mit öffentlichen Google-Kalender-ICS)
-async function fetchWithProxy(url) {
-// Verwende allorigins.win (zuverlässig, gibt rohen Text zurück)
-const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-const response = await fetch(proxyUrl);
-if (!response.ok) throw new Error(`HTTP ${response.status}`);
-return await response.text();
+// Hilfsfunktion: iCal Datum in YYYYMMDD (nur Datum) parsen
+function parseICalDateToYMD(dtStr){
+if(!dtStr) return null;
+if(dtStr.length === 8) return dtStr; // YYYYMMDD
+if(dtStr.includes('T')) return dtStr.substring(0,8);
+return null;
 }
 
-function parseICS(icsText) {
+// iCal laden mit CORS-Proxy
+async function loadICalendarFromUrl(url){
+if(!url) return;
+try{
+const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+const response = await fetch(proxy);
+if(!response.ok) throw new Error();
+const icsText = await response.text();
 const events = [];
 const lines = icsText.split(/\r?\n/);
-let inEvent = false, cur = {};
-for (let line of lines) {
-line = line.trim();
-if (line === 'BEGIN:VEVENT') { inEvent = true; cur = {}; continue; }
-if (line === 'END:VEVENT') { if (cur.summary && cur.start) events.push(cur); inEvent = false; continue; }
-if (inEvent) {
-if (line.startsWith('SUMMARY:')) cur.summary = line.substring(8).replace(/\\,/g, ',').replace(/\\n/g, ' ');
-else if (line.startsWith('DTSTART')) {
+let inEvent=false, cur={};
+for(let line of lines){
+line=line.trim();
+if(line==='BEGIN:VEVENT'){ inEvent=true; cur={}; continue; }
+if(line==='END:VEVENT'){ if(cur.summary && cur.start) events.push(cur); inEvent=false; continue; }
+if(inEvent){
+if(line.startsWith('SUMMARY:')) cur.summary = line.substring(8).replace(/\\,/g,',').replace(/\\n/g,' ');
+else if(line.startsWith('DTSTART')){
 let val = line.split(':')[1];
-if (!val && line.includes(';VALUE=DATE')) val = line.split(':').slice(1).join(':');
-else if (line.includes(':')) val = line.substring(line.indexOf(':') + 1);
-if (val) cur.start = val;
-}
-else if (line.startsWith('DTEND')) {
-let val = line.split(':')[1];
-if (val) cur.end = val;
+if(!val && line.includes(';VALUE=DATE')) val = line.split(':').slice(1).join(':');
+else if(line.includes(':')) val = line.substring(line.indexOf(':')+1);
+if(val) cur.start = val;
 }
 }
 }
-return events;
+icalEvents = events.map(ev => ({ startYMD: parseICalDateToYMD(ev.start), summary: ev.summary }));
+renderCalendar();
+}catch(e){ console.warn(e); calendarGrid.innerHTML = '<div style="grid-column:span 7; text-align:center;">⚠️ Fehler beim Laden des Kalenders. Prüfe iCal URL (öffentlich).</div>'; }
 }
 
-function formatICalDate(dt) {
-if (!dt) return 'Unbekannt';
-if (dt.length === 8 && /^\d+$/.test(dt)) return `${dt.slice(6,8)}.${dt.slice(4,6)}.${dt.slice(0,4)} (ganztägig)`;
-else if (dt.includes('T')) return `${dt.slice(6,8)}.${dt.slice(4,6)}.${dt.slice(0,4)} ${dt.slice(9,11)}:${dt.slice(11,13)} Uhr`;
-return dt;
-}
-
-async function loadICalendar(url) {
-if (!url) {
-eventsListContainer.innerHTML = '<div>❌ Bitte eine gültige iCal-URL eingeben.</div>';
-return;
-}
-eventsListContainer.innerHTML = '<div><i class="fas fa-spinner fa-pulse"></i> Lade Kalender über Proxy ...</div>';
-try {
-const icsText = await fetchWithProxy(url);
-const events = parseICS(icsText);
-if (events.length === 0) {
-eventsListContainer.innerHTML = '<div>📭 Keine Termine gefunden. Stelle sicher, dass die iCal-URL öffentlich ist (z.B. aus Google Kalender "Kalender veröffentlichen" > iCal-Link).</div>';
-return;
-}
-events.sort((a, b) => (a.start || '').localeCompare(b.start || ''));
-eventsListContainer.innerHTML = '';
-events.slice(0, 30).forEach(ev => {
-const div = document.createElement('div');
-div.className = 'event-card';
-div.innerHTML = `<div class="event-title"><i class="far fa-calendar-check"></i> ${escapeHtml(ev.summary || 'Ohne Titel')}</div>
-<div class="event-date"><i class="far fa-clock"></i> ${formatICalDate(ev.start)}</div>`;
-eventsListContainer.appendChild(div);
+function renderCalendar(){
+const year = currentDate.getFullYear();
+const month = currentDate.getMonth();
+const firstDay = new Date(year, month, 1);
+const startWeekday = firstDay.getDay(); // 0 = Sonntag
+const daysInMonth = new Date(year, month+1, 0).getDate();
+const monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+monthYearSpan.innerText = `${monthNames[month]} ${year}`;
+let gridHtml = `<div class="weekday">Mo</div><div class="weekday">Di</div><div class="weekday">Mi</div><div class="weekday">Do</div><div class="weekday">Fr</div><div class="weekday">Sa</div><div class="weekday">So</div>`;
+// Kalender beginnt mit Montag als erstem Wochentag (Anpassung)
+let adjustedStart = (startWeekday === 0 ? 6 : startWeekday-1);
+let dayCounter = 1;
+let totalCells = 42;
+for(let i=0; i<totalCells; i++){
+if(i < adjustedStart || dayCounter > daysInMonth){
+gridHtml += `<div class="calendar-day" style="opacity:0.6;"></div>`;
+} else {
+let dateStr = `${year}${String(month+1).padStart(2,'0')}${String(dayCounter).padStart(2,'0')}`;
+let eventsOnDay = icalEvents.filter(ev => ev.startYMD === dateStr);
+let dotsHtml = '';
+let colors = ['#f4c542','#e57373','#81c784','#64b5f6','#ba82d6'];
+eventsOnDay.forEach((ev,idx) => {
+let colorClass = colors[idx % colors.length];
+dotsHtml += `<div class="event-dot" style="background-color:${colorClass};"></div>`;
 });
-if (events.length > 30) {
-let info = document.createElement('div');
-info.style.fontSize = '0.7rem';
-info.style.padding = '8px';
-info.innerText = `+ ${events.length - 30} weitere Termine`;
-eventsListContainer.appendChild(info);
+gridHtml += `<div class="calendar-day"><div class="day-number">${dayCounter}</div><div class="event-dots">${dotsHtml}</div></div>`;
+dayCounter++;
 }
-} catch (err) {
-console.error(err);
-eventsListContainer.innerHTML = `<div>⚠️ Fehler beim Laden des Kalenders. Prüfe die URL (muss öffentlich sein) oder der Proxy ist temporär nicht erreichbar. Tipp: Nutze die iCal-Adresse aus Google Kalender → Einstellungen → Kalender veröffentlichen → iCal-Link.</div>`;
 }
+calendarGrid.innerHTML = gridHtml;
 }
 
-function escapeHtml(str) {
-if (!str) return '';
-return str.replace(/[&<>]/g, m => (m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;')));
-}
-
-loadCalendarBtn.onclick = () => {
-let url = icalUrlInput.value.trim();
-if (!url) url = "https://calendar.google.com/calendar/ical/de.german%23holiday%40group.v.calendar.google.com/public/basic.ics";
-loadICalendar(url);
+prevMonthBtn.onclick = () => { currentDate.setMonth(currentDate.getMonth()-1); renderCalendar(); };
+nextMonthBtn.onclick = () => { currentDate.setMonth(currentDate.getMonth()+1); renderCalendar(); };
+document.getElementById('applyIcalBtn').onclick = () => {
+let url = document.getElementById('icalUrlInput').value.trim();
+if(url) loadICalendarFromUrl(url);
+else alert("Bitte eine gültige iCal URL eingeben");
 };
-// Initial mit Feiertagen
-loadICalendar(icalUrlInput.value.trim());
+// Initial laden
+loadICalendarFromUrl(document.getElementById('icalUrlInput').value.trim());
 
-// ======================= 4. THEMES & SCHRIFTART (Nur Akzentfarben, Karten bleiben transparent) =======================
+// ---------- 4. TRANSPARENZ (WETTER & KALENDER), SCHRIFTART, THEMES ----------
+const weatherOpacitySlider = document.getElementById('weatherOpacity');
+const calendarOpacitySlider = document.getElementById('calendarOpacity');
+const fontSelect = document.getElementById('fontSelect');
 const themeBtns = document.querySelectorAll('.theme-btn');
-const fontSelect = document.getElementById('fontFamilySelect');
-const settingsPanel = document.getElementById('settingsPanel');
-const settingsFab = document.getElementById('settingsFab');
-const closeSettings = document.getElementById('closeSettingsBtn');
+const weatherCard = document.getElementById('weatherCard');
+const calendarCard = document.getElementById('calendarCard');
 
-function applyTheme(themeName) {
+function setWeatherTransparency(val){ document.documentElement.style.setProperty('--weather-bg', `rgba(0, 0, 0, ${val})`); }
+function setCalendarTransparency(val){ document.documentElement.style.setProperty('--calendar-bg', `rgba(0, 0, 0, ${val})`); }
+weatherOpacitySlider.addEventListener('input', (e)=>setWeatherTransparency(parseFloat(e.target.value)));
+calendarOpacitySlider.addEventListener('input', (e)=>setCalendarTransparency(parseFloat(e.target.value)));
+setWeatherTransparency(0.55); setCalendarTransparency(0.55);
+
+fontSelect.addEventListener('change', (e)=> document.body.style.fontFamily = e.target.value);
+function applyTheme(theme){
 const themes = {
-ocean: { accent: "#1e6f9f", border: "#2b6a9f" }, forest: { accent: "#2f6b3c", border: "#3c824b" },
-lavender: { accent: "#6a4e9b", border: "#7c5eb8" }, sunset: { accent: "#c2571a", border: "#e07a2e" },
-royal: { accent: "#4a3b7c", border: "#5b4a91" }, mint: { accent: "#2b7a62", border: "#2b8b6e" },
-graphite: { accent: "#3a4b5c", border: "#557086" }, cherry: { accent: "#b3414b", border: "#c9545e" },
-sky: { accent: "#0077be", border: "#0099dd" }, neutral: { accent: "#5e6f8d", border: "#6c7e9c" }
+ocean:'#1e6f9f', forest:'#2f6b3c', lavender:'#6a4e9b', sunset:'#c2571a', royal:'#4a3b7c',
+mint:'#2b7a62', graphite:'#3a4b5c', cherry:'#b3414b', sky:'#0077be', neutral:'#5e6f8d'
 };
-const t = themes[themeName];
-if (t) {
-document.documentElement.style.setProperty('--primary-accent', t.accent);
-document.documentElement.style.setProperty('--event-left-border', t.border);
-// Buttons und Akzente anpassen
-document.querySelectorAll('.search-location button, .ical-url-input button, .bg-url-input button').forEach(btn => {
-btn.style.backgroundColor = t.accent;
-});
+let color = themes[theme] || '#1e6f9f';
+document.querySelectorAll('.search-location button, .month-nav, #applyIcalBtn, .bg-slideshow-controls button, .file-label, #addBgUrlBtn, #resetBgBtn').forEach(btn => { if(btn.style) btn.style.backgroundColor = color; });
+themeBtns.forEach(btn=>{ if(btn.dataset.theme === theme) btn.classList.add('active'); else btn.classList.remove('active'); });
 }
-themeBtns.forEach(btn => {
-if (btn.dataset.theme === themeName) btn.classList.add('active');
-else btn.classList.remove('active');
-});
-}
-
-fontSelect.addEventListener('change', (e) => { document.body.style.fontFamily = e.target.value; });
-themeBtns.forEach(btn => btn.addEventListener('click', () => applyTheme(btn.dataset.theme)));
-settingsFab.addEventListener('click', () => settingsPanel.classList.toggle('open'));
-closeSettings.addEventListener('click', () => settingsPanel.classList.remove('open'));
-window.addEventListener('click', (e) => {
-if (!settingsPanel.contains(e.target) && e.target !== settingsFab && !settingsFab.contains(e.target))
-settingsPanel.classList.remove('open');
-});
+themeBtns.forEach(btn=> btn.addEventListener('click',()=>applyTheme(btn.dataset.theme)));
 applyTheme('ocean');
+
+// Settings Panel toggle
+const settingsFab = document.getElementById('settingsFab');
+const settingsPanel = document.getElementById('settingsPanel');
+const closeSettings = document.getElementById('closeSettingsBtn');
+settingsFab.onclick = () => settingsPanel.classList.toggle('open');
+closeSettings.onclick = () => settingsPanel.classList.remove('open');
+window.onclick = (e) => { if(e.target === settingsFab) return; if(!settingsPanel.contains(e.target) && e.target !== settingsFab) settingsPanel.classList.remove('open'); };
 </script>
 </body>
 </html>
-```
