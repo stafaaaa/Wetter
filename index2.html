@@ -1,14 +1,14 @@
-www.google.de
 <!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<title>Ultimate Dashboard | Wetter & Kalender | 10 Themes | Slideshow</title>
+<title>Smart Dashboard | 50/50 Teilung | Wetter & Kalender</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
+/* Vollbild-Hintergrund Slideshow */
 .bg-slideshow {
 position: fixed;
 top: 0;
@@ -40,9 +40,10 @@ align-items: center;
 justify-content: center;
 color: #ffffff;
 }
+/* Dashboard 50/50 Teilung */
 .dashboard {
 width: 100%;
-max-width: 1400px;
+max-width: 1600px;
 height: 100%;
 display: flex;
 gap: 28px;
@@ -50,7 +51,7 @@ flex-wrap: nowrap;
 align-items: stretch;
 }
 .weather-panel, .calendar-panel {
-flex: 1;
+flex: 1; /* gleiche Breite */
 border-radius: 2rem;
 padding: 1.5rem;
 backdrop-filter: none;
@@ -58,9 +59,20 @@ transition: background 0.1s ease, color 0.1s ease;
 display: flex;
 flex-direction: column;
 background: rgba(0, 0, 0, 0.65);
+overflow-y: auto; /* falls Inhalt zu lang, intern scrollbar, aber verhindert Body-Scroll */
 }
-.weather-panel { flex: 1.2; }
-.calendar-panel { flex: 1.8; }
+/* Anpassung für 11" Tablet Portrait: dann untereinander */
+@media (max-width: 1024px) and (orientation: portrait) {
+body { padding: 16px; overflow-y: auto; height: auto; }
+.dashboard { flex-direction: column; height: auto; gap: 24px; }
+.weather-panel, .calendar-panel { max-height: none; }
+}
+/* Für Landscape auf 11" behalten wir 50/50 bei */
+@media (min-width: 1025px) and (orientation: landscape) {
+body { overflow: hidden; }
+.dashboard { height: calc(100vh - 40px); }
+.weather-panel, .calendar-panel { overflow-y: auto; }
+}
 .section-title {
 font-size: 1.3rem;
 font-weight: 700;
@@ -77,7 +89,14 @@ padding: 12px 0;
 flex-wrap: wrap;
 }
 .temp-large { font-size: 3.8rem; font-weight: 800; line-height: 1; }
-.forecast-5days { display: flex; gap: 12px; margin-top: 12px; justify-content: space-between; overflow-x: auto; }
+.forecast-5days {
+display: flex;
+gap: 12px;
+margin-top: 12px;
+justify-content: space-between;
+overflow-x: auto;
+padding-bottom: 6px;
+}
 .forecast-day {
 background: rgba(0,0,0,0.4);
 border-radius: 28px;
@@ -87,18 +106,21 @@ flex: 1;
 min-width: 70px;
 border: 1px solid rgba(255,255,255,0.2);
 }
+/* Stündliche Vorhersage – vertikal unterteilt (zwei Zeilen) */
 .hourly-forecast {
 margin-top: 20px;
 background: rgba(0,0,0,0.3);
 border-radius: 28px;
 padding: 12px;
 }
-.hourly-scroll {
+.hourly-row {
 display: flex;
 gap: 12px;
 overflow-x: auto;
-padding-bottom: 8px;
+margin-bottom: 12px;
+padding-bottom: 6px;
 }
+.hourly-row:last-child { margin-bottom: 0; }
 .hourly-item {
 background: rgba(0,0,0,0.5);
 border-radius: 24px;
@@ -120,6 +142,7 @@ color: white;
 font-weight: 500;
 }
 .search-location button { background: var(--accent-color, #2c6e9e); cursor: pointer; }
+/* Kalender */
 .calendar-header-controls {
 display: flex;
 justify-content: space-between;
@@ -193,6 +216,7 @@ color: white;
 text-align: center;
 }
 .close-modal { background: var(--accent-color, #2c6e9e); padding: 8px 20px; border-radius: 40px; border: none; color: white; cursor: pointer; }
+/* Icon-Leiste Spotify & Amazon Music */
 .music-icons {
 position: fixed;
 bottom: 24px;
@@ -272,17 +296,12 @@ cursor: pointer;
 }
 hr { border-color: rgba(255,255,255,0.2); margin: 8px 0; }
 .status-msg { font-size: 0.75rem; margin-top: 8px; padding: 4px; border-radius: 20px; text-align: center; background: rgba(0,0,0,0.4); }
-@media (max-width: 1024px) and (orientation: portrait) {
-body { padding: 16px; overflow-y: auto; height: auto; }
-.dashboard { flex-direction: column; height: auto; gap: 24px; }
-.calendar-day { min-height: 70px; }
-}
-@media (min-width: 1100px) and (min-height: 700px) { body { overflow: hidden; } .dashboard { height: calc(100vh - 40px); } }
 </style>
 </head>
 <body>
 <div class="bg-slideshow" id="bgSlideshow"></div>
 <div class="dashboard">
+<!-- Linke Hälfte: Wetter -->
 <div class="weather-panel" id="weatherPanel">
 <div class="section-title"><i class="fas fa-cloud-sun"></i> Aktuelles Wetter</div>
 <div class="search-location">
@@ -293,9 +312,10 @@ body { padding: 16px; overflow-y: auto; height: auto; }
 <div id="weatherCurrent" class="weather-now">Lade Wetter...</div>
 <div style="font-weight:600; margin-top: 8px;">5-Tage-Vorhersage</div>
 <div id="forecastContainer" class="forecast-5days"></div>
-<div style="font-weight:600; margin-top: 16px;">Stündliche Vorhersage (heute)</div>
-<div id="hourlyContainer" class="hourly-forecast"><div class="hourly-scroll">Lade stündliche Daten...</div></div>
+<div style="font-weight:600; margin-top: 16px;">Stündlich (heute)</div>
+<div id="hourlyContainer" class="hourly-forecast">Lade stündliche Daten...</div>
 </div>
+<!-- Rechte Hälfte: Kalender -->
 <div class="calendar-panel" id="calendarPanel">
 <div class="section-title"><i class="fas fa-calendar-alt"></i> Kalender (iCal)</div>
 <div class="calendar-header-controls">
@@ -308,11 +328,13 @@ body { padding: 16px; overflow-y: auto; height: auto; }
 </div>
 </div>
 
+<!-- Fixe Icons -->
 <div class="music-icons">
 <a href="https://open.spotify.com/" target="_blank" class="icon-btn" style="background:#1DB954;"><i class="fab fa-spotify"></i></a>
 <a href="https://music.amazon.de/" target="_blank" class="icon-btn" style="background:#FF9900;"><i class="fab fa-amazon"></i></a>
 </div>
 
+<!-- Einstellungen -->
 <div class="settings-fab" id="settingsFab"><i class="fas fa-sliders-h"></i></div>
 <div id="settingsPanel" class="settings-panel">
 <button class="close-settings" id="closeSettingsBtn">&times;</button>
@@ -355,6 +377,7 @@ body { padding: 16px; overflow-y: auto; height: auto; }
 <div id="uploadStatus" class="status-msg"></div>
 </div>
 
+<!-- Modal für Termin-Info -->
 <div id="eventModal" class="modal">
 <div class="modal-content">
 <h3><i class="fas fa-info-circle"></i> Termine an diesem Tag</h3>
@@ -365,7 +388,7 @@ body { padding: 16px; overflow-y: auto; height: auto; }
 
 <script>
 (function() {
-// ======================= 1. HINTERGRUND-SLIDESHOW =======================
+// ========== 1. HINTERGRUND-SLIDESHOW (Upload + Animation) ==========
 let bgPhotos = [
 "https://picsum.photos/id/104/1920/1080",
 "https://picsum.photos/id/15/1920/1080",
@@ -435,13 +458,13 @@ uploadInput.value = '';
 }
 rebuildBg(); startBgInterval();
 
-// ======================= 2. WETTER + STÜNDLICH =======================
+// ========== 2. WETTER + STÜNDLICH (vertikal geteilt) ==========
 const cityInput = document.getElementById('cityInput');
 const searchBtn = document.getElementById('searchWeatherBtn');
 const locationBtn = document.getElementById('myLocationBtn');
 const weatherDiv = document.getElementById('weatherCurrent');
 const forecastDiv = document.getElementById('forecastContainer');
-const hourlyDiv = document.getElementById('hourlyContainer');
+const hourlyContainer = document.getElementById('hourlyContainer');
 
 async function getCoords(city) {
 const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=de&format=json`);
@@ -457,6 +480,40 @@ function getWeatherIcon(code) {
 const map = {0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",61:"🌧️",63:"🌧️",71:"❄️",80:"🌦️",95:"⛈️"};
 return map[code] || "🌡️";
 }
+// Stündliche Daten in zwei Zeilen teilen (oben/unten)
+function renderHourlySplit(hourlyTimes, hourlyTemp, hourlyCode, todayStr) {
+let items = [];
+for(let i=0; i<hourlyTimes.length; i++){
+if(hourlyTimes[i].startsWith(todayStr)){
+const time = hourlyTimes[i].slice(11,16);
+const temp = Math.round(hourlyTemp[i]);
+const icon = getWeatherIcon(hourlyCode[i]);
+items.push({ time, temp, icon });
+if(items.length >= 12) break; // maximal 12 Stunden anzeigen
+}
+}
+const mid = Math.ceil(items.length / 2);
+const firstRow = items.slice(0, mid);
+const secondRow = items.slice(mid);
+let html = '';
+if(firstRow.length){
+html += '<div class="hourly-row">';
+firstRow.forEach(item => {
+html += `<div class="hourly-item"><div>${item.time}</div><div style="font-size:1.4rem;">${item.icon}</div><div>${item.temp}°</div></div>`;
+});
+html += '</div>';
+}
+if(secondRow.length){
+html += '<div class="hourly-row">';
+secondRow.forEach(item => {
+html += `<div class="hourly-item"><div>${item.time}</div><div style="font-size:1.4rem;">${item.icon}</div><div>${item.temp}°</div></div>`;
+});
+html += '</div>';
+}
+if(html === '') html = '<div>Keine stündlichen Daten verfügbar</div>';
+hourlyContainer.innerHTML = html;
+}
+
 async function loadWeather(city) {
 const coord = await getCoords(city);
 if(!coord){ weatherDiv.innerHTML = "<div>❌ Stadt nicht gefunden</div>"; return; }
@@ -478,38 +535,21 @@ const wk = new Date(d).toLocaleDateString('de-DE',{weekday:'short'});
 forecastDiv.innerHTML += `<div class="forecast-day"><div>${wk}</div><div style="font-size:1.6rem;">${getWeatherIcon(codes[i])}</div><div>${Math.round(maxT[i])}°/${Math.round(minT[i])}°</div></div>`;
 });
 }
-// Stündliche Vorhersage für heute (nächste 12-24 Stunden)
 if(w.hourly && w.hourly.time){
 const now = new Date();
 const todayStr = now.toISOString().slice(0,10);
-const hourlyTimes = w.hourly.time;
-const hourlyTemp = w.hourly.temperature_2m;
-const hourlyCode = w.hourly.weathercode;
-let hourlyHtml = '<div class="hourly-scroll">';
-let count = 0;
-for(let i=0; i<hourlyTimes.length && count<12; i++){
-if(hourlyTimes[i].startsWith(todayStr)){
-const time = hourlyTimes[i].slice(11,16);
-const temp = Math.round(hourlyTemp[i]);
-const icon = getWeatherIcon(hourlyCode[i]);
-hourlyHtml += `<div class="hourly-item"><div>${time}</div><div style="font-size:1.4rem;">${icon}</div><div>${temp}°</div></div>`;
-count++;
-}
-}
-hourlyHtml += '</div>';
-hourlyDiv.innerHTML = hourlyHtml;
+renderHourlySplit(w.hourly.time, w.hourly.temperature_2m, w.hourly.weathercode, todayStr);
 } else {
-hourlyDiv.innerHTML = '<div class="hourly-scroll">Keine stündlichen Daten verfügbar</div>';
+hourlyContainer.innerHTML = '<div>Keine stündlichen Daten</div>';
 }
 }
 }
 searchBtn.onclick = () => loadWeather(cityInput.value.trim() || "Berlin");
-locationBtn.onclick = () => { if(navigator.geolocation) navigator.geolocation.getCurrentPosition(async pos=>{ const w = await fetchFullWeather(pos.coords.latitude, pos.coords.longitude); if(w?.current_weather) { weatherDiv.innerHTML = `<div><div style="font-size:2.5rem;">${getWeatherIcon(w.current_weather.weathercode)}</div><div class="temp-large">${Math.round(w.current_weather.temperature)}°C</div><div>📍 Mein Standort</div></div><div><i class="fas fa-wind"></i> ${w.current_weather.windspeed} km/h</div>`; if(w.daily) updateForecastQuick(w.daily); if(w.hourly) updateHourlyQuick(w.hourly); } }); };
+locationBtn.onclick = () => { if(navigator.geolocation) navigator.geolocation.getCurrentPosition(async pos=>{ const w = await fetchFullWeather(pos.coords.latitude, pos.coords.longitude); if(w?.current_weather) { weatherDiv.innerHTML = `<div><div style="font-size:2.5rem;">${getWeatherIcon(w.current_weather.weathercode)}</div><div class="temp-large">${Math.round(w.current_weather.temperature)}°C</div><div>📍 Mein Standort</div></div><div><i class="fas fa-wind"></i> ${w.current_weather.windspeed} km/h</div>`; if(w.daily) updateForecastQuick(w.daily); if(w.hourly) { const todayStr = new Date().toISOString().slice(0,10); renderHourlySplit(w.hourly.time, w.hourly.temperature_2m, w.hourly.weathercode, todayStr); } } }); };
 function updateForecastQuick(daily){ const days = daily.time.slice(0,5); const maxT = daily.temperature_2m_max; const minT = daily.temperature_2m_min; const codes = daily.weathercode; forecastDiv.innerHTML = ''; days.forEach((d,i)=>{ const wk = new Date(d).toLocaleDateString('de-DE',{weekday:'short'}); forecastDiv.innerHTML += `<div class="forecast-day"><div>${wk}</div><div style="font-size:1.6rem;">${getWeatherIcon(codes[i])}</div><div>${Math.round(maxT[i])}°/${Math.round(minT[i])}°</div></div>`; }); }
-function updateHourlyQuick(hourly){ /* ähnlich, wird ignoriert */ }
 loadWeather("Berlin");
 
-// ======================= 3. MONATSKALENDER MIT iCal (FUNKTIONIERT) =======================
+// ========== 3. MONATSKALENDER MIT iCal (funktioniert mit Proxy) ==========
 let currentDate = new Date();
 let icalEvents = [];
 const monthYearSpan = document.getElementById('monthYearDisplay');
@@ -532,7 +572,7 @@ return null;
 async function loadICalendar(url) {
 if(!url) { icalStatus.innerText = "❌ Keine URL"; return; }
 icalStatus.innerText = "⏳ Lade Kalender über Proxy...";
-icalDebug.innerText = "Versuche: allorigins...";
+icalDebug.innerText = "Versuche Proxy...";
 const proxies = [
 `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
 `https://corsproxy.io/?${encodeURIComponent(url)}`,
@@ -572,7 +612,7 @@ if(val) cur.start = val;
 }
 icalEvents = events.map(ev => ({ startYMD: parseYMD(ev.start), summary: ev.summary || "Termin" })).filter(e => e.startYMD);
 icalStatus.innerText = `✅ ${icalEvents.length} Termine geladen`;
-icalDebug.innerText = `Letzter Proxy erfolgreich.`;
+icalDebug.innerText = `Erfolgreich geladen.`;
 renderCalendar();
 }
 
@@ -625,7 +665,6 @@ prevMonthBtn.onclick = () => { currentDate.setMonth(currentDate.getMonth()-1); r
 nextMonthBtn.onclick = () => { currentDate.setMonth(currentDate.getMonth()+1); renderCalendar(); };
 const applyIcalBtn = document.getElementById('applyIcalBtn');
 const icalUrlInput = document.getElementById('icalUrlInput');
-// Wichtig: Event-Listener explizit setzen
 if(applyIcalBtn){
 applyIcalBtn.onclick = () => {
 let url = icalUrlInput.value.trim();
@@ -633,13 +672,11 @@ if(url) loadICalendar(url);
 else icalStatus.innerText = "❌ Bitte URL eingeben";
 };
 }
-// Initial laden
 loadICalendar(icalUrlInput.value.trim());
-
 closeModalBtn.onclick = () => modal.style.display = 'none';
 window.onclick = (e) => { if(e.target === modal) modal.style.display = 'none'; };
 
-// ======================= 4. THEMES, FARBEN, TRANSPARENZ, SCHRIFT =======================
+// ========== 4. THEMES, TRANSPARENZ, SCHRIFTFARBE ==========
 const themeBtns = document.querySelectorAll('.theme-btn');
 function setAccentColor(color) {
 document.documentElement.style.setProperty('--accent-color', color);
@@ -701,4 +738,3 @@ window.addEventListener('click', (e) => { if(e.target === settingsFab) return; i
 </script>
 </body>
 </html>
-```
