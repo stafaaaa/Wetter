@@ -35,7 +35,6 @@
             touch-action: none; display: flex; flex-direction: column;
         }
         .tile-content { flex:1; overflow-y:auto; }
-        /* Wetter */
         #weather { z-index:10; height: var(--weather-height); }
         #weather .tile-content {
             padding:12px; text-shadow:0 1px 4px rgba(0,0,0,0.7);
@@ -58,7 +57,6 @@
             border-radius:4px; width:100px; font-size:0.7rem;
         }
         .location-bar button { background: var(--accent); border:none; color:white; border-radius:4px; padding:2px 6px; cursor:pointer; font-size:0.7rem; }
-        /* Kalender */
         #calendar { background:#000; }
         #calendar .tile-content { padding:12px 16px 8px; display:flex; flex-direction:column; height:100%; }
         .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; text-align:center; flex:1; }
@@ -74,7 +72,6 @@
         .month-slider-container input[type=range] { flex:1; background:rgba(255,255,255,0.2); height:4px; border-radius:2px; -webkit-appearance:none; }
         .month-slider-container input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; background:var(--accent); border-radius:50%; cursor:pointer; }
         .month-label { font-size:0.8rem; white-space:nowrap; }
-        /* Slideshow */
         #slideshow { background:#000; }
         #slideshow .tile-content { padding:0; }
         .slideshow-container { position:relative; width:100%; height:100%; background:#000; overflow:hidden; }
@@ -83,7 +80,6 @@
             opacity:0; transition: opacity var(--slide-duration) ease-out, transform var(--slide-duration) ease-out;
         }
         .slide-img.active { opacity:1; }
-        /* 10 Animationen */
         .slide-anim-fade .slide-img { transform:none; }
         .slide-anim-slide-left .slide-img { transform:translateX(100%); opacity:1; }
         .slide-anim-slide-left .slide-img.active { transform:translateX(0); }
@@ -105,13 +101,11 @@
         .slide-anim-circle-reveal .slide-img.active { clip-path:circle(100% at 50% 50%); opacity:1; }
         .slide-anim-slide-diagonal .slide-img { transform:translate(100%,100%) rotate(10deg); opacity:0; }
         .slide-anim-slide-diagonal .slide-img.active { transform:translate(0,0) rotate(0); opacity:1; }
-        /* Steuerung */
         .slideshow-controls {
             position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
             display:flex; gap:10px; background:rgba(0,0,0,0.6); padding:4px 10px; border-radius:20px; z-index:10;
         }
         .slideshow-controls button { background:transparent; border:none; color:white; font-size:1.2rem; cursor:pointer; padding:4px 8px; }
-        /* Einstell-Buttons – initial versteckt */
         .panel-btn {
             position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.6); border-radius:50%;
             width:32px; height:32px; display:none; align-items:center; justify-content:center;
@@ -133,7 +127,6 @@
         }
         .upload-btn { background:var(--accent); color:white; border:none; border-radius:12px; padding:4px 10px; cursor:pointer; font-size:0.8rem; }
         input[type=file] { display:none; }
-        /* Wettergrößen-Container – initial versteckt */
         #weather-height-container {
             position:absolute; bottom:4px; left:4px; z-index:20; display:none; gap:4px; align-items:center;
         }
@@ -142,7 +135,7 @@
 <body>
 <div id="dashboard"><div id="gradient-overlay"></div></div>
 
-<!-- Einstell-Panels (initial unsichtbar) -->
+<!-- Panels -->
 <div class="panel" id="anim-panel" style="top:50px; right:10px; width:200px;">
     <label>Animation</label>
     <select id="anim-select">
@@ -164,6 +157,7 @@
     <label>iCal URL</label>
     <input type="text" id="ical-url" placeholder="https://calendar.google.com/.../basic.ics">
     <button id="load-ical">Kalender laden</button>
+    <div id="ical-info" style="font-size:0.7rem; margin-top:4px; color:#a5f3fc;"></div>
     <div id="ical-error" style="color:#f88; font-size:0.7rem; margin-top:4px;"></div>
 </div>
 <div id="weather-height-container">
@@ -180,7 +174,6 @@
         weather:   { x:0, y: H*0.58, w: W*0.38, h: H*0.42 }
     };
 
-    // Einstellungen-Sichtbarkeit
     let settingsVisible = false;
     function showSettings() {
         settingsVisible = true;
@@ -194,7 +187,6 @@
         document.getElementById('weather-height-container').style.display = 'none';
     }
 
-    // Doppelklick irgendwo -> Einstellungen umschalten
     document.addEventListener('dblclick', function(e) {
         if (settingsVisible) {
             hideSettings();
@@ -203,7 +195,6 @@
         }
     });
 
-    // Einfacher Klick: Einstellungen ausblenden, wenn nicht auf ein Einstellungs-Element geklickt
     document.addEventListener('click', function(e) {
         if (!settingsVisible) return;
         if (e.target.closest('.panel-btn') || e.target.closest('.panel') || e.target.closest('#weather-height-container')) {
@@ -398,7 +389,7 @@
         await updateWeather();
     }
 
-    // --- KALENDER (originalgetreuer iCal-Proxy) ---
+    // --- KALENDER (verbessert) ---
     let calendarEvents = [];
     const palette = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63','#00bcd4','#ff5722'];
     function assignColor(i) { return palette[i % palette.length]; }
@@ -447,46 +438,67 @@
     ];
 
     async function fetchICSWithFallback(url) {
+        // 1. Direkter Versuch
         try {
             const res = await fetch(url);
             if (res.ok) return await res.text();
         } catch(e) {}
+        // 2. Proxies nacheinander
         for (const proxy of CORS_PROXIES) {
             try {
                 const proxyUrl = proxy + encodeURIComponent(url);
                 const res = await fetch(proxyUrl);
                 if (res.ok) {
                     const text = await res.text();
-                    if (text.includes('BEGIN:VCALENDAR')) return text;
+                    if (text.includes('BEGIN:VCALENDAR')) {
+                        console.log('✅ Proxy erfolgreich:', proxy);
+                        return text;
+                    }
                 }
             } catch(e) {}
         }
-        throw new Error('Alle Lade-Versuche fehlgeschlagen.');
+        throw new Error('Alle Lade-Versuche fehlgeschlagen. URL prüfen.');
     }
 
     async function loadCalendar(url) {
         if(!url) return;
-        const errBox = document.getElementById('ical-error');
-        errBox.style.display = 'none';
-        errBox.textContent = '';
+        const infoEl = document.getElementById('ical-info');
+        const errEl = document.getElementById('ical-error');
+        infoEl.textContent = '';
+        errEl.textContent = '';
         url = url.replace(/^webcal:\/\//i, 'https://');
         try {
             const data = await fetchICSWithFallback(url);
             const jcal = ICAL.parse(data);
             const comp = new ICAL.Component(jcal);
-            calendarEvents = comp.getAllSubcomponents('vevent').map((v,i) => {
+            const vevents = comp.getAllSubcomponents('vevent');
+            if (!vevents || vevents.length === 0) {
+                infoEl.textContent = '⚠️ Keine Termine in diesem Kalender gefunden.';
+                calendarEvents = [];
+                renderCalendar();
+                return;
+            }
+            calendarEvents = vevents.map((v, i) => {
                 const ev = new ICAL.Event(v);
+                const start = ev.startDate ? ev.startDate.toJSDate() : new Date();
+                const end = ev.endDate ? ev.endDate.toJSDate() : null;
                 return {
-                    summary: ev.summary || 'Termin',
-                    start: ev.startDate.toJSDate().toISOString().substring(0,10),
+                    summary: ev.summary || '(Ohne Titel)',
+                    start: start.toISOString().substring(0, 10),
+                    end: end ? end.toISOString().substring(0, 10) : start.toISOString().substring(0, 10),
                     color: assignColor(i)
                 };
             });
             renderCalendar();
             localStorage.setItem('icalUrl', url);
+            infoEl.textContent = `✅ ${calendarEvents.length} Termine geladen.`;
+            console.log('Kalender geladen:', calendarEvents.length, 'Termine');
         } catch(e) {
-            errBox.style.display = 'block';
-            errBox.textContent = '❌ ' + e.message;
+            console.error('Kalenderfehler:', e);
+            errEl.textContent = '❌ ' + e.message;
+            calendarEvents = [];
+            renderCalendar();
+            infoEl.textContent = '';
         }
     }
 
@@ -536,7 +548,6 @@
             localStorage.setItem('slides', JSON.stringify(slides));
             startSS();
         }
-        // Einstell-Buttons nur aktiv, wenn sichtbar
         else if(t.closest('#anim-btn') && settingsVisible) {
             document.getElementById('anim-panel').classList.toggle('open');
         }
