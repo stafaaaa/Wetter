@@ -83,7 +83,7 @@
             opacity:0; transition: opacity var(--slide-duration) ease-out, transform var(--slide-duration) ease-out;
         }
         .slide-img.active { opacity:1; }
-        /* Animationen */
+        /* 10 Animationen */
         .slide-anim-fade .slide-img { transform:none; }
         .slide-anim-slide-left .slide-img { transform:translateX(100%); opacity:1; }
         .slide-anim-slide-left .slide-img.active { transform:translateX(0); }
@@ -361,7 +361,7 @@
         await updateWeather();
     }
 
-    // --- KALENDER ---
+    // --- KALENDER (mit originalgetreuem iCal-Proxy) ---
     let calendarEvents = [];
     const palette = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63','#00bcd4','#ff5722'];
     function assignColor(i) { return palette[i % palette.length]; }
@@ -403,37 +403,66 @@
         document.getElementById('month-slider').value = currentMonth;
     }
 
-    const CORS_PROXIES = ['https://corsproxy.io/?', 'https://api.allorigins.win/raw?url='];
-    async function fetchICS(url) {
-        try { const r = await fetch(url); if(r.ok) return await r.text(); } catch(e) {}
-        for(const p of CORS_PROXIES) {
-            try {
-                const r = await fetch(p + encodeURIComponent(url));
-                if(r.ok && (await r.text()).includes('BEGIN:VCALENDAR')) return await r.text();
-            } catch(e) {}
+    // ORIGINALE CORS-PROXIES AUS T2.HTML
+    const CORS_PROXIES = [
+        'https://corsproxy.io/?',
+        'https://api.allorigins.win/raw?url=',
+        'https://api.codetabs.com/v1/proxy?quest='
+    ];
+
+    async function fetchICSWithFallback(url) {
+        // 1. Direkter Versuch
+        try {
+            const res = await fetch(url);
+            if (res.ok) return await res.text();
+        } catch(e) {
+            console.log('Direkter Abruf fehlgeschlagen (CORS), versuche Proxies...');
         }
-        throw new Error('Kalender nicht erreichbar');
+        // 2. Proxies nacheinander
+        for (const proxy of CORS_PROXIES) {
+            try {
+                const proxyUrl = proxy + encodeURIComponent(url);
+                const res = await fetch(proxyUrl);
+                if (res.ok) {
+                    const text = await res.text();
+                    if (text.includes('BEGIN:VCALENDAR')) {
+                        console.log('Proxy erfolgreich:', proxy);
+                        return text;
+                    }
+                }
+            } catch(e) {
+                console.log('Proxy fehlgeschlagen:', proxy);
+            }
+        }
+        throw new Error('Alle Lade-Versuche fehlgeschlagen. Bitte URL überprüfen.');
     }
 
     async function loadCalendar(url) {
         if(!url) return;
-        document.getElementById('ical-error').textContent = '';
+        const errBox = document.getElementById('ical-error');
+        errBox.style.display = 'none';
+        errBox.textContent = '';
+        // webcal:// ersetzen
+        url = url.replace(/^webcal:\/\//i, 'https://');
         try {
-            const data = await fetchICS(url);
+            const data = await fetchICSWithFallback(url);
             const jcal = ICAL.parse(data);
             const comp = new ICAL.Component(jcal);
             calendarEvents = comp.getAllSubcomponents('vevent').map((v,i) => {
                 const ev = new ICAL.Event(v);
                 return {
-                    summary: ev.summary || 'Termin',
+                    summary: ev.summary || '(Ohne Titel)',
                     start: ev.startDate.toJSDate().toISOString().substring(0,10),
                     color: assignColor(i)
                 };
             });
             renderCalendar();
             localStorage.setItem('icalUrl', url);
+            console.log('✅ Kalender geladen:', calendarEvents.length, 'Termine');
         } catch(e) {
-            document.getElementById('ical-error').textContent = '❌ ' + e.message;
+            console.error('❌ Kalenderfehler:', e);
+            errBox.style.display = 'block';
+            errBox.textContent = '❌ ' + e.message;
         }
     }
 
@@ -454,7 +483,6 @@
             img.src = slides[currentSlide];
             container.insertBefore(img, container.firstChild);
         } else {
-            // Platzhalter, damit man sofort sieht, dass die Kachel funktioniert
             const placeholder = document.createElement('div');
             placeholder.className = 'slide-img active';
             placeholder.style.background = '#222';
@@ -555,7 +583,10 @@
         document.getElementById('anim-select').value = savedAnim;
 
         const savedIcal = localStorage.getItem('icalUrl');
-        if(savedIcal) { document.getElementById('ical-url').value = savedIcal; loadCalendar(savedIcal); }
+        if(savedIcal) {
+            document.getElementById('ical-url').value = savedIcal;
+            loadCalendar(savedIcal);
+        }
 
         createTiles();
         loadSlides();
