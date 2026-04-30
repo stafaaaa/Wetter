@@ -34,14 +34,19 @@
             width: calc(var(--gradient-width) * 100%);
             height:100%;
             background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,var(--gradient-opacity)) 60%, rgba(0,0,0,1) 100%);
-            z-index:5; pointer-events:none; transition: left 0.2s, width 0.2s;
+            z-index:5; pointer-events:none;
+            transition: left 0.2s, width 0.2s;
         }
         .tile {
-            position: absolute; background: rgba(0,0,0,var(--tile-opacity)); border:none;
-            overflow: hidden; touch-action: none; display: flex; flex-direction: column;
+            position: absolute;
+            background: rgba(0,0,0,var(--tile-opacity));
+            border:none; overflow:hidden;
+            touch-action: none; display: flex; flex-direction: column;
             cursor: default;
         }
         .tile-content { flex:1; overflow-y:auto; cursor: default; }
+
+        /* Ziehgriffe standardmäßig ausgeblendet – erscheinen nur im Einstellungsmodus */
         .resize-handle-edge, .resize-handle-corner { display: none; }
         #dashboard[data-settings-visible="true"] .resize-handle-edge,
         #dashboard[data-settings-visible="true"] .resize-handle-corner { display: block; }
@@ -73,9 +78,7 @@
         /* Kalender */
         #calendar { background:#000; }
         #calendar .tile-content { padding:8px 12px; display:flex; flex-direction:column; height:100%; }
-        .view-switch {
-            display: flex; gap: 4px; margin-bottom: 6px;
-        }
+        .view-switch { display: flex; gap: 4px; margin-bottom: 6px; }
         .view-btn {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
             color: white; padding: 4px 12px; border-radius: 6px; cursor: pointer;
@@ -122,7 +125,27 @@
             opacity:0; transition: opacity var(--slide-duration) ease-out, transform var(--slide-duration) ease-out;
         }
         .slide-img.active { opacity:1; }
-        [ … Animationen … ]  /* (identisch wie bisher) */
+        .slide-anim-fade .slide-img { transform:none; }
+        .slide-anim-slide-left .slide-img { transform:translateX(100%); opacity:1; }
+        .slide-anim-slide-left .slide-img.active { transform:translateX(0); }
+        .slide-anim-slide-up .slide-img { transform:translateY(100%); opacity:1; }
+        .slide-anim-slide-up .slide-img.active { transform:translateY(0); }
+        .slide-anim-zoom .slide-img { transform:scale(0.7); opacity:0; }
+        .slide-anim-zoom .slide-img.active { transform:scale(1); opacity:1; }
+        .slide-anim-rotate .slide-img { transform:rotate(-15deg) scale(0.8); opacity:0; }
+        .slide-anim-rotate .slide-img.active { transform:rotate(0) scale(1); opacity:1; }
+        .slide-anim-flip .slide-img { transform:perspective(800px) rotateY(90deg); opacity:0; }
+        .slide-anim-flip .slide-img.active { transform:perspective(800px) rotateY(0); opacity:1; }
+        .slide-anim-blur .slide-img { filter:blur(20px); opacity:0; }
+        .slide-anim-blur .slide-img.active { filter:blur(0); opacity:1; }
+        .slide-anim-ken-burns .slide-img.active { animation: kenBurns 8s infinite alternate; }
+        @keyframes kenBurns { from { transform:scale(1); } to { transform:scale(1.1); } }
+        .slide-anim-split .slide-img { clip-path:inset(50% 0 50% 0); opacity:0; }
+        .slide-anim-split .slide-img.active { clip-path:inset(0 0 0 0); opacity:1; }
+        .slide-anim-circle-reveal .slide-img { clip-path:circle(0% at 50% 50%); opacity:0; }
+        .slide-anim-circle-reveal .slide-img.active { clip-path:circle(100% at 50% 50%); opacity:1; }
+        .slide-anim-slide-diagonal .slide-img { transform:translate(100%,100%) rotate(10deg); opacity:0; }
+        .slide-anim-slide-diagonal .slide-img.active { transform:translate(0,0) rotate(0); opacity:1; }
         .slideshow-controls {
             position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
             display:flex; gap:10px; background:rgba(0,0,0,0.6); padding:4px 10px; border-radius:20px; z-index:10;
@@ -157,7 +180,7 @@
 <body>
 <div id="dashboard"><div id="gradient-overlay"></div></div>
 
-<!-- Einstellungs-Panels (wie gehabt) -->
+<!-- Panels -->
 <div class="panel" id="anim-panel" style="top:50px; right:10px; width:200px;">
     <label>Animation</label>
     <select id="anim-select">
@@ -204,14 +227,240 @@
 
     let settingsVisible = false;
     const dashboard = document.getElementById('dashboard');
-    let currentView = 'month'; // 'month' oder 'week'
+    let currentView = 'month';
 
-    function showSettings() { /* ... wie gehabt ... */ }
-    function hideSettings() { /* ... wie gehabt ... */ }
+    function showSettings() {
+        settingsVisible = true;
+        dashboard.setAttribute('data-settings-visible', 'true');
+        document.querySelectorAll('.panel-btn').forEach(b => b.style.display = 'flex');
+        document.getElementById('weather-height-container').style.display = 'flex';
+        interact('.tile').draggable({ enabled: true }).resizable({ enabled: true });
+    }
 
-    // ... (restliche Funktionen für Interact, Wetter, Slideshow etc. – identisch zur letzten Version) ...
+    function hideSettings() {
+        settingsVisible = false;
+        dashboard.removeAttribute('data-settings-visible');
+        document.querySelectorAll('.panel-btn').forEach(b => b.style.display = 'none');
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
+        document.getElementById('weather-height-container').style.display = 'none';
+        interact('.tile').draggable({ enabled: false }).resizable({ enabled: false });
+    }
 
-    // --- KALENDER (erweitert) ---
+    document.addEventListener('dblclick', function(e) {
+        if (settingsVisible) hideSettings();
+        else showSettings();
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!settingsVisible) return;
+        if (!e.target.closest('.panel-btn') && !e.target.closest('.panel') && !e.target.closest('#weather-height-container')) {
+            hideSettings();
+        }
+    });
+
+    function createTiles() {
+        dashboard.querySelectorAll('.tile').forEach(t => t.remove());
+        for (const [id, dim] of Object.entries(layout)) {
+            const tile = document.createElement('div');
+            tile.className = 'tile'; tile.id = id;
+            tile.style.left = dim.x + 'px'; tile.style.top = dim.y + 'px';
+            tile.style.width = dim.w + 'px'; tile.style.height = dim.h + 'px';
+            tile.innerHTML = `<div class="tile-content"></div>
+                <div class="resize-handle-edge top"></div><div class="resize-handle-edge bottom"></div>
+                <div class="resize-handle-edge left"></div><div class="resize-handle-edge right"></div>
+                <div class="resize-handle-corner tl"></div><div class="resize-handle-corner tr"></div>
+                <div class="resize-handle-corner bl"></div><div class="resize-handle-corner br"></div>`;
+            dashboard.appendChild(tile);
+            fillTile(id, tile);
+        }
+        initInteract();
+        initCalendarContent();
+        renderCurrentView();
+    }
+
+    function fillTile(id, tile) {
+        const content = tile.querySelector('.tile-content');
+        if (id === 'weather') {
+            content.innerHTML = `
+                <div class="weather-now">
+                    <div class="temp" id="current-temp">--°</div>
+                    <div class="details" id="current-details">Wetter wird geladen…</div>
+                    <div id="current-icon" style="font-size:2rem;">🌥️</div>
+                </div>
+                <div class="forecast-row" id="forecast-container"><div class="forecast-day">Mo<br>--°</div></div>
+                <div class="location-bar">
+                    <input type="text" id="location-search" placeholder="Stadt">
+                    <button id="location-search-btn">🔍</button>
+                    <button id="gps-btn">📍</button>
+                    <span id="current-location-name">Düsseldorf</span>
+                </div>`;
+        } else if (id === 'calendar') {
+            content.innerHTML = `
+                <div class="view-switch">
+                    <button class="view-btn active" id="view-month">Monat</button>
+                    <button class="view-btn" id="view-week">Woche</button>
+                </div>
+                <div class="calendar-grid" id="calendar-grid"></div>
+                <div class="month-slider-container" id="month-slider-container">
+                    <span class="month-label" id="month-label"></span>
+                    <input type="range" id="month-slider" min="0" max="11" value="${new Date().getMonth()}">
+                </div>
+                <div class="week-container" id="week-container">
+                    <div class="week-header"><span id="week-label"></span></div>
+                    <div class="week-days" id="week-days"></div>
+                </div>
+                <div class="event-details" id="event-details"></div>`;
+        } else if (id === 'slideshow') {
+            content.innerHTML = `
+                <div class="slideshow-container slide-anim-fade" id="slideshow-container">
+                    <div class="panel-btn anim-btn" id="anim-btn"><i class="fas fa-film"></i></div>
+                    <div class="panel-btn gradient-btn" id="gradient-btn"><i class="fas fa-adjust"></i></div>
+                    <div class="panel-btn cal-settings-btn" id="cal-settings-btn"><i class="fas fa-cog"></i></div>
+                    <div class="panel-btn tile-opacity-btn" id="tile-opacity-btn"><i class="fas fa-eye"></i></div>
+                    <div class="slideshow-controls">
+                        <button id="prev-slide"><i class="fas fa-chevron-left"></i></button>
+                        <button id="play-pause"><i class="fas fa-pause"></i></button>
+                        <button id="next-slide"><i class="fas fa-chevron-right"></i></button>
+                        <button id="delete-slide"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <div class="upload-area">
+                    <label for="file-upload" class="upload-btn"><i class="fas fa-upload"></i></label>
+                    <input type="file" id="file-upload" multiple accept="image/*">
+                    <span id="image-count">0 Bilder</span>
+                </div>`;
+        }
+    }
+
+    function initCalendarContent() {
+        // Wird von createTiles aufgerufen, nachdem der Kalender-Tile existiert
+    }
+
+    function initInteract() {
+        interact('.tile')
+            .draggable({
+                enabled: false,
+                allowFrom: '.tile-content',
+                modifiers: [interact.modifiers.restrict({ restriction: 'parent', endOnly: true })],
+                listeners: {
+                    move(e) {
+                        const t = e.target;
+                        const x = (parseFloat(t.getAttribute('data-x'))||0) + e.dx;
+                        const y = (parseFloat(t.getAttribute('data-y'))||0) + e.dy;
+                        t.style.transform = `translate(${x}px,${y}px)`;
+                        t.setAttribute('data-x', x); t.setAttribute('data-y', y);
+                    },
+                    end(e) {
+                        const t = e.target;
+                        const x = parseFloat(t.getAttribute('data-x'))||0;
+                        const y = parseFloat(t.getAttribute('data-y'))||0;
+                        t.style.transform = '';
+                        t.style.left = (parseFloat(t.style.left)+x)+'px';
+                        t.style.top = (parseFloat(t.style.top)+y)+'px';
+                        t.setAttribute('data-x',0); t.setAttribute('data-y',0);
+                        saveLayout();
+                    }
+                }
+            })
+            .resizable({
+                enabled: false,
+                edges: { top:true, bottom:true, left:true, right:true },
+                modifiers: [
+                    interact.modifiers.restrict({ restriction: 'parent', endOnly: true }),
+                    interact.modifiers.restrictSize({ min: { width:80, height:80 } })
+                ],
+                listeners: {
+                    move(e) {
+                        const t = e.target;
+                        let x = (parseFloat(t.getAttribute('data-x'))||0);
+                        let y = (parseFloat(t.getAttribute('data-y'))||0);
+                        t.style.width = e.rect.width + 'px';
+                        t.style.height = e.rect.height + 'px';
+                        x += e.deltaRect.left; y += e.deltaRect.top;
+                        t.style.transform = `translate(${x}px,${y}px)`;
+                        t.setAttribute('data-x', x); t.setAttribute('data-y', y);
+                    },
+                    end(e) {
+                        const t = e.target;
+                        const x = parseFloat(t.getAttribute('data-x'))||0;
+                        const y = parseFloat(t.getAttribute('data-y'))||0;
+                        t.style.transform = '';
+                        t.style.left = (parseFloat(t.style.left)+x)+'px';
+                        t.style.top = (parseFloat(t.style.top)+y)+'px';
+                        t.setAttribute('data-x',0); t.setAttribute('data-y',0);
+                        saveLayout();
+                    }
+                }
+            });
+    }
+
+    function saveLayout() {
+        const tiles = {};
+        document.querySelectorAll('.tile').forEach(t => {
+            tiles[t.id] = {
+                x: parseFloat(t.style.left)||0,
+                y: parseFloat(t.style.top)||0,
+                w: parseFloat(t.style.width)||100,
+                h: parseFloat(t.style.height)||100
+            };
+        });
+        localStorage.setItem('kitchenLayout', JSON.stringify(tiles));
+    }
+
+    // --- WETTER ---
+    let currentLat = 51.2277, currentLon = 6.7735, currentLocName = 'Düsseldorf';
+    async function fetchWeather() {
+        try {
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${currentLat}&longitude=${currentLon}&current=weather_code,temperature_2m,relative_humidity_2m,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5`);
+            return await res.json();
+        } catch(e) { return null; }
+    }
+    function wEmoji(c) {
+        const m = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌦️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',80:'🌧️',81:'🌧️',82:'🌧️',85:'🌨️',86:'🌨️',95:'⛈️'};
+        return m[c] || '🌥️';
+    }
+    function wDesc(c) {
+        if(c===0) return 'Sonnig'; if(c===1) return 'Heiter'; if(c===2) return 'Wolkig';
+        if(c===3) return 'Bedeckt'; if(c>=45&&c<=48) return 'Nebel'; if(c>=51) return 'Niesel';
+        if(c>=61) return 'Regen'; if(c>=71) return 'Schnee'; if(c>=95) return 'Gewitter';
+        return 'Bewölkt';
+    }
+    async function updateWeather() {
+        const data = await fetchWeather();
+        if(!data) {
+            document.getElementById('current-temp').textContent = '--°';
+            document.getElementById('current-details').textContent = 'Keine Verbindung';
+            document.getElementById('forecast-container').innerHTML = '<div class="forecast-day">--</div>';
+            return;
+        }
+        document.getElementById('current-temp').textContent = Math.round(data.current.temperature_2m) + '°';
+        document.getElementById('current-details').innerHTML = `${wDesc(data.current.weather_code)}<br>💧 ${data.current.relative_humidity_2m}% · 💨 ${Math.round(data.current.wind_speed_10m)} km/h`;
+        document.getElementById('current-icon').textContent = wEmoji(data.current.weather_code);
+        document.getElementById('current-location-name').textContent = currentLocName;
+        const fc = document.getElementById('forecast-container');
+        if(fc) {
+            fc.innerHTML = '';
+            data.daily.time.forEach((day,i) => {
+                const d = new Date(day);
+                const div = document.createElement('div');
+                div.className = 'forecast-day' + (i===0?' active':'');
+                div.innerHTML = `<div>${d.toLocaleDateString('de-DE',{weekday:'short'})}</div><div>${wEmoji(data.daily.weather_code[i])}</div><div>${Math.round(data.daily.temperature_2m_max[i])}°/${Math.round(data.daily.temperature_2m_min[i])}°</div>`;
+                fc.appendChild(div);
+            });
+        }
+    }
+    async function searchLocation(query) {
+        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=3&language=de`);
+        const data = await res.json();
+        return data.results || [];
+    }
+    async function setLocation(lat, lon, name) {
+        currentLat = lat; currentLon = lon; currentLocName = name;
+        localStorage.setItem('weatherLoc', JSON.stringify({lat,lon,name}));
+        await updateWeather();
+    }
+
+    // --- KALENDER ---
     let calendarEvents = [];
     const palette = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63','#00bcd4','#ff5722'];
     function assignColor(i) { return palette[i % palette.length]; }
@@ -266,16 +515,16 @@
         const weekContainer = document.getElementById('week-container');
         if(!weekContainer) return;
         const today = new Date();
-        const dayOfWeek = today.getDay(); // 0=So, 1=Mo, ...
+        const dayOfWeek = today.getDay();
         const monday = new Date(today);
-        monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7)); // zurück auf Montag
+        monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
         const days = [];
         for (let i = 0; i < 7; i++) {
             const date = new Date(monday);
             date.setDate(monday.getDate() + i);
             days.push(date);
         }
-        const weekLabel = `${monday.toLocaleDateString('de-DE', {day:'numeric', month:'short'})} – ${new Date(monday).setDate(monday.getDate()+6) ? new Date(monday.getTime()+6*86400000).toLocaleDateString('de-DE', {day:'numeric', month:'short'}) : ''}`;
+        const weekLabel = `${monday.toLocaleDateString('de-DE', {day:'numeric', month:'short'})} – ${days[6].toLocaleDateString('de-DE', {day:'numeric', month:'short'})}`;
         document.getElementById('week-label').textContent = weekLabel;
 
         const weekDaysDiv = document.getElementById('week-days');
@@ -311,84 +560,235 @@
         details.classList.add('show');
     }
 
-    // Event-Listener für Ansichtsumschaltung
-    document.addEventListener('click', function(e) {
-        if (e.target.id === 'view-month') {
-            currentView = 'month';
-            document.getElementById('view-month').classList.add('active');
-            document.getElementById('view-week').classList.remove('active');
+    const CORS_PROXIES = [
+        'https://corsproxy.io/?',
+        'https://api.allorigins.win/raw?url=',
+        'https://api.codetabs.com/v1/proxy?quest='
+    ];
+    async function fetchICSWithFallback(url) {
+        try { const res = await fetch(url); if (res.ok) return await res.text(); } catch(e) {}
+        for (const proxy of CORS_PROXIES) {
+            try {
+                const proxyUrl = proxy + encodeURIComponent(url);
+                const res = await fetch(proxyUrl);
+                if (res.ok) {
+                    const text = await res.text();
+                    if (text.includes('BEGIN:VCALENDAR')) return text;
+                }
+            } catch(e) {}
+        }
+        throw new Error('Alle Lade-Versuche fehlgeschlagen.');
+    }
+
+    async function loadCalendar(url) {
+        if(!url) return;
+        const infoEl = document.getElementById('ical-info');
+        const errEl = document.getElementById('ical-error');
+        infoEl.textContent = ''; errEl.textContent = '';
+        url = url.replace(/^webcal:\/\//i, 'https://');
+        try {
+            const data = await fetchICSWithFallback(url);
+            const jcal = ICAL.parse(data);
+            const comp = new ICAL.Component(jcal);
+            const vevents = comp.getAllSubcomponents('vevent');
+            if (!vevents || vevents.length === 0) {
+                infoEl.textContent = '⚠️ Keine Termine gefunden.';
+                calendarEvents = [];
+                renderCurrentView();
+                return;
+            }
+            calendarEvents = vevents.map((v, i) => {
+                const ev = new ICAL.Event(v);
+                const start = ev.startDate ? ev.startDate.toJSDate() : new Date();
+                const end = ev.endDate ? ev.endDate.toJSDate() : null;
+                return {
+                    summary: ev.summary || '(Ohne Titel)',
+                    start: start.toISOString().substring(0, 10),
+                    end: end ? end.toISOString().substring(0, 10) : start.toISOString().substring(0, 10),
+                    color: assignColor(i)
+                };
+            });
             renderCurrentView();
-        } else if (e.target.id === 'view-week') {
+            localStorage.setItem('icalUrl', url);
+            infoEl.textContent = `✅ ${calendarEvents.length} Termine geladen.`;
+        } catch(e) {
+            errEl.textContent = '❌ ' + e.message;
+            calendarEvents = [];
+            renderCurrentView();
+            infoEl.textContent = '';
+        }
+    }
+
+    // --- SLIDESHOW ---
+    let slides = [], currentSlide = 0, paused = false, timer;
+    function loadSlides() {
+        const saved = localStorage.getItem('slides');
+        if(saved) { slides = JSON.parse(saved); currentSlide = parseInt(localStorage.getItem('slideIdx'))||0; }
+        updateSlideDisplay();
+    }
+    function updateSlideDisplay() {
+        const container = document.getElementById('slideshow-container');
+        if(!container) return;
+        container.querySelectorAll('.slide-img').forEach(i => i.remove());
+        if(slides.length && slides[currentSlide]) {
+            const img = document.createElement('img');
+            img.className = 'slide-img active';
+            img.src = slides[currentSlide];
+            container.insertBefore(img, container.firstChild);
+        } else {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'slide-img active';
+            placeholder.style.background = '#222';
+            placeholder.style.display = 'flex'; placeholder.style.alignItems = 'center'; placeholder.style.justifyContent = 'center';
+            placeholder.innerHTML = '<span style="color:white; opacity:0.5;">📷 Fotos hochladen</span>';
+            container.appendChild(placeholder);
+        }
+    }
+    function next() { if(slides.length) { currentSlide = (currentSlide+1)%slides.length; updateSlideDisplay(); localStorage.setItem('slideIdx', currentSlide); } }
+    function prev() { if(slides.length) { currentSlide = (currentSlide-1+slides.length)%slides.length; updateSlideDisplay(); localStorage.setItem('slideIdx', currentSlide); } }
+    function startSS() { clearInterval(timer); if(!paused && slides.length) timer = setInterval(next, 10000); }
+
+    document.addEventListener('click', function(e) {
+        const t = e.target;
+        if(t.closest('#prev-slide')) { prev(); startSS(); }
+        else if(t.closest('#next-slide')) { next(); startSS(); }
+        else if(t.closest('#play-pause')) {
+            paused = !paused;
+            const btn = t.closest('#play-pause');
+            btn.innerHTML = paused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+            paused ? clearInterval(timer) : startSS();
+        }
+        else if(t.closest('#delete-slide') && slides.length) {
+            slides.splice(currentSlide, 1);
+            if(currentSlide >= slides.length) currentSlide = 0;
+            updateSlideDisplay();
+            localStorage.setItem('slides', JSON.stringify(slides));
+            startSS();
+        }
+        else if(t.closest('#anim-btn') && settingsVisible) {
+            document.getElementById('anim-panel').classList.toggle('open');
+        }
+        else if(t.closest('#gradient-btn') && settingsVisible) {
+            document.getElementById('gradient-panel').classList.toggle('open');
+        }
+        else if(t.closest('#cal-settings-btn') && settingsVisible) {
+            document.getElementById('cal-panel').classList.toggle('open');
+        }
+        else if(t.closest('#tile-opacity-btn') && settingsVisible) {
+            document.getElementById('tile-opacity-panel').classList.toggle('open');
+        }
+        else if(t.closest('#load-ical')) loadCalendar(document.getElementById('ical-url').value);
+        else if(t.closest('#location-search-btn')) {
+            const q = document.getElementById('location-search').value;
+            searchLocation(q).then(results => {
+                if(results.length) setLocation(results[0].latitude, results[0].longitude, results[0].name);
+            });
+        }
+        else if(t.closest('#gps-btn')) {
+            navigator.geolocation.getCurrentPosition(p => setLocation(p.coords.latitude, p.coords.longitude, 'GPS'));
+        }
+        else if(t.closest('#view-month')) {
+            currentView = 'month';
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('view-month').classList.add('active');
+            renderCurrentView();
+        }
+        else if(t.closest('#view-week')) {
             currentView = 'week';
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('view-week').classList.add('active');
-            document.getElementById('view-month').classList.remove('active');
             renderCurrentView();
         }
     });
 
-    // Initialisierung der Kalender-Ansicht
-    function initCalendar() {
-        const calContent = document.querySelector('#calendar .tile-content');
-        if (calContent) {
-            calContent.innerHTML = `
-                <div class="view-switch">
-                    <button class="view-btn active" id="view-month">Monat</button>
-                    <button class="view-btn" id="view-week">Woche</button>
-                </div>
-                <div class="calendar-grid" id="calendar-grid"></div>
-                <div class="month-slider-container" id="month-slider-container">
-                    <span class="month-label" id="month-label"></span>
-                    <input type="range" id="month-slider" min="0" max="11" value="${new Date().getMonth()}">
-                </div>
-                <div class="week-container" id="week-container">
-                    <div class="week-header"><span id="week-label"></span></div>
-                    <div class="week-days" id="week-days"></div>
-                </div>
-                <div class="event-details" id="event-details"></div>
-            `;
-        }
-    }
-
-    // ... (die übrigen Funktionen wie createTiles, fillTile etc. anpassen: in fillTile für calendar das neue HTML einfügen) ...
-
-    // In createTiles/fillTile für den Kalender rufen wir initCalendar() auf, nachdem die Kachel erstellt wurde.
-    function createTiles() {
-        dashboard.querySelectorAll('.tile').forEach(t => t.remove());
-        for (const [id, dim] of Object.entries(layout)) {
-            const tile = document.createElement('div');
-            tile.className = 'tile'; tile.id = id;
-            tile.style.left = dim.x + 'px'; tile.style.top = dim.y + 'px';
-            tile.style.width = dim.w + 'px'; tile.style.height = dim.h + 'px';
-            tile.innerHTML = `<div class="tile-content"></div>`;
-            if (id !== 'calendar') {
-                // Ziehgriffe nur für Nicht-Kalender? Oder für alle, aber Kalender bekommt sie auch
-            }
-            dashboard.appendChild(tile);
-            fillTile(id, tile);
-        }
-        initInteract();
-        // Kalender-Ansicht initialisieren
-        initCalendar();
-        renderCurrentView();
-    }
-
-    // In loadCalendar nach dem Parsen auch renderCurrentView aufrufen
-    async function loadCalendar(url) {
-        // ... (Parsen wie zuvor) ...
-        calendarEvents = vevents.map(...);
-        renderCurrentView(); // Statt renderCalendar()
-        // ...
-    }
-
-    // Monats-Schieberegler Event anpassen
     document.addEventListener('change', function(e) {
+        if(e.target.id === 'file-upload') {
+            Array.from(e.target.files).forEach(f => {
+                const r = new FileReader();
+                r.onload = ev => {
+                    slides.push(ev.target.result);
+                    if(slides.length===1) currentSlide = 0;
+                    updateSlideDisplay();
+                    localStorage.setItem('slides', JSON.stringify(slides));
+                    startSS();
+                };
+                r.readAsDataURL(f);
+            });
+        }
+        if(e.target.id === 'anim-select') {
+            document.getElementById('slideshow-container').className = 'slideshow-container slide-anim-' + e.target.value;
+            localStorage.setItem('slideAnim', e.target.value);
+        }
+        if(e.target.id === 'gradient-position-slider') {
+            document.documentElement.style.setProperty('--gradient-position', e.target.value);
+            document.getElementById('gradient-pos-value').textContent = Math.round(e.target.value * 100) + '%';
+            localStorage.setItem('gradientPosition', e.target.value);
+        }
+        if(e.target.id === 'gradient-width-slider') {
+            document.documentElement.style.setProperty('--gradient-width', e.target.value);
+            localStorage.setItem('gradientWidth', e.target.value);
+        }
+        if(e.target.id === 'gradient-opacity-slider') {
+            document.documentElement.style.setProperty('--gradient-opacity', e.target.value);
+            localStorage.setItem('gradientOpacity', e.target.value);
+        }
+        if(e.target.id === 'tile-opacity-slider') {
+            document.documentElement.style.setProperty('--tile-opacity', e.target.value);
+            document.getElementById('tile-opacity-value').textContent = Math.round(e.target.value * 100) + '%';
+            localStorage.setItem('tileOpacity', e.target.value);
+        }
+        if(e.target.id === 'weather-height-slider') {
+            const val = e.target.value + 'vh';
+            document.documentElement.style.setProperty('--weather-height', val);
+            document.getElementById('weather').style.height = val;
+            localStorage.setItem('weatherHeight', e.target.value);
+        }
         if(e.target.id === 'month-slider' && currentView === 'month') {
             currentMonth = parseInt(e.target.value);
             renderMonthCalendar();
         }
     });
 
-    // ... (restliche Listener und Initialisierung wie gehabt) ...
+    function init() {
+        const savedLoc = localStorage.getItem('weatherLoc');
+        if(savedLoc) { const l = JSON.parse(savedLoc); currentLat = l.lat; currentLon = l.lon; currentLocName = l.name; }
+
+        const gp = localStorage.getItem('gradientPosition') || 0.38;
+        const gw = localStorage.getItem('gradientWidth') || 0.05;
+        const go = localStorage.getItem('gradientOpacity') || 0.8;
+        const to = localStorage.getItem('tileOpacity') || 0.85;
+        const wh = localStorage.getItem('weatherHeight') || 42;
+        document.documentElement.style.setProperty('--gradient-position', gp);
+        document.documentElement.style.setProperty('--gradient-width', gw);
+        document.documentElement.style.setProperty('--gradient-opacity', go);
+        document.documentElement.style.setProperty('--tile-opacity', to);
+        document.documentElement.style.setProperty('--weather-height', wh + 'vh');
+        document.getElementById('gradient-position-slider').value = gp;
+        document.getElementById('gradient-width-slider').value = gw;
+        document.getElementById('gradient-opacity-slider').value = go;
+        document.getElementById('tile-opacity-slider').value = to;
+        document.getElementById('weather-height-slider').value = wh;
+        document.getElementById('gradient-pos-value').textContent = Math.round(gp * 100) + '%';
+        document.getElementById('tile-opacity-value').textContent = Math.round(to * 100) + '%';
+
+        const savedAnim = localStorage.getItem('slideAnim') || 'fade';
+        document.getElementById('anim-select').value = savedAnim;
+
+        const savedIcal = localStorage.getItem('icalUrl');
+        if(savedIcal) {
+            document.getElementById('ical-url').value = savedIcal;
+            loadCalendar(savedIcal);
+        }
+
+        createTiles();
+        loadSlides();
+        updateWeather();
+        renderCurrentView();
+        setInterval(updateWeather, 900000);
+        startSS();
+        hideSettings();
+    }
+    init();
 })();
 </script>
 </body>
