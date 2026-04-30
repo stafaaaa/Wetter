@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Kitchen Wall – Erweitert</title>
+    <title>Kitchen Wall – Komplett</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js">
+    </script>
     <style>
         :root {
             --bg: #000;
@@ -19,32 +21,44 @@
             --tile-opacity: 0.85;
             --weather-height: 42vh;
             --font-scale: 1;
-            --tile-bg: rgba(0,0,0,0.85);
-            --tile-shadow: none;
+            --tile-bg: rgba(0, 0, 0, 0.85);
             --tile-border: none;
-            --backdrop: blur(0px);
+            --tile-shadow: none;
         }
-        * { margin:0; padding:0; box-sizing:border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
             background: var(--bg);
             color: var(--text);
-            height: 100vh; height: 100dvh; overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
             touch-action: manipulation;
             font-size: calc(1rem * var(--font-scale));
             transition: background 0.3s;
         }
-        #dashboard { width:100%; height:100%; position:relative; overflow:hidden; }
+        #dashboard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
         #gradient-overlay {
             position: absolute;
-            top:0;
-            left: calc(var(--gradient-position)*100% - var(--gradient-width)*100%);
-            width: calc(var(--gradient-width)*100%);
-            height:100%;
-            background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,var(--gradient-opacity)) 60%, rgba(0,0,0,1) 100%);
-            z-index:5; pointer-events:none; transition: left 0.2s, width 0.2s;
+            top: 0;
+            left: calc(var(--gradient-position) * 100% - var(--gradient-width) * 100%);
+            width: calc(var(--gradient-width) * 100%);
+            height: 100%;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, var(--gradient-opacity)) 60%, rgba(0, 0, 0, 1) 100%);
+            z-index: 5;
+            pointer-events: none;
+            transition: left 0.2s, width 0.2s;
         }
         .tile {
             position: absolute;
@@ -54,341 +68,856 @@
             box-shadow: var(--tile-shadow);
             overflow: hidden;
             touch-action: none;
-            display: flex; flex-direction: column;
+            display: flex;
+            flex-direction: column;
             cursor: default;
         }
-        .tile-content { flex:1; overflow-y:auto; cursor: default; }
-        .resize-handle-edge, .resize-handle-corner { display: none; }
+        .tile-content {
+            flex: 1;
+            overflow-y: auto;
+            cursor: default;
+        }
+        .resize-handle-edge,
+        .resize-handle-corner {
+            display: none;
+        }
         #dashboard[data-settings-visible="true"] .resize-handle-edge,
-        #dashboard[data-settings-visible="true"] .resize-handle-corner { display: block; }
-
-        /* Unscheinbarer Einstellungs-Knopf */
+        #dashboard[data-settings-visible="true"] .resize-handle-corner {
+            display: block;
+        }
         #settings-subtle {
-            position: fixed; top:10px; right:10px; z-index:300;
-            width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.1);
-            display:flex; align-items:center; justify-content:center; cursor:pointer;
-            transition: opacity 0.5s; opacity:0; font-size:14px;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 300;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: opacity 0.5s;
+            opacity: 0;
+            font-size: 14px;
         }
-        #settings-subtle.show { opacity:0.6; }
-        #settings-subtle:hover { opacity:1; background:rgba(255,255,255,0.3); }
-
+        #settings-subtle.show {
+            opacity: 0.6;
+        }
+        #settings-subtle:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.3);
+        }
         /* Wetter */
-        #weather { z-index:10; height: var(--weather-height); }
-        #weather .tile-content {
-            padding:2vw; text-shadow:0 1px 4px rgba(0,0,0,0.7);
-            display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-end; text-align:right;
+        #weather {
+            z-index: 10;
+            height: var(--weather-height);
         }
-        .weather-now .temp { font-size: clamp(3rem, 8vw, 6rem); font-weight:300; line-height:1; }
-        .weather-now .details { font-size:calc(1rem*var(--font-scale)); opacity:0.9; margin-top:4px; }
-        .forecast-row { display:flex; gap:8px; margin-top:12px; justify-content:flex-end; flex-wrap:wrap; }
-        .forecast-day { background:rgba(255,255,255,0.15); border-radius:14px; padding:8px 10px; text-align:center; font-size:calc(0.8rem*var(--font-scale)); min-width:56px; }
-        .forecast-day.active { background: var(--accent); color:white; }
-        .location-bar { position:absolute; bottom:8px; left:12px; right:12px; display:flex; gap:6px; align-items:center; font-size:calc(0.8rem*var(--font-scale)); opacity:0.9; }
-        .location-bar input { background:rgba(255,255,255,0.15); border:none; color:white; padding:6px 10px; border-radius:8px; width:120px; font-size:calc(0.85rem*var(--font-scale)); min-height:36px; }
-        .location-bar button { background: var(--accent); border:none; color:white; border-radius:8px; padding:6px 12px; cursor:pointer; font-size:calc(0.85rem*var(--font-scale)); min-height:36px; min-width:44px; }
-
+        #weather .tile-content {
+            padding: 2vw;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-end;
+            text-align: right;
+        }
+        .weather-now .temp {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 300;
+            line-height: 1;
+        }
+        .weather-now .details {
+            font-size: calc(1rem * var(--font-scale));
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        .forecast-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+        .forecast-day {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            padding: 8px 10px;
+            text-align: center;
+            font-size: calc(0.8rem * var(--font-scale));
+            min-width: 56px;
+        }
+        .forecast-day.active {
+            background: var(--accent);
+            color: white;
+        }
+        .location-bar {
+            position: absolute;
+            bottom: 8px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            font-size: calc(0.8rem * var(--font-scale));
+            opacity: 0.9;
+        }
+        .location-bar input {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            width: 120px;
+            font-size: calc(0.85rem * var(--font-scale));
+            min-height: 36px;
+        }
+        .location-bar button {
+            background: var(--accent);
+            border: none;
+            color: white;
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: calc(0.85rem * var(--font-scale));
+            min-height: 36px;
+            min-width: 44px;
+        }
         /* Kalender */
-        #calendar { background:#000; }
-        #calendar .tile-content { padding:1.5vw; display:flex; flex-direction:column; height:100%; }
-        .view-switch { display: flex; gap: 6px; margin-bottom: 10px; }
-        .view-btn { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:white; padding:8px 18px; border-radius:10px; cursor:pointer; font-size:calc(0.9rem*var(--font-scale)); font-weight:600; min-height:40px; }
-        .view-btn.active { background: var(--accent); border-color: var(--accent); }
-        .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; text-align:center; flex:1; }
-        .day-header { font-size:calc(0.8rem*var(--font-scale)); font-weight:400; color:#aaa; padding:4px 0; }
-        .day { position:relative; padding:clamp(2px,0.8vw,6px) 2px; font-weight:300; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; cursor:pointer; min-height:clamp(40px,6vw,55px); border-radius:6px; }
-        .day:active { background:rgba(255,255,255,0.1); }
-        .day .day-number { display:inline-flex; align-items:center; justify-content:center; width:1.6em; height:1.6em; border-radius:50%; font-weight:300; font-size:calc(1.2rem*var(--font-scale)); }
-        .day.today .day-number { background: var(--accent); color:#fff; font-weight:400; }
-        .day .event-title { font-size:calc(0.55rem*var(--font-scale)); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:95%; margin-top:1px; }
-        .month-slider-container { display:flex; align-items:center; gap:10px; margin-top:6px; }
-        .month-slider-container input[type=range] { flex:1; background:rgba(255,255,255,0.2); height:6px; border-radius:3px; -webkit-appearance:none; }
-        .month-slider-container input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:28px; height:28px; background:var(--accent); border-radius:50%; cursor:pointer; }
-        .month-label { font-size:calc(0.85rem*var(--font-scale)); white-space:nowrap; min-width:100px; }
-        .week-container { display:none; flex:1; flex-direction:column; gap:6px; }
-        .week-header { display:flex; justify-content:space-between; align-items:center; font-size:calc(0.9rem*var(--font-scale)); margin-bottom:6px; }
-        .week-days { display:flex; gap:6px; flex:1; }
-        .week-day { flex:1; background:rgba(255,255,255,0.1); border-radius:10px; padding:8px 4px; text-align:center; cursor:pointer; display:flex; flex-direction:column; gap:4px; min-height:60px; }
-        .week-day.today { border:2px solid var(--accent); }
-        .week-day:active { background:rgba(255,255,255,0.2); }
-        .week-day-label { font-size:calc(0.75rem*var(--font-scale)); }
-        .week-day-date { font-size:calc(1.1rem*var(--font-scale)); font-weight:600; }
-        .week-event { font-size:calc(0.65rem*var(--font-scale)); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:2px 4px; border-radius:3px; margin-top:2px; }
-        .event-details { background:rgba(0,0,0,0.9); color:white; padding:10px; border-radius:10px; font-size:calc(0.8rem*var(--font-scale)); margin-top:8px; max-height:120px; overflow-y:auto; display:none; }
-        .event-details.show { display:block; }
-
+        #calendar {
+            background: #000;
+        }
+        #calendar .tile-content {
+            padding: 1.5vw;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .view-switch {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .view-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: calc(0.9rem * var(--font-scale));
+            font-weight: 600;
+            min-height: 40px;
+        }
+        .view-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            text-align: center;
+            flex: 1;
+        }
+        .day-header {
+            font-size: calc(0.8rem * var(--font-scale));
+            font-weight: 400;
+            color: #aaa;
+            padding: 4px 0;
+        }
+        .day {
+            position: relative;
+            padding: clamp(2px, 0.8vw, 6px) 2px;
+            font-weight: 300;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            cursor: pointer;
+            min-height: clamp(40px, 6vw, 55px);
+            border-radius: 6px;
+        }
+        .day:active {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .day .day-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.6em;
+            height: 1.6em;
+            border-radius: 50%;
+            font-weight: 300;
+            font-size: calc(1.2rem * var(--font-scale));
+        }
+        .day.today .day-number {
+            background: var(--accent);
+            color: #fff;
+            font-weight: 400;
+        }
+        .day .event-title {
+            font-size: calc(0.55rem * var(--font-scale));
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 95%;
+            margin-top: 1px;
+        }
+        .month-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .month-slider-container input[type=range] {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.2);
+            height: 6px;
+            border-radius: 3px;
+            -webkit-appearance: none;
+        }
+        .month-slider-container input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .month-label {
+            font-size: calc(0.85rem * var(--font-scale));
+            white-space: nowrap;
+            min-width: 100px;
+        }
+        .week-container {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .week-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: calc(0.9rem * var(--font-scale));
+            margin-bottom: 6px;
+        }
+        .week-days {
+            display: flex;
+            gap: 6px;
+            flex: 1;
+        }
+        .week-day {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 8px 4px;
+            text-align: center;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-height: 60px;
+        }
+        .week-day.today {
+            border: 2px solid var(--accent);
+        }
+        .week-day:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .week-day-label {
+            font-size: calc(0.75rem * var(--font-scale));
+        }
+        .week-day-date {
+            font-size: calc(1.1rem * var(--font-scale));
+            font-weight: 600;
+        }
+        .week-event {
+            font-size: calc(0.65rem * var(--font-scale));
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 2px 4px;
+            border-radius: 3px;
+            margin-top: 2px;
+        }
+        .event-details {
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: calc(0.8rem * var(--font-scale));
+            margin-top: 8px;
+            max-height: 120px;
+            overflow-y: auto;
+            display: none;
+        }
+        .event-details.show {
+            display: block;
+        }
         /* Slideshow */
-        #slideshow { background:#000; }
-        #slideshow .tile-content { padding:0; }
-        .slideshow-container { position:relative; width:100%; height:100%; background:#000; overflow:hidden; }
-        .slide-img { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity:0; transition: opacity var(--slide-duration) ease-out, transform var(--slide-duration) ease-out; }
-        .slide-img.active { opacity:1; }
-        .slide-anim-fade .slide-img { transform:none; }
-        .slide-anim-slide-left .slide-img { transform:translateX(100%); opacity:1; }
-        .slide-anim-slide-left .slide-img.active { transform:translateX(0); }
-        .slide-anim-slide-up .slide-img { transform:translateY(100%); opacity:1; }
-        .slide-anim-slide-up .slide-img.active { transform:translateY(0); }
-        .slide-anim-zoom .slide-img { transform:scale(0.7); opacity:0; }
-        .slide-anim-zoom .slide-img.active { transform:scale(1); opacity:1; }
-        .slide-anim-rotate .slide-img { transform:rotate(-15deg) scale(0.8); opacity:0; }
-        .slide-anim-rotate .slide-img.active { transform:rotate(0) scale(1); opacity:1; }
-        .slide-anim-flip .slide-img { transform:perspective(800px) rotateY(90deg); opacity:0; }
-        .slide-anim-flip .slide-img.active { transform:perspective(800px) rotateY(0); opacity:1; }
-        .slide-anim-blur .slide-img { filter:blur(20px); opacity:0; }
-        .slide-anim-blur .slide-img.active { filter:blur(0); opacity:1; }
-        .slide-anim-ken-burns .slide-img.active { animation: kenBurns 8s infinite alternate; }
-        @keyframes kenBurns { from { transform:scale(1); } to { transform:scale(1.1); } }
-        .slide-anim-split .slide-img { clip-path:inset(50% 0 50% 0); opacity:0; }
-        .slide-anim-split .slide-img.active { clip-path:inset(0 0 0 0); opacity:1; }
-        .slide-anim-circle-reveal .slide-img { clip-path:circle(0% at 50% 50%); opacity:0; }
-        .slide-anim-circle-reveal .slide-img.active { clip-path:circle(100% at 50% 50%); opacity:1; }
-        .slide-anim-slide-diagonal .slide-img { transform:translate(100%,100%) rotate(10deg); opacity:0; }
-        .slide-anim-slide-diagonal .slide-img.active { transform:translate(0,0) rotate(0); opacity:1; }
-
-        .slideshow-controls { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:12px; background:rgba(0,0,0,0.6); padding:8px 16px; border-radius:24px; z-index:10; }
-        .slideshow-controls button { background:transparent; border:none; color:white; font-size:1.6rem; cursor:pointer; padding:6px 10px; min-width:44px; min-height:44px; }
-
+        #slideshow {
+            background: #000;
+        }
+        #slideshow .tile-content {
+            padding: 0;
+        }
+        .slideshow-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow: hidden;
+        }
+        .slide-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity var(--slide-duration) ease-out, transform var(--slide-duration) ease-out;
+        }
+        .slide-img.active {
+            opacity: 1;
+        }
+        /* Animationen */
+        .slide-anim-fade .slide-img {
+            transform: none;
+        }
+        .slide-anim-slide-left .slide-img {
+            transform: translateX(100%);
+            opacity: 1;
+        }
+        .slide-anim-slide-left .slide-img.active {
+            transform: translateX(0);
+        }
+        .slide-anim-slide-up .slide-img {
+            transform: translateY(100%);
+            opacity: 1;
+        }
+        .slide-anim-slide-up .slide-img.active {
+            transform: translateY(0);
+        }
+        .slide-anim-zoom .slide-img {
+            transform: scale(0.7);
+            opacity: 0;
+        }
+        .slide-anim-zoom .slide-img.active {
+            transform: scale(1);
+            opacity: 1;
+        }
+        .slide-anim-rotate .slide-img {
+            transform: rotate(-15deg) scale(0.8);
+            opacity: 0;
+        }
+        .slide-anim-rotate .slide-img.active {
+            transform: rotate(0) scale(1);
+            opacity: 1;
+        }
+        .slide-anim-flip .slide-img {
+            transform: perspective(800px) rotateY(90deg);
+            opacity: 0;
+        }
+        .slide-anim-flip .slide-img.active {
+            transform: perspective(800px) rotateY(0);
+            opacity: 1;
+        }
+        .slide-anim-blur .slide-img {
+            filter: blur(20px);
+            opacity: 0;
+        }
+        .slide-anim-blur .slide-img.active {
+            filter: blur(0);
+            opacity: 1;
+        }
+        .slide-anim-ken-burns .slide-img.active {
+            animation: kenBurns 8s infinite alternate;
+        }
+        @keyframes kenBurns {
+            from {
+                transform: scale(1);
+            }
+            to {
+                transform: scale(1.1);
+            }
+        }
+        .slide-anim-split .slide-img {
+            clip-path: inset(50% 0 50% 0);
+            opacity: 0;
+        }
+        .slide-anim-split .slide-img.active {
+            clip-path: inset(0 0 0 0);
+            opacity: 1;
+        }
+        .slide-anim-circle-reveal .slide-img {
+            clip-path: circle(0% at 50% 50%);
+            opacity: 0;
+        }
+        .slide-anim-circle-reveal .slide-img.active {
+            clip-path: circle(100% at 50% 50%);
+            opacity: 1;
+        }
+        .slide-anim-slide-diagonal .slide-img {
+            transform: translate(100%, 100%) rotate(10deg);
+            opacity: 0;
+        }
+        .slide-anim-slide-diagonal .slide-img.active {
+            transform: translate(0, 0) rotate(0);
+            opacity: 1;
+        }
+        .slideshow-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 16px;
+            border-radius: 24px;
+            z-index: 10;
+        }
+        .slideshow-controls button {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.6rem;
+            cursor: pointer;
+            padding: 6px 10px;
+            min-width: 44px;
+            min-height: 44px;
+        }
         /* Einstell-Buttons */
         .panel-btn {
-            position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.6); border-radius:50%;
-            width:40px; height:40px; display:none; align-items:center; justify-content:center;
-            cursor:pointer; color:white; z-index:15; font-size:1.1rem;
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            z-index: 15;
+            font-size: 1.1rem;
         }
-        .gradient-btn { right:60px; } .cal-settings-btn { right:108px; } .tile-opacity-btn { right:156px; }
-        .font-scale-btn { right:204px; } .battery-btn { right:252px; } .layout-btn { right:300px; } .theme-btn { right:348px; }
-
+        .gradient-btn {
+            right: 60px;
+        }
+        .cal-settings-btn {
+            right: 108px;
+        }
+        .tile-opacity-btn {
+            right: 156px;
+        }
+        .font-scale-btn {
+            right: 204px;
+        }
+        .battery-btn {
+            right: 252px;
+        }
+        .layout-btn {
+            right: 300px;
+        }
+        .theme-btn {
+            right: 348px;
+        }
         .panel {
-            position:absolute; background:rgba(20,20,30,0.95); backdrop-filter:blur(15px);
-            border-radius:14px; padding:14px; z-index:100; color:white; display:none;
-            font-size:calc(0.85rem*var(--font-scale)); box-shadow:0 8px 24px rgba(0,0,0,0.6);
+            position: absolute;
+            background: rgba(20, 20, 30, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 14px;
+            padding: 14px;
+            z-index: 100;
+            color: white;
+            display: none;
+            font-size: calc(0.85rem * var(--font-scale));
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
         }
-        .panel.open { display:block; }
-        .panel label { display:block; margin-bottom:6px; font-weight:600; }
-        .panel select, .panel input, .panel textarea { width:100%; background:rgba(255,255,255,0.15); color:white; border:none; padding:6px 8px; border-radius:6px; font-size:calc(0.85rem*var(--font-scale)); }
-        .panel button { margin-top:6px; background:var(--accent); color:white; border:none; padding:6px 12px; cursor:pointer; border-radius:6px; font-size:calc(0.85rem*var(--font-scale)); }
-        .layout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+        .panel.open {
+            display: block;
+        }
+        .panel label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .panel select,
+        .panel input,
+        .panel textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: none;
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: calc(0.85rem * var(--font-scale));
+        }
+        .panel button {
+            margin-top: 6px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: calc(0.85rem * var(--font-scale));
+        }
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 8px;
+        }
         .layout-item {
-            background: rgba(255,255,255,0.1); padding: 8px; border-radius: 8px; text-align: center;
-            cursor: pointer; transition: background 0.2s;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s;
             font-size: 0.75rem;
         }
-        .layout-item:hover { background: var(--accent); }
-        .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+        .layout-item:hover {
+            background: var(--accent);
+        }
+        .theme-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 8px;
+        }
         .theme-item {
-            background: rgba(255,255,255,0.1); padding: 8px; border-radius: 8px; text-align: center;
-            cursor: pointer; transition: background 0.2s;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s;
             font-size: 0.75rem;
         }
-        .theme-item:hover { background: var(--accent); }
-
-        .upload-area { position:absolute; bottom:10px; right:10px; background:rgba(0,0,0,0.5); padding:6px 10px; border-radius:8px; z-index:5; display:flex; gap:8px; align-items:center; }
-        .upload-btn { background:var(--accent); color:white; border:none; border-radius:14px; padding:6px 14px; cursor:pointer; font-size:calc(0.9rem*var(--font-scale)); }
-        input[type=file] { display:none; }
-        #weather-height-container { position:absolute; bottom:8px; left:8px; z-index:20; display:none; gap:6px; align-items:center; }
-        #hint { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:white; padding:8px 20px; border-radius:20px; font-size:calc(0.8rem*var(--font-scale)); z-index:400; display:none; }
-        #hint.show { display:block; }
+        .theme-item:hover {
+            background: var(--accent);
+        }
+        .upload-area {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 6px 10px;
+            border-radius: 8px;
+            z-index: 5;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .upload-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: calc(0.9rem * var(--font-scale));
+        }
+        input[type=file] {
+            display: none;
+        }
+        #weather-height-container {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            z-index: 20;
+            display: none;
+            gap: 6px;
+            align-items: center;
+        }
+        #hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: calc(0.8rem * var(--font-scale));
+            z-index: 400;
+            display: none;
+        }
+        #hint.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
-<div id="dashboard"><div id="gradient-overlay"></div></div>
-<div id="settings-subtle" class="show">⚙</div>
-<div id="hint">Ziehe die Ecken zum Vergrößern, den Inhalt zum Verschieben</div>
+    <div id="dashboard"><div id="gradient-overlay"></div></div>
+    <div id="settings-subtle" class="show">⚙</div>
+    <div id="hint">Ziehe die Ecken zum Vergrößern, den Inhalt zum Verschieben</div>
 
-<!-- Panels -->
-<div class="panel" id="anim-panel" style="top:60px; right:12px; width:220px;">
-    <label>Animation</label>
-    <select id="anim-select">
-        <option value="fade">Überblenden</option><option value="slide-left">Seitlich schieben</option>
-        <option value="slide-up">Nach oben schieben</option><option value="zoom">Zoom</option>
-        <option value="rotate">Drehen</option><option value="flip">Flip 3D</option>
-        <option value="blur">Unschärfe</option><option value="ken-burns">Ken Burns</option>
-        <option value="split">Vertikal teilen</option><option value="circle-reveal">Kreis öffnen</option>
-        <option value="slide-diagonal">Diagonal schieben</option>
-    </select>
-</div>
-<div class="panel" id="gradient-panel" style="top:60px; right:60px; width:260px;">
-    <label>Verlauf Pos. <span id="gradient-pos-value">38%</span></label>
-    <input type="range" id="gradient-position-slider" min="0" max="1" step="0.01" value="0.38">
-    <label>Verlauf Breite</label>
-    <input type="range" id="gradient-width-slider" min="0" max="0.3" step="0.01" value="0.05">
-    <label>Verlauf Stärke</label>
-    <input type="range" id="gradient-opacity-slider" min="0" max="1" step="0.1" value="0.8">
-</div>
-<div class="panel" id="tile-opacity-panel" style="top:60px; right:156px; width:220px;">
-    <label>Kachel-Transp. <span id="tile-opacity-value">85%</span></label>
-    <input type="range" id="tile-opacity-slider" min="0" max="1" step="0.05" value="0.85">
-</div>
-<div class="panel" id="font-scale-panel" style="top:60px; right:204px; width:220px;">
-    <label>Schriftgröße <span id="font-scale-value">1.0</span></label>
-    <input type="range" id="font-scale-slider" min="0.7" max="1.5" step="0.1" value="1.0">
-</div>
-<div class="panel" id="cal-panel" style="top:60px; right:108px; width:300px;">
-    <label>iCal URLs (eine pro Zeile)</label>
-    <textarea id="ical-urls" rows="2" placeholder="https://calendar.google.com/.../basic.ics"></textarea>
-    <button id="load-ical">Kalender laden</button>
-    <div id="ical-info" style="font-size:0.75rem; margin-top:6px; color:#a5f3fc;"></div>
-    <div id="ical-error" style="color:#f88; font-size:0.75rem; margin-top:6px;"></div>
-</div>
-<div class="panel" id="battery-panel" style="top:60px; right:252px; width:200px;">
-    <label><input type="checkbox" id="battery-mode"> Batteriesparmodus</label>
-    <small>Längeres Intervall, schwächere Animation</small>
-</div>
-<!-- Layout-Presets Panel -->
-<div class="panel" id="layout-panel" style="top:60px; right:300px; width:300px;">
-    <label>Horizontal (Querformat)</label>
-    <div class="layout-grid" id="horizontal-presets">
-        <div class="layout-item" data-preset="h1">🖼️ Bild groß</div>
-        <div class="layout-item" data-preset="h2">📅 Kalender groß</div>
-        <div class="layout-item" data-preset="h3">🌤️ Wetter oben</div>
-        <div class="layout-item" data-preset="h4">🔲 Gleichmäßig</div>
-        <div class="layout-item" data-preset="h5">🎥 Kino rechts</div>
+    <!-- Panels -->
+    <div class="panel" id="anim-panel" style="top:60px; right:12px; width:220px;">
+        <label>Animation</label>
+        <select id="anim-select">
+            <option value="fade">Überblenden</option><option value="slide-left">Seitlich schieben</option>
+            <option value="slide-up">Nach oben schieben</option><option value="zoom">Zoom</option>
+            <option value="rotate">Drehen</option><option value="flip">Flip 3D</option>
+            <option value="blur">Unschärfe</option><option value="ken-burns">Ken Burns</option>
+            <option value="split">Vertikal teilen</option><option value="circle-reveal">Kreis öffnen</option>
+            <option value="slide-diagonal">Diagonal schieben</option>
+        </select>
     </div>
-    <label style="margin-top:10px;">Vertikal (Hochformat)</label>
-    <div class="layout-grid" id="vertical-presets">
-        <div class="layout-item" data-preset="v1">📅 Kalender oben</div>
-        <div class="layout-item" data-preset="v2">🌤️ Wetter oben</div>
-        <div class="layout-item" data-preset="v3">🖼️ Bild oben</div>
-        <div class="layout-item" data-preset="v4">📏 Schmale Leiste</div>
-        <div class="layout-item" data-preset="v5">👪 Familien-Wand</div>
+    <div class="panel" id="gradient-panel" style="top:60px; right:60px; width:260px;">
+        <label>Verlauf Pos. <span id="gradient-pos-value">38%</span></label>
+        <input type="range" id="gradient-position-slider" min="0" max="1" step="0.01" value="0.38">
+        <label>Verlauf Breite</label>
+        <input type="range" id="gradient-width-slider" min="0" max="0.3" step="0.01" value="0.05">
+        <label>Verlauf Stärke</label>
+        <input type="range" id="gradient-opacity-slider" min="0" max="1" step="0.1" value="0.8">
     </div>
-</div>
-<!-- Theme Panel -->
-<div class="panel" id="theme-panel" style="top:60px; right:348px; width:240px;">
-    <label>Theme</label>
-    <div class="theme-grid">
-        <div class="theme-item" data-theme="default">☀️ Hell</div>
-        <div class="theme-item" data-theme="dark">🌙 Dunkel</div>
-        <div class="theme-item" data-theme="neon">💜 Neon</div>
-        <div class="theme-item" data-theme="nordic">❄️ Nordic</div>
-        <div class="theme-item" data-theme="kitchen">🖤 Kitchen</div>
+    <div class="panel" id="tile-opacity-panel" style="top:60px; right:156px; width:220px;">
+        <label>Kachel-Transp. <span id="tile-opacity-value">85%</span></label>
+        <input type="range" id="tile-opacity-slider" min="0" max="1" step="0.05" value="0.85">
     </div>
-</div>
+    <div class="panel" id="font-scale-panel" style="top:60px; right:204px; width:220px;">
+        <label>Schriftgröße <span id="font-scale-value">1.0</span></label>
+        <input type="range" id="font-scale-slider" min="0.7" max="1.5" step="0.1" value="1.0">
+    </div>
+    <div class="panel" id="cal-panel" style="top:60px; right:108px; width:300px;">
+        <label>iCal URLs (eine pro Zeile)</label>
+        <textarea id="ical-urls" rows="2" placeholder="https://calendar.google.com/.../basic.ics"></textarea>
+        <button id="load-ical">Kalender laden</button>
+        <div id="ical-info" style="font-size:0.75rem; margin-top:6px; color:#a5f3fc;"></div>
+        <div id="ical-error" style="color:#f88; font-size:0.75rem; margin-top:6px;"></div>
+    </div>
+    <div class="panel" id="battery-panel" style="top:60px; right:252px; width:200px;">
+        <label><input type="checkbox" id="battery-mode"> Batteriesparmodus</label>
+        <small>Längeres Intervall, schwächere Animation</small>
+    </div>
+    <div class="panel" id="layout-panel" style="top:60px; right:300px; width:300px;">
+        <label>Horizontal (Querformat)</label>
+        <div class="layout-grid" id="horizontal-presets">
+            <div class="layout-item" data-preset="h1">🖼️ Bild groß</div>
+            <div class="layout-item" data-preset="h2">📅 Kalender groß</div>
+            <div class="layout-item" data-preset="h3">🌤️ Wetter oben</div>
+            <div class="layout-item" data-preset="h4">🔲 Gleichmäßig</div>
+            <div class="layout-item" data-preset="h5">🎥 Kino rechts</div>
+        </div>
+        <label style="margin-top:10px;">Vertikal (Hochformat)</label>
+        <div class="layout-grid" id="vertical-presets">
+            <div class="layout-item" data-preset="v1">📅 Kalender oben</div>
+            <div class="layout-item" data-preset="v2">🌤️ Wetter oben</div>
+            <div class="layout-item" data-preset="v3">🖼️ Bild oben</div>
+            <div class="layout-item" data-preset="v4">📏 Schmale Leiste</div>
+            <div class="layout-item" data-preset="v5">👪 Familien-Wand</div>
+        </div>
+    </div>
+    <div class="panel" id="theme-panel" style="top:60px; right:348px; width:240px;">
+        <label>Theme</label>
+        <div class="theme-grid">
+            <div class="theme-item" data-theme="default">☀️ Hell</div>
+            <div class="theme-item" data-theme="dark">🌙 Dunkel</div>
+            <div class="theme-item" data-theme="neon">💜 Neon</div>
+            <div class="theme-item" data-theme="nordic">❄️ Nordic</div>
+            <div class="theme-item" data-theme="kitchen">🖤 Kitchen</div>
+        </div>
+    </div>
+    <div id="weather-height-container">
+        <span style="color:white; font-size:0.75rem;">↕️</span>
+        <input type="range" id="weather-height-slider" min="20" max="60" value="42" style="width:100px;">
+    </div>
 
-<div id="weather-height-container">
-    <span style="color:white; font-size:0.75rem;">↕️</span>
-    <input type="range" id="weather-height-slider" min="20" max="60" value="42" style="width:100px;">
-</div>
+    <script>
+        (function() {
+            const W = window.innerWidth,
+                H = window.innerHeight;
 
-<script>
-(function() {
-    const W = window.innerWidth, H = window.innerHeight;
+            // Layout-Presets (relativ)
+            const presets = {
+                h1: {
+                    slideshow: { x: 0, y: 0, w: 0.6, h: 1 },
+                    calendar: { x: 0.6, y: 0, w: 0.4, h: 0.75 },
+                    weather: { x: 0.6, y: 0.75, w: 0.4, h: 0.25 }
+                },
+                h2: {
+                    slideshow: { x: 0, y: 0, w: 0.35, h: 1 },
+                    calendar: { x: 0.35, y: 0, w: 0.65, h: 0.8 },
+                    weather: { x: 0, y: 0.8, w: 0.35, h: 0.2 }
+                },
+                h3: {
+                    slideshow: { x: 0, y: 0.35, w: 0.4, h: 0.65 },
+                    calendar: { x: 0.4, y: 0, w: 0.6, h: 1 },
+                    weather: { x: 0, y: 0, w: 0.4, h: 0.35 }
+                },
+                h4: {
+                    slideshow: { x: 0, y: 0, w: 0.5, h: 0.6 },
+                    calendar: { x: 0.5, y: 0, w: 0.5, h: 0.6 },
+                    weather: { x: 0, y: 0.6, w: 1, h: 0.4 }
+                },
+                h5: {
+                    slideshow: { x: 0.6, y: 0, w: 0.4, h: 1 },
+                    calendar: { x: 0, y: 0, w: 0.6, h: 0.8 },
+                    weather: { x: 0, y: 0.8, w: 0.6, h: 0.2 }
+                },
+                v1: {
+                    slideshow: { x: 0, y: 0.45, w: 1, h: 0.55 },
+                    calendar: { x: 0, y: 0, w: 1, h: 0.45 },
+                    weather: { x: 0, y: 0.85, w: 1, h: 0.15 }
+                },
+                v2: {
+                    slideshow: { x: 0, y: 0.45, w: 1, h: 0.55 },
+                    calendar: { x: 0, y: 0.2, w: 1, h: 0.65 },
+                    weather: { x: 0, y: 0, w: 1, h: 0.2 }
+                },
+                v3: {
+                    slideshow: { x: 0, y: 0, w: 1, h: 0.55 },
+                    calendar: { x: 0, y: 0.55, w: 1, h: 0.3 },
+                    weather: { x: 0, y: 0.85, w: 1, h: 0.15 }
+                },
+                v4: {
+                    slideshow: { x: 0, y: 0, w: 0.3, h: 0.4 },
+                    calendar: { x: 0.3, y: 0, w: 0.7, h: 0.8 },
+                    weather: { x: 0, y: 0.8, w: 0.3, h: 0.2 }
+                },
+                v5: {
+                    slideshow: { x: 0, y: 0, w: 1, h: 0.5 },
+                    calendar: { x: 0, y: 0.5, w: 0.7, h: 0.5 },
+                    weather: { x: 0.7, y: 0.5, w: 0.3, h: 0.5 }
+                }
+            };
 
-    // Layout-Presets (relative Werte bezogen auf Fenstergröße)
-    const presets = {
-        h1: { slideshow: {x:0, y:0, w:0.6, h:1}, calendar: {x:0.6, y:0, w:0.4, h:0.75}, weather: {x:0.6, y:0.75, w:0.4, h:0.25} },
-        h2: { slideshow: {x:0, y:0, w:0.35, h:1}, calendar: {x:0.35, y:0, w:0.65, h:0.8}, weather: {x:0, y:0.8, w:0.35, h:0.2} },
-        h3: { slideshow: {x:0, y:0.35, w:0.4, h:0.65}, calendar: {x:0.4, y:0, w:0.6, h:1}, weather: {x:0, y:0, w:0.4, h:0.35} },
-        h4: { slideshow: {x:0, y:0, w:0.5, h:0.6}, calendar: {x:0.5, y:0, w:0.5, h:0.6}, weather: {x:0, y:0.6, w:1, h:0.4} },
-        h5: { slideshow: {x:0.6, y:0, w:0.4, h:1}, calendar: {x:0, y:0, w:0.6, h:0.8}, weather: {x:0, y:0.8, w:0.6, h:0.2} },
-        v1: { slideshow: {x:0, y:0.45, w:1, h:0.55}, calendar: {x:0, y:0, w:1, h:0.45}, weather: {x:0, y:0.85, w:1, h:0.15} },
-        v2: { slideshow: {x:0, y:0.45, w:1, h:0.55}, calendar: {x:0, y:0.2, w:1, h:0.65}, weather: {x:0, y:0, w:1, h:0.2} },
-        v3: { slideshow: {x:0, y:0, w:1, h:0.55}, calendar: {x:0, y:0.55, w:1, h:0.3}, weather: {x:0, y:0.85, w:1, h:0.15} },
-        v4: { slideshow: {x:0, y:0, w:0.3, h:0.4}, calendar: {x:0.3, y:0, w:0.7, h:0.8}, weather: {x:0, y:0.8, w:0.3, h:0.2} },
-        v5: { slideshow: {x:0, y:0, w:1, h:0.5}, calendar: {x:0, y:0.5, w:0.7, h:0.5}, weather: {x:0.7, y:0.5, w:0.3, h:0.5} }
-    };
+            // Themes
+            const themes = {
+                default: { '--bg': '#f0f2f5', '--text': '#1e293b', '--accent': '#3b82f6',
+                '--tile-bg': 'rgba(255,255,255,0.8)', '--tile-shadow': '0 8px 32px rgba(0,0,0,0.1)',
+                    '--tile-border': '1px solid rgba(0,0,0,0.1)' },
+                dark: { '--bg': '#1e293b', '--text': '#e2e8f0', '--accent': '#6366f1',
+                '--tile-bg': 'rgba(30,41,59,0.6)', '--tile-shadow': '0 8px 32px rgba(0,0,0,0.3)' },
+                neon: { '--bg': '#0f0a1e', '--text': '#d8b4fe', '--accent': '#ec4899',
+                '--tile-bg': 'rgba(88,28,135,0.4)', '--tile-shadow': '0 0 20px rgba(236,72,153,0.4)' },
+                nordic: { '--bg': '#e0f2fe', '--text': '#0f172a', '--accent': '#0284c7',
+                '--tile-bg': 'rgba(255,255,255,0.7)', '--tile-shadow': '0 8px 32px rgba(0,0,0,0.05)' },
+                kitchen: { '--bg': '#000000', '--text': '#ffffff', '--accent': '#E94545',
+                    '--tile-bg': 'rgba(0,0,0,0.85)', '--tile-shadow': 'none', '--tile-border': 'none' }
+            };
 
-    // Themes
-    const themes = {
-        default: { '--bg':'#f0f2f5', '--text':'#1e293b', '--accent':'#3b82f6', '--tile-bg':'rgba(255,255,255,0.8)', '--tile-shadow':'0 8px 32px rgba(0,0,0,0.1)', '--tile-border':'1px solid rgba(0,0,0,0.1)' },
-        dark:    { '--bg':'#1e293b', '--text':'#e2e8f0', '--accent':'#6366f1', '--tile-bg':'rgba(30,41,59,0.6)', '--tile-shadow':'0 8px 32px rgba(0,0,0,0.3)' },
-        neon:    { '--bg':'#0f0a1e', '--text':'#d8b4fe', '--accent':'#ec4899', '--tile-bg':'rgba(88,28,135,0.4)', '--tile-shadow':'0 0 20px rgba(236,72,153,0.4)' },
-        nordic:  { '--bg':'#e0f2fe', '--text':'#0f172a', '--accent':'#0284c7', '--tile-bg':'rgba(255,255,255,0.7)', '--tile-shadow':'0 8px 32px rgba(0,0,0,0.05)' },
-        kitchen: { '--bg':'#000000', '--text':'#ffffff', '--accent':'#E94545', '--tile-bg':'rgba(0,0,0,0.85)', '--tile-shadow':'none', '--tile-border':'none' }
-    };
+            let layout = {
+                slideshow: { x: 0, y: 0, w: Math.round(W * 0.38), h: H },
+                calendar: { x: Math.round(W * 0.38), y: 0, w: Math.round(W * 0.62), h: H },
+                weather: { x: 0, y: Math.round(H * 0.58), w: Math.round(W * 0.38), h: Math.round(H * 0.42) }
+            };
 
-    let layout = {
-        slideshow: { x:0, y:0, w: Math.round(W*0.38), h: H },
-        calendar:  { x: Math.round(W*0.38), y:0, w: Math.round(W*0.62), h: H },
-        weather:   { x:0, y: Math.round(H*0.58), w: Math.round(W*0.38), h: Math.round(H*0.42) }
-    };
+            let settingsVisible = false;
+            const dashboard = document.getElementById('dashboard');
+            const subtleBtn = document.getElementById('settings-subtle');
+            const hint = document.getElementById('hint');
+            let currentView = 'month';
 
-    let settingsVisible = false;
-    const dashboard = document.getElementById('dashboard');
-    const subtleBtn = document.getElementById('settings-subtle');
-    const hint = document.getElementById('hint');
-    let currentView = 'month';
+            // Slideshow-Variablen
+            let slides = [],
+                currentSlide = 0,
+                paused = false,
+                timer,
+                batteryMode = false;
 
-    function applyPreset(presetKey) {
-        const preset = presets[presetKey];
-        if (!preset) return;
-        for (const id in preset) {
-            if (layout[id]) {
-                layout[id].x = Math.round(preset[id].x * W);
-                layout[id].y = Math.round(preset[id].y * H);
-                layout[id].w = Math.round(preset[id].w * W);
-                layout[id].h = Math.round(preset[id].h * H);
+            function applyPreset(key) {
+                const preset = presets[key];
+                if (!preset) return;
+                for (const id in preset) {
+                    if (layout[id]) {
+                        layout[id].x = Math.round(preset[id].x * W);
+                        layout[id].y = Math.round(preset[id].y * H);
+                        layout[id].w = Math.round(preset[id].w * W);
+                        layout[id].h = Math.round(preset[id].h * H);
+                    }
+                }
+                createTiles();
+                renderCurrentView();
+                saveLayout();
             }
-        }
-        createTiles();
-        renderCurrentView();
-        saveLayout();
-    }
 
-    function applyTheme(themeKey) {
-        const theme = themes[themeKey];
-        if (!theme) return;
-        for (const [prop, value] of Object.entries(theme)) {
-            document.documentElement.style.setProperty(prop, value);
-        }
-        localStorage.setItem('theme', themeKey);
-    }
+            function applyTheme(key) {
+                const theme = themes[key];
+                if (!theme) return;
+                for (const [prop, value] of Object.entries(theme)) {
+                    document.documentElement.style.setProperty(prop, value);
+                }
+                localStorage.setItem('theme', key);
+            }
 
-    function showSettings() {
-        settingsVisible = true;
-        dashboard.setAttribute('data-settings-visible', 'true');
-        document.querySelectorAll('.panel-btn').forEach(b => b.style.display = 'flex');
-        document.getElementById('weather-height-container').style.display = 'flex';
-        interact('.tile').draggable({ enabled: true }).resizable({ enabled: true });
-        subtleBtn.classList.remove('show');
-        hint.classList.add('show');
-        setTimeout(() => hint.classList.remove('show'), 4000);
-    }
+            function showSettings() {
+                settingsVisible = true;
+                dashboard.setAttribute('data-settings-visible', 'true');
+                document.querySelectorAll('.panel-btn').forEach(b => b.style.display = 'flex');
+                document.getElementById('weather-height-container').style.display = 'flex';
+                interact('.tile').draggable({ enabled: true }).resizable({ enabled: true });
+                subtleBtn.classList.remove('show');
+                hint.classList.add('show');
+                setTimeout(() => hint.classList.remove('show'), 4000);
+            }
 
-    function hideSettings() {
-        settingsVisible = false;
-        dashboard.removeAttribute('data-settings-visible');
-        document.querySelectorAll('.panel-btn').forEach(b => b.style.display = 'none');
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
-        document.getElementById('weather-height-container').style.display = 'none';
-        interact('.tile').draggable({ enabled: false }).resizable({ enabled: false });
-        subtleBtn.classList.add('show');
-        hint.classList.remove('show');
-    }
+            function hideSettings() {
+                settingsVisible = false;
+                dashboard.removeAttribute('data-settings-visible');
+                document.querySelectorAll('.panel-btn').forEach(b => b.style.display = 'none');
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
+                document.getElementById('weather-height-container').style.display = 'none';
+                interact('.tile').draggable({ enabled: false }).resizable({ enabled: false });
+                subtleBtn.classList.add('show');
+                hint.classList.remove('show');
+            }
 
-    subtleBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (settingsVisible) hideSettings(); else showSettings();
-    });
+            subtleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (settingsVisible) hideSettings();
+                else showSettings();
+            });
 
-    document.addEventListener('click', function(e) {
-        if (!settingsVisible) return;
-        if (!e.target.closest('.panel-btn') && !e.target.closest('.panel') && !e.target.closest('#weather-height-container') && !e.target.closest('#settings-subtle')) {
-            hideSettings();
-        }
-    });
+            document.addEventListener('click', function(e) {
+                if (!settingsVisible) return;
+                if (!e.target.closest('.panel-btn') && !e.target.closest('.panel') && !e.target
+                    .closest('#weather-height-container') && !e.target.closest('#settings-subtle')) {
+                    hideSettings();
+                }
+            });
 
-    function createTiles() {
-        dashboard.querySelectorAll('.tile').forEach(t => t.remove());
-        for (const [id, dim] of Object.entries(layout)) {
-            const tile = document.createElement('div');
-            tile.className = 'tile'; tile.id = id;
-            tile.style.left = dim.x + 'px'; tile.style.top = dim.y + 'px';
-            tile.style.width = dim.w + 'px'; tile.style.height = dim.h + 'px';
-            tile.innerHTML = `<div class="tile-content"></div>
+            function createTiles() {
+                dashboard.querySelectorAll('.tile').forEach(t => t.remove());
+                for (const [id, dim] of Object.entries(layout)) {
+                    const tile = document.createElement('div');
+                    tile.className = 'tile';
+                    tile.id = id;
+                    tile.style.left = dim.x + 'px';
+                    tile.style.top = dim.y + 'px';
+                    tile.style.width = dim.w + 'px';
+                    tile.style.height = dim.h + 'px';
+                    tile.innerHTML = `<div class="tile-content"></div>
                 <div class="resize-handle-edge top"></div><div class="resize-handle-edge bottom"></div>
                 <div class="resize-handle-edge left"></div><div class="resize-handle-edge right"></div>
                 <div class="resize-handle-corner tl"></div><div class="resize-handle-corner tr"></div>
                 <div class="resize-handle-corner bl"></div><div class="resize-handle-corner br"></div>`;
-            dashboard.appendChild(tile);
-            fillTile(id, tile);
-        }
-        initInteract();
-        renderCurrentView();
-    }
+                    dashboard.appendChild(tile);
+                    fillTile(id, tile);
+                }
+                initInteract();
+                renderCurrentView();
+                // Slideshow-Display aktualisieren, falls schon Bilder vorhanden
+                if (slides.length) updateSlideDisplay();
+                else loadSlides();
+            }
 
-    function fillTile(id, tile) {
-        const content = tile.querySelector('.tile-content');
-        if (id === 'weather') {
-            content.innerHTML = `
+            function fillTile(id, tile) {
+                const content = tile.querySelector('.tile-content');
+                if (id === 'weather') {
+                    content.innerHTML = `
                 <div class="weather-now">
                     <div class="temp" id="current-temp">--°</div>
                     <div class="details" id="current-details">Wetter wird geladen…</div>
@@ -401,8 +930,8 @@
                     <button id="gps-btn">📍</button>
                     <span id="current-location-name">Düsseldorf</span>
                 </div>`;
-        } else if (id === 'calendar') {
-            content.innerHTML = `
+                } else if (id === 'calendar') {
+                    content.innerHTML = `
                 <div class="view-switch">
                     <button class="view-btn active" id="view-month">Monat</button>
                     <button class="view-btn" id="view-week">Woche</button>
@@ -417,8 +946,8 @@
                     <div class="week-days" id="week-days"></div>
                 </div>
                 <div class="event-details" id="event-details"></div>`;
-        } else if (id === 'slideshow') {
-            content.innerHTML = `
+                } else if (id === 'slideshow') {
+                    content.innerHTML = `
                 <div class="slideshow-container slide-anim-fade" id="slideshow-container">
                     <div class="panel-btn anim-btn" id="anim-btn"><i class="fas fa-film"></i></div>
                     <div class="panel-btn gradient-btn" id="gradient-btn"><i class="fas fa-adjust"></i></div>
@@ -438,58 +967,555 @@
                 <div class="upload-area">
                     <label for="file-upload" class="upload-btn"><i class="fas fa-upload"></i></label>
                     <input type="file" id="file-upload" multiple accept="image/*">
-                    <span id="image-count">0</span>
+                    <span id="image-count">0 Bilder</span>
                 </div>`;
-        }
-    }
-
-    function initInteract() { /* ... unverändert vom vorherigen Code ... */ }
-
-    // Rest des Codes (Wetter, Kalender, Slideshow) unverändert aus der vorherigen vollständigen Version.
-    // Aus Platzgründen hier nur als Platzhalter, aber im echten Code vollständig enthalten.
-    // (Die komplette Wetter-/Kalender-/Slideshow-Logik wie in der letzten Antwort bleibt gleich.)
-
-    // Event-Handling für Layout- und Theme-Buttons
-    document.addEventListener('click', function(e) {
-        const t = e.target;
-        if (t.closest('.layout-item')) {
-            const preset = t.closest('.layout-item').dataset.preset;
-            applyPreset(preset);
-        } else if (t.closest('.theme-item')) {
-            const theme = t.closest('.theme-item').dataset.theme;
-            applyTheme(theme);
-        } else if (t.closest('#layout-btn') && settingsVisible) {
-            document.getElementById('layout-panel').classList.toggle('open');
-        } else if (t.closest('#theme-btn') && settingsVisible) {
-            document.getElementById('theme-panel').classList.toggle('open');
-        }
-        // ... bestehende Klick-Handler für andere Buttons bleiben erhalten ...
-    });
-
-    // Initialisierung
-    function init() {
-        // Gespeichertes Theme wiederherstellen
-        const savedTheme = localStorage.getItem('theme') || 'kitchen';
-        applyTheme(savedTheme);
-
-        // Gespeichertes Layout laden
-        const savedLayout = localStorage.getItem('kitchenLayout');
-        if (savedLayout) {
-            try {
-                const parsed = JSON.parse(savedLayout);
-                for (const id in parsed) {
-                    if (layout[id]) layout[id] = parsed[id];
                 }
-            } catch(e) {}
-        }
+            }
 
-        // Restliche Initialisierung (Wetter, Kalender, Slideshow) wie gehabt
-        // ...
-        createTiles();
-        // ...
-    }
-    init();
-})();
-</script>
+            function initInteract() {
+                interact('.tile')
+                    .draggable({
+                        enabled: false,
+                        allowFrom: '.tile-content',
+                        modifiers: [interact.modifiers.restrict({ restriction: 'parent',
+                        endOnly: true })],
+                        listeners: {
+                            move(e) {
+                                const t = e.target;
+                                const x = (parseFloat(t.getAttribute('data-x')) || 0) + e.dx;
+                                const y = (parseFloat(t.getAttribute('data-y')) || 0) + e.dy;
+                                t.style.transform = `translate(${x}px,${y}px)`;
+                                t.setAttribute('data-x', x);
+                                t.setAttribute('data-y', y);
+                            },
+                            end(e) {
+                                const t = e.target;
+                                const x = parseFloat(t.getAttribute('data-x')) || 0;
+                                const y = parseFloat(t.getAttribute('data-y')) || 0;
+                                t.style.transform = '';
+                                t.style.left = (parseFloat(t.style.left) + x) + 'px';
+                                t.style.top = (parseFloat(t.style.top) + y) + 'px';
+                                t.setAttribute('data-x', 0);
+                                t.setAttribute('data-y', 0);
+                                saveLayout();
+                            }
+                        }
+                    })
+                    .resizable({
+                        enabled: false,
+                        edges: { top: true, bottom: true, left: true, right: true },
+                        modifiers: [
+                            interact.modifiers.restrict({ restriction: 'parent', endOnly: true }),
+                            interact.modifiers.restrictSize({ min: { width: 80, height: 80 } })
+                        ],
+                        listeners: {
+                            move(e) {
+                                const t = e.target;
+                                let x = (parseFloat(t.getAttribute('data-x')) || 0);
+                                let y = (parseFloat(t.getAttribute('data-y')) || 0);
+                                t.style.width = e.rect.width + 'px';
+                                t.style.height = e.rect.height + 'px';
+                                x += e.deltaRect.left;
+                                y += e.deltaRect.top;
+                                t.style.transform = `translate(${x}px,${y}px)`;
+                                t.setAttribute('data-x', x);
+                                t.setAttribute('data-y', y);
+                            },
+                            end(e) {
+                                const t = e.target;
+                                const x = parseFloat(t.getAttribute('data-x')) || 0;
+                                const y = parseFloat(t.getAttribute('data-y')) || 0;
+                                t.style.transform = '';
+                                t.style.left = (parseFloat(t.style.left) + x) + 'px';
+                                t.style.top = (parseFloat(t.style.top) + y) + 'px';
+                                t.setAttribute('data-x', 0);
+                                t.setAttribute('data-y', 0);
+                                saveLayout();
+                            }
+                        }
+                    });
+            }
+
+            function saveLayout() {
+                const tiles = {};
+                document.querySelectorAll('.tile').forEach(t => {
+                    tiles[t.id] = {
+                        x: parseFloat(t.style.left) || 0,
+                        y: parseFloat(t.style.top) || 0,
+                        w: parseFloat(t.style.width) || 100,
+                        h: parseFloat(t.style.height) || 100
+                    };
+                });
+                localStorage.setItem('kitchenLayout', JSON.stringify(tiles));
+            }
+
+            // --- WETTER (mit Offline-Cache) ---
+            let currentLat = 51.2277,
+                currentLon = 6.7735,
+                currentLocName = 'Düsseldorf';
+            async function fetchWeather() {
+                try {
+                    const res = await fetch(
+                        `https://api.open-meteo.com/v1/forecast?latitude=${currentLat}&longitude=${currentLon}&current=weather_code,temperature_2m,relative_humidity_2m,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5`
+                        );
+                    return await res.json();
+                } catch (e) { return null; }
+            }
+            const wEmoji = (c) => ({ 0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️', 45: '🌫️', 48: '🌫️', 51: '🌦️', 53: '🌦️',
+                55: '🌦️', 61: '🌧️', 63: '🌧️', 65: '🌧️', 71: '🌨️', 73: '🌨️', 75: '🌨️', 80: '🌧️', 81: '🌧️',
+                82: '🌧️', 85: '🌨️', 86: '🌨️', 95: '⛈️' } [c] || '🌥️');
+            const wDesc = (c) => c === 0 ? 'Sonnig' : c === 1 ? 'Heiter' : c === 2 ? 'Wolkig' : c === 3 ? 'Bedeckt' : c >=
+                45 && c <= 48 ? 'Nebel' : c >= 51 ? 'Niesel' : c >= 61 ? 'Regen' : c >= 71 ? 'Schnee' : c >= 95 ?
+                'Gewitter' : 'Bewölkt';
+
+            async function updateWeather() {
+                const data = await fetchWeather();
+                if (!data) {
+                    const cached = localStorage.getItem('weatherCache');
+                    if (cached) { renderWeather(JSON.parse(cached)); } else {
+                        document.getElementById('current-temp').textContent = '--°';
+                        document.getElementById('current-details').textContent = 'Keine Verbindung';
+                    }
+                    return;
+                }
+                localStorage.setItem('weatherCache', JSON.stringify(data));
+                renderWeather(data);
+            }
+
+            function renderWeather(data) {
+                document.getElementById('current-temp').textContent = Math.round(data.current.temperature_2m) + '°';
+                document.getElementById('current-details').innerHTML =
+                    `${wDesc(data.current.weather_code)}<br>💧 ${data.current.relative_humidity_2m}% · 💨 ${Math.round(data.current.wind_speed_10m)} km/h`;
+                document.getElementById('current-icon').textContent = wEmoji(data.current.weather_code);
+                document.getElementById('current-location-name').textContent = currentLocName;
+                const fc = document.getElementById('forecast-container');
+                if (fc) {
+                    fc.innerHTML = '';
+                    data.daily.time.forEach((day, i) => {
+                        const d = new Date(day);
+                        const div = document.createElement('div');
+                        div.className = 'forecast-day' + (i === 0 ? ' active' : '');
+                        div.innerHTML =
+                            `<div>${d.toLocaleDateString('de-DE',{weekday:'short'})}</div><div>${wEmoji(data.daily.weather_code[i])}</div><div>${Math.round(data.daily.temperature_2m_max[i])}°/${Math.round(data.daily.temperature_2m_min[i])}°</div>`;
+                        fc.appendChild(div);
+                    });
+                }
+            }
+            async function searchLocation(query) {
+                const res = await fetch(
+                    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=3&language=de`);
+                const data = await res.json();
+                return data.results || [];
+            }
+            async function setLocation(lat, lon, name) {
+                currentLat = lat;
+                currentLon = lon;
+                currentLocName = name;
+                localStorage.setItem('weatherLoc', JSON.stringify({ lat, lon, name }));
+                await updateWeather();
+            }
+
+            // --- KALENDER (mehrere URLs, Offline-Cache) ---
+            let calendarEvents = [];
+            const palette = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#1abc9c', '#e91e63',
+                '#00bcd4', '#ff5722'
+            ];
+            const assignColor = i => palette[i % palette.length];
+            let currentMonth = new Date().getMonth(),
+                currentYear = new Date().getFullYear();
+
+            function renderCurrentView() { currentView === 'month' ? renderMonthCalendar() : renderWeekCalendar(); }
+
+            function renderMonthCalendar() {
+                const grid = document.getElementById('calendar-grid');
+                if (!grid) return;
+                grid.innerHTML = '';
+                ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'].forEach(d => {
+                    const div = document.createElement('div');
+                    div.className = 'day-header';
+                    div.textContent = d;
+                    grid.appendChild(div);
+                });
+                const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'day';
+                    const dateStr =
+                        `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                    const eventsOnDay = calendarEvents.filter(e => e.start.startsWith(dateStr));
+                    dayDiv.innerHTML = `<span class="day-number">${d}</span>`;
+                    eventsOnDay.slice(0, 3).forEach(ev => {
+                        const title = document.createElement('div');
+                        title.className = 'event-title';
+                        title.style.color = ev.color;
+                        title.textContent = ev.summary;
+                        dayDiv.appendChild(title);
+                    });
+                    const today = new Date();
+                    if (d === today.getDate() && currentMonth === today.getMonth() && currentYear === today
+                        .getFullYear()) {
+                        dayDiv.classList.add('today');
+                    }
+                    dayDiv.addEventListener('click', () => showDayDetails(dateStr, eventsOnDay));
+                    grid.appendChild(dayDiv);
+                }
+                document.getElementById('month-label').textContent = new Date(currentYear, currentMonth)
+                    .toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+                document.getElementById('month-slider').value = currentMonth;
+                document.getElementById('calendar-grid').style.display = 'grid';
+                document.getElementById('month-slider-container').style.display = 'flex';
+                document.getElementById('week-container').style.display = 'none';
+            }
+
+            function renderWeekCalendar() {
+                const today = new Date();
+                const monday = new Date(today);
+                monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+                const days = [];
+                for (let i = 0; i < 7; i++) {
+                    const d = new Date(monday);
+                    d.setDate(monday.getDate() + i);
+                    days.push(d);
+                }
+                document.getElementById('week-label').textContent =
+                    `${days[0].toLocaleDateString('de-DE',{day:'numeric',month:'short'})} – ${days[6].toLocaleDateString('de-DE',{day:'numeric',month:'short'})}`;
+                const weekDaysDiv = document.getElementById('week-days');
+                weekDaysDiv.innerHTML = '';
+                days.forEach(date => {
+                    const dateStr = date.toISOString().substring(0, 10);
+                    const eventsOnDay = calendarEvents.filter(e => e.start.startsWith(dateStr));
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'week-day';
+                    if (date.toDateString() === today.toDateString()) dayDiv.classList.add('today');
+                    dayDiv.innerHTML =
+                        `<div class="week-day-label">${date.toLocaleDateString('de-DE',{weekday:'short'})}</div><div class="week-day-date">${date.getDate()}</div>`;
+                    eventsOnDay.slice(0, 3).forEach(ev => {
+                        const time = new Date(ev.start).toLocaleTimeString('de-DE', { hour: '2-digit',
+                            minute: '2-digit' });
+                        const eventEl = document.createElement('div');
+                        eventEl.className = 'week-event';
+                        eventEl.style.background = ev.color;
+                        eventEl.textContent = `${time} ${ev.summary}`;
+                        dayDiv.appendChild(eventEl);
+                    });
+                    dayDiv.addEventListener('click', () => showDayDetails(dateStr, eventsOnDay));
+                    weekDaysDiv.appendChild(dayDiv);
+                });
+                document.getElementById('calendar-grid').style.display = 'none';
+                document.getElementById('month-slider-container').style.display = 'none';
+                document.getElementById('week-container').style.display = 'flex';
+            }
+
+            function showDayDetails(dateStr, events) {
+                const details = document.getElementById('event-details');
+                if (!details) return;
+                details.innerHTML = events.length ? events.map(e => {
+                    const time = new Date(e.start).toLocaleTimeString('de-DE', { hour: '2-digit',
+                    minute: '2-digit' });
+                    return `<div style="margin-bottom:5px;"><span style="color:${e.color};">●</span> <strong>${e.summary}</strong><br><small>${time}</small></div>`;
+                }).join('') : '<em>Keine Termine</em>';
+                details.classList.add('show');
+            }
+
+            const CORS_PROXIES = ['https://corsproxy.io/?', 'https://api.allorigins.win/raw?url=',
+                'https://api.codetabs.com/v1/proxy?quest='
+            ];
+            async function fetchICSWithFallback(url) {
+                try { const r = await fetch(url); if (r.ok) return await r.text(); } catch (e) {}
+                for (const p of CORS_PROXIES) {
+                    try {
+                        const r = await fetch(p + encodeURIComponent(url));
+                        if (r.ok) { const t = await r.text(); if (t.includes('BEGIN:VCALENDAR')) return t; }
+                    } catch (e) {}
+                }
+                throw new Error('Kalender nicht erreichbar');
+            }
+
+            async function loadCalendar(urlsText) {
+                if (!urlsText.trim()) return;
+                const infoEl = document.getElementById('ical-info'),
+                    errEl = document.getElementById('ical-error');
+                infoEl.textContent = '';
+                errEl.textContent = '';
+                const urls = urlsText.split('\n').map(l => l.trim()).filter(l => l);
+                try {
+                    const allEvents = [];
+                    for (let i = 0; i < urls.length; i++) {
+                        const url = urls[i].replace(/^webcal:\/\//i, 'https://');
+                        const data = await fetchICSWithFallback(url);
+                        const jcal = ICAL.parse(data);
+                        const comp = new ICAL.Component(jcal);
+                        const vevents = comp.getAllSubcomponents('vevent');
+                        vevents.forEach((v, j) => {
+                            const ev = new ICAL.Event(v);
+                            const start = ev.startDate ? ev.startDate.toJSDate() : new Date();
+                            allEvents.push({
+                                summary: ev.summary || 'Ohne Titel',
+                                start: start.toISOString(),
+                                color: assignColor(allEvents.length)
+                            });
+                        });
+                    }
+                    calendarEvents = allEvents;
+                    localStorage.setItem('calendarCache', JSON.stringify(calendarEvents));
+                    localStorage.setItem('icalUrls', urlsText);
+                    renderCurrentView();
+                    infoEl.textContent = `✅ ${calendarEvents.length} Termine aus ${urls.length} Kalendern`;
+                } catch (e) {
+                    errEl.textContent = '❌ ' + e.message;
+                    calendarEvents = [];
+                    renderCurrentView();
+                }
+            }
+
+            // --- SLIDESHOW (komplett funktionsfähig) ---
+            function loadSlides() {
+                const saved = localStorage.getItem('slides');
+                if (saved) {
+                    slides = JSON.parse(saved);
+                    currentSlide = parseInt(localStorage.getItem('slideIdx')) || 0;
+                    if (currentSlide >= slides.length) currentSlide = 0;
+                }
+                updateSlideDisplay();
+            }
+
+            function updateSlideDisplay() {
+                const container = document.getElementById('slideshow-container');
+                if (!container) return;
+                container.querySelectorAll('.slide-img').forEach(i => i.remove());
+                if (slides.length && slides[currentSlide]) {
+                    const img = document.createElement('img');
+                    img.className = 'slide-img active';
+                    img.src = slides[currentSlide];
+                    container.appendChild(img);
+                } else {
+                    // Platzhalter, wenn keine Bilder
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'slide-img active';
+                    placeholder.style.background = '#222';
+                    placeholder.style.display = 'flex';
+                    placeholder.style.alignItems = 'center';
+                    placeholder.style.justifyContent = 'center';
+                    placeholder.style.color = 'rgba(255,255,255,0.5)';
+                    placeholder.style.fontSize = '1.5rem';
+                    placeholder.textContent = '📷 Fotos hochladen';
+                    container.appendChild(placeholder);
+                }
+                const countSpan = document.getElementById('image-count');
+                if (countSpan) countSpan.textContent = slides.length + ' Bilder';
+            }
+
+            function nextSlide() {
+                if (slides.length) {
+                    currentSlide = (currentSlide + 1) % slides.length;
+                    updateSlideDisplay();
+                    localStorage.setItem('slideIdx', currentSlide);
+                }
+            }
+
+            function prevSlide() {
+                if (slides.length) {
+                    currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+                    updateSlideDisplay();
+                    localStorage.setItem('slideIdx', currentSlide);
+                }
+            }
+
+            function startSS() {
+                clearInterval(timer);
+                if (!paused && slides.length) {
+                    const interval = batteryMode ? 60000 : 10000;
+                    timer = setInterval(nextSlide, interval);
+                }
+            }
+
+            function setBatteryMode(on) {
+                batteryMode = on;
+                localStorage.setItem('batteryMode', on);
+                if (on) {
+                    document.getElementById('anim-select').value = 'fade';
+                    document.getElementById('slideshow-container').className = 'slideshow-container slide-anim-fade';
+                }
+                startSS();
+            }
+
+            // Event-Listener für alle Buttons (einschließlich Slideshow, Layout, Theme)
+            document.addEventListener('click', function(e) {
+                const t = e.target;
+                if (t.closest('#prev-slide')) { prevSlide();
+                    startSS(); } else if (t.closest('#next-slide')) { nextSlide();
+                    startSS(); } else if (t.closest('#play-pause')) {
+                    paused = !paused;
+                    const btn = t.closest('#play-pause');
+                    btn.innerHTML = paused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+                    paused ? clearInterval(timer) : startSS();
+                } else if (t.closest('#delete-slide') && slides.length) {
+                    slides.splice(currentSlide, 1);
+                    if (currentSlide >= slides.length) currentSlide = 0;
+                    updateSlideDisplay();
+                    localStorage.setItem('slides', JSON.stringify(slides));
+                    startSS();
+                } else if (t.closest('#anim-btn') && settingsVisible) document.getElementById('anim-panel').classList
+                    .toggle('open');
+                else if (t.closest('#gradient-btn') && settingsVisible) document.getElementById('gradient-panel')
+                    .classList.toggle('open');
+                else if (t.closest('#cal-settings-btn') && settingsVisible) document.getElementById('cal-panel')
+                    .classList.toggle('open');
+                else if (t.closest('#tile-opacity-btn') && settingsVisible) document.getElementById(
+                    'tile-opacity-panel').classList.toggle('open');
+                else if (t.closest('#font-scale-btn') && settingsVisible) document.getElementById('font-scale-panel')
+                    .classList.toggle('open');
+                else if (t.closest('#battery-btn') && settingsVisible) document.getElementById('battery-panel')
+                    .classList.toggle('open');
+                else if (t.closest('#layout-btn') && settingsVisible) document.getElementById('layout-panel').classList
+                    .toggle('open');
+                else if (t.closest('#theme-btn') && settingsVisible) document.getElementById('theme-panel').classList
+                    .toggle('open');
+                else if (t.closest('#load-ical')) loadCalendar(document.getElementById('ical-urls').value);
+                else if (t.closest('#location-search-btn')) {
+                    const q = document.getElementById('location-search').value;
+                    searchLocation(q).then(r => { if (r.length) setLocation(r[0].latitude, r[0].longitude, r[0]
+                            .name); });
+                } else if (t.closest('#gps-btn')) navigator.geolocation.getCurrentPosition(p => setLocation(p.coords
+                    .latitude, p.coords.longitude, 'GPS'));
+                else if (t.closest('#view-month')) { currentView = 'month';
+                    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                    document.getElementById('view-month').classList.add('active');
+                    renderCurrentView(); } else if (t.closest('#view-week')) { currentView = 'week';
+                    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                    document.getElementById('view-week').classList.add('active');
+                    renderCurrentView(); }
+                // Layout- und Theme-Klicks
+                else if (t.closest('.layout-item')) applyPreset(t.closest('.layout-item').dataset.preset);
+                else if (t.closest('.theme-item')) applyTheme(t.closest('.theme-item').dataset.theme);
+            });
+
+            // Datei-Upload für Slideshow
+            document.addEventListener('change', function(e) {
+                if (e.target.id === 'file-upload') {
+                    Array.from(e.target.files).forEach(f => {
+                        const r = new FileReader();
+                        r.onload = ev => {
+                            slides.push(ev.target.result);
+                            if (slides.length === 1) currentSlide = 0;
+                            updateSlideDisplay();
+                            localStorage.setItem('slides', JSON.stringify(slides));
+                            startSS();
+                        };
+                        r.readAsDataURL(f);
+                    });
+                    e.target.value = '';
+                }
+                if (e.target.id === 'anim-select') {
+                    const cont = document.getElementById('slideshow-container');
+                    if (cont) cont.className = 'slideshow-container slide-anim-' + e.target.value;
+                    localStorage.setItem('slideAnim', e.target.value);
+                }
+                if (e.target.id === 'gradient-position-slider') {
+                    document.documentElement.style.setProperty('--gradient-position', e.target.value);
+                    document.getElementById('gradient-pos-value').textContent = Math.round(e.target.value * 100) +
+                        '%';
+                    localStorage.setItem('gradientPosition', e.target.value);
+                }
+                if (e.target.id === 'gradient-width-slider') {
+                    document.documentElement.style.setProperty('--gradient-width', e.target.value);
+                    localStorage.setItem('gradientWidth', e.target.value);
+                }
+                if (e.target.id === 'gradient-opacity-slider') {
+                    document.documentElement.style.setProperty('--gradient-opacity', e.target.value);
+                    localStorage.setItem('gradientOpacity', e.target.value);
+                }
+                if (e.target.id === 'tile-opacity-slider') {
+                    document.documentElement.style.setProperty('--tile-opacity', e.target.value);
+                    document.getElementById('tile-opacity-value').textContent = Math.round(e.target.value * 100) +
+                        '%';
+                    localStorage.setItem('tileOpacity', e.target.value);
+                }
+                if (e.target.id === 'font-scale-slider') {
+                    document.documentElement.style.setProperty('--font-scale', e.target.value);
+                    document.getElementById('font-scale-value').textContent = parseFloat(e.target.value).toFixed(1);
+                    localStorage.setItem('fontScale', e.target.value);
+                }
+                if (e.target.id === 'weather-height-slider') {
+                    const v = e.target.value + 'vh';
+                    document.documentElement.style.setProperty('--weather-height', v);
+                    document.getElementById('weather').style.height = v;
+                    localStorage.setItem('weatherHeight', e.target.value);
+                }
+                if (e.target.id === 'month-slider' && currentView === 'month') {
+                    currentMonth = parseInt(e.target.value);
+                    renderMonthCalendar();
+                }
+                if (e.target.id === 'battery-mode') setBatteryMode(e.target.checked);
+            });
+
+            // Wischgesten für Slideshow
+            let touchStartX = 0;
+            document.addEventListener('touchstart', function(e) {
+                if (e.target.closest('#slideshow-container')) touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+            document.addEventListener('touchend', function(e) {
+                if (e.target.closest('#slideshow-container')) {
+                    const diff = touchStartX - e.changedTouches[0].screenX;
+                    if (Math.abs(diff) > 60) { diff > 0 ? nextSlide() : prevSlide();
+                        startSS(); }
+                }
+            });
+
+            // Init
+            function init() {
+                const savedLoc = localStorage.getItem('weatherLoc');
+                if (savedLoc) { const l = JSON.parse(savedLoc);
+                    currentLat = l.lat;
+                    currentLon = l.lon;
+                    currentLocName = l.name; }
+                // Theme wiederherstellen
+                const savedTheme = localStorage.getItem('theme') || 'kitchen';
+                applyTheme(savedTheme);
+                // Layout wiederherstellen
+                const savedLayout = localStorage.getItem('kitchenLayout');
+                if (savedLayout) {
+                    try {
+                        const parsed = JSON.parse(savedLayout);
+                        for (const id in parsed) { if (layout[id]) layout[id] = parsed[id]; }
+                    } catch (e) {}
+                }
+                // Weitere gespeicherte Werte
+                ['gradientPosition', 'gradientWidth', 'gradientOpacity', 'tileOpacity', 'weatherHeight', 'fontScale',
+                    'batteryMode'
+                ].forEach(k => {
+                    const v = localStorage.getItem(k) || { gradientPosition: '0.38', gradientWidth: '0.05',
+                        gradientOpacity: '0.8', tileOpacity: '0.85', weatherHeight: '42', fontScale: '1',
+                        batteryMode: 'false' } [k];
+                    if (k === 'batteryMode') batteryMode = v === 'true';
+                    else document.documentElement.style.setProperty('--' + k.replace(/([A-Z])/g, '-$1')
+                        .toLowerCase(), k === 'weatherHeight' ? v + 'vh' : k === 'fontScale' ? v : v);
+                });
+                document.getElementById('font-scale-slider').value = localStorage.getItem('fontScale') || '1';
+                document.getElementById('font-scale-value').textContent = parseFloat(localStorage.getItem(
+                    'fontScale') || '1').toFixed(1);
+                document.getElementById('battery-mode').checked = batteryMode;
+                if (batteryMode) setBatteryMode(true);
+                document.getElementById('anim-select').value = localStorage.getItem('slideAnim') || 'fade';
+                const savedIcal = localStorage.getItem('icalUrls');
+                if (savedIcal) { document.getElementById('ical-urls').value = savedIcal;
+                    loadCalendar(savedIcal); }
+                const cachedEvents = localStorage.getItem('calendarCache');
+                if (cachedEvents && !savedIcal) { calendarEvents = JSON.parse(cachedEvents);
+                    renderCurrentView(); }
+                createTiles();
+                loadSlides();
+                updateWeather();
+                renderCurrentView();
+                setInterval(updateWeather, 900000);
+                startSS();
+                hideSettings();
+                subtleBtn.classList.add('show');
+            }
+            init();
+        })();
+    </script>
 </body>
 </html>
