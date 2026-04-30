@@ -101,17 +101,61 @@ body {
   padding: 12px;
   overflow-y: auto;
   overflow-x: hidden;
+  container-type: inline-size;
 }
 
-.resize-handle {
+/* Wenn Tile-Inhalt schmal: Forecast in 1 Spalte */
+@container (max-width: 200px) {
+  .forecast-day {
+    flex-basis: 100%;
+    display: flex;
+    justify-content: space-around;
+  }
+  .hourly-item {
+    flex-basis: 45px;
+  }
+}
+
+@container (max-width: 280px) {
+  .weather-now .temp { font-size: 2.2rem; }
+}
+
+.resize-handle-edge {
   position: absolute;
-  bottom: 0; right: 0;
-  width: 32px; height: 32px;
-  cursor: nwse-resize;
   touch-action: none;
+  z-index: 5;
+}
+.resize-handle-edge.top {
+  top: 0; left: 20px; right: 20px; height: 8px;
+  cursor: ns-resize;
+}
+.resize-handle-edge.bottom {
+  bottom: 0; left: 20px; right: 20px; height: 8px;
+  cursor: ns-resize;
+}
+.resize-handle-edge.left {
+  left: 0; top: 20px; bottom: 20px; width: 8px;
+  cursor: ew-resize;
+}
+.resize-handle-edge.right {
+  right: 0; top: 20px; bottom: 20px; width: 8px;
+  cursor: ew-resize;
+}
+.resize-handle-corner {
+  position: absolute;
+  width: 20px; height: 20px;
+  touch-action: none;
+  z-index: 6;
+}
+.resize-handle-corner.tl { top: 0; left: 0; cursor: nwse-resize; }
+.resize-handle-corner.tr { top: 0; right: 0; cursor: nesw-resize; }
+.resize-handle-corner.bl { bottom: 0; left: 0; cursor: nesw-resize; }
+.resize-handle-corner.br {
+  bottom: 0; right: 0;
+  cursor: nwse-resize;
   background: linear-gradient(135deg, transparent 60%, rgba(0,0,0,0.15) 60%);
   border-radius: 0 0 var(--tile-border-radius) 0;
-  z-index: 5;
+  width: 32px; height: 32px;
 }
 
 .icon-tile-content {
@@ -126,22 +170,58 @@ body {
   transition: transform 0.3s;
 }
 
-.weather-now .temp { font-size: 3rem; font-weight: 700; }
-.forecast-row { display: flex; gap: 6px; }
+.weather-now .temp { 
+  font-size: clamp(1.8rem, 8cqw, 3rem); 
+  font-weight: 700; 
+}
+.forecast-row { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 6px; 
+}
 .forecast-day {
-  flex:1; background: rgba(255,255,255,0.25); border-radius:16px;
-  padding:6px; text-align:center; font-size:0.85rem;
+  flex: 1 1 70px;
+  min-width: 65px;
+  background: rgba(255,255,255,0.25); 
+  border-radius:16px;
+  padding:6px; 
+  text-align:center; 
+  font-size:0.85rem;
 }
 .forecast-day.active { background: var(--accent); color: white; }
-.hourly-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.hourly-scroll { 
+  display: flex; 
+  flex-wrap: wrap;
+  gap: 6px; 
+  padding-bottom: 4px;
+  align-content: flex-start;
+}
 .hourly-item {
-  min-width:60px; background: rgba(255,255,255,0.25);
-  border-radius:12px; padding:4px; text-align:center; font-size:0.8rem;
+  flex: 1 1 50px;
+  min-width: 50px;
+  max-width: 80px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 10px; 
+  padding: 4px; 
+  text-align: center; 
+  font-size: 0.75rem;
 }
 
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; font-size:0.85rem; }
+.calendar-grid { 
+  display: grid; 
+  grid-template-columns: repeat(7, 1fr); 
+  gap: 2px; 
+  text-align: center; 
+  font-size: clamp(0.65rem, 1.5cqw, 0.9rem);
+}
 .day-header { font-weight:600; opacity:0.7; }
-.day { position:relative; padding:4px 0; border-radius:8px; cursor:pointer; min-height: 32px; }
+.day { 
+  position: relative; 
+  padding: clamp(2px, 0.5cqw, 6px) 0; 
+  border-radius: 6px; 
+  cursor: pointer; 
+  min-height: clamp(24px, 4cqw, 36px);
+}
 .day:hover { background: rgba(255,255,255,0.2); }
 .day.today { background: var(--accent); color:white; font-weight:bold; }
 .event-line { position:absolute; bottom:2px; left:10%; width:80%; height:3px; border-radius:2px; }
@@ -284,6 +364,29 @@ input[type="file"] { display:none; }
 .range-row span {
   font-size: 0.85rem; min-width: 40px; text-align: right;
 }
+
+.layout-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.layout-btn {
+  padding: 8px 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  color: white;
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s, border-color 0.2s;
+  touch-action: manipulation;
+}
+.layout-btn:hover, .layout-btn.active {
+  background: rgba(99,102,241,0.3);
+  border-color: rgba(99,102,241,0.6);
+}
 .error-msg {
   background: rgba(239,68,68,0.2);
   color: #fecaca;
@@ -303,6 +406,26 @@ input[type="file"] { display:none; }
 <div class="settings-panel" id="settings-panel">
   <button class="close-settings" id="close-settings">&times;</button>
   <h2>Einstellungen</h2>
+  
+  <h3 style="margin-top: 0; font-size: 1rem; color: #a5b4fc;">⚡ Schnell-Layouts</h3>
+  
+  <label>Querformat (horizontal)</label>
+  <div class="layout-buttons">
+    <button class="layout-btn" data-layout="h1">📅 Kalender groß</button>
+    <button class="layout-btn" data-layout="h2">🌤️ Wetter groß</button>
+    <button class="layout-btn" data-layout="h3">🖼️ Slideshow groß</button>
+    <button class="layout-btn" data-layout="h4">⚖️ Symmetrisch 3×2</button>
+    <button class="layout-btn" data-layout="h5">📋 Info-Cockpit</button>
+  </div>
+  
+  <label>Hochformat (vertikal)</label>
+  <div class="layout-buttons">
+    <button class="layout-btn" data-layout="v1">📅 Kalender oben</button>
+    <button class="layout-btn" data-layout="v2">🌤️ Wetter oben</button>
+    <button class="layout-btn" data-layout="v3">🖼️ Slideshow oben</button>
+    <button class="layout-btn" data-layout="v4">📊 Stack vertikal</button>
+    <button class="layout-btn" data-layout="v5">🎯 Familien-Wand</button>
+  </div>
   
   <label>Thema</label>
   <select id="theme-select">
@@ -521,6 +644,226 @@ function saveLayout() {
   localStorage.setItem('dashboardLayout', JSON.stringify(layout));
 }
 
+
+// === LAYOUT-PRESETS für 11"-Tablet ===
+const LAYOUT_PRESETS = {
+  // === HORIZONTAL (Querformat) ===
+  'h1': { // Kalender groß — links 60%, Rest rechts gestapelt
+    name: 'Kalender groß',
+    items: [
+      { id: 'spotify',  x: 0.62, y: 0.01, w: 0.08, h: 0.10 },
+      { id: 'amazon',   x: 0.71, y: 0.01, w: 0.08, h: 0.10 },
+      { id: 'youtube',  x: 0.80, y: 0.01, w: 0.08, h: 0.10 },
+      { id: 'settings', x: 0.89, y: 0.01, w: 0.08, h: 0.10 },
+      { id: 'calendar', x: 0.01, y: 0.01, w: 0.60, h: 0.98 },
+      { id: 'weather',  x: 0.62, y: 0.13, w: 0.18, h: 0.30 },
+      { id: 'forecast', x: 0.81, y: 0.13, w: 0.18, h: 0.30 },
+      { id: 'hourly',   x: 0.62, y: 0.45, w: 0.37, h: 0.20 },
+      { id: 'slideshow',x: 0.62, y: 0.67, w: 0.37, h: 0.32 },
+    ]
+  },
+  'h2': { // Wetter groß — Wetter+Stündlich oben breit
+    name: 'Wetter groß',
+    items: [
+      { id: 'spotify',  x: 0.78, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'amazon',   x: 0.84, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'youtube',  x: 0.90, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'settings', x: 0.96, y: 0.01, w: 0.04, h: 0.07 },
+      { id: 'weather',  x: 0.01, y: 0.01, w: 0.30, h: 0.45 },
+      { id: 'forecast', x: 0.32, y: 0.01, w: 0.45, h: 0.45 },
+      { id: 'hourly',   x: 0.01, y: 0.47, w: 0.99, h: 0.18 },
+      { id: 'calendar', x: 0.01, y: 0.66, w: 0.49, h: 0.33 },
+      { id: 'slideshow',x: 0.51, y: 0.66, w: 0.48, h: 0.33 },
+    ]
+  },
+  'h3': { // Slideshow groß — Bild dominiert links
+    name: 'Slideshow groß',
+    items: [
+      { id: 'spotify',  x: 0.78, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'amazon',   x: 0.84, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'youtube',  x: 0.90, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'settings', x: 0.96, y: 0.01, w: 0.04, h: 0.07 },
+      { id: 'slideshow',x: 0.01, y: 0.01, w: 0.65, h: 0.75 },
+      { id: 'calendar', x: 0.67, y: 0.10, w: 0.32, h: 0.65 },
+      { id: 'weather',  x: 0.01, y: 0.77, w: 0.32, h: 0.22 },
+      { id: 'forecast', x: 0.34, y: 0.77, w: 0.32, h: 0.22 },
+      { id: 'hourly',   x: 0.67, y: 0.77, w: 0.32, h: 0.22 },
+    ]
+  },
+  'h4': { // Symmetrisch 3×2 Grid
+    name: 'Symmetrisch 3×2',
+    items: [
+      { id: 'spotify',  x: 0.78, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'amazon',   x: 0.84, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'youtube',  x: 0.90, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'settings', x: 0.96, y: 0.01, w: 0.04, h: 0.07 },
+      { id: 'weather',  x: 0.01, y: 0.10, w: 0.32, h: 0.43 },
+      { id: 'forecast', x: 0.34, y: 0.10, w: 0.32, h: 0.43 },
+      { id: 'calendar', x: 0.67, y: 0.10, w: 0.32, h: 0.43 },
+      { id: 'hourly',   x: 0.01, y: 0.55, w: 0.32, h: 0.44 },
+      { id: 'slideshow',x: 0.34, y: 0.55, w: 0.65, h: 0.44 },
+    ]
+  },
+  'h5': { // Info-Cockpit — viel Info, kompakt
+    name: 'Info-Cockpit',
+    items: [
+      { id: 'weather',  x: 0.01, y: 0.01, w: 0.20, h: 0.30 },
+      { id: 'forecast', x: 0.22, y: 0.01, w: 0.40, h: 0.30 },
+      { id: 'spotify',  x: 0.63, y: 0.01, w: 0.07, h: 0.14 },
+      { id: 'amazon',   x: 0.71, y: 0.01, w: 0.07, h: 0.14 },
+      { id: 'youtube',  x: 0.79, y: 0.01, w: 0.07, h: 0.14 },
+      { id: 'settings', x: 0.87, y: 0.01, w: 0.12, h: 0.14 },
+      { id: 'slideshow',x: 0.63, y: 0.16, w: 0.36, h: 0.45 },
+      { id: 'hourly',   x: 0.01, y: 0.32, w: 0.61, h: 0.18 },
+      { id: 'calendar', x: 0.01, y: 0.51, w: 0.61, h: 0.48 },
+      { id: 'forecast', x: 0.63, y: 0.62, w: 0.36, h: 0.37 },
+    ]
+  },
+  
+  // === VERTIKAL (Hochformat) ===
+  'v1': { // Kalender oben
+    name: 'Kalender oben',
+    items: [
+      { id: 'spotify',  x: 0.01, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'amazon',   x: 0.26, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'youtube',  x: 0.51, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'settings', x: 0.76, y: 0.01, w: 0.23, h: 0.06 },
+      { id: 'calendar', x: 0.01, y: 0.08, w: 0.98, h: 0.42 },
+      { id: 'weather',  x: 0.01, y: 0.51, w: 0.49, h: 0.18 },
+      { id: 'forecast', x: 0.51, y: 0.51, w: 0.48, h: 0.18 },
+      { id: 'hourly',   x: 0.01, y: 0.70, w: 0.98, h: 0.13 },
+      { id: 'slideshow',x: 0.01, y: 0.84, w: 0.98, h: 0.15 },
+    ]
+  },
+  'v2': { // Wetter oben
+    name: 'Wetter oben',
+    items: [
+      { id: 'spotify',  x: 0.01, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'amazon',   x: 0.26, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'youtube',  x: 0.51, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'settings', x: 0.76, y: 0.01, w: 0.23, h: 0.06 },
+      { id: 'weather',  x: 0.01, y: 0.08, w: 0.98, h: 0.22 },
+      { id: 'forecast', x: 0.01, y: 0.31, w: 0.98, h: 0.18 },
+      { id: 'hourly',   x: 0.01, y: 0.50, w: 0.98, h: 0.14 },
+      { id: 'calendar', x: 0.01, y: 0.65, w: 0.98, h: 0.20 },
+      { id: 'slideshow',x: 0.01, y: 0.86, w: 0.98, h: 0.13 },
+    ]
+  },
+  'v3': { // Slideshow oben
+    name: 'Slideshow oben',
+    items: [
+      { id: 'spotify',  x: 0.01, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'amazon',   x: 0.26, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'youtube',  x: 0.51, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'settings', x: 0.76, y: 0.01, w: 0.23, h: 0.06 },
+      { id: 'slideshow',x: 0.01, y: 0.08, w: 0.98, h: 0.40 },
+      { id: 'weather',  x: 0.01, y: 0.49, w: 0.49, h: 0.18 },
+      { id: 'forecast', x: 0.51, y: 0.49, w: 0.48, h: 0.18 },
+      { id: 'hourly',   x: 0.01, y: 0.68, w: 0.98, h: 0.13 },
+      { id: 'calendar', x: 0.01, y: 0.82, w: 0.98, h: 0.17 },
+    ]
+  },
+  'v4': { // Stack vertikal — alles untereinander
+    name: 'Stack vertikal',
+    items: [
+      { id: 'spotify',  x: 0.01, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'amazon',   x: 0.26, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'youtube',  x: 0.51, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'settings', x: 0.76, y: 0.01, w: 0.23, h: 0.06 },
+      { id: 'weather',  x: 0.01, y: 0.08, w: 0.98, h: 0.18 },
+      { id: 'forecast', x: 0.01, y: 0.27, w: 0.98, h: 0.16 },
+      { id: 'hourly',   x: 0.01, y: 0.44, w: 0.98, h: 0.13 },
+      { id: 'calendar', x: 0.01, y: 0.58, w: 0.98, h: 0.20 },
+      { id: 'slideshow',x: 0.01, y: 0.79, w: 0.98, h: 0.20 },
+    ]
+  },
+  'v5': { // Familien-Wand — Slideshow groß, Rest kompakt
+    name: 'Familien-Wand',
+    items: [
+      { id: 'spotify',  x: 0.01, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'amazon',   x: 0.26, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'youtube',  x: 0.51, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'settings', x: 0.76, y: 0.01, w: 0.23, h: 0.06 },
+      { id: 'slideshow',x: 0.01, y: 0.08, w: 0.98, h: 0.50 },
+      { id: 'calendar', x: 0.01, y: 0.59, w: 0.98, h: 0.25 },
+      { id: 'weather',  x: 0.01, y: 0.85, w: 0.32, h: 0.14 },
+      { id: 'forecast', x: 0.34, y: 0.85, w: 0.32, h: 0.14 },
+      { id: 'hourly',   x: 0.67, y: 0.85, w: 0.32, h: 0.14 },
+    ]
+  },
+};
+
+function applyLayoutPreset(presetKey) {
+  const preset = LAYOUT_PRESETS[presetKey];
+  if (!preset) return;
+  
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  
+  // Existing IDs sammeln
+  const existingIds = new Set(layout.map(l => l.id));
+  
+  // Für jeden Eintrag im Preset: prüfen ob diese Kachel-ID existiert
+  // Wenn ja: Position übernehmen
+  // Wenn nicht: hinzufügen (z.B. wenn vorher rausgenommen)
+  const newLayout = [];
+  preset.items.forEach(item => {
+    if (existingIds.has(item.id) || ['spotify','amazon','youtube','settings','weather','forecast','hourly','calendar','slideshow'].includes(item.id)) {
+      newLayout.push({
+        id: item.id,
+        x: Math.round(item.x * W),
+        y: Math.round(item.y * H),
+        w: Math.round(item.w * W),
+        h: Math.round(item.h * H),
+      });
+    }
+  });
+  
+  layout = newLayout;
+  localStorage.setItem('dashboardLayout', JSON.stringify(layout));
+  localStorage.setItem('activeLayoutPreset', presetKey);
+  
+  createTiles();
+  loadSlides();
+  updateWeather();
+  renderCalendar();
+  
+  // Active-Status der Buttons
+  document.querySelectorAll('.layout-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.layout === presetKey);
+  });
+}
+
+// Event-Listener für alle Layout-Buttons
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('layout-btn')) {
+    applyLayoutPreset(e.target.dataset.layout);
+  }
+});
+
+// Beim Laden: aktiven Preset markieren
+function markActivePreset() {
+  const active = localStorage.getItem('activeLayoutPreset');
+  if (active) {
+    document.querySelectorAll('.layout-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.layout === active);
+    });
+  }
+}
+
+function getResizeHandlesHTML() {
+  return `
+    <div class="resize-handle-edge top"></div>
+    <div class="resize-handle-edge bottom"></div>
+    <div class="resize-handle-edge left"></div>
+    <div class="resize-handle-edge right"></div>
+    <div class="resize-handle-corner tl"></div>
+    <div class="resize-handle-corner tr"></div>
+    <div class="resize-handle-corner bl"></div>
+    <div class="resize-handle-corner br"></div>
+  `;
+}
+
 function createTiles() {
   const container = document.getElementById('dashboard');
   container.innerHTML = '';
@@ -533,9 +876,9 @@ function createTiles() {
     tile.style.width = item.w + 'px';
     tile.style.height = item.h + 'px';
     if (['spotify','amazon','youtube','settings'].includes(item.id)) {
-      tile.innerHTML = `<div class="tile-content icon-tile-content"></div><div class="resize-handle"></div>`;
+      tile.innerHTML = `<div class="tile-content icon-tile-content"></div>` + getResizeHandlesHTML();
     } else {
-      tile.innerHTML = `<div class="tile-header"></div><div class="tile-content"></div><div class="resize-handle"></div>`;
+      tile.innerHTML = `<div class="tile-header"></div><div class="tile-content"></div>` + getResizeHandlesHTML();
     }
     container.appendChild(tile);
     fillTileContent(item.id, tile);
@@ -630,16 +973,38 @@ function initInteract() {
       }
     }
   }).resizable({
-    edges: { bottom: true, right: true },
+    edges: { top: true, bottom: true, left: true, right: true },
     inertia: false,
-    modifiers: [interact.modifiers.restrict({ restriction: 'parent', endOnly: true })],
+    modifiers: [
+      interact.modifiers.restrict({ restriction: 'parent', endOnly: true }),
+      interact.modifiers.restrictSize({ min: { width: 80, height: 80 } })
+    ],
     listeners: {
       start(event) { event.target.classList.add('resizing'); },
       move(event) {
-        event.target.style.width = event.rect.width + 'px';
-        event.target.style.height = event.rect.height + 'px';
+        const target = event.target;
+        let x = (parseFloat(target.getAttribute('data-x')) || 0);
+        let y = (parseFloat(target.getAttribute('data-y')) || 0);
+        target.style.width = event.rect.width + 'px';
+        target.style.height = event.rect.height + 'px';
+        x += event.deltaRect.left;
+        y += event.deltaRect.top;
+        target.style.transform = `translate(${x}px, ${y}px)`;
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
       },
-      end(event) { event.target.classList.remove('resizing'); saveLayout(); }
+      end(event) {
+        event.target.classList.remove('resizing');
+        const target = event.target;
+        const x = parseFloat(target.getAttribute('data-x')) || 0;
+        const y = parseFloat(target.getAttribute('data-y')) || 0;
+        target.style.transform = '';
+        target.style.left = (parseFloat(target.style.left) + x) + 'px';
+        target.style.top = (parseFloat(target.style.top) + y) + 'px';
+        target.setAttribute('data-x', 0);
+        target.setAttribute('data-y', 0);
+        saveLayout();
+      }
     }
   });
 }
@@ -1224,6 +1589,7 @@ document.getElementById('load-ical-settings').addEventListener('click', function
 
 // ---------- INIT ----------
 createTiles();
+setTimeout(markActivePreset, 100);
 loadSlides();
 loadSettings();
 updateWeather();
