@@ -13,8 +13,10 @@
             --text: #fff;
             --accent: #E94545;
             --slide-duration: 1s;
+            --gradient-position: 0.38;
             --gradient-width: 0.05;
             --gradient-opacity: 0.8;
+            --tile-opacity: 0.85;
             --weather-height: 42vh;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -26,12 +28,19 @@
         }
         #dashboard { width:100%; height:100vh; position:relative; overflow:hidden; }
         #gradient-overlay {
-            position: absolute; top:0; left: calc(38% - var(--gradient-width)*100%); width: calc(var(--gradient-width)*100%); height:100%;
+            position: absolute;
+            top:0;
+            left: calc(var(--gradient-position) * 100% - var(--gradient-width) * 100%);
+            width: calc(var(--gradient-width) * 100%);
+            height:100%;
             background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,var(--gradient-opacity)) 60%, rgba(0,0,0,1) 100%);
-            z-index:5; pointer-events:none; transition: left 0.3s, width 0.3s;
+            z-index:5; pointer-events:none;
+            transition: left 0.2s, width 0.2s;
         }
         .tile {
-            position: absolute; background: rgba(0,0,0,0.85); border:none; overflow:hidden;
+            position: absolute;
+            background: rgba(0,0,0,var(--tile-opacity));
+            border:none; overflow:hidden;
             touch-action: none; display: flex; flex-direction: column;
         }
         .tile-content { flex:1; overflow-y:auto; }
@@ -106,12 +115,23 @@
             display:flex; gap:10px; background:rgba(0,0,0,0.6); padding:4px 10px; border-radius:20px; z-index:10;
         }
         .slideshow-controls button { background:transparent; border:none; color:white; font-size:1.2rem; cursor:pointer; padding:4px 8px; }
+        #settings-toggle {
+            position: fixed;
+            top: 10px; right: 10px; z-index: 200;
+            background: rgba(0,0,0,0.7); color: white;
+            width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1.2rem;
+            backdrop-filter: blur(4px); box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.2); user-select: none;
+        }
+        #settings-toggle:hover { background: rgba(255,255,255,0.2); }
         .panel-btn {
             position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.6); border-radius:50%;
             width:32px; height:32px; display:none; align-items:center; justify-content:center;
             cursor:pointer; color:white; z-index:15; font-size:0.9rem;
         }
-        .gradient-btn { right:50px; } .cal-settings-btn { right:90px; }
+        .gradient-btn { right:50px; } .cal-settings-btn { right:90px; } .tile-opacity-btn { right:130px; }
         .panel {
             position:absolute; background:rgba(20,20,30,0.95); backdrop-filter:blur(15px);
             border-radius:12px; padding:12px; z-index:100; color:white; display:none;
@@ -134,6 +154,7 @@
 </head>
 <body>
 <div id="dashboard"><div id="gradient-overlay"></div></div>
+<div id="settings-toggle">⚙️</div>
 
 <!-- Panels -->
 <div class="panel" id="anim-panel" style="top:50px; right:10px; width:200px;">
@@ -147,11 +168,17 @@
         <option value="slide-diagonal">Diagonal schieben</option>
     </select>
 </div>
-<div class="panel" id="gradient-panel" style="top:50px; right:50px; width:220px;">
+<div class="panel" id="gradient-panel" style="top:50px; right:50px; width:240px;">
+    <label>Verlauf Position <span id="gradient-pos-value">38%</span></label>
+    <input type="range" id="gradient-position-slider" min="0" max="1" step="0.01" value="0.38">
     <label>Verlauf Breite</label>
-    <input type="range" id="gradient-width-slider" min="0" max="0.2" step="0.01" value="0.05">
+    <input type="range" id="gradient-width-slider" min="0" max="0.3" step="0.01" value="0.05">
     <label>Verlauf Stärke</label>
     <input type="range" id="gradient-opacity-slider" min="0" max="1" step="0.1" value="0.8">
+</div>
+<div class="panel" id="tile-opacity-panel" style="top:50px; right:130px; width:200px;">
+    <label>Kachel-Transparenz <span id="tile-opacity-value">85%</span></label>
+    <input type="range" id="tile-opacity-slider" min="0" max="1" step="0.05" value="0.85">
 </div>
 <div class="panel" id="cal-panel" style="top:50px; right:90px; width:260px;">
     <label>iCal URL</label>
@@ -175,32 +202,32 @@
     };
 
     let settingsVisible = false;
+    const toggleBtn = document.getElementById('settings-toggle');
+
     function showSettings() {
         settingsVisible = true;
+        toggleBtn.innerHTML = '✕';
         document.querySelectorAll('.panel-btn').forEach(b => b.style.display = 'flex');
         document.getElementById('weather-height-container').style.display = 'flex';
     }
     function hideSettings() {
         settingsVisible = false;
+        toggleBtn.innerHTML = '⚙️';
         document.querySelectorAll('.panel-btn').forEach(b => b.style.display = 'none');
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
         document.getElementById('weather-height-container').style.display = 'none';
     }
 
-    document.addEventListener('dblclick', function(e) {
-        if (settingsVisible) {
-            hideSettings();
-        } else {
-            showSettings();
-        }
+    toggleBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        settingsVisible ? hideSettings() : showSettings();
     });
 
     document.addEventListener('click', function(e) {
         if (!settingsVisible) return;
-        if (e.target.closest('.panel-btn') || e.target.closest('.panel') || e.target.closest('#weather-height-container')) {
-            return;
+        if (!e.target.closest('#settings-toggle') && !e.target.closest('.panel') && !e.target.closest('.panel-btn') && !e.target.closest('#weather-height-container')) {
+            hideSettings();
         }
-        hideSettings();
     });
 
     function createTiles() {
@@ -249,6 +276,7 @@
                     <div class="panel-btn anim-btn" id="anim-btn"><i class="fas fa-film"></i></div>
                     <div class="panel-btn gradient-btn" id="gradient-btn"><i class="fas fa-adjust"></i></div>
                     <div class="panel-btn cal-settings-btn" id="cal-settings-btn"><i class="fas fa-cog"></i></div>
+                    <div class="panel-btn tile-opacity-btn" id="tile-opacity-btn"><i class="fas fa-eye"></i></div>
                     <div class="slideshow-controls">
                         <button id="prev-slide"><i class="fas fa-chevron-left"></i></button>
                         <button id="play-pause"><i class="fas fa-pause"></i></button>
@@ -339,7 +367,6 @@
             return await res.json();
         } catch(e) { return null; }
     }
-
     function wEmoji(c) {
         const m = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌦️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',80:'🌧️',81:'🌧️',82:'🌧️',85:'🌨️',86:'🌨️',95:'⛈️'};
         return m[c] || '🌥️';
@@ -350,7 +377,6 @@
         if(c>=61) return 'Regen'; if(c>=71) return 'Schnee'; if(c>=95) return 'Gewitter';
         return 'Bewölkt';
     }
-
     async function updateWeather() {
         const data = await fetchWeather();
         if(!data) {
@@ -363,7 +389,6 @@
         document.getElementById('current-details').innerHTML = `${wDesc(data.current.weather_code)}<br>💧 ${data.current.relative_humidity_2m}% · 💨 ${Math.round(data.current.wind_speed_10m)} km/h`;
         document.getElementById('current-icon').textContent = wEmoji(data.current.weather_code);
         document.getElementById('current-location-name').textContent = currentLocName;
-
         const fc = document.getElementById('forecast-container');
         if(fc) {
             fc.innerHTML = '';
@@ -376,20 +401,18 @@
             });
         }
     }
-
     async function searchLocation(query) {
         const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=3&language=de`);
         const data = await res.json();
         return data.results || [];
     }
-
     async function setLocation(lat, lon, name) {
         currentLat = lat; currentLon = lon; currentLocName = name;
         localStorage.setItem('weatherLoc', JSON.stringify({lat,lon,name}));
         await updateWeather();
     }
 
-    // --- KALENDER (verbessert) ---
+    // --- KALENDER ---
     let calendarEvents = [];
     const palette = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63','#00bcd4','#ff5722'];
     function assignColor(i) { return palette[i % palette.length]; }
@@ -436,36 +459,26 @@
         'https://api.allorigins.win/raw?url=',
         'https://api.codetabs.com/v1/proxy?quest='
     ];
-
     async function fetchICSWithFallback(url) {
-        // 1. Direkter Versuch
-        try {
-            const res = await fetch(url);
-            if (res.ok) return await res.text();
-        } catch(e) {}
-        // 2. Proxies nacheinander
+        try { const res = await fetch(url); if (res.ok) return await res.text(); } catch(e) {}
         for (const proxy of CORS_PROXIES) {
             try {
                 const proxyUrl = proxy + encodeURIComponent(url);
                 const res = await fetch(proxyUrl);
                 if (res.ok) {
                     const text = await res.text();
-                    if (text.includes('BEGIN:VCALENDAR')) {
-                        console.log('✅ Proxy erfolgreich:', proxy);
-                        return text;
-                    }
+                    if (text.includes('BEGIN:VCALENDAR')) return text;
                 }
             } catch(e) {}
         }
-        throw new Error('Alle Lade-Versuche fehlgeschlagen. URL prüfen.');
+        throw new Error('Alle Lade-Versuche fehlgeschlagen.');
     }
 
     async function loadCalendar(url) {
         if(!url) return;
         const infoEl = document.getElementById('ical-info');
         const errEl = document.getElementById('ical-error');
-        infoEl.textContent = '';
-        errEl.textContent = '';
+        infoEl.textContent = ''; errEl.textContent = '';
         url = url.replace(/^webcal:\/\//i, 'https://');
         try {
             const data = await fetchICSWithFallback(url);
@@ -473,7 +486,7 @@
             const comp = new ICAL.Component(jcal);
             const vevents = comp.getAllSubcomponents('vevent');
             if (!vevents || vevents.length === 0) {
-                infoEl.textContent = '⚠️ Keine Termine in diesem Kalender gefunden.';
+                infoEl.textContent = '⚠️ Keine Termine gefunden.';
                 calendarEvents = [];
                 renderCalendar();
                 return;
@@ -492,9 +505,7 @@
             renderCalendar();
             localStorage.setItem('icalUrl', url);
             infoEl.textContent = `✅ ${calendarEvents.length} Termine geladen.`;
-            console.log('Kalender geladen:', calendarEvents.length, 'Termine');
         } catch(e) {
-            console.error('Kalenderfehler:', e);
             errEl.textContent = '❌ ' + e.message;
             calendarEvents = [];
             renderCalendar();
@@ -557,6 +568,9 @@
         else if(t.closest('#cal-settings-btn') && settingsVisible) {
             document.getElementById('cal-panel').classList.toggle('open');
         }
+        else if(t.closest('#tile-opacity-btn') && settingsVisible) {
+            document.getElementById('tile-opacity-panel').classList.toggle('open');
+        }
         else if(t.closest('#load-ical')) loadCalendar(document.getElementById('ical-url').value);
         else if(t.closest('#location-search-btn')) {
             const q = document.getElementById('location-search').value;
@@ -587,6 +601,11 @@
             document.getElementById('slideshow-container').className = 'slideshow-container slide-anim-' + e.target.value;
             localStorage.setItem('slideAnim', e.target.value);
         }
+        if(e.target.id === 'gradient-position-slider') {
+            document.documentElement.style.setProperty('--gradient-position', e.target.value);
+            document.getElementById('gradient-pos-value').textContent = Math.round(e.target.value * 100) + '%';
+            localStorage.setItem('gradientPosition', e.target.value);
+        }
         if(e.target.id === 'gradient-width-slider') {
             document.documentElement.style.setProperty('--gradient-width', e.target.value);
             localStorage.setItem('gradientWidth', e.target.value);
@@ -594,6 +613,11 @@
         if(e.target.id === 'gradient-opacity-slider') {
             document.documentElement.style.setProperty('--gradient-opacity', e.target.value);
             localStorage.setItem('gradientOpacity', e.target.value);
+        }
+        if(e.target.id === 'tile-opacity-slider') {
+            document.documentElement.style.setProperty('--tile-opacity', e.target.value);
+            document.getElementById('tile-opacity-value').textContent = Math.round(e.target.value * 100) + '%';
+            localStorage.setItem('tileOpacity', e.target.value);
         }
         if(e.target.id === 'weather-height-slider') {
             const val = e.target.value + 'vh';
@@ -611,15 +635,23 @@
         const savedLoc = localStorage.getItem('weatherLoc');
         if(savedLoc) { const l = JSON.parse(savedLoc); currentLat = l.lat; currentLon = l.lon; currentLocName = l.name; }
 
+        const gp = localStorage.getItem('gradientPosition') || 0.38;
         const gw = localStorage.getItem('gradientWidth') || 0.05;
         const go = localStorage.getItem('gradientOpacity') || 0.8;
+        const to = localStorage.getItem('tileOpacity') || 0.85;
         const wh = localStorage.getItem('weatherHeight') || 42;
+        document.documentElement.style.setProperty('--gradient-position', gp);
         document.documentElement.style.setProperty('--gradient-width', gw);
         document.documentElement.style.setProperty('--gradient-opacity', go);
+        document.documentElement.style.setProperty('--tile-opacity', to);
         document.documentElement.style.setProperty('--weather-height', wh + 'vh');
+        document.getElementById('gradient-position-slider').value = gp;
         document.getElementById('gradient-width-slider').value = gw;
         document.getElementById('gradient-opacity-slider').value = go;
+        document.getElementById('tile-opacity-slider').value = to;
         document.getElementById('weather-height-slider').value = wh;
+        document.getElementById('gradient-pos-value').textContent = Math.round(gp * 100) + '%';
+        document.getElementById('tile-opacity-value').textContent = Math.round(to * 100) + '%';
 
         const savedAnim = localStorage.getItem('slideAnim') || 'fade';
         document.getElementById('anim-select').value = savedAnim;
@@ -636,6 +668,7 @@
         renderCalendar();
         setInterval(updateWeather, 900000);
         startSS();
+        hideSettings();
     }
     init();
 })();
