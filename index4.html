@@ -19,7 +19,7 @@
   --text-color: #1e293b;
   --accent: #3b82f6;
   --font-family: 'Segoe UI', system-ui, sans-serif;
-  --backdrop: blur(12px);
+  --backdrop: blur(6px);
   --tile-transform: none;
   --text-shadow: none;
   --icon-transform: none;
@@ -40,16 +40,25 @@ body {
   background-image: var(--bg-image);
   background-size: cover;
   background-position: center;
+  background-attachment: fixed;
   color: var(--text-color);
   height: 100vh;
   overflow: hidden;
-  transition: background-image 0.5s ease-in-out;
+  transition: background-image 0.4s ease-out;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
 #dashboard { width: 100%; height: 100vh; position: relative; overflow: auto; }
 
 .tile {
   position: absolute;
+  touch-action: none;
+  will-change: transform;
   background: var(--tile-bg);
   opacity: var(--tile-opacity);
   backdrop-filter: var(--backdrop);
@@ -59,7 +68,7 @@ body {
   box-shadow: var(--tile-shadow);
   display: flex;
   flex-direction: column;
-  transition: box-shadow 0.3s, opacity 0.3s, transform 0.3s;
+  transition: box-shadow 0.2s ease-out;
   transform: var(--tile-transform);
   min-width: 80px;
   min-height: 80px;
@@ -76,6 +85,8 @@ body {
   padding: 8px 14px;
   cursor: grab;
   user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
   font-weight: 600;
   border-bottom: 1px solid rgba(0,0,0,0.05);
   background: rgba(255,255,255,0.2);
@@ -95,8 +106,9 @@ body {
 .resize-handle {
   position: absolute;
   bottom: 0; right: 0;
-  width: 22px; height: 22px;
+  width: 32px; height: 32px;
   cursor: nwse-resize;
+  touch-action: none;
   background: linear-gradient(135deg, transparent 60%, rgba(0,0,0,0.15) 60%);
   border-radius: 0 0 var(--tile-border-radius) 0;
   z-index: 5;
@@ -107,6 +119,9 @@ body {
   height: 100%; font-size: 2rem; cursor: pointer;
   color: var(--text-color);
   transform: var(--icon-transform);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
   text-shadow: var(--text-shadow);
   transition: transform 0.3s;
 }
@@ -141,6 +156,8 @@ body {
   position:relative; width:100%; aspect-ratio:16/9;
   background:rgba(0,0,0,0.05); border-radius:12px;
   overflow:hidden; margin-bottom:8px;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 .slide-img {
   position: absolute;
@@ -148,7 +165,10 @@ body {
   width:100%; height:100%;
   object-fit: var(--slide-fit);
   opacity: 0;
-  transition: all var(--slide-duration) ease-in-out;
+  will-change: transform, opacity;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transition: opacity var(--slide-duration) ease-out, transform var(--slide-duration) ease-out;
 }
 .slide-img.active { opacity: 1; }
 
@@ -191,8 +211,8 @@ body {
   animation: kenBurns 8s ease-in-out infinite alternate;
 }
 @keyframes kenBurns {
-  from { transform: scale(1) translate(0, 0); }
-  to { transform: scale(1.15) translate(-3%, -3%); }
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-3%, -3%, 0) scale(1.1); }
 }
 
 /* Animation: split */
@@ -234,7 +254,10 @@ input[type="file"] { display:none; }
   background-position: center;
   background-repeat: no-repeat;
   opacity: 0;
-  transition: opacity 1s ease-in-out;
+  will-change: opacity;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  transition: opacity 0.8s ease-out;
 }
 .bg-slideshow-layer.active { opacity: 1; }
 
@@ -580,7 +603,9 @@ function initInteract() {
   interact('.tile').draggable({
     allowFrom: '.tile-header, .icon-tile-content',
     ignoreFrom: '.resize-handle',
-    modifiers: [interact.modifiers.restrict({ restriction: 'parent', endOnly: false })],
+    inertia: false,
+    autoScroll: false,
+    modifiers: [interact.modifiers.restrict({ restriction: 'parent', endOnly: true })],
     listeners: {
       start(event) { event.target.classList.add('dragging'); },
       move(event) {
@@ -606,7 +631,8 @@ function initInteract() {
     }
   }).resizable({
     edges: { bottom: true, right: true },
-    modifiers: [interact.modifiers.restrict({ restriction: 'parent', endOnly: false })],
+    inertia: false,
+    modifiers: [interact.modifiers.restrict({ restriction: 'parent', endOnly: true })],
     listeners: {
       start(event) { event.target.classList.add('resizing'); },
       move(event) {
