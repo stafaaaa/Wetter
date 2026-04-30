@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<title>Glass Dashboard · Icons & 5 3D-Effekte</title>
+<title>Glass Dashboard · Volle Kontrolle</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
@@ -209,8 +209,8 @@ border:none; color:white; font-size:1.5rem; cursor:pointer;
 <div id="bg-url-container" style="display:none;"><label>Bild-URL</label><input type="text" id="bg-url" placeholder="https://..."></div>
 <div id="bg-upload-container" style="display:none;">
 <label>Hintergrundbild hochladen</label>
-<input type="file" id="bg-upload" accept="image/*">
 <button id="bg-upload-trigger" class="upload-btn" style="width:100%;">Bild auswählen</button>
+<input type="file" id="bg-upload" accept="image/*">
 </div>
 <label>Transparente Kacheln</label>
 <select id="transparency-toggle"><option value="off">Aus (glasig)</option><option value="on">An (durchsichtig)</option></select>
@@ -236,6 +236,9 @@ border:none; color:white; font-size:1.5rem; cursor:pointer;
 <label>Kachel Rahmenrundung (px)</label><input type="number" id="border-radius" min="0" max="40" value="24">
 <label>Slideshow Intervall (Sekunden)</label>
 <select id="interval-select"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option></select>
+<label>Kalender iCal URL</label>
+<input type="text" id="ical-url" placeholder="https://... (webcal wird automatisch konvertiert)">
+<button id="load-ical-settings" class="upload-btn" style="width:100%;">Kalender laden</button>
 </div>
 
 <script>
@@ -293,13 +296,11 @@ root.style.setProperty('--tile-shadow', `0 0 ${s*5}px rgba(255,255,255,0.4), 0 0
 root.style.setProperty('--text-shadow', `0 0 ${s*2}px var(--accent)`);
 root.style.setProperty('--icon-transform', `scale(1.1) rotateZ(${s}deg)`);
 break;
-case 'none':
 default:
 root.style.setProperty('--tile-transform', 'none');
 root.style.setProperty('--tile-shadow', '0 8px 32px rgba(0,0,0,0.1)');
 root.style.setProperty('--text-shadow', 'none');
 root.style.setProperty('--icon-transform', 'none');
-break;
 }
 root.style.setProperty('--effect-strength', s);
 }
@@ -386,8 +387,6 @@ break;
 case 'calendar':
 header.innerHTML = '<i class="fas fa-calendar"></i> Termine';
 content.innerHTML = `
-<input type="text" id="ical-url" placeholder="iCal URL einfügen..." style="width:100%; padding:6px; border-radius:8px; border:1px solid #ccc; margin-bottom:6px;">
-<button id="load-ical" class="upload-btn" style="margin-bottom:6px;">Laden</button>
 <div class="calendar-grid" id="calendar-grid"></div>
 <div class="event-details" id="event-details"></div>
 `;
@@ -464,21 +463,11 @@ return;
 }
 const app = tile.getAttribute('data-app');
 if (app) {
-const schemes = {
-spotify: 'spotify://',
-amazon: 'amznmp3://',
-youtube: 'vnd.youtube://'
-};
-const fallbacks = {
-spotify: 'https://open.spotify.com',
-amazon: 'https://music.amazon.com',
-youtube: 'https://youtube.com'
-};
+const schemes = { spotify: 'spotify://', amazon: 'amznmp3://', youtube: 'vnd.youtube://' };
+const fallbacks = { spotify: 'https://open.spotify.com', amazon: 'https://music.amazon.com', youtube: 'https://youtube.com' };
 const start = Date.now();
 window.location.href = schemes[app];
-setTimeout(() => {
-if (Date.now() - start < 1500) window.open(fallbacks[app], '_blank');
-}, 1000);
+setTimeout(() => { if (Date.now() - start < 1500) window.open(fallbacks[app], '_blank'); }, 1000);
 }
 });
 
@@ -499,12 +488,9 @@ if(code===0) return '☀️'; if(code<=2) return '🌤️'; if(code===3) return 
 async function updateWeather() {
 const data = await fetchWeather();
 if(!data) return;
-const tempEl = document.getElementById('current-temp');
-if(tempEl) tempEl.textContent = Math.round(data.current.temperature_2m) + '°C';
-const detEl = document.getElementById('current-details');
-if(detEl) detEl.innerHTML = `${weatherDesc(data.current.weather_code)}<br>💧 ${data.current.relative_humidity_2m}% · 💨 ${data.current.wind_speed_10m} km/h`;
-const iconEl = document.getElementById('current-icon');
-if(iconEl) iconEl.textContent = weatherEmoji(data.current.weather_code);
+document.getElementById('current-temp') && (document.getElementById('current-temp').textContent = Math.round(data.current.temperature_2m) + '°C');
+document.getElementById('current-details') && (document.getElementById('current-details').innerHTML = `${weatherDesc(data.current.weather_code)}<br>💧 ${data.current.relative_humidity_2m}% · 💨 ${data.current.wind_speed_10m} km/h`);
+document.getElementById('current-icon') && (document.getElementById('current-icon').textContent = weatherEmoji(data.current.weather_code));
 const fc = document.getElementById('forecast-container');
 if(fc) {
 fc.innerHTML = '';
@@ -583,9 +569,11 @@ grid.appendChild(dayDiv);
 
 function loadCalendar(url) {
 if(!url) return;
+// webcal:// durch https:// ersetzen
+url = url.replace(/^webcal:\/\//i, 'https://');
 fetch(url)
 .then(response => {
-if (!response.ok) throw new Error('Netzwerkantwort war nicht ok');
+if (!response.ok) throw new Error('Netzwerkantwort nicht ok');
 return response.text();
 })
 .then(data => {
@@ -605,6 +593,7 @@ color: assignEventColor(i)
 };
 });
 renderCalendar();
+console.log('Kalender geladen:', calendarEvents.length, 'Ereignisse');
 } catch(parseError) {
 console.error('ICAL Parse Fehler:', parseError);
 alert('Fehler beim Verarbeiten der Kalenderdaten. Bitte prüfe die URL.');
@@ -616,28 +605,17 @@ alert('Fehler beim Laden des Kalenders. Möglicherweise ist die URL falsch oder 
 });
 }
 
-document.addEventListener('click', function(e) {
-if(e.target.id === 'load-ical' || e.target.closest('#load-ical')) {
-const url = document.getElementById('ical-url').value.trim();
-if(!url) return;
-loadCalendar(url);
-}
-});
-
 // ---------- SLIDESHOW ----------
 let slides = [];
 let currentSlide = 0;
 let slideInterval = 10;
 let slideshowTimer;
 
-function saveSlidesToStorage() {
-try {
-localStorage.setItem('slideshowImages', JSON.stringify(slides));
-localStorage.setItem('slideshowIndex', currentSlide);
-} catch(e) {}
+function saveSlides() {
+try { localStorage.setItem('slideshowImages', JSON.stringify(slides)); localStorage.setItem('slideshowIndex', currentSlide); } catch(e) {}
 }
 
-function loadSlidesFromStorage() {
+function loadSlides() {
 try {
 const saved = localStorage.getItem('slideshowImages');
 if (saved) {
@@ -645,8 +623,7 @@ slides = JSON.parse(saved);
 currentSlide = parseInt(localStorage.getItem('slideshowIndex')) || 0;
 if (currentSlide >= slides.length) currentSlide = 0;
 updateSlideDisplay();
-const countEl = document.getElementById('image-count');
-if(countEl) countEl.textContent = slides.length + ' Bilder';
+document.getElementById('image-count') && (document.getElementById('image-count').textContent = slides.length + ' Bilder');
 }
 } catch(e) {}
 }
@@ -654,22 +631,18 @@ if(countEl) countEl.textContent = slides.length + ' Bilder';
 function applyBackground() {
 const mode = localStorage.getItem('bgMode') || 'theme';
 const root = document.documentElement;
-document.body.style.background = ''; // Inline-Styles entfernen
+document.body.style.background = '';
 switch(mode) {
-case 'theme':
-root.style.setProperty('--bg-image', 'none');
-break;
+case 'theme': root.style.setProperty('--bg-image', 'none'); break;
 case 'color':
 root.style.setProperty('--bg-image', 'none');
 document.body.style.background = localStorage.getItem('bgColor') || '#e0e7ff';
 break;
 case 'url':
-const url = localStorage.getItem('bgUrl') || '';
-root.style.setProperty('--bg-image', url ? `url(${url})` : 'none');
+root.style.setProperty('--bg-image', `url(${localStorage.getItem('bgUrl') || ''})`);
 break;
 case 'upload':
-const upload = localStorage.getItem('bgUpload') || '';
-root.style.setProperty('--bg-image', upload ? `url(${upload})` : 'none');
+root.style.setProperty('--bg-image', `url(${localStorage.getItem('bgUpload') || ''})`);
 break;
 case 'slideshow':
 if (slides.length > 0 && slides[currentSlide]) {
@@ -691,9 +664,7 @@ img.style.display = 'block';
 img.src = '';
 img.style.display = 'none';
 }
-if (localStorage.getItem('bgMode') === 'slideshow') {
-applyBackground();
-}
+if (localStorage.getItem('bgMode') === 'slideshow') applyBackground();
 }
 
 function startSlideshow() {
@@ -702,23 +673,20 @@ if(slides.length === 0) return;
 slideshowTimer = setInterval(() => {
 currentSlide = (currentSlide + 1) % slides.length;
 updateSlideDisplay();
-saveSlidesToStorage();
+saveSlides();
 }, slideInterval * 1000);
 }
 
 document.addEventListener('change', function(e) {
 if(e.target.id === 'file-upload') {
-const files = Array.from(e.target.files);
-if (files.length === 0) return;
-files.forEach(file => {
+Array.from(e.target.files).forEach(file => {
 const reader = new FileReader();
 reader.onload = ev => {
 slides.push(ev.target.result);
 if(slides.length === 1) currentSlide = 0;
 updateSlideDisplay();
-const countEl = document.getElementById('image-count');
-if(countEl) countEl.textContent = slides.length + ' Bilder';
-saveSlidesToStorage();
+document.getElementById('image-count') && (document.getElementById('image-count').textContent = slides.length + ' Bilder');
+saveSlides();
 startSlideshow();
 if (localStorage.getItem('bgMode') === 'slideshow') applyBackground();
 };
@@ -732,24 +700,18 @@ document.addEventListener('click', function(e) {
 if(e.target.closest('#next-slide')) {
 if(!slides.length) return;
 currentSlide = (currentSlide + 1) % slides.length;
-updateSlideDisplay();
-saveSlidesToStorage();
-startSlideshow();
+updateSlideDisplay(); saveSlides(); startSlideshow();
 } else if(e.target.closest('#prev-slide')) {
 if(!slides.length) return;
 currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-updateSlideDisplay();
-saveSlidesToStorage();
-startSlideshow();
+updateSlideDisplay(); saveSlides(); startSlideshow();
 } else if(e.target.closest('#delete-slide')) {
 if(!slides.length) return;
 slides.splice(currentSlide, 1);
 if(currentSlide >= slides.length) currentSlide = Math.max(0, slides.length-1);
 updateSlideDisplay();
-const countEl = document.getElementById('image-count');
-if(countEl) countEl.textContent = slides.length + ' Bilder';
-saveSlidesToStorage();
-startSlideshow();
+document.getElementById('image-count') && (document.getElementById('image-count').textContent = slides.length + ' Bilder');
+saveSlides(); startSlideshow();
 if (localStorage.getItem('bgMode') === 'slideshow') applyBackground();
 }
 });
@@ -759,23 +721,19 @@ function updateBgModeUI(mode) {
 document.getElementById('bg-color-container').style.display = mode === 'color' ? 'block' : 'none';
 document.getElementById('bg-url-container').style.display = mode === 'url' ? 'block' : 'none';
 document.getElementById('bg-upload-container').style.display = mode === 'upload' ? 'block' : 'none';
-if (mode === 'color') document.getElementById('bg-color').value = localStorage.getItem('bgColor') || '#e0e7ff';
-if (mode === 'url') document.getElementById('bg-url').value = localStorage.getItem('bgUrl') || '';
 }
 
 function loadSettings() {
-const savedTheme = localStorage.getItem('theme') || 'default';
-applyTheme(savedTheme);
-document.getElementById('theme-select').value = savedTheme;
+applyTheme(localStorage.getItem('theme') || 'default');
+document.getElementById('theme-select').value = localStorage.getItem('theme') || 'default';
 
 const bgMode = localStorage.getItem('bgMode') || 'theme';
 document.getElementById('bg-mode').value = bgMode;
 updateBgModeUI(bgMode);
 applyBackground();
 
-const transp = localStorage.getItem('transparent') || 'off';
-document.getElementById('transparency-toggle').value = transp;
-document.body.classList.toggle('transparent-tiles', transp === 'on');
+document.getElementById('transparency-toggle').value = localStorage.getItem('transparent') || 'off';
+document.body.classList.toggle('transparent-tiles', localStorage.getItem('transparent') === 'on');
 
 document.getElementById('font-color').value = localStorage.getItem('fontColor') || '#1e293b';
 document.documentElement.style.setProperty('--text-color', localStorage.getItem('fontColor') || '#1e293b');
@@ -801,6 +759,13 @@ document.documentElement.style.setProperty('--tile-border-radius', (localStorage
 slideInterval = parseInt(localStorage.getItem('slideInterval') || 10);
 document.getElementById('interval-select').value = slideInterval;
 startSlideshow();
+
+// Kalender-URL wiederherstellen
+const savedIcalUrl = localStorage.getItem('icalUrl');
+if (savedIcalUrl) {
+document.getElementById('ical-url').value = savedIcalUrl;
+loadCalendar(savedIcalUrl);
+}
 }
 
 // Settings-Event-Listener
@@ -830,9 +795,8 @@ if (localStorage.getItem('bgMode') === 'upload') applyBackground();
 };
 reader.readAsDataURL(file);
 });
-document.getElementById('bg-upload-trigger').addEventListener('click', function() {
-document.getElementById('bg-upload').click();
-});
+document.getElementById('bg-upload-trigger').addEventListener('click', () => document.getElementById('bg-upload').click());
+
 document.getElementById('transparency-toggle').addEventListener('change', e => {
 document.body.classList.toggle('transparent-tiles', e.target.value === 'on');
 localStorage.setItem('transparent', e.target.value);
@@ -846,9 +810,8 @@ document.documentElement.style.setProperty('--font-family', e.target.value);
 localStorage.setItem('fontFamily', e.target.value);
 });
 document.getElementById('3d-mode').addEventListener('change', function(e) {
-const mode = e.target.value;
-localStorage.setItem('3dMode', mode);
-apply3DEffect(mode, document.getElementById('3d-strength').value);
+localStorage.setItem('3dMode', e.target.value);
+apply3DEffect(e.target.value, document.getElementById('3d-strength').value);
 });
 document.getElementById('3d-strength').addEventListener('input', function(e) {
 localStorage.setItem('3dStrength', e.target.value);
@@ -871,10 +834,19 @@ slideInterval = parseInt(e.target.value);
 localStorage.setItem('slideInterval', slideInterval);
 startSlideshow();
 });
+document.getElementById('load-ical-settings').addEventListener('click', function() {
+const url = document.getElementById('ical-url').value.trim();
+if (url) {
+localStorage.setItem('icalUrl', url);
+loadCalendar(url);
+} else {
+alert('Bitte geben Sie eine iCal-URL ein.');
+}
+});
 
 // ---------- INIT ----------
 createTiles();
-loadSlidesFromStorage();
+loadSlides();
 loadSettings();
 updateWeather();
 renderCalendar();
@@ -887,3 +859,4 @@ fetchWeather(pos.coords.latitude, pos.coords.longitude).then(data => { if(data) 
 </script>
 </body>
 </html>
+```
