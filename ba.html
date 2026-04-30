@@ -42,8 +42,17 @@
             background: rgba(0,0,0,var(--tile-opacity));
             border:none; overflow:hidden;
             touch-action: none; display: flex; flex-direction: column;
+            /* Kein Verschiebe-Cursor im Normalmodus */
+            cursor: default;
         }
-        .tile-content { flex:1; overflow-y:auto; }
+        .tile-content { flex:1; overflow-y:auto; cursor: default; }
+
+        /* Ziehgriffe standardmäßig ausgeblendet – erscheinen nur im Einstellungsmodus */
+        .resize-handle-edge, .resize-handle-corner { display: none; }
+        #dashboard[data-settings-visible="true"] .resize-handle-edge,
+        #dashboard[data-settings-visible="true"] .resize-handle-corner { display: block; }
+
+        /* Wetter */
         #weather { z-index:10; height: var(--weather-height); }
         #weather .tile-content {
             padding:12px; text-shadow:0 1px 4px rgba(0,0,0,0.7);
@@ -144,7 +153,7 @@
 <body>
 <div id="dashboard"><div id="gradient-overlay"></div></div>
 
-<!-- Panels (versteckt) -->
+<!-- Einstellungs-Panels (versteckt) -->
 <div class="panel" id="anim-panel" style="top:50px; right:10px; width:200px;">
     <label>Animation</label>
     <select id="anim-select">
@@ -190,20 +199,28 @@
     };
 
     let settingsVisible = false;
+    const dashboard = document.getElementById('dashboard');
 
     function showSettings() {
         settingsVisible = true;
+        dashboard.setAttribute('data-settings-visible', 'true');
         document.querySelectorAll('.panel-btn').forEach(b => b.style.display = 'flex');
         document.getElementById('weather-height-container').style.display = 'flex';
+        // Verschieben & Größe ändern aktivieren
+        interact('.tile').draggable({ enabled: true }).resizable({ enabled: true });
     }
+
     function hideSettings() {
         settingsVisible = false;
+        dashboard.removeAttribute('data-settings-visible');
         document.querySelectorAll('.panel-btn').forEach(b => b.style.display = 'none');
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
         document.getElementById('weather-height-container').style.display = 'none';
+        // Verschieben & Größe ändern deaktivieren → kein Cursor
+        interact('.tile').draggable({ enabled: false }).resizable({ enabled: false });
     }
 
-    // Doppelklick irgendwo öffnet/schließt die Einstellungen
+    // Doppelklick öffnet/schließt Einstellungen
     document.addEventListener('dblclick', function(e) {
         if (settingsVisible) {
             hideSettings();
@@ -212,7 +229,7 @@
         }
     });
 
-    // Einfacher Klick schließt die Einstellungen, wenn nicht auf ein Bedienelement geklickt wurde
+    // Einfacher Klick schließt Einstellungen, wenn nicht auf Bedienelement
     document.addEventListener('click', function(e) {
         if (!settingsVisible) return;
         if (!e.target.closest('.panel-btn') && !e.target.closest('.panel') && !e.target.closest('#weather-height-container')) {
@@ -221,15 +238,23 @@
     });
 
     function createTiles() {
-        const dash = document.getElementById('dashboard');
-        dash.querySelectorAll('.tile').forEach(t => t.remove());
+        dashboard.querySelectorAll('.tile').forEach(t => t.remove());
         for (const [id, dim] of Object.entries(layout)) {
             const tile = document.createElement('div');
             tile.className = 'tile'; tile.id = id;
             tile.style.left = dim.x + 'px'; tile.style.top = dim.y + 'px';
             tile.style.width = dim.w + 'px'; tile.style.height = dim.h + 'px';
-            tile.innerHTML = `<div class="tile-content"></div>`;
-            dash.appendChild(tile);
+            tile.innerHTML = `<div class="tile-content"></div>` +
+                // Ziehgriffe (bleiben im HTML, werden per CSS ein-/ausgeblendet)
+                `<div class="resize-handle-edge top"></div>
+                 <div class="resize-handle-edge bottom"></div>
+                 <div class="resize-handle-edge left"></div>
+                 <div class="resize-handle-edge right"></div>
+                 <div class="resize-handle-corner tl"></div>
+                 <div class="resize-handle-corner tr"></div>
+                 <div class="resize-handle-corner bl"></div>
+                 <div class="resize-handle-corner br"></div>`;
+            dashboard.appendChild(tile);
             fillTile(id, tile);
         }
         initInteract();
@@ -283,57 +308,62 @@
     }
 
     function initInteract() {
-        interact('.tile').draggable({
-            allowFrom: '.tile-content',
-            modifiers: [interact.modifiers.restrict({ restriction: 'parent', endOnly: true })],
-            listeners: {
-                move(e) {
-                    const t = e.target;
-                    const x = (parseFloat(t.getAttribute('data-x'))||0) + e.dx;
-                    const y = (parseFloat(t.getAttribute('data-y'))||0) + e.dy;
-                    t.style.transform = `translate(${x}px,${y}px)`;
-                    t.setAttribute('data-x', x); t.setAttribute('data-y', y);
-                },
-                end(e) {
-                    const t = e.target;
-                    const x = parseFloat(t.getAttribute('data-x'))||0;
-                    const y = parseFloat(t.getAttribute('data-y'))||0;
-                    t.style.transform = '';
-                    t.style.left = (parseFloat(t.style.left)+x)+'px';
-                    t.style.top = (parseFloat(t.style.top)+y)+'px';
-                    t.setAttribute('data-x',0); t.setAttribute('data-y',0);
-                    saveLayout();
+        // Interact initialisieren, aber standardmäßig deaktiviert (wird per showSettings() aktiviert)
+        interact('.tile')
+            .draggable({
+                enabled: false,
+                allowFrom: '.tile-content',
+                modifiers: [interact.modifiers.restrict({ restriction: 'parent', endOnly: true })],
+                listeners: {
+                    move(e) {
+                        const t = e.target;
+                        const x = (parseFloat(t.getAttribute('data-x'))||0) + e.dx;
+                        const y = (parseFloat(t.getAttribute('data-y'))||0) + e.dy;
+                        t.style.transform = `translate(${x}px,${y}px)`;
+                        t.setAttribute('data-x', x); t.setAttribute('data-y', y);
+                    },
+                    end(e) {
+                        const t = e.target;
+                        const x = parseFloat(t.getAttribute('data-x'))||0;
+                        const y = parseFloat(t.getAttribute('data-y'))||0;
+                        t.style.transform = '';
+                        t.style.left = (parseFloat(t.style.left)+x)+'px';
+                        t.style.top = (parseFloat(t.style.top)+y)+'px';
+                        t.setAttribute('data-x',0); t.setAttribute('data-y',0);
+                        saveLayout();
+                    }
                 }
-            }
-        }).resizable({
-            edges: { top:true, bottom:true, left:true, right:true },
-            modifiers: [
-                interact.modifiers.restrict({ restriction: 'parent', endOnly: true }),
-                interact.modifiers.restrictSize({ min: { width:80, height:80 } })
-            ],
-            listeners: {
-                move(e) {
-                    const t = e.target;
-                    let x = (parseFloat(t.getAttribute('data-x'))||0);
-                    let y = (parseFloat(t.getAttribute('data-y'))||0);
-                    t.style.width = e.rect.width + 'px';
-                    t.style.height = e.rect.height + 'px';
-                    x += e.deltaRect.left; y += e.deltaRect.top;
-                    t.style.transform = `translate(${x}px,${y}px)`;
-                    t.setAttribute('data-x', x); t.setAttribute('data-y', y);
-                },
-                end(e) {
-                    const t = e.target;
-                    const x = parseFloat(t.getAttribute('data-x'))||0;
-                    const y = parseFloat(t.getAttribute('data-y'))||0;
-                    t.style.transform = '';
-                    t.style.left = (parseFloat(t.style.left)+x)+'px';
-                    t.style.top = (parseFloat(t.style.top)+y)+'px';
-                    t.setAttribute('data-x',0); t.setAttribute('data-y',0);
-                    saveLayout();
+            })
+            .resizable({
+                enabled: false,
+                edges: { top:true, bottom:true, left:true, right:true },
+                modifiers: [
+                    interact.modifiers.restrict({ restriction: 'parent', endOnly: true }),
+                    interact.modifiers.restrictSize({ min: { width:80, height:80 } })
+                ],
+                listeners: {
+                    move(e) {
+                        const t = e.target;
+                        let x = (parseFloat(t.getAttribute('data-x'))||0);
+                        let y = (parseFloat(t.getAttribute('data-y'))||0);
+                        t.style.width = e.rect.width + 'px';
+                        t.style.height = e.rect.height + 'px';
+                        x += e.deltaRect.left; y += e.deltaRect.top;
+                        t.style.transform = `translate(${x}px,${y}px)`;
+                        t.setAttribute('data-x', x); t.setAttribute('data-y', y);
+                    },
+                    end(e) {
+                        const t = e.target;
+                        const x = parseFloat(t.getAttribute('data-x'))||0;
+                        const y = parseFloat(t.getAttribute('data-y'))||0;
+                        t.style.transform = '';
+                        t.style.left = (parseFloat(t.style.left)+x)+'px';
+                        t.style.top = (parseFloat(t.style.top)+y)+'px';
+                        t.setAttribute('data-x',0); t.setAttribute('data-y',0);
+                        saveLayout();
+                    }
                 }
-            }
-        });
+            });
     }
 
     function saveLayout() {
@@ -658,7 +688,7 @@
         renderCalendar();
         setInterval(updateWeather, 900000);
         startSS();
-        // Einstellungen anfangs ausgeblendet
+        // Einstellungen aus, keine Cursor
         hideSettings();
     }
     init();
