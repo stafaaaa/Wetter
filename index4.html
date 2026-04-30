@@ -207,6 +207,55 @@ body {
   font-size: 0.75rem;
 }
 
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 4px;
+}
+.cal-nav-btn {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: var(--text-color);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+  transition: background 0.15s;
+}
+.cal-nav-btn:hover, .cal-nav-btn:active {
+  background: rgba(255,255,255,0.3);
+}
+.cal-today-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0 12px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  touch-action: manipulation;
+  transition: opacity 0.15s;
+}
+.cal-today-btn:hover, .cal-today-btn:active {
+  opacity: 0.85;
+}
+#cal-title {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-shadow: var(--text-shadow);
+}
 .calendar-grid { 
   display: grid; 
   grid-template-columns: repeat(7, 1fr); 
@@ -919,7 +968,16 @@ function fillTileContent(id, tile) {
       break;
     case 'calendar':
       header.innerHTML = '<i class="fas fa-calendar"></i> Termine';
-      content.innerHTML = `<div class="calendar-grid" id="calendar-grid"></div><div class="event-details" id="event-details"></div>`;
+      content.innerHTML = `
+        <div class="calendar-nav">
+          <button id="cal-prev" class="cal-nav-btn"><i class="fas fa-chevron-left"></i></button>
+          <span id="cal-title">Monat</span>
+          <button id="cal-today" class="cal-today-btn">Heute</button>
+          <button id="cal-next" class="cal-nav-btn"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="calendar-grid" id="calendar-grid"></div>
+        <div class="event-details" id="event-details"></div>
+      `;
       break;
     case 'slideshow':
       header.innerHTML = '<i class="fas fa-images"></i> Slideshow';
@@ -1100,6 +1158,9 @@ function assignEventColor(index) {
   return palette[index % palette.length];
 }
 
+// Aktueller Anzeigemonat (kann von "heute" abweichen wenn User navigiert)
+let calendarViewDate = new Date();
+
 function renderCalendar() {
   const grid = document.getElementById('calendar-grid');
   if(!grid) return;
@@ -1110,13 +1171,21 @@ function renderCalendar() {
     div.textContent = d;
     grid.appendChild(div);
   });
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
+  
+  const today = new Date();
+  const year = calendarViewDate.getFullYear();
+  const month = calendarViewDate.getMonth();
+  
+  // Monat-Titel aktualisieren
+  const monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  const titleEl = document.getElementById('cal-title');
+  if (titleEl) titleEl.textContent = `${monthNames[month]} ${year}`;
+  
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month+1, 0).getDate();
   const offset = (firstDay + 6) % 7;
   for(let i=0; i<offset; i++) grid.appendChild(document.createElement('div'));
+  
   for(let d=1; d<=daysInMonth; d++) {
     const dayDiv = document.createElement('div');
     dayDiv.className = 'day';
@@ -1139,12 +1208,33 @@ function renderCalendar() {
         }
       });
     }
-    if(d === now.getDate() && month === now.getMonth() && year === now.getFullYear()) {
+    // "Heute"-Highlight nur wenn aktueller Monat angezeigt wird
+    if(d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
       dayDiv.classList.add('today');
     }
     grid.appendChild(dayDiv);
   }
 }
+
+// Event-Listener für Kalender-Navigation (per Event-Delegation)
+document.addEventListener('click', function(e) {
+  if (e.target.closest('#cal-prev')) {
+    calendarViewDate.setMonth(calendarViewDate.getMonth() - 1);
+    renderCalendar();
+    const details = document.getElementById('event-details');
+    if (details) details.style.display = 'none';
+  } else if (e.target.closest('#cal-next')) {
+    calendarViewDate.setMonth(calendarViewDate.getMonth() + 1);
+    renderCalendar();
+    const details = document.getElementById('event-details');
+    if (details) details.style.display = 'none';
+  } else if (e.target.closest('#cal-today')) {
+    calendarViewDate = new Date();
+    renderCalendar();
+    const details = document.getElementById('event-details');
+    if (details) details.style.display = 'none';
+  }
+});
 
 // CORS-Proxies (mehrere als Fallback)
 const CORS_PROXIES = [
