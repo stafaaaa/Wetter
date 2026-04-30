@@ -25,6 +25,11 @@
   --icon-transform: none;
   --slide-anim: fade;
   --slide-duration: 1s;
+  --slide-fit: contain;
+  --tile-transform: none;
+  --text-shadow: none;
+  --icon-transform: none;
+  --effect-strength: 2;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -54,7 +59,7 @@ body {
   box-shadow: var(--tile-shadow);
   display: flex;
   flex-direction: column;
-  transition: box-shadow 0.3s, opacity 0.3s;
+  transition: box-shadow 0.3s, opacity 0.3s, transform 0.3s;
   transform: var(--tile-transform);
   min-width: 80px;
   min-height: 80px;
@@ -102,6 +107,8 @@ body {
   height: 100%; font-size: 2rem; cursor: pointer;
   color: var(--text-color);
   transform: var(--icon-transform);
+  text-shadow: var(--text-shadow);
+  transition: transform 0.3s;
 }
 
 .weather-now .temp { font-size: 3rem; font-weight: 700; }
@@ -139,7 +146,7 @@ body {
   position: absolute;
   top: 0; left: 0;
   width:100%; height:100%;
-  object-fit:contain;
+  object-fit: var(--slide-fit);
   opacity: 0;
   transition: all var(--slide-duration) ease-in-out;
 }
@@ -334,6 +341,22 @@ input[type="file"] { display:none; }
     <option value="'Times New Roman', serif">Times New Roman</option>
   </select>
   
+  <label>3D-Effekt</label>
+  <select id="3d-mode">
+    <option value="none">Keiner</option>
+    <option value="perspective">Perspektivisch</option>
+    <option value="shadow3d">Schatten 3D</option>
+    <option value="floating">Schwebend</option>
+    <option value="skew">Gekippt</option>
+    <option value="glow">Glühend 3D</option>
+  </select>
+  
+  <label>3D-Stärke (0-10)</label>
+  <div class="range-row">
+    <input type="range" id="3d-strength" min="0" max="10" value="2" step="0.5">
+    <span id="3d-strength-value">2</span>
+  </div>
+  
   <label>Kachel Hintergrundfarbe</label>
   <input type="color" id="tile-bg-color" value="#ffffff">
   
@@ -358,6 +381,12 @@ input[type="file"] { display:none; }
     <option value="split">Vertikales Teilen</option>
     <option value="circle-reveal">Kreis öffnet sich</option>
     <option value="slide-diagonal">Diagonal schieben</option>
+  </select>
+  
+  <label>Bilder anzeigen</label>
+  <select id="slide-fit">
+    <option value="contain">Komplett zeigen (mit Rändern)</option>
+    <option value="cover">Zugeschnitten (füllt aus)</option>
   </select>
   
   <label>Wechselzeit (Sekunden)</label>
@@ -401,6 +430,46 @@ function applyTheme(name) {
   if (!theme) return;
   Object.entries(theme).forEach(([prop, val]) => document.documentElement.style.setProperty(prop, val));
   localStorage.setItem('theme', name);
+}
+
+function apply3DEffect(mode, strength) {
+  const root = document.documentElement;
+  const s = parseFloat(strength) || 0;
+  switch(mode) {
+    case 'perspective':
+      root.style.setProperty('--tile-transform', `perspective(800px) rotateX(${s*1.5}deg) rotateY(${s}deg)`);
+      root.style.setProperty('--text-shadow', `${s*0.5}px ${s*0.5}px 2px rgba(0,0,0,0.2)`);
+      root.style.setProperty('--icon-transform', `rotateY(${s}deg) rotateX(${s*0.5}deg)`);
+      break;
+    case 'shadow3d':
+      root.style.setProperty('--tile-transform', `translateZ(0)`);
+      root.style.setProperty('--tile-shadow', `${s*2}px ${s*2}px ${s*4}px rgba(0,0,0,0.3), ${-s}px ${-s}px ${s*2}px rgba(255,255,255,0.2) inset`);
+      root.style.setProperty('--text-shadow', `${s}px ${s}px 0 rgba(0,0,0,0.3)`);
+      root.style.setProperty('--icon-transform', `scale(1.05)`);
+      break;
+    case 'floating':
+      root.style.setProperty('--tile-transform', `translateY(${-s*1.5}px) scale(${1 + s*0.01})`);
+      root.style.setProperty('--tile-shadow', `0 ${s*4}px ${s*6}px rgba(0,0,0,0.2)`);
+      root.style.setProperty('--text-shadow', `0 ${s}px ${s}px rgba(0,0,0,0.15)`);
+      root.style.setProperty('--icon-transform', `translateY(${-s*0.8}px)`);
+      break;
+    case 'skew':
+      root.style.setProperty('--tile-transform', `skewX(${s*0.8}deg) skewY(${s*0.2}deg)`);
+      root.style.setProperty('--text-shadow', `${s*0.3}px ${s*0.3}px 1px rgba(0,0,0,0.2)`);
+      root.style.setProperty('--icon-transform', `skewX(${-s*0.8}deg)`);
+      break;
+    case 'glow':
+      root.style.setProperty('--tile-transform', `perspective(600px) rotateY(${s*0.5}deg)`);
+      root.style.setProperty('--tile-shadow', `0 0 ${s*5}px rgba(255,255,255,0.4), 0 0 ${s*10}px var(--accent)`);
+      root.style.setProperty('--text-shadow', `0 0 ${s*2}px var(--accent)`);
+      root.style.setProperty('--icon-transform', `scale(1.1) rotateZ(${s}deg)`);
+      break;
+    default:
+      root.style.setProperty('--tile-transform', 'none');
+      root.style.setProperty('--tile-shadow', '0 8px 32px rgba(0,0,0,0.1)');
+      root.style.setProperty('--text-shadow', 'none');
+      root.style.setProperty('--icon-transform', 'none');
+  }
 }
 
 const defaultLayout = [
@@ -986,9 +1055,21 @@ function loadSettings() {
   document.getElementById('border-radius').value = localStorage.getItem('borderRadius') || 24;
   document.documentElement.style.setProperty('--tile-border-radius', (localStorage.getItem('borderRadius') || 24) + 'px');
   
+  // 3D-Effekt
+  const d3dMode = localStorage.getItem('3dMode') || 'none';
+  document.getElementById('3d-mode').value = d3dMode;
+  const d3dStrength = parseFloat(localStorage.getItem('3dStrength') || 2);
+  document.getElementById('3d-strength').value = d3dStrength;
+  document.getElementById('3d-strength-value').textContent = d3dStrength;
+  apply3DEffect(d3dMode, d3dStrength);
+  
   // Slideshow
   slideAnimType = localStorage.getItem('slideAnimation') || 'fade';
   document.getElementById('slide-animation').value = slideAnimType;
+  
+  const slideFit = localStorage.getItem('slideFit') || 'contain';
+  document.getElementById('slide-fit').value = slideFit;
+  document.documentElement.style.setProperty('--slide-fit', slideFit);
   
   slideInterval = parseInt(localStorage.getItem('slideInterval') || 10);
   document.getElementById('interval-input').value = slideInterval;
@@ -1071,6 +1152,22 @@ document.getElementById('border-width').addEventListener('input', e => {
 document.getElementById('border-radius').addEventListener('input', e => {
   document.documentElement.style.setProperty('--tile-border-radius', e.target.value + 'px');
   localStorage.setItem('borderRadius', e.target.value);
+});
+
+document.getElementById('3d-mode').addEventListener('change', function(e) {
+  localStorage.setItem('3dMode', e.target.value);
+  apply3DEffect(e.target.value, document.getElementById('3d-strength').value);
+});
+
+document.getElementById('3d-strength').addEventListener('input', function(e) {
+  localStorage.setItem('3dStrength', e.target.value);
+  document.getElementById('3d-strength-value').textContent = e.target.value;
+  apply3DEffect(document.getElementById('3d-mode').value, e.target.value);
+});
+
+document.getElementById('slide-fit').addEventListener('change', e => {
+  document.documentElement.style.setProperty('--slide-fit', e.target.value);
+  localStorage.setItem('slideFit', e.target.value);
 });
 
 document.getElementById('slide-animation').addEventListener('change', e => {
