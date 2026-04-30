@@ -5,10 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>Glass Dashboard · Icons & 5 3D-Effekte</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js">
-</script>
-<script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js">
-</script>
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
 <style>
 :root {
 --bg-image: none;
@@ -209,7 +207,11 @@ border:none; color:white; font-size:1.5rem; cursor:pointer;
 </select>
 <div id="bg-color-container" style="display:none;"><label>Hintergrundfarbe</label><input type="color" id="bg-color" value="#e0e7ff"></div>
 <div id="bg-url-container" style="display:none;"><label>Bild-URL</label><input type="text" id="bg-url" placeholder="https://..."></div>
-<div id="bg-upload-container" style="display:none;"><label>Hintergrundbild hochladen</label><input type="file" id="bg-upload" accept="image/*"></div>
+<div id="bg-upload-container" style="display:none;">
+<label>Hintergrundbild hochladen</label>
+<input type="file" id="bg-upload" accept="image/*">
+<button id="bg-upload-trigger" class="upload-btn" style="width:100%;">Bild auswählen</button>
+</div>
 <label>Transparente Kacheln</label>
 <select id="transparency-toggle"><option value="off">Aus (glasig)</option><option value="on">An (durchsichtig)</option></select>
 <label>Schriftfarbe</label><input type="color" id="font-color" value="#1e293b">
@@ -603,7 +605,6 @@ color: assignEventColor(i)
 };
 });
 renderCalendar();
-console.log('Kalender erfolgreich geladen:', calendarEvents.length, 'Ereignisse');
 } catch(parseError) {
 console.error('ICAL Parse Fehler:', parseError);
 alert('Fehler beim Verarbeiten der Kalenderdaten. Bitte prüfe die URL.');
@@ -633,9 +634,7 @@ function saveSlidesToStorage() {
 try {
 localStorage.setItem('slideshowImages', JSON.stringify(slides));
 localStorage.setItem('slideshowIndex', currentSlide);
-} catch(e) {
-console.warn('Slideshow konnte nicht vollständig gespeichert werden (zu viele/große Bilder).');
-}
+} catch(e) {}
 }
 
 function loadSlidesFromStorage() {
@@ -649,18 +648,16 @@ updateSlideDisplay();
 const countEl = document.getElementById('image-count');
 if(countEl) countEl.textContent = slides.length + ' Bilder';
 }
-} catch(e) {
-console.warn('Slideshow-Daten konnten nicht geladen werden.');
-}
+} catch(e) {}
 }
 
 function applyBackground() {
 const mode = localStorage.getItem('bgMode') || 'theme';
 const root = document.documentElement;
+document.body.style.background = ''; // Inline-Styles entfernen
 switch(mode) {
 case 'theme':
 root.style.setProperty('--bg-image', 'none');
-document.body.style.background = '';
 break;
 case 'color':
 root.style.setProperty('--bg-image', 'none');
@@ -669,15 +666,12 @@ break;
 case 'url':
 const url = localStorage.getItem('bgUrl') || '';
 root.style.setProperty('--bg-image', url ? `url(${url})` : 'none');
-document.body.style.background = '';
 break;
 case 'upload':
 const upload = localStorage.getItem('bgUpload') || '';
 root.style.setProperty('--bg-image', upload ? `url(${upload})` : 'none');
-document.body.style.background = '';
 break;
 case 'slideshow':
-document.body.style.background = '';
 if (slides.length > 0 && slides[currentSlide]) {
 root.style.setProperty('--bg-image', `url(${slides[currentSlide]})`);
 } else {
@@ -761,6 +755,14 @@ if (localStorage.getItem('bgMode') === 'slideshow') applyBackground();
 });
 
 // ---------- SETTINGS ----------
+function updateBgModeUI(mode) {
+document.getElementById('bg-color-container').style.display = mode === 'color' ? 'block' : 'none';
+document.getElementById('bg-url-container').style.display = mode === 'url' ? 'block' : 'none';
+document.getElementById('bg-upload-container').style.display = mode === 'upload' ? 'block' : 'none';
+if (mode === 'color') document.getElementById('bg-color').value = localStorage.getItem('bgColor') || '#e0e7ff';
+if (mode === 'url') document.getElementById('bg-url').value = localStorage.getItem('bgUrl') || '';
+}
+
 function loadSettings() {
 const savedTheme = localStorage.getItem('theme') || 'default';
 applyTheme(savedTheme);
@@ -801,14 +803,7 @@ document.getElementById('interval-select').value = slideInterval;
 startSlideshow();
 }
 
-function updateBgModeUI(mode) {
-document.getElementById('bg-color-container').style.display = mode === 'color' ? 'block' : 'none';
-document.getElementById('bg-url-container').style.display = mode === 'url' ? 'block' : 'none';
-document.getElementById('bg-upload-container').style.display = mode === 'upload' ? 'block' : 'none';
-if (mode === 'color') document.getElementById('bg-color').value = localStorage.getItem('bgColor') || '#e0e7ff';
-if (mode === 'url') document.getElementById('bg-url').value = localStorage.getItem('bgUrl') || '';
-}
-
+// Settings-Event-Listener
 document.getElementById('close-settings').addEventListener('click', () => document.getElementById('settings-panel').classList.remove('open'));
 document.getElementById('theme-select').addEventListener('change', e => applyTheme(e.target.value));
 document.getElementById('bg-mode').addEventListener('change', function(e) {
@@ -834,6 +829,9 @@ localStorage.setItem('bgUpload', ev.target.result);
 if (localStorage.getItem('bgMode') === 'upload') applyBackground();
 };
 reader.readAsDataURL(file);
+});
+document.getElementById('bg-upload-trigger').addEventListener('click', function() {
+document.getElementById('bg-upload').click();
 });
 document.getElementById('transparency-toggle').addEventListener('change', e => {
 document.body.classList.toggle('transparent-tiles', e.target.value === 'on');
@@ -889,4 +887,3 @@ fetchWeather(pos.coords.latitude, pos.coords.longitude).then(data => { if(data) 
 </script>
 </body>
 </html>
-```
