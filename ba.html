@@ -1,679 +1,571 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard – Kitchen Wall</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Kitchen Wall Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
     <style>
         :root {
-            --bg-image: none;
-            --bg-gradient: #000000;
-            --tile-bg: rgba(0,0,0,0.85);
-            --tile-opacity: 1;
-            --tile-border-width: 0px;
-            --tile-border-radius: 0px;
-            --tile-shadow: none;
-            --text-color: #ffffff;
+            --bg: #000;
+            --text: #fff;
             --accent: #E94545;
-            --font-family: 'Segoe UI', system-ui, sans-serif;
-            --backdrop: blur(0px);
-            --tile-transform: none;
-            --text-shadow: none;
-            --icon-transform: none;
-            --slide-anim: fade;
             --slide-duration: 1s;
-            --slide-fit: cover;
-            --tile-transform: none;
-            --text-shadow: none;
-            --icon-transform: none;
-            --effect-strength: 2;
+            --gradient-width: 0.05;
+            --gradient-opacity: 0.8;
+            --weather-height: 42vh;
         }
-
         * { margin:0; padding:0; box-sizing:border-box; }
-
         body {
-            font-family: var(--font-family);
-            background: var(--bg-gradient);
-            background-image: var(--bg-image);
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: var(--text-color);
-            height: 100vh;
-            overflow: hidden;
-            transition: background-image 0.4s ease-out;
-            -webkit-font-smoothing: antialiased;
-            -webkit-tap-highlight-color: transparent;
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh; overflow: hidden;
         }
-
-        * { -webkit-tap-highlight-color: transparent; }
-
-        #dashboard { width: 100%; height: 100vh; position: relative; overflow: hidden; }
-
+        #dashboard { width:100%; height:100vh; position:relative; overflow:hidden; }
+        #gradient-overlay {
+            position: absolute; top:0; left: calc(38% - var(--gradient-width)*100%); width: calc(var(--gradient-width)*100%); height:100%;
+            background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,var(--gradient-opacity)) 60%, rgba(0,0,0,1) 100%);
+            z-index:5; pointer-events:none; transition: left 0.3s, width 0.3s;
+        }
         .tile {
-            position: absolute;
-            touch-action: none;
-            will-change: transform;
-            background: var(--tile-bg);
-            opacity: var(--tile-opacity);
-            backdrop-filter: var(--backdrop);
-            -webkit-backdrop-filter: var(--backdrop);
-            border: var(--tile-border-width) solid rgba(255,255,255,0.1);
-            border-radius: var(--tile-border-radius);
-            box-shadow: var(--tile-shadow);
-            display: flex;
-            flex-direction: column;
-            transition: box-shadow 0.2s ease-out;
-            transform: var(--tile-transform);
-            min-width: 80px;
-            min-height: 80px;
-            z-index: 1;
-            overflow: hidden;
+            position: absolute; background: rgba(0,0,0,0.85); border:none; overflow:hidden;
+            touch-action: none; display: flex; flex-direction: column;
         }
-
-        .tile.dragging, .tile.resizing {
-            box-shadow: 0 20px 50px rgba(0,0,0,0.4) !important;
-            z-index: 100;
+        .tile-content { flex:1; overflow-y:auto; }
+        /* Wetter */
+        #weather { z-index:10; height: var(--weather-height); }
+        #weather .tile-content {
+            padding:12px; text-shadow:0 1px 4px rgba(0,0,0,0.7);
+            display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-end; text-align:right;
         }
-
-        .tile-header {
-            padding: 8px 14px;
-            cursor: grab;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: none;
-            font-weight: 600;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            background: rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-shadow: var(--text-shadow);
+        .weather-now .temp { font-size: clamp(2rem, 5cqw, 4rem); font-weight:300; line-height:1; }
+        .weather-now .details { font-size:0.8rem; opacity:0.9; }
+        .forecast-row { display:flex; gap:6px; margin-top:8px; justify-content:flex-end; flex-wrap:wrap; }
+        .forecast-day {
+            background: rgba(255,255,255,0.15); border-radius:12px; padding:4px 6px;
+            text-align:center; font-size:0.7rem; min-width:48px;
         }
-
-        .tile-content {
-            flex: 1;
-            padding: 12px;
-            overflow-y: auto;
-            overflow-x: hidden;
-            container-type: inline-size;
+        .forecast-day.active { background: var(--accent); color:white; }
+        .location-bar {
+            position:absolute; bottom:2px; left:12px; right:12px; display:flex; gap:4px;
+            align-items:center; font-size:0.7rem; opacity:0.8;
         }
-
-        .resize-handle-edge {
-            position: absolute;
-            touch-action: none;
-            z-index: 5;
+        .location-bar input {
+            background: rgba(255,255,255,0.15); border:none; color:white; padding:2px 6px;
+            border-radius:4px; width:100px; font-size:0.7rem;
         }
-        .resize-handle-edge.top { top: 0; left: 20px; right: 20px; height: 8px; cursor: ns-resize; }
-        .resize-handle-edge.bottom { bottom: 0; left: 20px; right: 20px; height: 8px; cursor: ns-resize; }
-        .resize-handle-edge.left { left: 0; top: 20px; bottom: 20px; width: 8px; cursor: ew-resize; }
-        .resize-handle-edge.right { right: 0; top: 20px; bottom: 20px; width: 8px; cursor: ew-resize; }
-        .resize-handle-corner {
-            position: absolute;
-            width: 20px; height: 20px;
-            touch-action: none;
-            z-index: 6;
-        }
-        .resize-handle-corner.tl { top: 0; left: 0; cursor: nwse-resize; }
-        .resize-handle-corner.tr { top: 0; right: 0; cursor: nesw-resize; }
-        .resize-handle-corner.bl { bottom: 0; left: 0; cursor: nesw-resize; }
-        .resize-handle-corner.br {
-            bottom: 0; right: 0;
-            cursor: nwse-resize;
-            background: linear-gradient(135deg, transparent 60%, rgba(255,255,255,0.1) 60%);
-            border-radius: 0 0 var(--tile-border-radius) 0;
-            width: 32px; height: 32px;
-        }
-
-        /* Wetter im Kitchen‑Stil */
-        body[data-theme="kitchen"] #weather {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            z-index: 10 !important;
-        }
-        body[data-theme="kitchen"] #weather .tile-header { display: none; }
-        body[data-theme="kitchen"] #weather .tile-content {
-            padding: 12px;
-            text-shadow: 0 1px 4px rgba(0,0,0,0.7);
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: flex-end;
-            text-align: right;
-        }
-        body[data-theme="kitchen"] #weather .temp {
-            font-size: clamp(2rem, 5cqw, 4rem);
-            font-weight: 300;
-            line-height: 1;
-        }
-        body[data-theme="kitchen"] #weather .details {
-            font-size: 0.8rem;
-            opacity: 0.9;
-        }
-
-        /* Kalender im Kitchen‑Stil */
-        body[data-theme="kitchen"] #calendar {
-            background: #000 !important;
-            border: none !important;
-            box-shadow: none !important;
-        }
-        body[data-theme="kitchen"] #calendar .tile-header { display: none; }
-        body[data-theme="kitchen"] #calendar .tile-content {
-            padding: 12px 16px;
-        }
-        /* Kalender‑Navigation wird ausgeblendet (entspricht dem Bild) */
-        body[data-theme="kitchen"] #calendar .calendar-nav { display: none; }
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 2px;
-            text-align: center;
-            font-size: clamp(0.8rem, 1.6cqw, 1.1rem);
-        }
-        .day-header {
-            font-size: clamp(0.85rem, 1.5cqw, 1.2rem);
-            font-weight: 400;
-            opacity: 1;
-            color: #fff;
-            padding: 4px 0;
-            letter-spacing: 0.05em;
-        }
+        .location-bar button { background: var(--accent); border:none; color:white; border-radius:4px; padding:2px 6px; cursor:pointer; font-size:0.7rem; }
+        /* Kalender */
+        #calendar { background:#000; }
+        #calendar .tile-content { padding:12px 16px 8px; display:flex; flex-direction:column; height:100%; }
+        .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; text-align:center; flex:1; }
+        .day-header { font-size:clamp(0.85rem, 1.5cqw, 1.2rem); font-weight:400; color:#fff; padding:4px 0; letter-spacing:0.05em; }
         .day {
-            padding: clamp(6px, 1.5cqw, 12px) 6px;
-            min-height: clamp(50px, 7cqw, 90px);
-            text-align: center;
-            font-size: clamp(1.2rem, 2.2cqw, 2rem);
-            font-weight: 300;
-            color: #fff;
-            border: none;
-            border-radius: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 2px;
-            cursor: default;
+            position:relative; padding:clamp(4px,1cqw,10px) 4px; font-weight:300; color:#fff;
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
         }
-        .day .day-number {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 1.4em;
-            height: 1.4em;
-            border-radius: 50%;
-            font-weight: 300;
-        }
-        .day.today .day-number {
-            background: #E94545;
-            color: #fff;
-            font-weight: 400;
-        }
-        .day.other-month { opacity: 0.3; }
-        .event-line { display: none; }
-        .day-events {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            width: 100%;
-            margin-top: 2px;
-        }
-        .day-event {
-            font-size: clamp(0.55rem, 0.8cqw, 0.75rem);
-            font-weight: 400;
-            padding: 1px 4px;
-            border-radius: 2px;
-            text-align: left;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            color: #fff;
-            line-height: 1.3;
-        }
-        .day-event.bullet {
-            background: transparent;
-            padding-left: 8px;
-            position: relative;
-        }
-        .day-event.bullet::before {
-            content: '●';
-            position: absolute;
-            left: 0;
-            font-size: 0.7em;
-        }
-
-        /* Slideshow im Kitchen‑Stil */
-        body[data-theme="kitchen"] #slideshow {
-            background: #000 !important;
-            border: none !important;
-            box-shadow: none !important;
-        }
-        body[data-theme="kitchen"] #slideshow .tile-header { display: none; }
-        body[data-theme="kitchen"] #slideshow .tile-content { padding: 0; }
-        .slideshow-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.05);
-            overflow: hidden;
-            margin-bottom: 0;
-            border-radius: 0;
-        }
+        .day .day-number { display:inline-flex; align-items:center; justify-content:center; width:1.4em; height:1.4em; border-radius:50%; font-weight:300; }
+        .day.today .day-number { background: var(--accent); color:#fff; font-weight:400; }
+        .event-line { position:absolute; bottom:2px; left:10%; width:80%; height:3px; border-radius:2px; }
+        .month-slider-container { display:flex; align-items:center; gap:8px; margin-top:4px; padding:0 16px; }
+        .month-slider-container input[type=range] { flex:1; background:rgba(255,255,255,0.2); height:4px; border-radius:2px; -webkit-appearance:none; }
+        .month-slider-container input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; background:var(--accent); border-radius:50%; cursor:pointer; }
+        .month-label { font-size:0.8rem; white-space:nowrap; }
+        /* Slideshow */
+        #slideshow { background:#000; }
+        #slideshow .tile-content { padding:0; }
+        .slideshow-container { position:relative; width:100%; height:100%; background:#000; overflow:hidden; }
         .slide-img {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            object-fit: cover;
-            opacity: 0;
-            will-change: transform, opacity;
-            transition: opacity var(--slide-duration) ease-out, transform var(--slide-duration) ease-out;
+            position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;
+            opacity:0; transition: opacity var(--slide-duration) ease-out, transform var(--slide-duration) ease-out;
         }
-        .slide-img.active { opacity: 1; }
-
+        .slide-img.active { opacity:1; }
+        /* Animationen */
+        .slide-anim-fade .slide-img { transform:none; }
+        .slide-anim-slide-left .slide-img { transform:translateX(100%); opacity:1; }
+        .slide-anim-slide-left .slide-img.active { transform:translateX(0); }
+        .slide-anim-slide-up .slide-img { transform:translateY(100%); opacity:1; }
+        .slide-anim-slide-up .slide-img.active { transform:translateY(0); }
+        .slide-anim-zoom .slide-img { transform:scale(0.7); opacity:0; }
+        .slide-anim-zoom .slide-img.active { transform:scale(1); opacity:1; }
+        .slide-anim-rotate .slide-img { transform:rotate(-15deg) scale(0.8); opacity:0; }
+        .slide-anim-rotate .slide-img.active { transform:rotate(0) scale(1); opacity:1; }
+        .slide-anim-flip .slide-img { transform:perspective(800px) rotateY(90deg); opacity:0; }
+        .slide-anim-flip .slide-img.active { transform:perspective(800px) rotateY(0); opacity:1; }
+        .slide-anim-blur .slide-img { filter:blur(20px); opacity:0; }
+        .slide-anim-blur .slide-img.active { filter:blur(0); opacity:1; }
+        .slide-anim-ken-burns .slide-img.active { animation: kenBurns 8s infinite alternate; }
+        @keyframes kenBurns { from { transform:scale(1); } to { transform:scale(1.1); } }
+        .slide-anim-split .slide-img { clip-path:inset(50% 0 50% 0); opacity:0; }
+        .slide-anim-split .slide-img.active { clip-path:inset(0 0 0 0); opacity:1; }
+        .slide-anim-circle-reveal .slide-img { clip-path:circle(0% at 50% 50%); opacity:0; }
+        .slide-anim-circle-reveal .slide-img.active { clip-path:circle(100% at 50% 50%); opacity:1; }
+        .slide-anim-slide-diagonal .slide-img { transform:translate(100%,100%) rotate(10deg); opacity:0; }
+        .slide-anim-slide-diagonal .slide-img.active { transform:translate(0,0) rotate(0); opacity:1; }
+        /* Steuerung */
         .slideshow-controls {
-            position: absolute;
-            bottom: 6px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            background: rgba(0,0,0,0.6);
-            padding: 4px 10px;
-            border-radius: 20px;
-            z-index: 10;
+            position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
+            display:flex; gap:10px; background:rgba(0,0,0,0.6); padding:4px 10px; border-radius:20px; z-index:10;
         }
-        .slideshow-controls button {
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 4px 8px;
+        .slideshow-controls button { background:transparent; border:none; color:white; font-size:1.2rem; cursor:pointer; padding:4px 8px; }
+        .panel-btn {
+            position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.6); border-radius:50%;
+            width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+            cursor:pointer; color:white; z-index:15; font-size:0.9rem;
         }
+        .gradient-btn { right:50px; } .cal-settings-btn { right:90px; }
+        .panel {
+            position:absolute; background:rgba(20,20,30,0.95); backdrop-filter:blur(15px);
+            border-radius:12px; padding:12px; z-index:100; color:white; display:none;
+            font-size:0.8rem; box-shadow:0 8px 20px rgba(0,0,0,0.6);
+        }
+        .panel.open { display:block; }
+        .panel label { display:block; margin-bottom:4px; font-weight:600; }
+        .panel select, .panel input { width:100%; background:rgba(255,255,255,0.15); color:white; border:none; padding:4px; border-radius:4px; }
+        .panel button { margin-top:4px; background:var(--accent); color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:4px; }
         .upload-area {
-            position: absolute;
-            bottom: 8px;
-            right: 8px;
-            background: rgba(0,0,0,0.5);
-            padding: 4px 8px;
-            border-radius: 6px;
-            z-index: 5;
-            display: flex;
-            gap: 8px;
-            align-items: center;
+            position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,0.5); padding:4px 8px;
+            border-radius:6px; z-index:5; display:flex; gap:8px; align-items:center;
         }
-        .upload-btn {
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 6px 12px;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-        input[type="file"] { display: none; }
-
-        .event-details {
-            background: rgba(0,0,0,0.85);
-            color: white;
-            padding: 8px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            margin-top: 8px;
-            display: none;
-            max-height: 150px;
-            overflow-y: auto;
-        }
+        .upload-btn { background:var(--accent); color:white; border:none; border-radius:12px; padding:4px 10px; cursor:pointer; font-size:0.8rem; }
+        input[type=file] { display:none; }
     </style>
 </head>
-<body data-theme="kitchen">
+<body>
+<div id="dashboard"><div id="gradient-overlay"></div></div>
 
-<div id="dashboard"></div>
+<!-- Panels -->
+<div class="panel" id="anim-panel" style="top:50px; right:10px; width:200px;">
+    <label>Animation</label>
+    <select id="anim-select">
+        <option value="fade">Überblenden</option><option value="slide-left">Seitlich schieben</option>
+        <option value="slide-up">Nach oben schieben</option><option value="zoom">Zoom</option>
+        <option value="rotate">Drehen</option><option value="flip">Flip 3D</option>
+        <option value="blur">Unschärfe</option><option value="ken-burns">Ken Burns</option>
+        <option value="split">Vertikal teilen</option><option value="circle-reveal">Kreis öffnen</option>
+        <option value="slide-diagonal">Diagonal schieben</option>
+    </select>
+</div>
+<div class="panel" id="gradient-panel" style="top:50px; right:50px; width:220px;">
+    <label>Verlauf Breite</label>
+    <input type="range" id="gradient-width-slider" min="0" max="0.2" step="0.01" value="0.05">
+    <label>Verlauf Stärke</label>
+    <input type="range" id="gradient-opacity-slider" min="0" max="1" step="0.1" value="0.8">
+</div>
+<div class="panel" id="cal-panel" style="top:50px; right:90px; width:260px;">
+    <label>iCal URL</label>
+    <input type="text" id="ical-url" placeholder="https://calendar.google.com/.../basic.ics">
+    <button id="load-ical">Kalender laden</button>
+    <div id="ical-error" style="color:#f88; font-size:0.7rem; margin-top:4px;"></div>
+</div>
+<div style="position:absolute; bottom:4px; left:4px; z-index:20; display:flex; gap:4px; align-items:center;">
+    <span style="color:white; font-size:0.7rem;">↕️</span>
+    <input type="range" id="weather-height-slider" min="20" max="60" value="42" style="width:80px;">
+</div>
 
 <script>
-    (function() {
-        // Nur die drei Kacheln: slideshow, calendar, weather – exakt wie im Bild
-        const layout = [
-            { id: 'slideshow', x: 0, y: 0, w: window.innerWidth * 0.38, h: window.innerHeight },
-            { id: 'calendar',  x: window.innerWidth * 0.38, y: 0, w: window.innerWidth * 0.62, h: window.innerHeight },
-            { id: 'weather',   x: 0, y: window.innerHeight * 0.78, w: window.innerWidth * 0.38, h: window.innerHeight * 0.22 }
-        ];
+(function() {
+    const W = window.innerWidth, H = window.innerHeight;
+    const layout = {
+        slideshow: { x:0, y:0, w: W*0.38, h: H },
+        calendar:  { x:W*0.38, y:0, w: W*0.62, h: H },
+        weather:   { x:0, y: H*0.58, w: W*0.38, h: H*0.42 }
+    };
 
-        function createTiles() {
-            const container = document.getElementById('dashboard');
-            container.innerHTML = '';
-            layout.forEach(item => {
-                const tile = document.createElement('div');
-                tile.className = 'tile';
-                tile.id = item.id;
-                tile.style.left = item.x + 'px';
-                tile.style.top = item.y + 'px';
-                tile.style.width = item.w + 'px';
-                tile.style.height = item.h + 'px';
-                if (item.id === 'weather' || item.id === 'calendar' || item.id === 'slideshow') {
-                    tile.innerHTML = `<div class="tile-header"></div><div class="tile-content"></div>`;
-                }
-                container.appendChild(tile);
-                fillTileContent(item.id, tile);
-            });
-            initInteract();
+    function createTiles() {
+        const dash = document.getElementById('dashboard');
+        dash.querySelectorAll('.tile').forEach(t => t.remove());
+        for (const [id, dim] of Object.entries(layout)) {
+            const tile = document.createElement('div');
+            tile.className = 'tile'; tile.id = id;
+            tile.style.left = dim.x + 'px'; tile.style.top = dim.y + 'px';
+            tile.style.width = dim.w + 'px'; tile.style.height = dim.h + 'px';
+            tile.innerHTML = `<div class="tile-content"></div>`;
+            dash.appendChild(tile);
+            fillTile(id, tile);
         }
+        initInteract();
+    }
 
-        function fillTileContent(id, tile) {
-            const content = tile.querySelector('.tile-content');
-            switch(id) {
-                case 'weather':
-                    content.innerHTML = `
-                        <div class="weather-now">
-                            <div class="temp" id="current-temp">--°</div>
-                            <div class="details" id="current-details"></div>
-                            <div id="current-icon" style="font-size:2rem;"></div>
-                        </div>`;
-                    break;
-                case 'calendar':
-                    content.innerHTML = `
-                        <div class="calendar-nav" style="display:none;">
-                            <button id="cal-prev" class="cal-nav-btn"><i class="fas fa-chevron-left"></i></button>
-                            <span id="cal-title">Monat</span>
-                            <button id="cal-today" class="cal-today-btn">Heute</button>
-                            <button id="cal-next" class="cal-nav-btn"><i class="fas fa-chevron-right"></i></button>
-                        </div>
-                        <div class="calendar-grid" id="calendar-grid"></div>
-                        <div class="event-details" id="event-details"></div>`;
-                    break;
-                case 'slideshow':
-                    content.innerHTML = `
-                        <div class="slideshow-container slide-anim-fade" id="slideshow-container">
-                            <div class="slideshow-controls">
-                                <button id="prev-slide"><i class="fas fa-chevron-left"></i></button>
-                                <button id="play-pause"><i class="fas fa-pause"></i></button>
-                                <button id="next-slide"><i class="fas fa-chevron-right"></i></button>
-                                <button id="delete-slide"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>
-                        <div class="upload-area">
-                            <label for="file-upload" class="upload-btn"><i class="fas fa-upload"></i> Hochladen</label>
-                            <input type="file" id="file-upload" multiple accept="image/*">
-                            <span id="image-count">0 Bilder</span>
-                        </div>`;
-                    break;
+    function fillTile(id, tile) {
+        const content = tile.querySelector('.tile-content');
+        if (id === 'weather') {
+            content.innerHTML = `
+                <div class="weather-now">
+                    <div class="temp" id="current-temp">--°</div>
+                    <div class="details" id="current-details">Wetter wird geladen…</div>
+                    <div id="current-icon" style="font-size:2rem;">🌥️</div>
+                </div>
+                <div class="forecast-row" id="forecast-container">
+                    <div class="forecast-day">Mo<br>--°</div>
+                </div>
+                <div class="location-bar">
+                    <input type="text" id="location-search" placeholder="Stadt">
+                    <button id="location-search-btn">🔍</button>
+                    <button id="gps-btn">📍</button>
+                    <span id="current-location-name">Düsseldorf</span>
+                </div>`;
+        } else if (id === 'calendar') {
+            content.innerHTML = `
+                <div class="calendar-grid" id="calendar-grid"></div>
+                <div class="month-slider-container">
+                    <span class="month-label" id="month-label"></span>
+                    <input type="range" id="month-slider" min="0" max="11" value="${new Date().getMonth()}">
+                </div>`;
+        } else if (id === 'slideshow') {
+            content.innerHTML = `
+                <div class="slideshow-container slide-anim-fade" id="slideshow-container">
+                    <div class="panel-btn anim-btn" id="anim-btn"><i class="fas fa-film"></i></div>
+                    <div class="panel-btn gradient-btn" id="gradient-btn"><i class="fas fa-adjust"></i></div>
+                    <div class="panel-btn cal-settings-btn" id="cal-settings-btn"><i class="fas fa-cog"></i></div>
+                    <div class="slideshow-controls">
+                        <button id="prev-slide"><i class="fas fa-chevron-left"></i></button>
+                        <button id="play-pause"><i class="fas fa-pause"></i></button>
+                        <button id="next-slide"><i class="fas fa-chevron-right"></i></button>
+                        <button id="delete-slide"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <div class="upload-area">
+                    <label for="file-upload" class="upload-btn"><i class="fas fa-upload"></i></label>
+                    <input type="file" id="file-upload" multiple accept="image/*">
+                    <span id="image-count">0 Bilder</span>
+                </div>`;
+        }
+    }
+
+    function initInteract() {
+        interact('.tile').draggable({
+            allowFrom: '.tile-content',
+            modifiers: [interact.modifiers.restrict({ restriction: 'parent', endOnly: true })],
+            listeners: {
+                move(e) {
+                    const t = e.target;
+                    const x = (parseFloat(t.getAttribute('data-x'))||0) + e.dx;
+                    const y = (parseFloat(t.getAttribute('data-y'))||0) + e.dy;
+                    t.style.transform = `translate(${x}px,${y}px)`;
+                    t.setAttribute('data-x', x); t.setAttribute('data-y', y);
+                },
+                end(e) {
+                    const t = e.target;
+                    const x = parseFloat(t.getAttribute('data-x'))||0;
+                    const y = parseFloat(t.getAttribute('data-y'))||0;
+                    t.style.transform = '';
+                    t.style.left = (parseFloat(t.style.left)+x)+'px';
+                    t.style.top = (parseFloat(t.style.top)+y)+'px';
+                    t.setAttribute('data-x',0); t.setAttribute('data-y',0);
+                    saveLayout();
+                }
             }
-        }
-
-        // Interaktivität (Verschieben / Vergrößern)
-        function initInteract() {
-            interact('.tile').draggable({
-                allowFrom: '.tile-header',
-                ignoreFrom: '.resize-handle',
-                inertia: false,
-                modifiers: [interact.modifiers.restrict({ restriction: 'parent', endOnly: true })],
-                listeners: {
-                    start(event) { event.target.classList.add('dragging'); },
-                    move(event) {
-                        const target = event.target;
-                        const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-                        const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-                        target.style.transform = `translate(${x}px, ${y}px)`;
-                        target.setAttribute('data-x', x);
-                        target.setAttribute('data-y', y);
-                    },
-                    end(event) {
-                        const target = event.target;
-                        target.classList.remove('dragging');
-                        const x = parseFloat(target.getAttribute('data-x')) || 0;
-                        const y = parseFloat(target.getAttribute('data-y')) || 0;
-                        target.style.transform = '';
-                        target.style.left = (parseFloat(target.style.left) + x) + 'px';
-                        target.style.top = (parseFloat(target.style.top) + y) + 'px';
-                        target.setAttribute('data-x', 0);
-                        target.setAttribute('data-y', 0);
-                    }
+        }).resizable({
+            edges: { top:true, bottom:true, left:true, right:true },
+            modifiers: [
+                interact.modifiers.restrict({ restriction: 'parent', endOnly: true }),
+                interact.modifiers.restrictSize({ min: { width:80, height:80 } })
+            ],
+            listeners: {
+                move(e) {
+                    const t = e.target;
+                    let x = (parseFloat(t.getAttribute('data-x'))||0);
+                    let y = (parseFloat(t.getAttribute('data-y'))||0);
+                    t.style.width = e.rect.width + 'px';
+                    t.style.height = e.rect.height + 'px';
+                    x += e.deltaRect.left; y += e.deltaRect.top;
+                    t.style.transform = `translate(${x}px,${y}px)`;
+                    t.setAttribute('data-x', x); t.setAttribute('data-y', y);
+                },
+                end(e) {
+                    const t = e.target;
+                    const x = parseFloat(t.getAttribute('data-x'))||0;
+                    const y = parseFloat(t.getAttribute('data-y'))||0;
+                    t.style.transform = '';
+                    t.style.left = (parseFloat(t.style.left)+x)+'px';
+                    t.style.top = (parseFloat(t.style.top)+y)+'px';
+                    t.setAttribute('data-x',0); t.setAttribute('data-y',0);
+                    saveLayout();
                 }
-            }).resizable({
-                edges: { top: true, bottom: true, left: true, right: true },
-                inertia: false,
-                modifiers: [
-                    interact.modifiers.restrict({ restriction: 'parent', endOnly: true }),
-                    interact.modifiers.restrictSize({ min: { width: 80, height: 80 } })
-                ],
-                listeners: {
-                    start(event) { event.target.classList.add('resizing'); },
-                    move(event) {
-                        const target = event.target;
-                        let x = (parseFloat(target.getAttribute('data-x')) || 0);
-                        let y = (parseFloat(target.getAttribute('data-y')) || 0);
-                        target.style.width = event.rect.width + 'px';
-                        target.style.height = event.rect.height + 'px';
-                        x += event.deltaRect.left;
-                        y += event.deltaRect.top;
-                        target.style.transform = `translate(${x}px, ${y}px)`;
-                        target.setAttribute('data-x', x);
-                        target.setAttribute('data-y', y);
-                    },
-                    end(event) {
-                        event.target.classList.remove('resizing');
-                        const target = event.target;
-                        const x = parseFloat(target.getAttribute('data-x')) || 0;
-                        const y = parseFloat(target.getAttribute('data-y')) || 0;
-                        target.style.transform = '';
-                        target.style.left = (parseFloat(target.style.left) + x) + 'px';
-                        target.style.top = (parseFloat(target.style.top) + y) + 'px';
-                        target.setAttribute('data-x', 0);
-                        target.setAttribute('data-y', 0);
-                    }
-                }
-            });
-        }
+            }
+        });
+    }
 
-        // ---------- Wetter ----------
-        async function fetchWeather(lat = 51.2277, lon = 6.7735) {
-            try {
-                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=weather_code,temperature_2m,relative_humidity_2m,wind_speed_10m&hourly=weather_code,temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5`);
-                return await res.json();
-            } catch(e) { console.error(e); return null; }
-        }
+    function saveLayout() {
+        const tiles = {};
+        document.querySelectorAll('.tile').forEach(t => {
+            tiles[t.id] = {
+                x: parseFloat(t.style.left)||0,
+                y: parseFloat(t.style.top)||0,
+                w: parseFloat(t.style.width)||100,
+                h: parseFloat(t.style.height)||100
+            };
+        });
+        localStorage.setItem('kitchenLayout', JSON.stringify(tiles));
+    }
 
-        function weatherEmoji(code) {
-            if(code === 0) return '☀️';
-            if(code === 1) return '🌤️';
-            if(code === 2) return '⛅';
-            if(code === 3) return '☁️';
-            if(code === 45 || code === 48) return '🌫️';
-            if(code >= 51 && code <= 57) return '🌦️';
-            if(code >= 61 && code <= 67) return '🌧️';
-            if(code >= 71 && code <= 77) return '🌨️';
-            if(code >= 80 && code <= 82) return '🌧️';
-            if(code >= 85 && code <= 86) return '🌨️';
-            if(code >= 95) return '⛈️';
-            return '🌥️';
-        }
+    // --- WETTER ---
+    let currentLat = 51.2277, currentLon = 6.7735, currentLocName = 'Düsseldorf';
+    async function fetchWeather() {
+        try {
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${currentLat}&longitude=${currentLon}&current=weather_code,temperature_2m,relative_humidity_2m,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5`);
+            return await res.json();
+        } catch(e) { return null; }
+    }
 
-        function weatherDesc(code) {
-            if(code === 0) return 'Sonnig';
-            if(code === 1) return 'Überwiegend sonnig';
-            if(code === 2) return 'Teilweise bewölkt';
-            if(code === 3) return 'Bedeckt';
-            if(code === 45 || code === 48) return 'Nebel';
-            if(code >= 51 && code <= 57) return 'Nieselregen';
-            if(code >= 61 && code <= 67) return 'Regen';
-            if(code >= 71 && code <= 77) return 'Schnee';
-            if(code >= 80 && code <= 82) return 'Regenschauer';
-            if(code >= 85 && code <= 86) return 'Schneeschauer';
-            if(code >= 95) return 'Gewitter';
-            return 'Bewölkt';
-        }
+    function wEmoji(c) {
+        const m = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌦️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',80:'🌧️',81:'🌧️',82:'🌧️',85:'🌨️',86:'🌨️',95:'⛈️'};
+        return m[c] || '🌥️';
+    }
+    function wDesc(c) {
+        if(c===0) return 'Sonnig'; if(c===1) return 'Heiter'; if(c===2) return 'Wolkig';
+        if(c===3) return 'Bedeckt'; if(c>=45&&c<=48) return 'Nebel'; if(c>=51) return 'Niesel';
+        if(c>=61) return 'Regen'; if(c>=71) return 'Schnee'; if(c>=95) return 'Gewitter';
+        return 'Bewölkt';
+    }
 
-        async function updateWeather() {
-            const data = await fetchWeather();
-            if(!data) return;
-            document.getElementById('current-temp').textContent = Math.round(data.current.temperature_2m) + '°';
-            document.getElementById('current-details').innerHTML = `${weatherDesc(data.current.weather_code)}<br>💧 ${data.current.relative_humidity_2m}% · 💨 ${Math.round(data.current.wind_speed_10m)} km/h`;
-            document.getElementById('current-icon').textContent = weatherEmoji(data.current.weather_code);
+    async function updateWeather() {
+        const data = await fetchWeather();
+        if(!data) {
+            document.getElementById('current-temp').textContent = '--°';
+            document.getElementById('current-details').textContent = 'Keine Verbindung';
+            document.getElementById('forecast-container').innerHTML = '<div class="forecast-day">--</div>';
+            return;
         }
+        document.getElementById('current-temp').textContent = Math.round(data.current.temperature_2m) + '°';
+        document.getElementById('current-details').innerHTML = `${wDesc(data.current.weather_code)}<br>💧 ${data.current.relative_humidity_2m}% · 💨 ${Math.round(data.current.wind_speed_10m)} km/h`;
+        document.getElementById('current-icon').textContent = wEmoji(data.current.weather_code);
+        document.getElementById('current-location-name').textContent = currentLocName;
 
-        // ---------- Kalender (Monatsansicht ohne Navigation) ----------
-        let calendarEvents = [];
-        function assignEventColor(index) {
-            const palette = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63','#00bcd4','#ff5722'];
-            return palette[index % palette.length];
-        }
-
-        function renderCalendar() {
-            const grid = document.getElementById('calendar-grid');
-            if(!grid) return;
-            grid.innerHTML = '';
-            ['So','Mo','Di','Mi','Do','Fr','Sa'].forEach(d => {
+        const fc = document.getElementById('forecast-container');
+        if(fc) {
+            fc.innerHTML = '';
+            data.daily.time.forEach((day,i) => {
+                const d = new Date(day);
                 const div = document.createElement('div');
-                div.className = 'day-header';
-                div.textContent = d;
-                grid.appendChild(div);
+                div.className = 'forecast-day' + (i===0?' active':'');
+                div.innerHTML = `<div>${d.toLocaleDateString('de-DE',{weekday:'short'})}</div><div>${wEmoji(data.daily.weather_code[i])}</div><div>${Math.round(data.daily.temperature_2m_max[i])}°/${Math.round(data.daily.temperature_2m_min[i])}°</div>`;
+                fc.appendChild(div);
             });
-
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = today.getMonth();
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month+1, 0).getDate();
-            const offset = firstDay; // Sonntag = 0
-            for(let i=0; i<offset; i++) grid.appendChild(document.createElement('div'));
-
-            for(let d=1; d<=daysInMonth; d++) {
-                const dayDiv = document.createElement('div');
-                dayDiv.className = 'day';
-                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const eventsOnDay = calendarEvents.filter(e => e.start.startsWith(dateStr));
-                dayDiv.innerHTML = '';
-                const numSpan = document.createElement('span');
-                numSpan.className = 'day-number';
-                numSpan.textContent = d;
-                dayDiv.appendChild(numSpan);
-
-                if(eventsOnDay.length > 0) {
-                    const eventsContainer = document.createElement('div');
-                    eventsContainer.className = 'day-events';
-                    eventsOnDay.slice(0, 4).forEach((ev, idx) => {
-                        const evDiv = document.createElement('div');
-                        evDiv.className = 'day-event bullet';
-                        evDiv.style.color = ev.color || assignEventColor(idx);
-                        evDiv.textContent = ev.summary;
-                        evDiv.title = ev.summary;
-                        eventsContainer.appendChild(evDiv);
-                    });
-                    dayDiv.appendChild(eventsContainer);
-                }
-
-                if(d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                    dayDiv.classList.add('today');
-                }
-                grid.appendChild(dayDiv);
-            }
         }
+    }
 
-        // ---------- Slideshow ----------
-        let slides = [];
-        let currentSlide = 0;
-        let slideInterval = 10;
-        let slideAnimDuration = 1;
-        let slideshowPaused = false;
-        let slideshowTimer;
+    async function searchLocation(query) {
+        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=3&language=de`);
+        const data = await res.json();
+        return data.results || [];
+    }
 
-        function loadSlides() {
+    async function setLocation(lat, lon, name) {
+        currentLat = lat; currentLon = lon; currentLocName = name;
+        localStorage.setItem('weatherLoc', JSON.stringify({lat,lon,name}));
+        await updateWeather();
+    }
+
+    // --- KALENDER ---
+    let calendarEvents = [];
+    const palette = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63','#00bcd4','#ff5722'];
+    function assignColor(i) { return palette[i % palette.length]; }
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+
+    function renderCalendar() {
+        const grid = document.getElementById('calendar-grid');
+        if(!grid) return;
+        grid.innerHTML = '';
+        ['So','Mo','Di','Mi','Do','Fr','Sa'].forEach(d => {
+            const div = document.createElement('div');
+            div.className = 'day-header'; div.textContent = d;
+            grid.appendChild(div);
+        });
+        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+        for(let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div'));
+        for(let d=1; d<=daysInMonth; d++) {
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'day';
+            const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const eventsOnDay = calendarEvents.filter(e => e.start.startsWith(dateStr));
+            dayDiv.innerHTML = `<span class="day-number">${d}</span>`;
+            eventsOnDay.slice(0,3).forEach((ev, idx) => {
+                const line = document.createElement('div');
+                line.className = 'event-line';
+                line.style.backgroundColor = ev.color || assignColor(idx);
+                line.style.bottom = (2 + idx*5) + 'px';
+                dayDiv.appendChild(line);
+            });
+            const today = new Date();
+            if(d === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) {
+                dayDiv.classList.add('today');
+            }
+            grid.appendChild(dayDiv);
+        }
+        document.getElementById('month-label').textContent = new Date(currentYear, currentMonth).toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+        document.getElementById('month-slider').value = currentMonth;
+    }
+
+    const CORS_PROXIES = ['https://corsproxy.io/?', 'https://api.allorigins.win/raw?url='];
+    async function fetchICS(url) {
+        try { const r = await fetch(url); if(r.ok) return await r.text(); } catch(e) {}
+        for(const p of CORS_PROXIES) {
             try {
-                const saved = localStorage.getItem('slideshowImages');
-                if (saved) {
-                    slides = JSON.parse(saved);
-                    currentSlide = parseInt(localStorage.getItem('slideshowIndex')) || 0;
-                    if (currentSlide >= slides.length) currentSlide = 0;
-                    updateSlideDisplay();
-                    document.getElementById('image-count').textContent = slides.length + ' Bilder';
-                }
+                const r = await fetch(p + encodeURIComponent(url));
+                if(r.ok && (await r.text()).includes('BEGIN:VCALENDAR')) return await r.text();
             } catch(e) {}
         }
+        throw new Error('Kalender nicht erreichbar');
+    }
 
-        function updateSlideDisplay() {
-            const container = document.getElementById('slideshow-container');
-            if(!container) return;
-            const existingImgs = container.querySelectorAll('.slide-img');
-            existingImgs.forEach(img => img.remove());
-            if (slides.length > 0 && slides[currentSlide]) {
-                const newImg = document.createElement('img');
-                newImg.className = 'slide-img active';
-                newImg.src = slides[currentSlide];
-                container.insertBefore(newImg, container.firstChild);
-            }
+    async function loadCalendar(url) {
+        if(!url) return;
+        document.getElementById('ical-error').textContent = '';
+        try {
+            const data = await fetchICS(url);
+            const jcal = ICAL.parse(data);
+            const comp = new ICAL.Component(jcal);
+            calendarEvents = comp.getAllSubcomponents('vevent').map((v,i) => {
+                const ev = new ICAL.Event(v);
+                return {
+                    summary: ev.summary || 'Termin',
+                    start: ev.startDate.toJSDate().toISOString().substring(0,10),
+                    color: assignColor(i)
+                };
+            });
+            renderCalendar();
+            localStorage.setItem('icalUrl', url);
+        } catch(e) {
+            document.getElementById('ical-error').textContent = '❌ ' + e.message;
         }
+    }
 
-        function nextSlide() {
-            if(slides.length === 0) return;
-            currentSlide = (currentSlide + 1) % slides.length;
+    // --- SLIDESHOW ---
+    let slides = [], currentSlide = 0, paused = false, timer;
+    function loadSlides() {
+        const saved = localStorage.getItem('slides');
+        if(saved) { slides = JSON.parse(saved); currentSlide = parseInt(localStorage.getItem('slideIdx'))||0; }
+        updateSlideDisplay();
+    }
+    function updateSlideDisplay() {
+        const container = document.getElementById('slideshow-container');
+        if(!container) return;
+        container.querySelectorAll('.slide-img').forEach(i => i.remove());
+        if(slides.length && slides[currentSlide]) {
+            const img = document.createElement('img');
+            img.className = 'slide-img active';
+            img.src = slides[currentSlide];
+            container.insertBefore(img, container.firstChild);
+        } else {
+            // Platzhalter, damit man sofort sieht, dass die Kachel funktioniert
+            const placeholder = document.createElement('div');
+            placeholder.className = 'slide-img active';
+            placeholder.style.background = '#222';
+            placeholder.style.display = 'flex'; placeholder.style.alignItems = 'center'; placeholder.style.justifyContent = 'center';
+            placeholder.innerHTML = '<span style="color:white; opacity:0.5;">📷 Fotos hochladen</span>';
+            container.appendChild(placeholder);
+        }
+    }
+    function next() { if(slides.length) { currentSlide = (currentSlide+1)%slides.length; updateSlideDisplay(); localStorage.setItem('slideIdx', currentSlide); } }
+    function prev() { if(slides.length) { currentSlide = (currentSlide-1+slides.length)%slides.length; updateSlideDisplay(); localStorage.setItem('slideIdx', currentSlide); } }
+    function startSS() { clearInterval(timer); if(!paused && slides.length) timer = setInterval(next, 10000); }
+
+    document.addEventListener('click', function(e) {
+        const t = e.target;
+        if(t.closest('#prev-slide')) { prev(); startSS(); }
+        else if(t.closest('#next-slide')) { next(); startSS(); }
+        else if(t.closest('#play-pause')) {
+            paused = !paused;
+            const btn = t.closest('#play-pause');
+            btn.innerHTML = paused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+            paused ? clearInterval(timer) : startSS();
+        }
+        else if(t.closest('#delete-slide') && slides.length) {
+            slides.splice(currentSlide, 1);
+            if(currentSlide >= slides.length) currentSlide = 0;
             updateSlideDisplay();
-            localStorage.setItem('slideshowIndex', currentSlide);
+            localStorage.setItem('slides', JSON.stringify(slides));
+            startSS();
         }
-
-        function prevSlide() {
-            if(slides.length === 0) return;
-            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-            updateSlideDisplay();
-            localStorage.setItem('slideshowIndex', currentSlide);
+        else if(t.closest('#anim-btn')) document.getElementById('anim-panel').classList.toggle('open');
+        else if(t.closest('#gradient-btn')) document.getElementById('gradient-panel').classList.toggle('open');
+        else if(t.closest('#cal-settings-btn')) document.getElementById('cal-panel').classList.toggle('open');
+        else if(t.closest('#load-ical')) loadCalendar(document.getElementById('ical-url').value);
+        else if(t.closest('#location-search-btn')) {
+            const q = document.getElementById('location-search').value;
+            searchLocation(q).then(results => {
+                if(results.length) setLocation(results[0].latitude, results[0].longitude, results[0].name);
+            });
         }
-
-        function startSlideshow() {
-            clearInterval(slideshowTimer);
-            if(slides.length === 0 || slideshowPaused) return;
-            slideshowTimer = setInterval(nextSlide, slideInterval * 1000);
+        else if(t.closest('#gps-btn')) {
+            navigator.geolocation.getCurrentPosition(p => setLocation(p.coords.latitude, p.coords.longitude, 'GPS'));
         }
+    });
 
-        document.addEventListener('change', function(e) {
-            if(e.target.id === 'file-upload') {
-                Array.from(e.target.files).forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = ev => {
-                        slides.push(ev.target.result);
-                        if(slides.length === 1) currentSlide = 0;
-                        updateSlideDisplay();
-                        document.getElementById('image-count').textContent = slides.length + ' Bilder';
-                        localStorage.setItem('slideshowImages', JSON.stringify(slides));
-                        startSlideshow();
-                    };
-                    reader.readAsDataURL(file);
-                });
-                e.target.value = '';
-            }
-        });
+    document.addEventListener('change', function(e) {
+        if(e.target.id === 'file-upload') {
+            Array.from(e.target.files).forEach(f => {
+                const r = new FileReader();
+                r.onload = ev => {
+                    slides.push(ev.target.result);
+                    if(slides.length===1) currentSlide = 0;
+                    updateSlideDisplay();
+                    localStorage.setItem('slides', JSON.stringify(slides));
+                    startSS();
+                };
+                r.readAsDataURL(f);
+            });
+        }
+        if(e.target.id === 'anim-select') {
+            document.getElementById('slideshow-container').className = 'slideshow-container slide-anim-' + e.target.value;
+            localStorage.setItem('slideAnim', e.target.value);
+        }
+        if(e.target.id === 'gradient-width-slider') {
+            document.documentElement.style.setProperty('--gradient-width', e.target.value);
+            localStorage.setItem('gradientWidth', e.target.value);
+        }
+        if(e.target.id === 'gradient-opacity-slider') {
+            document.documentElement.style.setProperty('--gradient-opacity', e.target.value);
+            localStorage.setItem('gradientOpacity', e.target.value);
+        }
+        if(e.target.id === 'weather-height-slider') {
+            const val = e.target.value + 'vh';
+            document.documentElement.style.setProperty('--weather-height', val);
+            document.getElementById('weather').style.height = val;
+            localStorage.setItem('weatherHeight', e.target.value);
+        }
+        if(e.target.id === 'month-slider') {
+            currentMonth = parseInt(e.target.value);
+            renderCalendar();
+        }
+    });
 
-        document.addEventListener('click', function(e) {
-            if(e.target.closest('#next-slide')) { nextSlide(); startSlideshow(); }
-            else if(e.target.closest('#prev-slide')) { prevSlide(); startSlideshow(); }
-            else if(e.target.closest('#play-pause')) {
-                slideshowPaused = !slideshowPaused;
-                const btn = e.target.closest('#play-pause');
-                btn.innerHTML = slideshowPaused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
-                if (slideshowPaused) clearInterval(slideshowTimer);
-                else startSlideshow();
-            }
-            else if(e.target.closest('#delete-slide')) {
-                if(!slides.length) return;
-                slides.splice(currentSlide, 1);
-                if(currentSlide >= slides.length) currentSlide = Math.max(0, slides.length-1);
-                updateSlideDisplay();
-                document.getElementById('image-count').textContent = slides.length + ' Bilder';
-                localStorage.setItem('slideshowImages', JSON.stringify(slides));
-                startSlideshow();
-            }
-        });
+    function init() {
+        const savedLoc = localStorage.getItem('weatherLoc');
+        if(savedLoc) { const l = JSON.parse(savedLoc); currentLat = l.lat; currentLon = l.lon; currentLocName = l.name; }
 
-        // ---------- Start ----------
+        const gw = localStorage.getItem('gradientWidth') || 0.05;
+        const go = localStorage.getItem('gradientOpacity') || 0.8;
+        const wh = localStorage.getItem('weatherHeight') || 42;
+        document.documentElement.style.setProperty('--gradient-width', gw);
+        document.documentElement.style.setProperty('--gradient-opacity', go);
+        document.documentElement.style.setProperty('--weather-height', wh + 'vh');
+        document.getElementById('gradient-width-slider').value = gw;
+        document.getElementById('gradient-opacity-slider').value = go;
+        document.getElementById('weather-height-slider').value = wh;
+
+        const savedAnim = localStorage.getItem('slideAnim') || 'fade';
+        document.getElementById('anim-select').value = savedAnim;
+
+        const savedIcal = localStorage.getItem('icalUrl');
+        if(savedIcal) { document.getElementById('ical-url').value = savedIcal; loadCalendar(savedIcal); }
+
         createTiles();
         loadSlides();
         updateWeather();
         renderCalendar();
-        setInterval(updateWeather, 15 * 60 * 1000);
-    })();
+        setInterval(updateWeather, 900000);
+        startSS();
+    }
+    init();
+})();
 </script>
 </body>
 </html>
-```
