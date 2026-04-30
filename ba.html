@@ -111,9 +111,10 @@
             display:flex; gap:10px; background:rgba(0,0,0,0.6); padding:4px 10px; border-radius:20px; z-index:10;
         }
         .slideshow-controls button { background:transparent; border:none; color:white; font-size:1.2rem; cursor:pointer; padding:4px 8px; }
+        /* Einstell-Buttons – initial versteckt */
         .panel-btn {
             position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.6); border-radius:50%;
-            width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+            width:32px; height:32px; display:none; align-items:center; justify-content:center;
             cursor:pointer; color:white; z-index:15; font-size:0.9rem;
         }
         .gradient-btn { right:50px; } .cal-settings-btn { right:90px; }
@@ -132,12 +133,16 @@
         }
         .upload-btn { background:var(--accent); color:white; border:none; border-radius:12px; padding:4px 10px; cursor:pointer; font-size:0.8rem; }
         input[type=file] { display:none; }
+        /* Wettergrößen-Container – initial versteckt */
+        #weather-height-container {
+            position:absolute; bottom:4px; left:4px; z-index:20; display:none; gap:4px; align-items:center;
+        }
     </style>
 </head>
 <body>
 <div id="dashboard"><div id="gradient-overlay"></div></div>
 
-<!-- Panels -->
+<!-- Einstell-Panels (initial unsichtbar) -->
 <div class="panel" id="anim-panel" style="top:50px; right:10px; width:200px;">
     <label>Animation</label>
     <select id="anim-select">
@@ -161,7 +166,7 @@
     <button id="load-ical">Kalender laden</button>
     <div id="ical-error" style="color:#f88; font-size:0.7rem; margin-top:4px;"></div>
 </div>
-<div style="position:absolute; bottom:4px; left:4px; z-index:20; display:flex; gap:4px; align-items:center;">
+<div id="weather-height-container">
     <span style="color:white; font-size:0.7rem;">↕️</span>
     <input type="range" id="weather-height-slider" min="20" max="60" value="42" style="width:80px;">
 </div>
@@ -174,6 +179,38 @@
         calendar:  { x:W*0.38, y:0, w: W*0.62, h: H },
         weather:   { x:0, y: H*0.58, w: W*0.38, h: H*0.42 }
     };
+
+    // Einstellungen-Sichtbarkeit
+    let settingsVisible = false;
+    function showSettings() {
+        settingsVisible = true;
+        document.querySelectorAll('.panel-btn').forEach(b => b.style.display = 'flex');
+        document.getElementById('weather-height-container').style.display = 'flex';
+    }
+    function hideSettings() {
+        settingsVisible = false;
+        document.querySelectorAll('.panel-btn').forEach(b => b.style.display = 'none');
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
+        document.getElementById('weather-height-container').style.display = 'none';
+    }
+
+    // Doppelklick irgendwo -> Einstellungen umschalten
+    document.addEventListener('dblclick', function(e) {
+        if (settingsVisible) {
+            hideSettings();
+        } else {
+            showSettings();
+        }
+    });
+
+    // Einfacher Klick: Einstellungen ausblenden, wenn nicht auf ein Einstellungs-Element geklickt
+    document.addEventListener('click', function(e) {
+        if (!settingsVisible) return;
+        if (e.target.closest('.panel-btn') || e.target.closest('.panel') || e.target.closest('#weather-height-container')) {
+            return;
+        }
+        hideSettings();
+    });
 
     function createTiles() {
         const dash = document.getElementById('dashboard');
@@ -361,7 +398,7 @@
         await updateWeather();
     }
 
-    // --- KALENDER (mit originalgetreuem iCal-Proxy) ---
+    // --- KALENDER (originalgetreuer iCal-Proxy) ---
     let calendarEvents = [];
     const palette = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63','#00bcd4','#ff5722'];
     function assignColor(i) { return palette[i % palette.length]; }
@@ -403,7 +440,6 @@
         document.getElementById('month-slider').value = currentMonth;
     }
 
-    // ORIGINALE CORS-PROXIES AUS T2.HTML
     const CORS_PROXIES = [
         'https://corsproxy.io/?',
         'https://api.allorigins.win/raw?url=',
@@ -411,30 +447,21 @@
     ];
 
     async function fetchICSWithFallback(url) {
-        // 1. Direkter Versuch
         try {
             const res = await fetch(url);
             if (res.ok) return await res.text();
-        } catch(e) {
-            console.log('Direkter Abruf fehlgeschlagen (CORS), versuche Proxies...');
-        }
-        // 2. Proxies nacheinander
+        } catch(e) {}
         for (const proxy of CORS_PROXIES) {
             try {
                 const proxyUrl = proxy + encodeURIComponent(url);
                 const res = await fetch(proxyUrl);
                 if (res.ok) {
                     const text = await res.text();
-                    if (text.includes('BEGIN:VCALENDAR')) {
-                        console.log('Proxy erfolgreich:', proxy);
-                        return text;
-                    }
+                    if (text.includes('BEGIN:VCALENDAR')) return text;
                 }
-            } catch(e) {
-                console.log('Proxy fehlgeschlagen:', proxy);
-            }
+            } catch(e) {}
         }
-        throw new Error('Alle Lade-Versuche fehlgeschlagen. Bitte URL überprüfen.');
+        throw new Error('Alle Lade-Versuche fehlgeschlagen.');
     }
 
     async function loadCalendar(url) {
@@ -442,7 +469,6 @@
         const errBox = document.getElementById('ical-error');
         errBox.style.display = 'none';
         errBox.textContent = '';
-        // webcal:// ersetzen
         url = url.replace(/^webcal:\/\//i, 'https://');
         try {
             const data = await fetchICSWithFallback(url);
@@ -451,16 +477,14 @@
             calendarEvents = comp.getAllSubcomponents('vevent').map((v,i) => {
                 const ev = new ICAL.Event(v);
                 return {
-                    summary: ev.summary || '(Ohne Titel)',
+                    summary: ev.summary || 'Termin',
                     start: ev.startDate.toJSDate().toISOString().substring(0,10),
                     color: assignColor(i)
                 };
             });
             renderCalendar();
             localStorage.setItem('icalUrl', url);
-            console.log('✅ Kalender geladen:', calendarEvents.length, 'Termine');
         } catch(e) {
-            console.error('❌ Kalenderfehler:', e);
             errBox.style.display = 'block';
             errBox.textContent = '❌ ' + e.message;
         }
@@ -512,9 +536,16 @@
             localStorage.setItem('slides', JSON.stringify(slides));
             startSS();
         }
-        else if(t.closest('#anim-btn')) document.getElementById('anim-panel').classList.toggle('open');
-        else if(t.closest('#gradient-btn')) document.getElementById('gradient-panel').classList.toggle('open');
-        else if(t.closest('#cal-settings-btn')) document.getElementById('cal-panel').classList.toggle('open');
+        // Einstell-Buttons nur aktiv, wenn sichtbar
+        else if(t.closest('#anim-btn') && settingsVisible) {
+            document.getElementById('anim-panel').classList.toggle('open');
+        }
+        else if(t.closest('#gradient-btn') && settingsVisible) {
+            document.getElementById('gradient-panel').classList.toggle('open');
+        }
+        else if(t.closest('#cal-settings-btn') && settingsVisible) {
+            document.getElementById('cal-panel').classList.toggle('open');
+        }
         else if(t.closest('#load-ical')) loadCalendar(document.getElementById('ical-url').value);
         else if(t.closest('#location-search-btn')) {
             const q = document.getElementById('location-search').value;
