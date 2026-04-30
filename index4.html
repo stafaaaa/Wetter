@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>Glass Dashboard · Icons & 5 3D-Effekte</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js">
+</script>
+<script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js">
+</script>
 <style>
 :root {
 --bg-image: none;
@@ -71,7 +73,6 @@ min-width: 60px;
 min-height: 60px;
 z-index: 1;
 }
-
 .tile.interact-dragging,
 .tile.interact-resizing {
 box-shadow: 0 20px 50px rgba(0,0,0,0.4) !important;
@@ -90,7 +91,6 @@ align-items: center;
 gap: 8px;
 text-shadow: var(--text-shadow);
 }
-
 .tile-content {
 flex: 1;
 padding: 12px;
@@ -100,61 +100,72 @@ scrollbar-width: thin;
 scrollbar-color: rgba(0,0,0,0.2) transparent;
 }
 
-/* Text in Kacheln */
 .tile h2, .tile .temp, .tile .forecast-day, .tile .hourly-item, .tile .day, .tile .day-header {
 text-shadow: var(--text-shadow);
 }
 
 .resize-handle {
 position: absolute;
-bottom: 0;
-right: 0;
-width: 22px;
-height: 22px;
+bottom: 0; right: 0;
+width: 22px; height: 22px;
 cursor: nwse-resize;
 background: linear-gradient(135deg, transparent 60%, rgba(0,0,0,0.15) 60%);
 border-radius: 0 0 var(--tile-border-radius) 0;
 z-index: 5;
 }
 
-/* Icon-Tiles */
 .icon-tile-content {
-display: flex;
-align-items: center;
-justify-content: center;
-height: 100%;
-font-size: 2rem;
-cursor: pointer;
+display: flex; align-items: center; justify-content: center;
+height: 100%; font-size: 2rem; cursor: pointer;
 color: var(--text-color);
 transform: var(--icon-transform);
 text-shadow: var(--text-shadow);
-padding: 0 !important;
-overflow: hidden !important;
+padding: 0 !important; overflow: hidden !important;
 }
 
-/* Widget-Inhalte */
 .weather-now .temp { font-size: 3rem; font-weight: 700; }
 .forecast-row { display: flex; gap: 6px; }
-.forecast-day { flex:1; background: rgba(255,255,255,0.25); border-radius:16px; padding:6px; text-align:center; font-size:0.85rem; }
+.forecast-day {
+flex:1; background: rgba(255,255,255,0.25); border-radius:16px;
+padding:6px; text-align:center; font-size:0.85rem;
+}
 .forecast-day.active { background: var(--accent); color: white; }
 .hourly-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
-.hourly-item { min-width:60px; background: rgba(255,255,255,0.25); border-radius:12px; padding:4px; text-align:center; font-size:0.8rem; }
+.hourly-item {
+min-width:60px; background: rgba(255,255,255,0.25);
+border-radius:12px; padding:4px; text-align:center; font-size:0.8rem;
+}
 .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; font-size:0.85rem; }
 .day-header { font-weight:600; opacity:0.7; }
 .day { position:relative; padding:4px 0; border-radius:8px; cursor:pointer; }
 .day:hover { background: rgba(255,255,255,0.2); }
 .day.today { background: var(--accent); color:white; font-weight:bold; }
 .event-line { position:absolute; bottom:2px; left:10%; width:80%; height:4px; border-radius:2px; }
-.event-details { background:rgba(0,0,0,0.75); color:white; padding:8px; border-radius:8px; font-size:0.8rem; margin-top:8px; display:none; }
-.slideshow-container { position:relative; width:100%; aspect-ratio:16/9; background:rgba(0,0,0,0.05); border-radius:12px; overflow:hidden; margin-bottom:8px; }
-.slideshow-container img { width:100%; height:100%; object-fit:contain; transition:opacity 0.3s; }
-.slideshow-controls { position:absolute; bottom:4px; left:50%; transform:translateX(-50%); display:flex; gap:10px; background:rgba(0,0,0,0.5); padding:4px 10px; border-radius:20px; }
-.slideshow-controls button { background:transparent; border:none; color:white; font-size:1.2rem; cursor:pointer; }
+.event-details {
+background:rgba(0,0,0,0.75); color:white; padding:8px;
+border-radius:8px; font-size:0.8rem; margin-top:8px; display:none;
+}
+.slideshow-container {
+position:relative; width:100%; aspect-ratio:16/9;
+background:rgba(0,0,0,0.05); border-radius:12px; overflow:hidden; margin-bottom:8px;
+}
+.slideshow-container img {
+width:100%; height:100%; object-fit:contain; transition:opacity 0.3s;
+}
+.slideshow-controls {
+position:absolute; bottom:4px; left:50%; transform:translateX(-50%);
+display:flex; gap:10px; background:rgba(0,0,0,0.5); padding:4px 10px; border-radius:20px;
+}
+.slideshow-controls button {
+background:transparent; border:none; color:white; font-size:1.2rem; cursor:pointer;
+}
 .upload-area { display:flex; gap:8px; align-items:center; margin-top:4px; }
-.upload-btn { background: var(--accent); color:white; border:none; border-radius:12px; padding:6px 12px; cursor:pointer; font-size:0.85rem; }
+.upload-btn {
+background: var(--accent); color:white; border:none;
+border-radius:12px; padding:6px 12px; cursor:pointer; font-size:0.85rem;
+}
 input[type="file"] { display:none; }
 
-/* Settings Panel */
 .settings-panel {
 position: fixed; top:0; right:-400px; width:380px; height:100vh;
 background: rgba(20,20,30,0.95); backdrop-filter: blur(20px); color:white;
@@ -163,33 +174,31 @@ border-left:1px solid rgba(255,255,255,0.2);
 }
 .settings-panel.open { right:0; }
 .settings-panel label { display:block; margin:14px 0 4px; font-weight:600; }
-.settings-panel select, .settings-panel input { width:100%; padding:8px; border-radius:8px; border:none; background:rgba(255,255,255,0.15); color:white; margin-bottom:8px; }
-.close-settings { position:absolute; top:10px; right:10px; background:none; border:none; color:white; font-size:1.5rem; cursor:pointer; }
+.settings-panel select, .settings-panel input {
+width:100%; padding:8px; border-radius:8px; border:none;
+background:rgba(255,255,255,0.15); color:white; margin-bottom:8px;
+}
+.close-settings {
+position:absolute; top:10px; right:10px; background:none;
+border:none; color:white; font-size:1.5rem; cursor:pointer;
+}
 </style>
 </head>
 <body data-theme="default">
 
-<div id="dashboard">
-<!-- Tiles werden per JavaScript erzeugt -->
-</div>
+<div id="dashboard"></div>
 
 <div class="settings-panel" id="settings-panel">
 <button class="close-settings" id="close-settings">&times;</button>
 <h2>Einstellungen</h2>
 <label>Thema</label>
 <select id="theme-select">
-<option value="default">Standard Hell</option>
-<option value="dark">Dunkel Elegant</option>
-<option value="neon">Neon Nächte</option>
-<option value="nordic">Nordic Frost</option>
-<option value="sunset">Sunset Vibes</option>
-<option value="forest">Forest Whisper</option>
-<option value="midnight">Midnight Blue</option>
-<option value="rose">Rose Gold</option>
-<option value="ocean">Ocean Breeze</option>
-<option value="minimal">Minimal Weiß</option>
+<option value="default">Standard Hell</option><option value="dark">Dunkel Elegant</option>
+<option value="neon">Neon Nächte</option><option value="nordic">Nordic Frost</option>
+<option value="sunset">Sunset Vibes</option><option value="forest">Forest Whisper</option>
+<option value="midnight">Midnight Blue</option><option value="rose">Rose Gold</option>
+<option value="ocean">Ocean Breeze</option><option value="minimal">Minimal Weiß</option>
 </select>
-
 <label>Hintergrund-Typ</label>
 <select id="bg-mode">
 <option value="theme">Theme-Farbverlauf</option>
@@ -198,76 +207,40 @@ border-left:1px solid rgba(255,255,255,0.2);
 <option value="upload">Eigenes Bild (Upload)</option>
 <option value="slideshow">Slideshow-Bild</option>
 </select>
-<div id="bg-color-container" style="display:none;">
-<label>Hintergrundfarbe</label>
-<input type="color" id="bg-color" value="#e0e7ff">
-</div>
-<div id="bg-url-container" style="display:none;">
-<label>Bild-URL</label>
-<input type="text" id="bg-url" placeholder="https://...">
-</div>
-<div id="bg-upload-container" style="display:none;">
-<label>Hintergrundbild hochladen</label>
-<input type="file" id="bg-upload" accept="image/*">
-</div>
-
+<div id="bg-color-container" style="display:none;"><label>Hintergrundfarbe</label><input type="color" id="bg-color" value="#e0e7ff"></div>
+<div id="bg-url-container" style="display:none;"><label>Bild-URL</label><input type="text" id="bg-url" placeholder="https://..."></div>
+<div id="bg-upload-container" style="display:none;"><label>Hintergrundbild hochladen</label><input type="file" id="bg-upload" accept="image/*"></div>
 <label>Transparente Kacheln</label>
-<select id="transparency-toggle">
-<option value="off">Aus (glasig)</option>
-<option value="on">An (durchsichtig)</option>
-</select>
-<label>Schriftfarbe</label>
-<input type="color" id="font-color" value="#1e293b">
+<select id="transparency-toggle"><option value="off">Aus (glasig)</option><option value="on">An (durchsichtig)</option></select>
+<label>Schriftfarbe</label><input type="color" id="font-color" value="#1e293b">
 <label>Schriftart</label>
 <select id="font-family-select">
 <option value="'Segoe UI', system-ui, -apple-system, sans-serif">Segoe UI</option>
-<option value="'Inter', sans-serif">Inter</option>
-<option value="'Roboto', sans-serif">Roboto</option>
-<option value="'Playfair Display', serif">Playfair Display</option>
-<option value="'Courier New', monospace">Courier New</option>
-<option value="'Georgia', serif">Georgia</option>
-<option value="'Verdana', sans-serif">Verdana</option>
-<option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
-<option value="'Arial', sans-serif">Arial</option>
+<option value="'Inter', sans-serif">Inter</option><option value="'Roboto', sans-serif">Roboto</option>
+<option value="'Playfair Display', serif">Playfair Display</option><option value="'Courier New', monospace">Courier New</option>
+<option value="'Georgia', serif">Georgia</option><option value="'Verdana', sans-serif">Verdana</option>
+<option value="'Trebuchet MS', sans-serif">Trebuchet MS</option><option value="'Arial', sans-serif">Arial</option>
 <option value="'Times New Roman', serif">Times New Roman</option>
 </select>
-
 <label>3D-Effekt</label>
 <select id="3d-mode">
-<option value="none">Keiner</option>
-<option value="perspective">Perspektivisch</option>
-<option value="shadow3d">Schatten 3D</option>
-<option value="floating">Schwebend</option>
-<option value="skew">Gekippt</option>
-<option value="glow">Glühend 3D</option>
+<option value="none">Keiner</option><option value="perspective">Perspektivisch</option>
+<option value="shadow3d">Schatten 3D</option><option value="floating">Schwebend</option>
+<option value="skew">Gekippt</option><option value="glow">Glühend 3D</option>
 </select>
-<label>3D-Stärke (0-10)</label>
-<input type="range" id="3d-strength" min="0" max="10" value="2" step="0.5">
-
-<label>Kachel Hintergrundfarbe</label>
-<input type="color" id="tile-bg-color" value="#ffffff">
-<label>Kachel Rahmenbreite (px)</label>
-<input type="number" id="border-width" min="0" max="10" value="1">
-<label>Kachel Rahmenrundung (px)</label>
-<input type="number" id="border-radius" min="0" max="40" value="24">
+<label>3D-Stärke (0-10)</label><input type="range" id="3d-strength" min="0" max="10" value="2" step="0.5">
+<label>Kachel Hintergrundfarbe</label><input type="color" id="tile-bg-color" value="#ffffff">
+<label>Kachel Rahmenbreite (px)</label><input type="number" id="border-width" min="0" max="10" value="1">
+<label>Kachel Rahmenrundung (px)</label><input type="number" id="border-radius" min="0" max="40" value="24">
 <label>Slideshow Intervall (Sekunden)</label>
-<select id="interval-select">
-<option value="5">5</option>
-<option value="10" selected>10</option>
-<option value="15">15</option>
-</select>
+<select id="interval-select"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option></select>
 </div>
 
 <script>
 (function() {
-// ---------- GLOBAL Z-INDEX ----------
 let zCounter = 10;
-function bringToFront(tile) {
-zCounter += 1;
-tile.style.zIndex = zCounter;
-}
+function bringToFront(tile) { zCounter += 1; tile.style.zIndex = zCounter; }
 
-// ---------- THEMES ----------
 const themes = {
 default: { '--bg-gradient': 'linear-gradient(135deg, #e0e7ff, #c7d2fe)', '--tile-bg': 'rgba(255,255,255,0.3)', '--text-color': '#1e293b', '--accent': '#3b82f6' },
 dark: { '--bg-gradient': '#1e293b', '--tile-bg': 'rgba(30,41,59,0.6)', '--text-color': '#e2e8f0', '--accent': '#6366f1' },
@@ -286,7 +259,6 @@ Object.entries(theme).forEach(([prop, val]) => document.documentElement.style.se
 localStorage.setItem('theme', name);
 }
 
-// ---------- 3D-Effekte ----------
 function apply3DEffect(mode, strength) {
 const root = document.documentElement;
 const s = parseFloat(strength) || 0;
@@ -330,7 +302,6 @@ break;
 root.style.setProperty('--effect-strength', s);
 }
 
-// ---------- LAYOUT & TILES ----------
 const defaultLayout = [
 { id: 'spotify', x: 10, y: 10, w: 64, h: 64 },
 { id: 'amazon', x: 84, y: 10, w: 64, h: 64 },
@@ -440,15 +411,12 @@ break;
 }
 }
 
-// ---------- INTERACT.JS ----------
 function initInteract() {
 interact('.tile')
 .draggable({
 allowFrom: '.tile-header, .icon-tile-content',
 ignoreFrom: '.resize-handle',
-modifiers: [
-interact.modifiers.restrict({ restriction: 'parent', endOnly: false })
-],
+modifiers: [ interact.modifiers.restrict({ restriction: 'parent', endOnly: false }) ],
 listeners: {
 move(event) {
 const target = event.target;
@@ -473,9 +441,7 @@ saveLayout();
 })
 .resizable({
 edges: { bottom: true, right: true },
-modifiers: [
-interact.modifiers.restrict({ restriction: 'parent', endOnly: false })
-],
+modifiers: [ interact.modifiers.restrict({ restriction: 'parent', endOnly: false }) ],
 listeners: {
 move(event) {
 event.target.style.width = event.rect.width + 'px';
@@ -486,19 +452,14 @@ end() { saveLayout(); }
 });
 }
 
-// ---------- EVENT-DELEGATION FÜR KACHEL-KLICKS ----------
 document.getElementById('dashboard').addEventListener('click', function(e) {
 const tile = e.target.closest('.tile');
 if (!tile) return;
 bringToFront(tile);
-
-// Settings-Kachel öffnet Einstellungs-Panel
 if (tile.id === 'settings') {
 document.getElementById('settings-panel').classList.add('open');
 return;
 }
-
-// App-Icons
 const app = tile.getAttribute('data-app');
 if (app) {
 const schemes = {
@@ -576,7 +537,12 @@ function renderCalendar() {
 const grid = document.getElementById('calendar-grid');
 if(!grid) return;
 grid.innerHTML = '';
-['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => { const div = document.createElement('div'); div.className='day-header'; div.textContent=d; grid.appendChild(div); });
+['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => {
+const div = document.createElement('div');
+div.className = 'day-header';
+div.textContent = d;
+grid.appendChild(div);
+});
 const now = new Date();
 const year = now.getFullYear();
 const month = now.getMonth();
@@ -598,7 +564,7 @@ line.style.backgroundColor = ev.color || assignEventColor(idx);
 line.style.bottom = (2 + idx * 6) + 'px';
 dayDiv.appendChild(line);
 });
-dayDiv.addEventListener('click', (e) => {
+dayDiv.addEventListener('click', () => {
 const details = document.getElementById('event-details');
 if(details) {
 details.style.display = 'block';
@@ -612,25 +578,48 @@ dayDiv.classList.add('today');
 grid.appendChild(dayDiv);
 }
 }
-document.addEventListener('click', function(e) {
-if(e.target.id === 'load-ical' || e.target.closest('#load-ical')) {
-const url = document.getElementById('ical-url').value.trim();
+
+function loadCalendar(url) {
 if(!url) return;
-fetch(url).then(r=>r.text()).then(data => {
+fetch(url)
+.then(response => {
+if (!response.ok) throw new Error('Netzwerkantwort war nicht ok');
+return response.text();
+})
+.then(data => {
+try {
 const jcal = ICAL.parse(data);
 const comp = new ICAL.Component(jcal);
 const vevents = comp.getAllSubcomponents('vevent');
 calendarEvents = vevents.map((vevent, i) => {
 const ev = new ICAL.Event(vevent);
+const start = ev.startDate.toJSDate();
+const end = ev.endDate.toJSDate();
 return {
 summary: ev.summary,
-start: ev.startDate.toICALString().substring(0,10),
-end: ev.endDate.toICALString().substring(0,10),
+start: start.toISOString().substring(0,10),
+end: end.toISOString().substring(0,10),
 color: assignEventColor(i)
 };
 });
 renderCalendar();
-}).catch(() => alert('Fehler beim Laden'));
+console.log('Kalender erfolgreich geladen:', calendarEvents.length, 'Ereignisse');
+} catch(parseError) {
+console.error('ICAL Parse Fehler:', parseError);
+alert('Fehler beim Verarbeiten der Kalenderdaten. Bitte prüfe die URL.');
+}
+})
+.catch(err => {
+console.error('Kalender Ladefehler:', err);
+alert('Fehler beim Laden des Kalenders. Möglicherweise ist die URL falsch oder der Kalender nicht öffentlich zugänglich.');
+});
+}
+
+document.addEventListener('click', function(e) {
+if(e.target.id === 'load-ical' || e.target.closest('#load-ical')) {
+const url = document.getElementById('ical-url').value.trim();
+if(!url) return;
+loadCalendar(url);
 }
 });
 
@@ -639,57 +628,94 @@ let slides = [];
 let currentSlide = 0;
 let slideInterval = 10;
 let slideshowTimer;
+
+function saveSlidesToStorage() {
+try {
+localStorage.setItem('slideshowImages', JSON.stringify(slides));
+localStorage.setItem('slideshowIndex', currentSlide);
+} catch(e) {
+console.warn('Slideshow konnte nicht vollständig gespeichert werden (zu viele/große Bilder).');
+}
+}
+
+function loadSlidesFromStorage() {
+try {
+const saved = localStorage.getItem('slideshowImages');
+if (saved) {
+slides = JSON.parse(saved);
+currentSlide = parseInt(localStorage.getItem('slideshowIndex')) || 0;
+if (currentSlide >= slides.length) currentSlide = 0;
+updateSlideDisplay();
+const countEl = document.getElementById('image-count');
+if(countEl) countEl.textContent = slides.length + ' Bilder';
+}
+} catch(e) {
+console.warn('Slideshow-Daten konnten nicht geladen werden.');
+}
+}
+
 function applyBackground() {
 const mode = localStorage.getItem('bgMode') || 'theme';
+const root = document.documentElement;
 switch(mode) {
 case 'theme':
-document.body.style.setProperty('--bg-image', 'none');
+root.style.setProperty('--bg-image', 'none');
+document.body.style.background = '';
 break;
 case 'color':
-document.body.style.setProperty('--bg-image', 'none');
+root.style.setProperty('--bg-image', 'none');
 document.body.style.background = localStorage.getItem('bgColor') || '#e0e7ff';
 break;
 case 'url':
 const url = localStorage.getItem('bgUrl') || '';
-document.body.style.setProperty('--bg-image', url ? `url(${url})` : 'none');
+root.style.setProperty('--bg-image', url ? `url(${url})` : 'none');
+document.body.style.background = '';
 break;
 case 'upload':
 const upload = localStorage.getItem('bgUpload') || '';
-document.body.style.setProperty('--bg-image', upload ? `url(${upload})` : 'none');
+root.style.setProperty('--bg-image', upload ? `url(${upload})` : 'none');
+document.body.style.background = '';
 break;
 case 'slideshow':
-if (slides.length > 0) {
-document.body.style.setProperty('--bg-image', `url(${slides[currentSlide]})`);
+document.body.style.background = '';
+if (slides.length > 0 && slides[currentSlide]) {
+root.style.setProperty('--bg-image', `url(${slides[currentSlide]})`);
 } else {
-document.body.style.setProperty('--bg-image', 'none');
+root.style.setProperty('--bg-image', 'none');
 }
 break;
 }
 }
+
 function updateSlideDisplay() {
 const img = document.getElementById('slide-img');
 if(!img) return;
-if(slides.length > 0) {
+if (slides.length > 0 && slides[currentSlide]) {
 img.src = slides[currentSlide];
 img.style.display = 'block';
 } else {
+img.src = '';
 img.style.display = 'none';
 }
 if (localStorage.getItem('bgMode') === 'slideshow') {
-document.body.style.setProperty('--bg-image', slides.length > 0 ? `url(${slides[currentSlide]})` : 'none');
+applyBackground();
 }
 }
+
 function startSlideshow() {
 clearInterval(slideshowTimer);
 if(slides.length === 0) return;
 slideshowTimer = setInterval(() => {
 currentSlide = (currentSlide + 1) % slides.length;
 updateSlideDisplay();
+saveSlidesToStorage();
 }, slideInterval * 1000);
 }
+
 document.addEventListener('change', function(e) {
 if(e.target.id === 'file-upload') {
 const files = Array.from(e.target.files);
+if (files.length === 0) return;
 files.forEach(file => {
 const reader = new FileReader();
 reader.onload = ev => {
@@ -698,6 +724,7 @@ if(slides.length === 1) currentSlide = 0;
 updateSlideDisplay();
 const countEl = document.getElementById('image-count');
 if(countEl) countEl.textContent = slides.length + ' Bilder';
+saveSlidesToStorage();
 startSlideshow();
 if (localStorage.getItem('bgMode') === 'slideshow') applyBackground();
 };
@@ -706,15 +733,20 @@ reader.readAsDataURL(file);
 e.target.value = '';
 }
 });
+
 document.addEventListener('click', function(e) {
 if(e.target.closest('#next-slide')) {
 if(!slides.length) return;
 currentSlide = (currentSlide + 1) % slides.length;
-updateSlideDisplay(); startSlideshow();
+updateSlideDisplay();
+saveSlidesToStorage();
+startSlideshow();
 } else if(e.target.closest('#prev-slide')) {
 if(!slides.length) return;
 currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-updateSlideDisplay(); startSlideshow();
+updateSlideDisplay();
+saveSlidesToStorage();
+startSlideshow();
 } else if(e.target.closest('#delete-slide')) {
 if(!slides.length) return;
 slides.splice(currentSlide, 1);
@@ -722,6 +754,7 @@ if(currentSlide >= slides.length) currentSlide = Math.max(0, slides.length-1);
 updateSlideDisplay();
 const countEl = document.getElementById('image-count');
 if(countEl) countEl.textContent = slides.length + ' Bilder';
+saveSlidesToStorage();
 startSlideshow();
 if (localStorage.getItem('bgMode') === 'slideshow') applyBackground();
 }
@@ -776,12 +809,8 @@ if (mode === 'color') document.getElementById('bg-color').value = localStorage.g
 if (mode === 'url') document.getElementById('bg-url').value = localStorage.getItem('bgUrl') || '';
 }
 
-// Settings Panel schließen
 document.getElementById('close-settings').addEventListener('click', () => document.getElementById('settings-panel').classList.remove('open'));
-
-// Settings Event-Listener für Änderungen
 document.getElementById('theme-select').addEventListener('change', e => applyTheme(e.target.value));
-
 document.getElementById('bg-mode').addEventListener('change', function(e) {
 const mode = e.target.value;
 localStorage.setItem('bgMode', mode);
@@ -806,7 +835,6 @@ if (localStorage.getItem('bgMode') === 'upload') applyBackground();
 };
 reader.readAsDataURL(file);
 });
-
 document.getElementById('transparency-toggle').addEventListener('change', e => {
 document.body.classList.toggle('transparent-tiles', e.target.value === 'on');
 localStorage.setItem('transparent', e.target.value);
@@ -821,15 +849,12 @@ localStorage.setItem('fontFamily', e.target.value);
 });
 document.getElementById('3d-mode').addEventListener('change', function(e) {
 const mode = e.target.value;
-const strength = document.getElementById('3d-strength').value;
 localStorage.setItem('3dMode', mode);
-apply3DEffect(mode, strength);
+apply3DEffect(mode, document.getElementById('3d-strength').value);
 });
 document.getElementById('3d-strength').addEventListener('input', function(e) {
-const strength = e.target.value;
-localStorage.setItem('3dStrength', strength);
-const mode = document.getElementById('3d-mode').value;
-apply3DEffect(mode, strength);
+localStorage.setItem('3dStrength', e.target.value);
+apply3DEffect(document.getElementById('3d-mode').value, e.target.value);
 });
 document.getElementById('tile-bg-color').addEventListener('input', e => {
 document.documentElement.style.setProperty('--tile-bg', e.target.value + '80');
@@ -851,6 +876,7 @@ startSlideshow();
 
 // ---------- INIT ----------
 createTiles();
+loadSlidesFromStorage();
 loadSettings();
 updateWeather();
 renderCalendar();
