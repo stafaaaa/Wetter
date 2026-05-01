@@ -1,0 +1,2257 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>AnnaLove · Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root {
+  --bg-grad-1: #1a1530;
+  --bg-grad-2: #2a1f4a;
+  --bg-grad-3: #3d1a4a;
+  --bg-grad-4: #4a1f3d;
+
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-bg-strong: rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-border-strong: rgba(255, 255, 255, 0.25);
+
+  --text: #f5f0e8;
+  --text-muted: rgba(245, 240, 232, 0.65);
+  --text-faint: rgba(245, 240, 232, 0.4);
+
+  --accent: #ffb8a8;
+  --accent-warm: #ffd4a3;
+  --accent-cool: #a8d4ff;
+  --accent-rose: #ff9bb8;
+
+  --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.25);
+  --shadow-strong: 0 20px 60px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 40px rgba(255, 184, 168, 0.15);
+
+  --radius: 24px;
+  --radius-sm: 16px;
+  --radius-lg: 32px;
+
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Inter', system-ui, sans-serif;
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  font-family: var(--sans);
+  color: var(--text);
+  background: var(--bg-grad-1);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Animated gradient background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -10%;
+  background:
+    radial-gradient(ellipse at 20% 30%, var(--bg-grad-3) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, var(--bg-grad-4) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, var(--bg-grad-2) 0%, transparent 60%),
+    var(--bg-grad-1);
+  z-index: -2;
+  animation: bgDrift 30s ease-in-out infinite alternate;
+}
+
+@keyframes bgDrift {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(-2%, 2%) scale(1.05); }
+  100% { transform: translate(2%, -1%) scale(1.02); }
+}
+
+/* Subtle noise overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: -1;
+  mix-blend-mode: overlay;
+}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.dashboard {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "header   header"
+    "media    calendar"
+    "weather  weather";
+  gap: 20px;
+  padding: 24px;
+  height: 100vh;
+  height: 100dvh;
+}
+
+@media (max-width: 900px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "header"
+      "calendar"
+      "media"
+      "weather";
+    gap: 14px;
+    padding: 14px;
+  }
+}
+
+/* ============================================================
+   GLASS PANEL BASE
+   ============================================================ */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255,255,255,0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 40%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.header {
+  grid-area: header;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 28px;
+}
+
+.header-time {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+}
+
+.clock {
+  font-family: var(--serif);
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variation-settings: "opsz" 144;
+}
+
+.clock-seconds {
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  font-weight: 300;
+  color: var(--text-faint);
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+}
+
+.date-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.date-day {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.date-full {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.settings-trigger {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.4s var(--ease);
+  opacity: 0.4;
+  color: var(--text);
+}
+
+.settings-trigger:hover, .settings-trigger:active {
+  opacity: 1;
+  transform: rotate(60deg);
+  background: var(--glass-bg-strong);
+  box-shadow: var(--shadow-glow);
+}
+
+.settings-trigger svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* ============================================================
+   MEDIA / SLIDESHOW
+   ============================================================ */
+.media-panel {
+  grid-area: media;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.slideshow {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  border-radius: inherit;
+  min-height: 300px;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.8s var(--ease);
+  transform: scale(1);
+  animation: kenBurns 18s ease-in-out infinite alternate;
+}
+
+.slide.active {
+  opacity: 1;
+  z-index: 2;
+}
+
+@keyframes kenBurns {
+  0%   { transform: scale(1) translate(0, 0); }
+  100% { transform: scale(1.08) translate(-1%, 1%); }
+}
+
+.slide-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.5) 0%,
+    rgba(0,0,0,0.1) 30%,
+    transparent 60%
+  );
+  z-index: 3;
+  pointer-events: none;
+}
+
+.slide-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-family: var(--serif);
+  font-style: italic;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.slide-empty svg {
+  width: 64px;
+  height: 64px;
+  opacity: 0.3;
+}
+
+.slide-counter {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 4;
+  display: flex;
+  gap: 4px;
+}
+
+.slide-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  transition: all 0.3s var(--ease);
+}
+
+.slide-dot.active {
+  background: var(--accent);
+  width: 18px;
+  border-radius: 3px;
+}
+
+/* ============================================================
+   CALENDAR
+   ============================================================ */
+.calendar-panel {
+  grid-area: calendar;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 24px;
+}
+
+.cal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.cal-title {
+  font-family: var(--serif);
+  font-size: 1.7rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.cal-title-month {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.cal-nav {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cal-nav-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.2s var(--ease);
+}
+
+.cal-nav-btn:hover, .cal-nav-btn:active {
+  background: var(--glass-bg-strong);
+  transform: scale(1.05);
+}
+
+.cal-view-toggle {
+  display: flex;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 3px;
+  margin-left: 8px;
+}
+
+.cal-view-btn {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 11px;
+  transition: all 0.3s var(--ease);
+}
+
+.cal-view-btn.active {
+  background: var(--accent);
+  color: #2a1530;
+  box-shadow: 0 2px 8px rgba(255, 184, 168, 0.3);
+}
+
+/* Month view */
+.cal-month {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: 36px repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.cal-weekday {
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-faint);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 6px 0;
+}
+
+.cal-weekday-num {
+  /* For KW column header */
+  color: var(--accent);
+}
+
+.cal-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 36px repeat(7, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 4px;
+  min-height: 0;
+}
+
+.cal-week-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(255, 184, 168, 0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-week-num:hover, .cal-week-num:active {
+  background: rgba(255, 184, 168, 0.2);
+  transform: scale(1.08);
+}
+
+.cal-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 6px 4px 4px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  min-height: 44px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-day:hover, .cal-day:active {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+.cal-day.other-month {
+  opacity: 0.3;
+}
+
+.cal-day.today {
+  background: linear-gradient(135deg, rgba(255, 184, 168, 0.25), rgba(255, 155, 184, 0.15));
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.cal-day-num {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.cal-day-events {
+  display: flex;
+  gap: 2px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 100%;
+}
+
+.cal-event-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Week view */
+.cal-week {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 8px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.cal-week-day {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  min-height: 70px;
+}
+
+.cal-week-day.today {
+  background: linear-gradient(135deg, rgba(255, 184, 168, 0.15), rgba(255, 155, 184, 0.08));
+  border-color: var(--accent);
+}
+
+.cal-week-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.cal-week-day-name {
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.cal-week-day-date {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.cal-week-events-empty {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+.cal-week-event {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+  border-left: 3px solid var(--accent);
+}
+
+.cal-week-event:hover, .cal-week-event:active {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(2px);
+}
+
+.cal-week-event-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 80px;
+  font-weight: 500;
+}
+
+.cal-week-event-title {
+  font-size: 0.9rem;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   WEATHER
+   ============================================================ */
+.weather-panel {
+  grid-area: weather;
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) 2fr;
+  gap: 0;
+  padding: 0;
+  min-height: 200px;
+}
+
+@media (max-width: 760px) {
+  .weather-panel {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+}
+
+.weather-current {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  border-right: 1px solid var(--glass-border);
+}
+
+@media (max-width: 760px) {
+  .weather-current { border-right: none; border-bottom: 1px solid var(--glass-border); }
+}
+
+.weather-loc {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+.weather-loc svg { width: 14px; height: 14px; }
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 16px 0 12px;
+}
+
+.weather-icon-wrap {
+  width: 86px;
+  height: 86px;
+  flex-shrink: 0;
+}
+
+.weather-temp {
+  font-family: var(--serif);
+  font-size: 4.2rem;
+  font-weight: 300;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.weather-temp-unit {
+  font-size: 1.6rem;
+  vertical-align: super;
+  color: var(--text-muted);
+}
+
+.weather-desc {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--accent);
+  margin-bottom: 8px;
+  text-transform: capitalize;
+}
+
+.weather-range {
+  display: flex;
+  gap: 16px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.weather-range span { font-variant-numeric: tabular-nums; }
+
+.weather-forecast {
+  padding: 24px 24px 24px 0;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.weather-forecast::-webkit-scrollbar { display: none; }
+
+@media (max-width: 760px) {
+  .weather-forecast { padding: 20px 24px; }
+}
+
+.forecast-day {
+  flex: 1;
+  min-width: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid transparent;
+  transition: all 0.3s var(--ease);
+}
+
+.forecast-day:hover {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+.forecast-day-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.forecast-icon {
+  width: 48px;
+  height: 48px;
+  margin: 6px 0;
+}
+
+.forecast-temps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.forecast-max {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.forecast-min {
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+
+/* ============================================================
+   ANIMATED WEATHER ICONS
+   ============================================================ */
+.wicon-sun-core {
+  fill: #ffd166;
+  filter: drop-shadow(0 0 6px rgba(255, 209, 102, 0.5));
+}
+.wicon-sun-rays {
+  stroke: #ffd166;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  transform-origin: center;
+  animation: spin 20s linear infinite;
+}
+.wicon-cloud { fill: #e8e4f0; opacity: 0.95; }
+.wicon-cloud-dark { fill: #a8a4b8; }
+.wicon-rain { stroke: #7eb8e0; stroke-width: 2; stroke-linecap: round; animation: rainFall 1s linear infinite; }
+.wicon-snow { fill: #ffffff; }
+.wicon-bolt { fill: #ffd166; }
+.wicon-moon { fill: #f0e8d8; filter: drop-shadow(0 0 4px rgba(240, 232, 216, 0.4)); }
+.wicon-fog { stroke: #c8c4d0; stroke-width: 3; stroke-linecap: round; opacity: 0.8; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes rainFall {
+  0%   { transform: translateY(-3px); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translateY(8px); opacity: 0; }
+}
+
+/* ============================================================
+   EVENT MODAL
+   ============================================================ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 10, 30, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s var(--ease);
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal {
+  background: linear-gradient(135deg, rgba(60, 40, 80, 0.9), rgba(80, 50, 70, 0.9));
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  max-width: 540px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-strong);
+  transform: scale(0.9) translateY(20px);
+  transition: transform 0.5s var(--ease-spring);
+  position: relative;
+}
+
+.modal-backdrop.active .modal {
+  transform: scale(1) translateY(0);
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+}
+
+.modal-close:hover { background: rgba(255, 255, 255, 0.2); transform: rotate(90deg); }
+
+.modal h2 {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  padding-right: 40px;
+  line-height: 1.2;
+}
+
+.modal-color-bar {
+  width: 60px;
+  height: 4px;
+  background: var(--accent);
+  border-radius: 2px;
+  margin-bottom: 18px;
+}
+
+.modal-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.modal-row svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.modal-row-label {
+  color: var(--text-faint);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+
+.modal-row-value {
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* ============================================================
+   SETTINGS PANEL
+   ============================================================ */
+.settings-panel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(420px, 100vw);
+  background: linear-gradient(180deg, rgba(40, 28, 60, 0.96), rgba(60, 30, 50, 0.96));
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border-left: 1px solid var(--glass-border-strong);
+  z-index: 999;
+  transform: translateX(100%);
+  transition: transform 0.5s var(--ease);
+  overflow-y: auto;
+  padding: 28px 24px;
+  box-shadow: -20px 0 60px rgba(0,0,0,0.4);
+}
+
+.settings-panel.active { transform: translateX(0); }
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.settings-header h2 {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  font-weight: 500;
+}
+
+.settings-section {
+  margin-bottom: 28px;
+}
+
+.settings-section h3 {
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.settings-field {
+  margin-bottom: 14px;
+}
+
+.settings-label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.settings-input,
+.settings-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  transition: all 0.2s var(--ease);
+}
+
+.settings-input:focus,
+.settings-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.settings-textarea {
+  min-height: 70px;
+  resize: vertical;
+  font-family: 'SF Mono', Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.settings-btn {
+  padding: 11px 16px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent);
+  color: #2a1530;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+}
+
+.settings-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255, 184, 168, 0.4); }
+.settings-btn:active { transform: translateY(0); }
+
+.settings-btn-secondary {
+  background: var(--glass-bg-strong);
+  color: var(--text);
+  border: 1px solid var(--glass-border);
+}
+
+.settings-btn-danger {
+  background: rgba(255, 100, 100, 0.2);
+  color: #ffaaaa;
+  border: 1px solid rgba(255, 100, 100, 0.3);
+}
+
+/* Calendar source list */
+.cal-source-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.cal-source-color {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+
+.cal-source-name {
+  flex: 1;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.cal-source-url {
+  flex: 1;
+  font-size: 0.7rem;
+  color: var(--text-faint);
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-source-remove {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 100, 100, 0.2);
+  color: #ffaaaa;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Image source preview grid */
+.img-preview {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.img-preview-item {
+  position: relative;
+  aspect-ratio: 1;
+  background-size: cover;
+  background-position: center;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.img-preview-item .remove {
+  position: absolute;
+  top: 2px; right: 2px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  border: none;
+  cursor: pointer;
+}
+
+/* ============================================================
+   LOADING STATE
+   ============================================================ */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 16px;
+}
+
+.loading-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes pulse {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.1); }
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: rgba(40, 28, 60, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  padding: 12px 20px;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  z-index: 2000;
+  transition: transform 0.4s var(--ease-spring);
+  box-shadow: var(--shadow-strong);
+}
+
+.toast.active {
+  transform: translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+
+<div class="dashboard">
+  <!-- HEADER -->
+  <header class="header glass">
+    <div class="header-time">
+      <div>
+        <div class="clock" id="clock">--:--</div>
+      </div>
+      <div class="date-block">
+        <div class="date-day" id="date-day">—</div>
+        <div class="date-full" id="date-full">—</div>
+      </div>
+      <div class="clock-seconds" id="clock-seconds">--</div>
+    </div>
+    <button class="settings-trigger" id="settings-btn" aria-label="Einstellungen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- MEDIA / SLIDESHOW -->
+  <section class="media-panel glass">
+    <div class="slideshow" id="slideshow">
+      <div class="slide-empty" id="slide-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="9" cy="9" r="2"/>
+          <path d="M21 15l-5-5L5 21"/>
+        </svg>
+        <div>Noch keine Bilder.<br>Über das Zahnrad hinzufügen.</div>
+      </div>
+      <div class="slide-overlay"></div>
+      <div class="slide-counter" id="slide-counter"></div>
+    </div>
+  </section>
+
+  <!-- CALENDAR -->
+  <section class="calendar-panel glass">
+    <div class="cal-header">
+      <div class="cal-title">
+        <span class="cal-title-month" id="cal-title-month">Monat</span>
+        <span id="cal-title-year">2026</span>
+      </div>
+      <div class="cal-nav">
+        <button class="cal-nav-btn" id="cal-prev" aria-label="Vorher">‹</button>
+        <button class="cal-nav-btn" id="cal-today" aria-label="Heute" title="Heute">●</button>
+        <button class="cal-nav-btn" id="cal-next" aria-label="Nachher">›</button>
+        <div class="cal-view-toggle">
+          <button class="cal-view-btn active" data-view="month">Monat</button>
+          <button class="cal-view-btn" data-view="week">Woche</button>
+        </div>
+      </div>
+    </div>
+    <div class="cal-month" id="cal-month-view"></div>
+    <div class="cal-week" id="cal-week-view" style="display:none"></div>
+  </section>
+
+  <!-- WEATHER -->
+  <section class="weather-panel glass">
+    <div class="weather-current" id="weather-current">
+      <div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
+    </div>
+    <div class="weather-forecast" id="weather-forecast"></div>
+  </section>
+</div>
+
+<!-- EVENT MODAL -->
+<div class="modal-backdrop" id="event-modal">
+  <div class="modal">
+    <button class="modal-close" id="event-modal-close">×</button>
+    <div class="modal-color-bar" id="event-color"></div>
+    <h2 id="event-title">—</h2>
+    <div class="modal-meta" id="event-meta"></div>
+  </div>
+</div>
+
+<!-- SETTINGS PANEL -->
+<aside class="settings-panel" id="settings-panel">
+  <div class="settings-header">
+    <h2>Einstellungen</h2>
+    <button class="modal-close" id="settings-close">×</button>
+  </div>
+
+  <div class="settings-section">
+    <h3>Wetter — Standort</h3>
+    <div class="settings-field">
+      <label class="settings-label">Stadt oder PLZ</label>
+      <input type="text" id="loc-input" class="settings-input" placeholder="Düsseldorf, DE oder 40213">
+    </div>
+    <button class="settings-btn" id="loc-save">Standort speichern</button>
+  </div>
+
+  <div class="settings-section">
+    <h3>Kalender — Quellen</h3>
+    <div id="cal-source-list"></div>
+    <div class="settings-field" style="margin-top:14px">
+      <label class="settings-label">Name (z. B. „Arbeit", „Privat", „Müllabfuhr")</label>
+      <input type="text" id="cal-new-name" class="settings-input" placeholder="Mein Kalender">
+    </div>
+    <div class="settings-field">
+      <label class="settings-label">iCal-URL (z. B. von Google Calendar)</label>
+      <textarea id="cal-new-url" class="settings-textarea" placeholder="https://calendar.google.com/calendar/ical/..."></textarea>
+    </div>
+    <div class="settings-field">
+      <label class="settings-label">Farbe</label>
+      <input type="color" id="cal-new-color" class="settings-input" value="#ffb8a8" style="height: 44px; padding: 4px;">
+    </div>
+    <button class="settings-btn" id="cal-add-btn">Kalender hinzufügen</button>
+  </div>
+
+  <div class="settings-section">
+    <h3>Bilder — Slideshow</h3>
+    <div class="settings-field">
+      <label class="settings-label">Google Drive Ordner-ID (öffentlich)</label>
+      <input type="text" id="drive-folder-input" class="settings-input" placeholder="1dlHXGOBT1NOSycOl5NfQnB-iAZGa33nv">
+      <small style="color:var(--text-faint); font-size:0.72rem; display:block; margin-top:4px">
+        Bilder müssen freigegeben sein („Jeder mit Link"). IDs aus URLs eintragen — eine pro Zeile möglich.
+      </small>
+    </div>
+    <div class="settings-field">
+      <label class="settings-label">Lokal hochladen</label>
+      <input type="file" id="local-upload" accept="image/*" multiple class="settings-input">
+    </div>
+    <div class="settings-field">
+      <label class="settings-label">Slideshow-Intervall (Sekunden)</label>
+      <input type="number" id="slide-interval" class="settings-input" min="3" max="300" value="8">
+    </div>
+    <div id="img-preview" class="img-preview"></div>
+    <div style="display:flex; gap:8px; margin-top:12px">
+      <button class="settings-btn" id="img-save">Speichern</button>
+      <button class="settings-btn settings-btn-danger" id="img-clear-local">Lokale löschen</button>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <h3>System</h3>
+    <button class="settings-btn settings-btn-secondary" id="reload-all">Alles neu laden</button>
+  </div>
+</aside>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   CONFIG & STATE
+   ============================================================ */
+const DEFAULTS = {
+  weatherKey: '769c5861cd255a3982bafb1680abf194',
+  weatherLoc: 'Düsseldorf,DE',
+  driveFolders: ['1dlHXGOBT1NOSycOl5NfQnB-iAZGa33nv'],
+  slideInterval: 8,
+  calSources: [
+    {
+      id: 'gcal-default',
+      name: 'Google Calendar',
+      url: 'https://calendar.google.com/calendar/ical/bee6bd50fed6997d7a4b9ad5a26e274fafe8499c2',
+      color: '#ffb8a8'
+    }
+  ],
+  // CORS proxy for iCal — fallback chain
+  corsProxies: [
+    'https://corsproxy.io/?',
+    'https://api.allorigins.win/raw?url='
+  ]
+};
+
+const STORAGE_KEY = 'annalove4_config';
+const LOCAL_IMG_KEY = 'annalove4_local_imgs';
+
+let config = loadConfig();
+let state = {
+  view: 'month',                 // 'month' | 'week'
+  cursor: new Date(),            // current month/week cursor
+  events: [],                    // merged from all sources
+  slides: [],                    // {url, source}
+  slideIndex: 0,
+  slideTimer: null,
+  weather: null
+};
+
+function loadConfig() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return { ...DEFAULTS, ...JSON.parse(stored) };
+  } catch(e) { console.warn('Config load failed', e); }
+  return { ...DEFAULTS };
+}
+
+function saveConfig() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); }
+  catch(e) { toast('Speichern fehlgeschlagen'); }
+}
+
+function loadLocalImgs() {
+  try {
+    const stored = localStorage.getItem(LOCAL_IMG_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch(e) { return []; }
+}
+
+function saveLocalImgs(imgs) {
+  try {
+    localStorage.setItem(LOCAL_IMG_KEY, JSON.stringify(imgs));
+    return true;
+  } catch(e) {
+    toast('Zu viele Bilder — Drive nutzen');
+    return false;
+  }
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+function $(id) { return document.getElementById(id); }
+function $$(sel) { return document.querySelectorAll(sel); }
+
+function toast(msg, ms = 2500) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('active');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('active'), ms);
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const DAYS_DE = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+const DAYS_DE_SHORT = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+function isoWeekNumber(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+}
+
+function sameDay(a, b) {
+  return a.getFullYear() === b.getFullYear() &&
+         a.getMonth() === b.getMonth() &&
+         a.getDate() === b.getDate();
+}
+
+function startOfWeek(d) {
+  const r = new Date(d);
+  const day = r.getDay();
+  const diff = day === 0 ? -6 : 1 - day;  // Monday = first day
+  r.setDate(r.getDate() + diff);
+  r.setHours(0,0,0,0);
+  return r;
+}
+
+function fmtTime(d) {
+  return pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+
+/* ============================================================
+   CLOCK
+   ============================================================ */
+function updateClock() {
+  const now = new Date();
+  $('clock').textContent = pad(now.getHours()) + ':' + pad(now.getMinutes());
+  $('clock-seconds').textContent = pad(now.getSeconds());
+  $('date-day').textContent = DAYS_DE[now.getDay()];
+  $('date-full').textContent = now.getDate() + '. ' + MONTHS_DE[now.getMonth()] + ' ' + now.getFullYear();
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ============================================================
+   WEATHER ICONS (animated SVG)
+   ============================================================ */
+function weatherIcon(code, isNight = false, size = 64) {
+  // OpenWeatherMap codes: 2xx=storm 3xx=drizzle 5xx=rain 6xx=snow 7xx=atm 800=clear 80x=clouds
+  const c = parseInt(code, 10);
+  let svg = '';
+  const s = `viewBox="0 0 64 64" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg"`;
+
+  if (c === 800) {
+    if (isNight) {
+      svg = `<svg ${s}>
+        <circle class="wicon-moon" cx="34" cy="30" r="14"/>
+        <circle cx="40" cy="26" r="14" fill="rgb(40,30,60)"/>
+      </svg>`;
+    } else {
+      svg = `<svg ${s}>
+        <g class="wicon-sun-rays">
+          <line x1="32" y1="6" x2="32" y2="12"/>
+          <line x1="32" y1="52" x2="32" y2="58"/>
+          <line x1="6" y1="32" x2="12" y2="32"/>
+          <line x1="52" y1="32" x2="58" y2="32"/>
+          <line x1="13" y1="13" x2="17" y2="17"/>
+          <line x1="47" y1="47" x2="51" y2="51"/>
+          <line x1="13" y1="51" x2="17" y2="47"/>
+          <line x1="47" y1="17" x2="51" y2="13"/>
+        </g>
+        <circle class="wicon-sun-core" cx="32" cy="32" r="11"/>
+      </svg>`;
+    }
+  } else if (c >= 801 && c <= 802) {
+    // few/scattered clouds
+    if (isNight) {
+      svg = `<svg ${s}>
+        <circle class="wicon-moon" cx="22" cy="22" r="10"/>
+        <circle cx="26" cy="20" r="10" fill="rgb(40,30,60)"/>
+        <ellipse class="wicon-cloud" cx="36" cy="40" rx="18" ry="10"/>
+        <ellipse class="wicon-cloud" cx="46" cy="38" rx="10" ry="8"/>
+      </svg>`;
+    } else {
+      svg = `<svg ${s}>
+        <g class="wicon-sun-rays" style="transform-origin:22px 22px"><line x1="22" y1="4" x2="22" y2="9"/><line x1="22" y1="35" x2="22" y2="40"/><line x1="4" y1="22" x2="9" y2="22"/><line x1="35" y1="22" x2="40" y2="22"/></g>
+        <circle class="wicon-sun-core" cx="22" cy="22" r="9"/>
+        <ellipse class="wicon-cloud" cx="38" cy="40" rx="20" ry="11"/>
+        <ellipse class="wicon-cloud" cx="48" cy="38" rx="11" ry="9"/>
+      </svg>`;
+    }
+  } else if (c >= 803 && c <= 804) {
+    // overcast
+    svg = `<svg ${s}>
+      <ellipse class="wicon-cloud-dark" cx="22" cy="32" rx="15" ry="9"/>
+      <ellipse class="wicon-cloud" cx="36" cy="36" rx="22" ry="12"/>
+      <ellipse class="wicon-cloud" cx="48" cy="32" rx="12" ry="9"/>
+    </svg>`;
+  } else if (c >= 500 && c <= 531) {
+    // rain
+    svg = `<svg ${s}>
+      <ellipse class="wicon-cloud-dark" cx="32" cy="22" rx="20" ry="11"/>
+      <ellipse class="wicon-cloud" cx="40" cy="20" rx="14" ry="9"/>
+      <line class="wicon-rain" x1="22" y1="38" x2="20" y2="46"/>
+      <line class="wicon-rain" x1="32" y1="40" x2="30" y2="48" style="animation-delay:0.3s"/>
+      <line class="wicon-rain" x1="42" y1="38" x2="40" y2="46" style="animation-delay:0.6s"/>
+    </svg>`;
+  } else if (c >= 300 && c <= 321) {
+    // drizzle
+    svg = `<svg ${s}>
+      <ellipse class="wicon-cloud" cx="32" cy="22" rx="20" ry="11"/>
+      <line class="wicon-rain" x1="22" y1="38" x2="22" y2="44"/>
+      <line class="wicon-rain" x1="32" y1="40" x2="32" y2="46" style="animation-delay:0.3s"/>
+      <line class="wicon-rain" x1="42" y1="38" x2="42" y2="44" style="animation-delay:0.6s"/>
+    </svg>`;
+  } else if (c >= 200 && c <= 232) {
+    // thunderstorm
+    svg = `<svg ${s}>
+      <ellipse class="wicon-cloud-dark" cx="32" cy="22" rx="22" ry="12"/>
+      <polygon class="wicon-bolt" points="30,32 38,32 32,44 36,44 26,58 30,46 24,46"/>
+    </svg>`;
+  } else if (c >= 600 && c <= 622) {
+    // snow
+    svg = `<svg ${s}>
+      <ellipse class="wicon-cloud" cx="32" cy="22" rx="20" ry="11"/>
+      <circle class="wicon-snow" cx="22" cy="42" r="2.5"/>
+      <circle class="wicon-snow" cx="32" cy="46" r="2.5"/>
+      <circle class="wicon-snow" cx="42" cy="42" r="2.5"/>
+      <circle class="wicon-snow" cx="27" cy="52" r="2"/>
+      <circle class="wicon-snow" cx="37" cy="52" r="2"/>
+    </svg>`;
+  } else if (c >= 700 && c <= 781) {
+    // fog/mist
+    svg = `<svg ${s}>
+      <line class="wicon-fog" x1="10" y1="22" x2="54" y2="22"/>
+      <line class="wicon-fog" x1="14" y1="32" x2="50" y2="32"/>
+      <line class="wicon-fog" x1="8" y1="42" x2="56" y2="42"/>
+      <line class="wicon-fog" x1="14" y1="52" x2="50" y2="52"/>
+    </svg>`;
+  } else {
+    svg = `<svg ${s}><circle cx="32" cy="32" r="14" class="wicon-cloud"/></svg>`;
+  }
+  return svg;
+}
+
+/* ============================================================
+   WEATHER FETCH
+   ============================================================ */
+async function loadWeather() {
+  const loc = encodeURIComponent(config.weatherLoc);
+  const key = config.weatherKey;
+  const lang = 'de';
+
+  try {
+    // Current weather
+    const curRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${loc}&appid=${key}&units=metric&lang=${lang}`);
+    if (!curRes.ok) throw new Error('Wetter-API ' + curRes.status);
+    const cur = await curRes.json();
+
+    // 5-day forecast (3-hourly)
+    const fcRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${loc}&appid=${key}&units=metric&lang=${lang}`);
+    if (!fcRes.ok) throw new Error('Forecast ' + fcRes.status);
+    const fc = await fcRes.json();
+
+    state.weather = { current: cur, forecast: fc };
+    renderWeather();
+  } catch(e) {
+    $('weather-current').innerHTML =
+      `<div style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:20px">
+         Wetter konnte nicht geladen werden.<br>
+         <small style="color:var(--text-faint)">${e.message}</small>
+       </div>`;
+    $('weather-forecast').innerHTML = '';
+  }
+}
+
+function renderWeather() {
+  if (!state.weather) return;
+  const { current: c, forecast: f } = state.weather;
+  const isNight = c.weather[0].icon.endsWith('n');
+
+  $('weather-current').innerHTML = `
+    <div class="weather-loc">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      ${c.name}
+    </div>
+    <div class="weather-main">
+      <div class="weather-icon-wrap">${weatherIcon(c.weather[0].id, isNight, 86)}</div>
+      <div>
+        <div class="weather-temp">${Math.round(c.main.temp)}<span class="weather-temp-unit">°C</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="weather-desc">${c.weather[0].description}</div>
+      <div class="weather-range">
+        <span>↑ ${Math.round(c.main.temp_max)}°</span>
+        <span>↓ ${Math.round(c.main.temp_min)}°</span>
+        <span>· gefühlt ${Math.round(c.main.feels_like)}°</span>
+      </div>
+    </div>
+  `;
+
+  // Aggregate forecast to daily (5 days, skipping today)
+  const daily = aggregateDailyForecast(f.list);
+  $('weather-forecast').innerHTML = daily.slice(0, 5).map(d => `
+    <div class="forecast-day">
+      <div class="forecast-day-name">${d.dayName}</div>
+      <div class="forecast-icon">${weatherIcon(d.code, false, 48)}</div>
+      <div class="forecast-temps">
+        <div class="forecast-max">${Math.round(d.max)}°</div>
+        <div class="forecast-min">${Math.round(d.min)}°</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function aggregateDailyForecast(list) {
+  const byDay = {};
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  for (const item of list) {
+    const dt = new Date(item.dt * 1000);
+    const dayKey = dt.toISOString().slice(0, 10);
+    if (dt < today) continue;
+    if (sameDay(dt, today)) continue;          // skip today, current weather covers it
+    if (!byDay[dayKey]) byDay[dayKey] = { dt, temps: [], codes: [] };
+    byDay[dayKey].temps.push(item.main.temp);
+    byDay[dayKey].codes.push({ code: item.weather[0].id, hour: dt.getHours() });
+  }
+  return Object.values(byDay).map(d => {
+    // Pick code from midday slot if available, else first
+    const midday = d.codes.find(x => x.hour >= 11 && x.hour <= 14) || d.codes[0];
+    return {
+      dt: d.dt,
+      dayName: DAYS_DE_SHORT[(d.dt.getDay() + 6) % 7],   // shift to Mo=0
+      min: Math.min(...d.temps),
+      max: Math.max(...d.temps),
+      code: midday.code
+    };
+  }).sort((a, b) => a.dt - b.dt);
+}
+
+/* ============================================================
+   ICAL PARSER (lightweight)
+   ============================================================ */
+function parseICalDate(str) {
+  // Formats: 20260501T143000Z | 20260501T143000 | 20260501
+  if (!str) return null;
+  const clean = str.replace(/[-:]/g, '');
+  if (clean.length === 8) {
+    return new Date(
+      parseInt(clean.slice(0,4)),
+      parseInt(clean.slice(4,6)) - 1,
+      parseInt(clean.slice(6,8))
+    );
+  }
+  const y = parseInt(clean.slice(0,4));
+  const mo = parseInt(clean.slice(4,6)) - 1;
+  const d = parseInt(clean.slice(6,8));
+  const h = parseInt(clean.slice(9,11));
+  const mi = parseInt(clean.slice(11,13));
+  const s = parseInt(clean.slice(13,15)) || 0;
+  if (clean.endsWith('Z')) {
+    return new Date(Date.UTC(y, mo, d, h, mi, s));
+  }
+  return new Date(y, mo, d, h, mi, s);
+}
+
+function parseICal(text, source) {
+  const events = [];
+  // Unfold multi-line values (RFC 5545: lines starting with space/tab continue previous)
+  const lines = text.replace(/\r\n[ \t]/g, '').replace(/\n[ \t]/g, '').split(/\r?\n/);
+  let cur = null;
+  for (const raw of lines) {
+    if (raw === 'BEGIN:VEVENT') { cur = {}; continue; }
+    if (raw === 'END:VEVENT') {
+      if (cur && cur.start) {
+        events.push({
+          ...cur,
+          source: source.id,
+          sourceName: source.name,
+          color: source.color,
+          allDay: cur.allDay || false
+        });
+      }
+      cur = null;
+      continue;
+    }
+    if (!cur) continue;
+
+    const colon = raw.indexOf(':');
+    if (colon < 0) continue;
+    const keyPart = raw.slice(0, colon);
+    const value = raw.slice(colon + 1);
+    const [key, ...params] = keyPart.split(';');
+    const paramStr = params.join(';');
+
+    switch (key) {
+      case 'SUMMARY':     cur.title = unescapeICal(value); break;
+      case 'DESCRIPTION': cur.description = unescapeICal(value); break;
+      case 'LOCATION':    cur.location = unescapeICal(value); break;
+      case 'UID':         cur.uid = value; break;
+      case 'DTSTART':
+        cur.start = parseICalDate(value);
+        if (paramStr.includes('VALUE=DATE')) cur.allDay = true;
+        break;
+      case 'DTEND':
+        cur.end = parseICalDate(value);
+        break;
+      case 'ATTENDEE':
+        if (!cur.attendees) cur.attendees = [];
+        const cn = paramStr.match(/CN=([^;:]+)/);
+        cur.attendees.push(cn ? cn[1] : value.replace(/^mailto:/i, ''));
+        break;
+      case 'RRULE':
+        cur.rrule = value;
+        break;
+    }
+  }
+  return events;
+}
+
+function unescapeICal(s) {
+  return s.replace(/\\n/g, '\n').replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\\\/g, '\\');
+}
+
+/* Expand simple recurring events (DAILY, WEEKLY, MONTHLY, YEARLY) within visible range */
+function expandRecurring(event, rangeStart, rangeEnd) {
+  if (!event.rrule) return [event];
+  const rr = {};
+  for (const part of event.rrule.split(';')) {
+    const [k, v] = part.split('=');
+    rr[k] = v;
+  }
+  const freq = rr.FREQ;
+  if (!freq) return [event];
+  const interval = parseInt(rr.INTERVAL || '1');
+  const count = rr.COUNT ? parseInt(rr.COUNT) : null;
+  const until = rr.UNTIL ? parseICalDate(rr.UNTIL) : null;
+
+  const out = [];
+  const duration = (event.end ? event.end - event.start : 0);
+  let cursor = new Date(event.start);
+  let i = 0;
+  const cap = 400; // safety
+  while (i < cap) {
+    if (until && cursor > until) break;
+    if (count && i >= count) break;
+    if (cursor > rangeEnd) break;
+    if (cursor >= rangeStart) {
+      out.push({
+        ...event,
+        start: new Date(cursor),
+        end: duration ? new Date(cursor.getTime() + duration) : event.end
+      });
+    }
+    if (freq === 'DAILY')   cursor.setDate(cursor.getDate() + interval);
+    else if (freq === 'WEEKLY')  cursor.setDate(cursor.getDate() + 7 * interval);
+    else if (freq === 'MONTHLY') cursor.setMonth(cursor.getMonth() + interval);
+    else if (freq === 'YEARLY')  cursor.setFullYear(cursor.getFullYear() + interval);
+    else break;
+    i++;
+  }
+  return out;
+}
+
+async function fetchIcal(source) {
+  const url = source.url;
+  // Try direct first, then proxies
+  const attempts = [url, ...DEFAULTS.corsProxies.map(p => p + encodeURIComponent(url))];
+  for (const tryUrl of attempts) {
+    try {
+      const res = await fetch(tryUrl);
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (text.includes('BEGIN:VCALENDAR')) {
+        return parseICal(text, source);
+      }
+    } catch (e) { /* try next */ }
+  }
+  console.warn('iCal failed:', source.name);
+  return [];
+}
+
+async function loadAllCalendars() {
+  const all = [];
+  for (const src of config.calSources) {
+    if (!src.url) continue;
+    try {
+      const events = await fetchIcal(src);
+      all.push(...events);
+    } catch(e) { console.warn(e); }
+  }
+  // expand recurring within ±1 year
+  const rangeStart = new Date(); rangeStart.setFullYear(rangeStart.getFullYear() - 1);
+  const rangeEnd = new Date();   rangeEnd.setFullYear(rangeEnd.getFullYear() + 1);
+  const expanded = [];
+  for (const ev of all) {
+    expanded.push(...expandRecurring(ev, rangeStart, rangeEnd));
+  }
+  state.events = expanded;
+  renderCalendar();
+}
+
+function eventsForDay(day) {
+  return state.events.filter(ev => {
+    const evDay = new Date(ev.start);
+    return sameDay(evDay, day);
+  }).sort((a, b) => a.start - b.start);
+}
+
+/* ============================================================
+   CALENDAR RENDER
+   ============================================================ */
+function renderCalendar() {
+  if (state.view === 'month') renderMonth();
+  else renderWeek();
+}
+
+function renderMonth() {
+  $('cal-month-view').style.display = '';
+  $('cal-week-view').style.display = 'none';
+
+  const cur = state.cursor;
+  $('cal-title-month').textContent = MONTHS_DE[cur.getMonth()];
+  $('cal-title-year').textContent = cur.getFullYear();
+
+  const firstOfMonth = new Date(cur.getFullYear(), cur.getMonth(), 1);
+  const start = startOfWeek(firstOfMonth);
+  const today = new Date();
+
+  // Build 6 weeks × 7 days = 42 cells, plus week-num column
+  let html = '<div class="cal-weekdays">';
+  html += '<div class="cal-weekday cal-weekday-num">KW</div>';
+  for (const wd of DAYS_DE_SHORT) html += `<div class="cal-weekday">${wd}</div>`;
+  html += '</div>';
+
+  html += '<div class="cal-grid">';
+  let cursor = new Date(start);
+  for (let w = 0; w < 6; w++) {
+    const weekStart = new Date(cursor);
+    html += `<div class="cal-week-num" data-week-start="${weekStart.toISOString()}">${isoWeekNumber(weekStart)}</div>`;
+    for (let d = 0; d < 7; d++) {
+      const evs = eventsForDay(cursor);
+      const isOther = cursor.getMonth() !== cur.getMonth();
+      const isToday = sameDay(cursor, today);
+      const dotsHtml = evs.slice(0, 4).map(ev =>
+        `<span class="cal-event-dot" style="background:${ev.color}"></span>`
+      ).join('');
+      html += `
+        <div class="cal-day ${isOther ? 'other-month' : ''} ${isToday ? 'today' : ''}"
+             data-date="${cursor.toISOString()}">
+          <span class="cal-day-num">${cursor.getDate()}</span>
+          <div class="cal-day-events">${dotsHtml}</div>
+        </div>
+      `;
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  }
+  html += '</div>';
+
+  $('cal-month-view').innerHTML = html;
+
+  // wire up
+  $$('.cal-week-num').forEach(el => {
+    el.addEventListener('click', () => {
+      state.cursor = new Date(el.dataset.weekStart);
+      state.view = 'week';
+      $$('.cal-view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === 'week'));
+      renderCalendar();
+    });
+  });
+
+  $$('.cal-day').forEach(el => {
+    el.addEventListener('click', () => {
+      state.cursor = new Date(el.dataset.date);
+      state.view = 'week';
+      $$('.cal-view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === 'week'));
+      renderCalendar();
+    });
+  });
+}
+
+function renderWeek() {
+  $('cal-month-view').style.display = 'none';
+  $('cal-week-view').style.display = '';
+
+  const wkStart = startOfWeek(state.cursor);
+  const wkEnd = new Date(wkStart);
+  wkEnd.setDate(wkEnd.getDate() + 6);
+  const today = new Date();
+
+  $('cal-title-month').textContent = `KW ${isoWeekNumber(wkStart)}`;
+  $('cal-title-year').textContent = `${wkStart.getDate()}.${pad(wkStart.getMonth()+1)} – ${wkEnd.getDate()}.${pad(wkEnd.getMonth()+1)}.${wkEnd.getFullYear()}`;
+
+  let html = '';
+  const cursor = new Date(wkStart);
+  for (let i = 0; i < 7; i++) {
+    const evs = eventsForDay(cursor);
+    const isToday = sameDay(cursor, today);
+    html += `
+      <div class="cal-week-day ${isToday ? 'today' : ''}">
+        <div class="cal-week-day-header">
+          <div class="cal-week-day-name">${DAYS_DE[cursor.getDay()]}</div>
+          <div class="cal-week-day-date">${cursor.getDate()}. ${MONTHS_DE[cursor.getMonth()]}</div>
+        </div>
+        ${evs.length === 0
+          ? '<div class="cal-week-events-empty">— nichts geplant —</div>'
+          : evs.map((ev, idx) => `
+            <div class="cal-week-event" style="border-left-color:${ev.color}"
+                 data-event-key="${cursor.toISOString()}__${idx}">
+              <div class="cal-week-event-time">
+                ${ev.allDay ? 'ganztags' : fmtTime(ev.start) + (ev.end ? '–' + fmtTime(ev.end) : '')}
+              </div>
+              <div class="cal-week-event-title">${escapeHtml(ev.title || '(ohne Titel)')}</div>
+            </div>
+          `).join('')}
+      </div>
+    `;
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  $('cal-week-view').innerHTML = html;
+
+  // event click
+  $$('.cal-week-event').forEach(el => {
+    el.addEventListener('click', () => {
+      const [iso, idx] = el.dataset.eventKey.split('__');
+      const day = new Date(iso);
+      const evs = eventsForDay(day);
+      openEventModal(evs[parseInt(idx)]);
+    });
+  });
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ============================================================
+   EVENT MODAL
+   ============================================================ */
+function openEventModal(ev) {
+  if (!ev) return;
+  $('event-title').textContent = ev.title || '(ohne Titel)';
+  $('event-color').style.background = ev.color;
+
+  const rows = [];
+  // time
+  const timeStr = ev.allDay
+    ? 'Ganztägig · ' + ev.start.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+    : ev.start.toLocaleString('de-DE', { weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit' })
+      + (ev.end ? ' – ' + ev.end.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }) : '');
+  rows.push({ icon: 'clock', label: 'Zeit', value: timeStr });
+  if (ev.location) rows.push({ icon: 'pin',  label: 'Ort', value: ev.location });
+  if (ev.description) rows.push({ icon: 'note', label: 'Beschreibung', value: ev.description });
+  if (ev.attendees && ev.attendees.length) rows.push({ icon: 'users', label: 'Teilnehmer', value: ev.attendees.join('\n') });
+  if (ev.sourceName) rows.push({ icon: 'tag', label: 'Kalender', value: ev.sourceName });
+
+  const icons = {
+    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    pin:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    note:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>',
+    users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    tag:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1"/></svg>'
+  };
+
+  $('event-meta').innerHTML = rows.map(r => `
+    <div class="modal-row">
+      ${icons[r.icon]}
+      <div style="flex:1">
+        <div class="modal-row-label">${r.label}</div>
+        <div class="modal-row-value">${escapeHtml(r.value)}</div>
+      </div>
+    </div>
+  `).join('');
+
+  $('event-modal').classList.add('active');
+}
+
+$('event-modal-close').addEventListener('click', () => $('event-modal').classList.remove('active'));
+$('event-modal').addEventListener('click', e => {
+  if (e.target.id === 'event-modal') $('event-modal').classList.remove('active');
+});
+
+/* ============================================================
+   CALENDAR NAVIGATION
+   ============================================================ */
+$('cal-prev').addEventListener('click', () => {
+  if (state.view === 'month') state.cursor.setMonth(state.cursor.getMonth() - 1);
+  else                          state.cursor.setDate(state.cursor.getDate() - 7);
+  renderCalendar();
+});
+$('cal-next').addEventListener('click', () => {
+  if (state.view === 'month') state.cursor.setMonth(state.cursor.getMonth() + 1);
+  else                          state.cursor.setDate(state.cursor.getDate() + 7);
+  renderCalendar();
+});
+$('cal-today').addEventListener('click', () => {
+  state.cursor = new Date();
+  renderCalendar();
+});
+$$('.cal-view-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.view = btn.dataset.view;
+    $$('.cal-view-btn').forEach(b => b.classList.toggle('active', b === btn));
+    renderCalendar();
+  });
+});
+
+/* ============================================================
+   SLIDESHOW
+   ============================================================ */
+function buildSlides() {
+  const slides = [];
+  // Drive folder images — listing public Drive folders requires API; we use direct file IDs
+  // User stores folder IDs but we'll treat each entry as either a folder ID (try listing) or a file ID
+  // Pragmatic approach: users can paste either folder IDs OR direct image URLs in driveFolders
+  for (const entry of (config.driveFolders || [])) {
+    const trimmed = entry.trim();
+    if (!trimmed) continue;
+    if (trimmed.startsWith('http')) {
+      slides.push({ url: trimmed, source: 'url' });
+    } else {
+      // Treat as Drive file ID (single image)
+      slides.push({ url: `https://lh3.googleusercontent.com/d/${trimmed}=w2000`, source: 'drive' });
+    }
+  }
+  // Local images (data URLs)
+  const local = loadLocalImgs();
+  for (const dataUrl of local) slides.push({ url: dataUrl, source: 'local' });
+
+  state.slides = slides;
+}
+
+function renderSlideshow() {
+  const ss = $('slideshow');
+  // remove old slides
+  ss.querySelectorAll('.slide').forEach(s => s.remove());
+
+  if (state.slides.length === 0) {
+    $('slide-empty').style.display = '';
+    $('slide-counter').innerHTML = '';
+    return;
+  }
+  $('slide-empty').style.display = 'none';
+
+  // create slide elements
+  state.slides.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'slide' + (i === 0 ? ' active' : '');
+    div.style.backgroundImage = `url('${s.url}')`;
+    ss.insertBefore(div, ss.querySelector('.slide-overlay'));
+  });
+
+  // counter dots
+  $('slide-counter').innerHTML = state.slides.map((_, i) =>
+    `<span class="slide-dot ${i === 0 ? 'active' : ''}"></span>`
+  ).join('');
+
+  state.slideIndex = 0;
+  startSlideshow();
+}
+
+function startSlideshow() {
+  if (state.slideTimer) clearInterval(state.slideTimer);
+  if (state.slides.length < 2) return;
+  const interval = (config.slideInterval || 8) * 1000;
+  state.slideTimer = setInterval(advanceSlide, interval);
+}
+
+function advanceSlide() {
+  const slides = $$('.slide');
+  const dots   = $$('.slide-dot');
+  if (!slides.length) return;
+  slides[state.slideIndex].classList.remove('active');
+  dots[state.slideIndex]?.classList.remove('active');
+  state.slideIndex = (state.slideIndex + 1) % slides.length;
+  slides[state.slideIndex].classList.add('active');
+  dots[state.slideIndex]?.classList.add('active');
+}
+
+/* ============================================================
+   SETTINGS UI
+   ============================================================ */
+$('settings-btn').addEventListener('click', () => openSettings());
+$('settings-close').addEventListener('click', () => $('settings-panel').classList.remove('active'));
+
+function openSettings() {
+  // location
+  $('loc-input').value = config.weatherLoc;
+  // slide interval
+  $('slide-interval').value = config.slideInterval;
+  // drive folders (one per line)
+  $('drive-folder-input').value = (config.driveFolders || []).join('\n');
+  // calendar list
+  renderCalSourceList();
+  // image preview
+  renderImgPreview();
+  $('settings-panel').classList.add('active');
+}
+
+function renderCalSourceList() {
+  const list = $('cal-source-list');
+  if (config.calSources.length === 0) {
+    list.innerHTML = '<div style="color:var(--text-faint); font-size:0.82rem">Noch keine Quellen.</div>';
+    return;
+  }
+  list.innerHTML = config.calSources.map(s => `
+    <div class="cal-source-item">
+      <div class="cal-source-color" style="background:${s.color}"></div>
+      <div style="flex:1; min-width:0">
+        <div class="cal-source-name">${escapeHtml(s.name)}</div>
+        <div class="cal-source-url">${escapeHtml(s.url || '—')}</div>
+      </div>
+      <button class="cal-source-remove" data-id="${s.id}">×</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('.cal-source-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      config.calSources = config.calSources.filter(s => s.id !== btn.dataset.id);
+      saveConfig();
+      renderCalSourceList();
+      loadAllCalendars();
+    });
+  });
+}
+
+$('cal-add-btn').addEventListener('click', () => {
+  const name = $('cal-new-name').value.trim();
+  const url  = $('cal-new-url').value.trim();
+  const color = $('cal-new-color').value || '#ffb8a8';
+  if (!name || !url) { toast('Name und URL erforderlich'); return; }
+  config.calSources.push({
+    id: 'cal-' + Date.now(),
+    name, url, color
+  });
+  saveConfig();
+  $('cal-new-name').value = '';
+  $('cal-new-url').value = '';
+  renderCalSourceList();
+  loadAllCalendars();
+  toast('Kalender hinzugefügt');
+});
+
+$('loc-save').addEventListener('click', () => {
+  const v = $('loc-input').value.trim();
+  if (!v) { toast('Standort darf nicht leer sein'); return; }
+  config.weatherLoc = v;
+  saveConfig();
+  loadWeather();
+  toast('Standort gespeichert');
+});
+
+$('img-save').addEventListener('click', () => {
+  const folders = $('drive-folder-input').value
+    .split('\n').map(s => s.trim()).filter(Boolean);
+  config.driveFolders = folders;
+  config.slideInterval = parseInt($('slide-interval').value) || 8;
+  saveConfig();
+  buildSlides();
+  renderSlideshow();
+  toast('Slideshow aktualisiert');
+});
+
+$('local-upload').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  const existing = loadLocalImgs();
+  for (const f of files) {
+    if (!f.type.startsWith('image/')) continue;
+    const dataUrl = await new Promise(res => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.readAsDataURL(f);
+    });
+    existing.push(dataUrl);
+  }
+  if (saveLocalImgs(existing)) {
+    renderImgPreview();
+    toast(files.length + ' Bild(er) hochgeladen');
+  }
+});
+
+$('img-clear-local').addEventListener('click', () => {
+  if (!confirm('Alle lokal gespeicherten Bilder löschen?')) return;
+  localStorage.removeItem(LOCAL_IMG_KEY);
+  renderImgPreview();
+  buildSlides();
+  renderSlideshow();
+  toast('Lokale Bilder gelöscht');
+});
+
+function renderImgPreview() {
+  const local = loadLocalImgs();
+  const drive = (config.driveFolders || [])
+    .filter(s => s.trim())
+    .map(s => s.trim().startsWith('http')
+        ? s.trim()
+        : `https://lh3.googleusercontent.com/d/${s.trim()}=w400`);
+
+  const all = [...drive.map((url, i) => ({ url, type: 'drive', idx: i })),
+               ...local.map((url, i) => ({ url, type: 'local', idx: i }))];
+
+  if (all.length === 0) {
+    $('img-preview').innerHTML = '<div style="color:var(--text-faint); font-size:0.78rem; grid-column: 1/-1; text-align:center; padding:12px">Keine Bilder konfiguriert</div>';
+    return;
+  }
+  $('img-preview').innerHTML = all.map(img => `
+    <div class="img-preview-item" style="background-image:url('${img.url}')" title="${img.type}">
+      ${img.type === 'local' ? `<button class="remove" data-idx="${img.idx}">×</button>` : ''}
+    </div>
+  `).join('');
+
+  $('img-preview').querySelectorAll('.remove').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.idx);
+      const local = loadLocalImgs();
+      local.splice(idx, 1);
+      saveLocalImgs(local);
+      renderImgPreview();
+    });
+  });
+}
+
+$('reload-all').addEventListener('click', () => location.reload());
+
+/* ============================================================
+   HIDDEN GESTURE: long-press date for settings
+   ============================================================ */
+let pressTimer = null;
+$('date-day').addEventListener('touchstart', startPress, { passive: true });
+$('date-day').addEventListener('touchend',   endPress);
+$('date-day').addEventListener('mousedown',  startPress);
+$('date-day').addEventListener('mouseup',    endPress);
+$('date-day').addEventListener('mouseleave', endPress);
+
+function startPress(e) {
+  pressTimer = setTimeout(() => openSettings(), 1500);
+}
+function endPress() {
+  clearTimeout(pressTimer);
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+buildSlides();
+renderSlideshow();
+loadWeather();
+loadAllCalendars();
+renderCalendar();
+
+// refresh weather every 15 min, calendars every 30 min
+setInterval(loadWeather,        15 * 60 * 1000);
+setInterval(loadAllCalendars,   30 * 60 * 1000);
+
+// pause/resume slideshow on visibility
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) clearInterval(state.slideTimer);
+  else startSlideshow();
+});
+</script>
+
+</body>
+</html>
