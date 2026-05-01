@@ -3,96 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>DAKboard · Installationsanleitung & Dashboard</title>
+    <title>DAKboard · Große Slideshow + kompaktere Seiten</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html {
-            width: 100%;
-            height: 100%;
-            background: #000;
-            font-family: 'Inter', 'Helvetica', sans-serif;
-            color: #fff;
-            overflow: hidden;
+        body, html { width: 100%; height: 100%; background: #000; font-family: 'Inter', 'Helvetica', sans-serif; color: #fff; overflow: hidden; }
+        .dashboard { display: grid; grid-template-columns: 35% 65%; width: 100vw; height: 100vh; overflow: hidden; }
+        
+        /* Linke Spalte: flex für bessere Verteilung */
+        .left-panel { 
+            display: flex; 
+            flex-direction: column; 
+            background: #000; 
+            height: 100vh; 
+            overflow-y: auto; 
+            scrollbar-width: thin;
         }
-        .dashboard {
-            display: grid;
-            grid-template-columns: 35% 65%;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
+        
+        /* Uhr + Datum: kompakter (kleinerer Abstand, etwas kleinere Schrift) */
+        .time-date {
+            margin: 1rem 0 0 1.5rem;
         }
-        .left-panel { display: flex; flex-direction: column; background: #000; height: 100%; overflow-y: auto; scrollbar-width: thin; }
-        .time-date { margin: 1rem 0 0 1.5rem; }
-        .clock { font-size: clamp(1.8rem, 6vw, 4rem); font-weight: 300; letter-spacing: 1.5px; line-height: 1.1; }
-        .date { font-size: clamp(0.9rem, 2.5vw, 1.3rem); opacity: 0.85; }
-        .slideshow-container { flex: 1; min-height: 260px; max-height: 50vh; margin: 0.6rem 0 0.4rem; overflow: hidden; background: #0a0a0a; position: relative; }
-        .slideshow-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .weather-enhanced { margin: 0.2rem 1rem 1rem 1.5rem; background: rgba(10,10,15,0.6); border-radius: 24px; padding: 0.7rem 0.9rem; backdrop-filter: blur(4px); }
-        .current-weather { display: flex; justify-content: space-between; align-items: center; gap: 0.4rem; margin-bottom: 0.3rem; }
-        .temp-big { font-size: clamp(1.6rem, 5vw, 2.6rem); font-weight: 300; }
-        .current-icon { font-size: clamp(1.3rem, 4vw, 1.8rem); }
-        .weather-details { display: flex; gap: 1rem; font-size: clamp(0.6rem, 1.8vw, 0.7rem); margin-bottom: 0.2rem; }
-        .hourly-forecast { display: flex; gap: 0.4rem; overflow-x: auto; }
-        .hour-card { min-width: 58px; text-align: center; font-size: 0.65rem; }
-        .right-panel { background: #000; overflow-y: auto; padding: 1.2rem 1.5rem 1.5rem 1rem; }
-        .view-toggle { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 1rem; }
-        .view-btn { background: #1e1e1e; padding: 5px 12px; font-size: 0.75rem; border-radius: 40px; cursor: pointer; border: none; color: white; }
-        .view-btn.active { background: #3a6ea5; }
-        .weekdays { display: grid; grid-template-columns: repeat(7,1fr); margin-bottom: 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 0.4rem; }
-        .weekday { font-size: 0.8rem; font-weight: 500; text-transform: uppercase; opacity: 0.7; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 0.5rem 0.3rem; }
-        .cal-cell { padding: 0.3rem 0.1rem 0.2rem 0.2rem; min-height: 85px; }
-        .day-number { font-size: 1.5rem; font-weight: 350; line-height: 1; margin-bottom: 0.2rem; display: inline-block; }
-        .today .day-number { border: 2px solid #ff3b3b; border-radius: 50%; padding: 0.05rem 0.45rem; }
-        .event-badge { font-size: 0.62rem; padding: 2px 4px; border-radius: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: rgba(70,70,100,0.8); }
-        .empty-cell .day-number { opacity: 0.3; }
-        /* Install-Button (PWA) */
-        .install-btn-container { position: fixed; bottom: 20px; left: 20px; z-index: 300; }
-        #installAppBtn { background: #3a6ea5; border: none; color: white; padding: 8px 16px; border-radius: 40px; font-size: 0.8rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: none; }
-        #installAppBtn.show { display: block; }
-        /* Overlay für Installationsanleitung (file:// Fall) */
-        .instruction-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
+        .clock {
+            font-size: clamp(1.8rem, 6vw, 4rem);
+            font-weight: 300;
+            letter-spacing: 1.5px;
+            line-height: 1.1;
+        }
+        .date {
+            font-size: clamp(0.9rem, 2.5vw, 1.3rem);
+            opacity: 0.85;
+        }
+        
+        /* Slideshow: deutlich größer (nimmt flexiblen Raum ein) */
+        .slideshow-container {
+            flex: 1;               /* nimmt verfügbaren Raum */
+            min-height: 260px;     /* Mindesthöhe 260px */
+            max-height: 50vh;      /* auf großen Screens nicht zu dominant */
+            margin: 0.6rem 0 0.4rem;
+            overflow: hidden;
+            background: #0a0a0a;
+            position: relative;
+        }
+        .slideshow-img {
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.95);
-            backdrop-filter: blur(12px);
-            z-index: 1000;
+            object-fit: cover;
+            display: block;
+        }
+        
+        /* Wetter-Block: kompaktere Abstände, kleinere Icons */
+        .weather-enhanced {
+            margin: 0.2rem 1rem 1rem 1.5rem;
+            background: rgba(10,10,15,0.6);
+            border-radius: 24px;
+            padding: 0.7rem 0.9rem;
+            backdrop-filter: blur(4px);
+        }
+        .current-weather {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            visibility: hidden;
-            opacity: 0;
-            transition: 0.3s;
+            gap: 0.4rem;
+            margin-bottom: 0.3rem;
+        }
+        .temp-big {
+            font-size: clamp(1.6rem, 5vw, 2.6rem);
+            font-weight: 300;
+        }
+        .temp-unit {
+            font-size: clamp(0.8rem, 2vw, 1rem);
+        }
+        .current-icon {
+            font-size: clamp(1.3rem, 4vw, 1.8rem);
+        }
+        .weather-details {
+            display: flex;
+            gap: 1rem;
+            font-size: clamp(0.6rem, 1.8vw, 0.7rem);
+            margin-bottom: 0.2rem;
+        }
+        .hourly-title {
+            font-size: 0.65rem;
+            margin: 0.4rem 0 0.2rem;
+            opacity: 0.7;
+        }
+        .hourly-forecast {
+            display: flex;
+            gap: 0.4rem;
+            overflow-x: auto;
+            padding-bottom: 0.2rem;
+        }
+        .hour-card {
+            min-width: 58px;
+            text-align: center;
+            font-size: 0.65rem;
+        }
+        .hour-temp {
+            font-size: 0.8rem;
+        }
+        .hour-icon {
+            font-size: 1rem;
+        }
+        .hour-bar-container {
+            height: 2px;
+            margin: 3px 0;
+        }
+        
+        /* Rechte Spalte: unverändert, gut lesbar + scrollbar */
+        .right-panel {
+            background: #000;
             overflow-y: auto;
-            padding: 2rem;
+            padding: 1.2rem 1.5rem 1.5rem 1rem;
         }
-        .instruction-overlay.active {
-            visibility: visible;
-            opacity: 1;
+        .view-toggle {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-bottom: 1rem;
         }
-        .instruction-card {
-            background: #0e0e0e;
-            border-radius: 32px;
-            max-width: 550px;
-            width: 100%;
-            padding: 2rem;
-            border: 1px solid #333;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        .view-btn {
+            background: #1e1e1e;
+            padding: 5px 12px;
+            font-size: 0.75rem;
+            border-radius: 40px;
+            cursor: pointer;
+            border: none;
+            color: white;
         }
-        .instruction-card h2 { margin-bottom: 1rem; font-weight: 500; }
-        .instruction-card p { margin: 0.8rem 0; line-height: 1.4; opacity: 0.8; }
-        .step { background: #1e1e1e; border-radius: 24px; padding: 1rem; margin: 1rem 0; }
-        .step h3 { margin-bottom: 0.4rem; font-size: 1rem; }
-        .btn-close-instruction { background: #3a6ea5; border: none; padding: 8px 20px; border-radius: 40px; color: white; cursor: pointer; margin-top: 1rem; }
-        .small-note { font-size: 0.75rem; color: #aaa; margin-top: 1rem; }
-        @media (max-width: 950px) and (orientation: portrait) { .dashboard { grid-template-columns: 1fr; overflow-y: auto; } .left-panel, .right-panel { height: auto; } }
+        .view-btn.active { background: #3a6ea5; }
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7,1fr);
+            margin-bottom: 0.6rem;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+            padding-bottom: 0.4rem;
+        }
+        .weekday {
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7,1fr);
+            gap: 0.5rem 0.3rem;
+        }
+        .cal-cell {
+            padding: 0.3rem 0.1rem 0.2rem 0.2rem;
+            min-height: 85px;
+        }
+        .day-number {
+            font-size: 1.5rem;
+            font-weight: 350;
+            line-height: 1;
+            margin-bottom: 0.2rem;
+            display: inline-block;
+        }
+        .today .day-number {
+            border: 2px solid #ff3b3b;
+            border-radius: 50%;
+            padding: 0.05rem 0.45rem;
+            margin-left: -0.1rem;
+        }
+        .event-badge {
+            font-size: 0.62rem;
+            padding: 2px 4px;
+            border-radius: 20px;
+            white-space: nowrap;
+            overflow-x: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            background-color: rgba(70,70,100,0.8);
+        }
+        .empty-cell .day-number { opacity: 0.3; }
+        .empty-cell .events { visibility: hidden; }
+        
+        /* Animationen */
         .anim-fade { animation: fadeEffect 0.7s ease; }
+        .anim-slide-left { animation: slideLeft 0.6s ease-out; }
+        .anim-slide-right { animation: slideRight 0.6s ease-out; }
+        .anim-slide-up { animation: slideUp 0.6s ease-out; }
+        .anim-slide-down { animation: slideDown 0.6s ease-out; }
+        .anim-zoom { animation: zoomEffect 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1); }
+        .anim-rotate { animation: rotateEffect 0.6s ease; }
+        .anim-flip { animation: flipEffect 0.7s ease; }
+        .anim-blur { animation: blurEffect 0.5s ease; }
+        .anim-glitch { animation: glitchEffect 0.4s ease; }
         @keyframes fadeEffect { from { opacity: 0.2; } to { opacity: 1; } }
+        @keyframes slideLeft { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideRight { from { transform: translateX(-40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes zoomEffect { from { transform: scale(1.08); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes rotateEffect { from { transform: rotate(3deg) scale(0.96); opacity: 0; } to { transform: rotate(0deg) scale(1); opacity: 1; } }
+        @keyframes flipEffect { from { transform: perspective(400px) rotateY(12deg); opacity: 0; } to { transform: perspective(400px) rotateY(0); opacity: 1; } }
+        @keyframes blurEffect { from { filter: blur(8px); opacity: 0; } to { filter: blur(0); opacity: 1; } }
+        @keyframes glitchEffect { 0% { transform: skew(3deg); opacity: 0.5; } 100% { transform: skew(0); opacity: 1; } }
+        
+        /* Einstellungen Overlay (unverändert) */
+        .settings-gear { position: fixed; top: 20px; right: 20px; z-index: 200; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); width: 44px; height: 44px; border-radius: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.5rem; border: 1px solid rgba(255,255,255,0.2); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
+        .modal-overlay.active { visibility: visible; opacity: 1; }
+        .settings-modal { background: #0e0e0e; width: 90%; max-width: 680px; max-height: 85vh; border-radius: 32px; padding: 1.5rem; overflow-y: auto; border: 1px solid #2c2c2c; }
+        .setting-group { margin-bottom: 1.2rem; border-bottom: 1px solid #222; padding-bottom: 0.8rem; }
+        .setting-group label { font-size: 0.8rem; margin-bottom: 5px; opacity: 0.8; display: block; }
+        input, select, button { background: #1e1e1e; border: 1px solid #333; color: white; padding: 6px 10px; border-radius: 40px; font-family: inherit; font-size: 0.8rem; }
+        button { cursor: pointer; }
+        .color-flex { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 5px; }
+        .ical-status { font-size: 0.7rem; margin-top: 5px; color: #aaa; }
+        .events-hidden .events { display: none; }
+        
+        /* Responsive Querformat / Tablet */
+        @media (max-width: 950px) and (orientation: portrait) {
+            .dashboard { grid-template-columns: 1fr; overflow-y: auto; height: auto; }
+            .left-panel, .right-panel { height: auto; overflow-y: visible; }
+            .right-panel { padding: 1rem; }
+            .slideshow-container { min-height: 280px; max-height: 35vh; }
+        }
+        @media (max-width: 600px) {
+            .calendar-grid { gap: 0.2rem; }
+            .cal-cell { min-height: 70px; }
+            .day-number { font-size: 1.2rem; }
+            .event-badge { font-size: 0.55rem; white-space: normal; }
+        }
     </style>
 </head>
 <body>
@@ -101,7 +237,7 @@
         <div class="time-date"><div class="clock" id="liveClock">--:--:--</div><div class="date" id="liveDate"></div></div>
         <div class="slideshow-container"><img id="slideshowImage" class="slideshow-img" alt="slideshow"></div>
         <div class="weather-enhanced" id="weatherEnhanced">
-            <div class="current-weather"><div><span class="temp-big" id="currentTemp">--</span><span class="temp-unit">°C</span></div><div><i class="fas fa-sun current-icon" id="currentWeatherIcon"></i></div></div>
+            <div class="current-weather"><div><span class="temp-big" id="currentTemp">--</span><span class="temp-unit">°C</span></div><div><i class="fas fa-sun current-icon" id="currentWeatherIcon" style="color: #FFD966;"></i></div></div>
             <div class="weather-details"><span><i class="fas fa-tint"></i> <span id="precip">--</span>%</span><span><i class="fas fa-water"></i> <span id="humidity">--</span>%</span><span><i class="fas fa-wind"></i> <span id="windSpeed">--</span> km/h</span></div>
             <div class="hourly-title"><i class="fas fa-chart-line"></i> 3h-Vorhersage</div>
             <div class="hourly-forecast" id="hourlyForecast"></div>
@@ -112,159 +248,10 @@
         <div class="calendar"><div class="weekdays" id="weekdaysRow"></div><div class="calendar-grid" id="calendarGrid"></div></div>
     </div>
 </div>
-<div class="install-btn-container"><button id="installAppBtn">📱 App installieren</button></div>
-
-<!-- Overlay für Installationsanleitung (nur bei file://) -->
-<div id="instructionOverlay" class="instruction-overlay">
-    <div class="instruction-card">
-        <h2><i class="fas fa-info-circle"></i> Installation als App</h2>
-        <p>Um dieses Dashboard als eigenständige App auf deinem Tablet zu installieren (mit Offline-Funktion und Vollbild), muss die Datei über einen <strong>lokalen Webserver</strong> geöffnet werden – nicht direkt als Datei (<code>file://</code>).</p>
-        <div class="step">
-            <h3><i class="fab fa-chrome"></i> Methode 1: Web Server for Chrome (einfach)</h3>
-            <p>1. Installiere die kostenlose App <strong>„Web Server for Chrome“</strong> aus dem Google Play Store.<br>
-            2. Öffne die App, tippe auf <strong>„Choose Folder“</strong> und wähle den Ordner, in dem sich diese HTML-Datei befindet.<br>
-            3. Starte den Server (grüner Knopf).<br>
-            4. Die App zeigt eine lokale Adresse an, z. B. <strong>http://127.0.0.1:8080</strong>.<br>
-            5. Öffne diese Adresse im Browser, tippe unten links auf <strong>„App installieren“</strong>.</p>
-        </div>
-        <div class="step">
-            <h3><i class="fas fa-terminal"></i> Methode 2: Termux + Python (für Fortgeschrittene)</h3>
-            <p>1. Installiere <strong>Termux</strong> aus dem Play Store oder F-Droid.<br>
-            2. Öffne Termux und führe aus: <code>pkg install python</code><br>
-            3. Navigiere mit <code>cd /sdcard/Download</code> (oder wohin du die Datei gespeichert hast).<br>
-            4. Starte den Server: <code>python -m http.server 8080</code><br>
-            5. Öffne im Browser: <strong>http://127.0.0.1:8080</strong> – dann App installieren.</p>
-        </div>
-        <p><strong>Nach dem Start des Servers:</strong> Schließe dieses Fenster, öffne die lokale Adresse im Browser, und folge dem Installations-Button. Die App funktioniert dann wie eine native App – auch offline!</p>
-        <button class="btn-close-instruction" id="closeInstructionBtn">Fenster schließen (trotzdem Dashboard anzeigen)</button>
-        <div class="small-note"><i class="fas fa-shield-alt"></i> Hinweis: Ohne Server funktioniert das Dashboard selbstverständlich weiterhin – nur die Installation als App erfordert die obigen Schritte.</div>
-    </div>
-</div>
-
+<div class="settings-gear" id="settingsGear"><i class="fas fa-cog"></i></div>
+<div class="modal-overlay" id="settingsModal"><div class="settings-modal"><h2>Einstellungen</h2><div class="setting-group"><label>🖼️ Slideshow Bilder</label><div id="imageListContainer"></div><div style="display:flex; gap:6px;"><input type="file" id="uploadImages" multiple accept="image/*"><input type="text" id="imageUrlInput" placeholder="Bild-URL"><button id="addUrlBtn">+</button></div><button id="clearImagesBtn" style="margin-top:5px;">Reset</button></div><div class="setting-group"><label>🎞️ Animation</label><select id="animationSelect"><option value="anim-fade">Fade</option><option value="anim-slide-left">Slide Links</option><option value="anim-slide-right">Slide Rechts</option><option value="anim-slide-up">Slide Hoch</option><option value="anim-slide-down">Slide Runter</option><option value="anim-zoom">Zoom</option><option value="anim-rotate">Rotate</option><option value="anim-flip">Flip</option><option value="anim-blur">Blur</option><option value="anim-glitch">Glitch</option></select></div><div class="setting-group"><label>🌍 Wetter-Stadt</label><input type="text" id="weatherCity" placeholder="Berlin"><button id="refreshWeatherBtn">Aktualisieren</button></div><div class="setting-group"><label>📅 iCal URL</label><input type="text" id="icalUrl" placeholder="https://.../calendar.ics"><label><input type="checkbox" id="icalEnabled"> iCal aktivieren</label><button id="syncIcalNowBtn" class="primary">Sync</button><div class="ical-status" id="icalStatus"></div><label>🔄 Intervall (Minuten)</label><input type="number" id="icalInterval" min="5" max="240" value="30" style="width:90px;"></div><div class="setting-group"><label>🎨 Terminfarben</label><div class="color-flex"><div class="color-item">🔵 <input type="color" id="colorBlue" value="#2c7da0"></div><div class="color-item">🔴 <input type="color" id="colorRed" value="#c44536"></div><div class="color-item">🟢 <input type="color" id="colorGreen" value="#2e9b6e"></div><div class="color-item">🟠 <input type="color" id="colorOrange" value="#e67e22"></div><div class="color-item">🟣 <input type="color" id="colorPurple" value="#8e44ad"></div></div><label><input type="checkbox" id="toggleEventsVisibility"> Ereignisbalken anzeigen</label></div><div class="setting-group"><label><input type="checkbox" id="toggleSeconds" checked> Sekunden in Uhr</label></div><div><button id="saveSettingsBtn" class="primary">Speichern</button><button id="closeModalBtn">Schließen</button></div></div></div>
 <script>
-    // --------------------------------------------------------------
-    // 0. Prüfen, ob über file:// geöffnet wurde – dann Anleitung zeigen
-    // --------------------------------------------------------------
-    if (window.location.protocol === 'file:') {
-        // Service Worker kann nicht registriert werden – zeige Overlay
-        const overlay = document.getElementById('instructionOverlay');
-        if (overlay) overlay.classList.add('active');
-        document.getElementById('closeInstructionBtn')?.addEventListener('click', () => {
-            overlay.classList.remove('active');
-        });
-        // Installationsbutton ausblenden (geht im file:// nicht)
-        const installBtn = document.getElementById('installAppBtn');
-        if (installBtn) installBtn.style.display = 'none';
-    } else {
-        // Nur bei http/https: Service Worker und PWA-Installation aktivieren
-        (function setupPWA() {
-            const manifestObj = {
-                name: "DAKboard Dashboard",
-                short_name: "DAKboard",
-                description: "Smart Display mit Wetter, iCal & Slideshow",
-                start_url: ".",
-                display: "standalone",
-                theme_color: "#000000",
-                background_color: "#000000",
-                icons: []
-            };
-            function createIcon(size) {
-                const canvas = document.createElement('canvas');
-                canvas.width = size;
-                canvas.height = size;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#000000';
-                ctx.fillRect(0, 0, size, size);
-                ctx.fillStyle = '#3a6ea5';
-                ctx.font = `bold ${size * 0.45}px "Inter"`;
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText("📺", size/2, size/2);
-                ctx.fillStyle = '#ffffff';
-                ctx.font = `${size * 0.18}px "Inter"`;
-                ctx.fillText("D", size/2, size * 0.85);
-                return canvas.toDataURL();
-            }
-            [144, 192, 512].forEach(s => {
-                manifestObj.icons.push({ src: createIcon(s), sizes: `${s}x${s}`, type: "image/png" });
-            });
-            const manifestBlob = new Blob([JSON.stringify(manifestObj)], {type: "application/json"});
-            const manifestURL = URL.createObjectURL(manifestBlob);
-            const linkManifest = document.createElement('link');
-            linkManifest.rel = "manifest";
-            linkManifest.href = manifestURL;
-            document.head.appendChild(linkManifest);
-            
-            const swCode = `
-                const CACHE_NAME = 'dakboard-cache-v3';
-                self.addEventListener('install', event => {
-                    event.waitUntil(
-                        caches.open(CACHE_NAME).then(cache => {
-                            return cache.addAll([
-                                './',
-                                'https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap',
-                                'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'
-                            ]).catch(err => console.warn('Pre-cache error', err));
-                        })
-                    );
-                    self.skipWaiting();
-                });
-                self.addEventListener('fetch', event => {
-                    const url = new URL(event.request.url);
-                    if (url.hostname.includes('unsplash.com') || url.pathname.match(/\\.(jpg|jpeg|png|webp)$/i)) {
-                        event.respondWith(
-                            caches.match(event.request).then(cached => cached || fetch(event.request).then(net => {
-                                caches.open(CACHE_NAME).then(cache => cache.put(event.request, net.clone()));
-                                return net;
-                            }).catch(() => new Response('', { status: 200 })))
-                        );
-                        return;
-                    }
-                    if (url.pathname.includes('/v1/forecast') || url.pathname.includes('allorigins')) {
-                        event.respondWith(fetch(event.request).catch(() => new Response(JSON.stringify({ error: 'Offline' }), { status: 503 })));
-                        return;
-                    }
-                    event.respondWith(
-                        caches.match(event.request).then(cached => {
-                            const fetchPromise = fetch(event.request).then(networkResponse => {
-                                caches.open(CACHE_NAME).then(cache => cache.put(event.request, networkResponse.clone()));
-                                return networkResponse;
-                            }).catch(() => cached);
-                            return cached || fetchPromise;
-                        })
-                    );
-                });
-                self.addEventListener('activate', event => {
-                    event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))));
-                    self.clients.claim();
-                });
-            `;
-            const swBlob = new Blob([swCode], {type: 'application/javascript'});
-            const swURL = URL.createObjectURL(swBlob);
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register(swURL).catch(err => console.warn('SW Fehler (nicht kritisch)', err));
-            }
-            let deferredPrompt;
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                deferredPrompt = e;
-                const installBtn = document.getElementById('installAppBtn');
-                if (installBtn) installBtn.classList.add('show');
-            });
-            document.getElementById('installAppBtn')?.addEventListener('click', async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    await deferredPrompt.userChoice;
-                    deferredPrompt = null;
-                    document.getElementById('installAppBtn').classList.remove('show');
-                }
-            });
-        })();
-    }
-
-    // --------------------------------------------------------------
-    // 1. Dashboard-Kern (Uhr, Wetter, Slideshow, Kalender, iCal) – völlig identisch zum Original
-    // --------------------------------------------------------------
+    // ---------- GLOBALS ----------
     let slideshowImages = [];
     let currentAnimation = "anim-fade";
     let eventsVisible = true, showSeconds = true;
@@ -273,9 +260,15 @@
     let icalUrl = "", icalEnabled = false, icalEvents = [];
     let syncInterval = null, currentView = "month", currentDate = new Date();
     const DEMO_EVENTS = [{ day: 3, title: "Design Review", colorClass: "blue-badge" },{ day: 5, title: "Meeting Team", colorClass: "green-badge" },{ day: 8, title: "Zahnarzt", colorClass: "red-badge" },{ day: 12, title: "Workshop", colorClass: "purple-badge" },{ day: 15, title: "Deadline", colorClass: "orange-badge" },{ day: 20, title: "Geburtstag", colorClass: "red-badge" },{ day: 25, title: "Abgabe", colorClass: "orange-badge" }];
-    const clockEl = document.getElementById('liveClock'), dateEl = document.getElementById('liveDate'), calendarGrid = document.getElementById('calendarGrid'), weekdaysRow = document.getElementById('weekdaysRow'), slideshowImg = document.getElementById('slideshowImage');
+    const clockEl = document.getElementById('liveClock'), dateEl = document.getElementById('liveDate'), calendarGrid = document.getElementById('calendarGrid'), weekdaysRow = document.getElementById('weekdaysRow'), slideshowImg = document.getElementById('slideshowImage'), icalStatusSpan = document.getElementById('icalStatus');
     
-    let slideInterval = null, currentIndex = 0, isAnimating = false;
+    // ---------- SLIDESHOW FLÜSSIG (mit Preloading + animationend) ----------
+    let slideInterval = null;
+    let currentIndex = 0;
+    let isAnimating = false;
+    let nextImagePreload = new Image();
+
+    function preloadImage(url) { nextImagePreload = new Image(); nextImagePreload.src = url; }
     function changeImageSmooth(newUrl, animClass) {
         if (isAnimating) return;
         isAnimating = true;
@@ -290,44 +283,64 @@
         slideshowImg.addEventListener('animationend', onAnimEnd, { once: true });
         setTimeout(() => { if (isAnimating) { slideshowImg.classList.remove(animClass); isAnimating = false; } }, 800);
     }
-    function nextSlide() { if (!slideshowImages.length) return; const nextIdx = (currentIndex + 1) % slideshowImages.length; changeImageSmooth(slideshowImages[nextIdx], currentAnimation); currentIndex = nextIdx; }
-    function startSlideshow() { if (slideInterval) clearInterval(slideInterval); if (!slideshowImages.length) return; slideshowImg.src = slideshowImages[0]; slideInterval = setInterval(() => nextSlide(), 7000); }
+    function nextSlide() {
+        if (!slideshowImages.length) return;
+        const nextIdx = (currentIndex + 1) % slideshowImages.length;
+        const overNext = (nextIdx + 1) % slideshowImages.length;
+        preloadImage(slideshowImages[overNext]);
+        changeImageSmooth(slideshowImages[nextIdx], currentAnimation);
+        currentIndex = nextIdx;
+    }
+    function startSlideshow() {
+        if (slideInterval) clearInterval(slideInterval);
+        if (!slideshowImages.length) return;
+        currentIndex = 0;
+        slideshowImg.classList.remove(...slideshowImg.classList);
+        slideshowImg.classList.add('slideshow-img');
+        slideshowImg.src = slideshowImages[0];
+        if (slideshowImages[1]) preloadImage(slideshowImages[1]);
+        slideInterval = setInterval(() => nextSlide(), 7000);
+    }
     
+    // ---------- WETTER (kompakt, mit Iconfarben) ----------
     function getWeatherIconAndColor(code) { if(code===0) return {icon:"fa-sun", color:"#FFD966"}; if(code<=2) return {icon:"fa-cloud-sun", color:"#DDDDDD"}; if(code<=49) return {icon:"fa-cloud-rain", color:"#4a90e2"}; if(code<=77) return {icon:"fa-snowflake", color:"#7ec8e0"}; if(code<=99) return {icon:"fa-bolt", color:"#b980ea"}; return {icon:"fa-cloud", color:"#aaa"}; }
     async function fetchEnhancedWeather(city) { try { const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&format=json`); const geoJson=await geo.json(); if(!geoJson.results) throw new Error(); const {latitude,longitude}=geoJson.results[0]; const url=`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,precipitation_probability,windspeed_10m,weathercode&timezone=auto&forecast_days=2`; const res=await fetch(url); const data=await res.json(); const cur=data.current_weather; document.getElementById('currentTemp').innerText=Math.round(cur.temperature); const {icon,color}=getWeatherIconAndColor(cur.weathercode); const currIcon=document.getElementById('currentWeatherIcon'); currIcon.className=`fas ${icon} current-icon`; currIcon.style.color=color; const hourly=data.hourly; const now=new Date(); let precip=0,hum=0,wind=Math.round(cur.windspeed); for(let i=0;i<hourly.time.length;i++){ const t=new Date(hourly.time[i]); if(t.getHours()===now.getHours() && t.getDate()===now.getDate()){ precip=hourly.precipitation_probability[i]||0; hum=hourly.relativehumidity_2m[i]||0; wind=Math.round(hourly.windspeed_10m[i]); break; } } document.getElementById('precip').innerText=precip; document.getElementById('humidity').innerText=hum; document.getElementById('windSpeed').innerText=wind; let items=[]; for(let i=0;i<hourly.time.length;i++){ const dt=new Date(hourly.time[i]); if(dt>=now && items.length<10){ const {icon:ic,color:col}=getWeatherIconAndColor(hourly.weathercode[i]); items.push({day:dt.toLocaleDateString('de-DE',{weekday:'short'}), hour:dt.getHours()+":00", temp:Math.round(hourly.temperature_2m[i]), precip:hourly.precipitation_probability[i]||0, icon:ic, color:col }); } } const container=document.getElementById('hourlyForecast'); container.innerHTML=items.map(h=>`<div class="hour-card"><div class="hour-time">${h.day} ${h.hour}</div><i class="fas ${h.icon} hour-icon" style="color:${h.color};"></i><div class="hour-temp">${h.temp}°</div><div class="hour-bar-container"><div class="hour-bar" style="width:${Math.min(h.precip,100)}%; background:#4aa3ff;"></div></div><div class="hour-precip">${h.precip}%</div></div>`).join(''); } catch(e){ console.error(e); } }
     
+    // ---------- KALENDER (iCal + Demo) ----------
     function parseICal(icalData){ let ev=[]; let curr=null; const lines=icalData.split(/\r?\n/); for(let l of lines){ l=l.trim(); if(l==="BEGIN:VEVENT") curr={}; else if(l==="END:VEVENT"){ if(curr&&curr.summary&&curr.dtstart_value){ let start=null; let val=curr.dtstart_value; if(val&&val.length===8){ let y=parseInt(val.slice(0,4)),m=parseInt(val.slice(4,6))-1,d=parseInt(val.slice(6,8)); start=new Date(y,m,d); }else if(val&&val.length>=15){ let y=parseInt(val.slice(0,4)),m=parseInt(val.slice(4,6))-1,d=parseInt(val.slice(6,8)),h=parseInt(val.slice(9,11)),min=parseInt(val.slice(11,13)); start=new Date(y,m,d,h,min); } if(start) ev.push({start,title:curr.summary,colorClass:"blue-badge"}); } curr=null; }else if(curr){ if(l.startsWith("SUMMARY:")) curr.summary=l.substring(8).replace(/\\,/g,','); else if(l.startsWith("DTSTART")) curr.dtstart_value=l.split(":")[1]; else if(l.includes("DTSTART;")&&l.includes("VALUE=DATE")){ let parts=l.split(":"); if(parts[1]) curr.dtstart_value=parts[1]; } } } return ev; }
-    async function fetchICalEvents(url){ if(!url) return []; const proxy="https://api.allorigins.win/raw?url="; try{ const resp=await fetch(proxy+encodeURIComponent(url)); if(!resp.ok) throw new Error(); const text=await resp.text(); const parsed=parseICal(text); const statusDiv=document.getElementById('icalStatusMsg'); if(statusDiv) statusDiv.innerText=`✅ ${parsed.length} Termine`; return parsed; }catch(err){ const statusDiv=document.getElementById('icalStatusMsg'); if(statusDiv) statusDiv.innerText=`❌ Fehler`; return []; } }
-    async function refreshICal(){ if(!icalEnabled||!icalUrl) return []; const events=await fetchICalEvents(icalUrl); icalEvents=events; renderCalendarByView(); return events; }
+    async function fetchICalEvents(url){ if(!url) return []; const proxy="https://api.allorigins.win/raw?url="; try{ const resp=await fetch(proxy+encodeURIComponent(url)); if(!resp.ok) throw new Error(); const text=await resp.text(); const parsed=parseICal(text); icalStatusSpan.innerText=`✅ ${parsed.length} Termine`; return parsed; }catch(err){ icalStatusSpan.innerText=`❌ Fehler`; return []; } }
+    async function refreshICal(){ if(!icalEnabled||!icalUrl) return []; icalStatusSpan.innerText="🔄 ..."; const events=await fetchICalEvents(icalUrl); icalEvents=events; renderCalendarByView(); return events; }
     function getEventsForDate(date,events){ const start=new Date(date.getFullYear(),date.getMonth(),date.getDate()); const end=new Date(date.getFullYear(),date.getMonth(),date.getDate(),23,59,59); return events.filter(ev=>ev.start>=start&&ev.start<=end); }
     function renderMonthCalendar(year,month,events){ const firstDay=new Date(year,month,1).getDay(); const daysInMonth=new Date(year,month+1,0).getDate(); const today=new Date(); let html=''; for(let i=0;i<firstDay;i++) html+=`<div class="cal-cell empty-cell"><div class="day-number"></div><div class="events"></div></div>`; for(let d=1;d<=daysInMonth;d++){ const cellDate=new Date(year,month,d); const isToday=(year===today.getFullYear()&&month===today.getMonth()&&d===today.getDate()); const dayEvents=getEventsForDate(cellDate,events); let evHtml=''; if(dayEvents.length){ evHtml=`<div class="events">`; dayEvents.slice(0,2).forEach(ev=>evHtml+=`<div class="event-badge ${ev.colorClass||'blue-badge'}">${ev.title.substring(0,16)}</div>`); if(dayEvents.length>2) evHtml+=`<div class="event-badge">+${dayEvents.length-2}</div>`; evHtml+=`</div>`; } html+=`<div class="cal-cell ${isToday?'today':''}"><div class="day-number">${d}</div>${evHtml}</div>`; } let total=firstDay+daysInMonth; for(let i=total;i<42;i++) html+=`<div class="cal-cell empty-cell"><div class="day-number"></div><div class="events"></div></div>`; calendarGrid.innerHTML=html; }
     function renderWeekCalendar(refDate,events){ const startOfWeek=new Date(refDate); const dow=refDate.getDay(); const diffToMonday=(dow===0?-6:1-dow); startOfWeek.setDate(refDate.getDate()+diffToMonday); const weekDays=[]; for(let i=0;i<7;i++){ let d=new Date(startOfWeek); d.setDate(startOfWeek.getDate()+i); weekDays.push(d); } const today=new Date(); let html=''; weekDays.forEach(day=>{ const isToday=(day.toDateString()===today.toDateString()); const dayEvents=getEventsForDate(day,events); let evHtml=''; if(dayEvents.length){ evHtml=`<div class="events">`; dayEvents.slice(0,2).forEach(ev=>evHtml+=`<div class="event-badge ${ev.colorClass||'blue-badge'}">${ev.title.substring(0,16)}</div>`); if(dayEvents.length>2) evHtml+=`<div class="event-badge">+${dayEvents.length-2}</div>`; evHtml+=`</div>`; } html+=`<div class="cal-cell ${isToday?'today':''}"><div class="day-number">${day.getDate()}</div>${evHtml}</div>`; }); calendarGrid.innerHTML=html; weekdaysRow.innerHTML=weekDays.map((d,i)=>`<div class="weekday">${["S","M","T","W","T","F","S"][i]} ${d.getDate()}.${d.getMonth()+1}</div>`).join(''); }
-    function renderCalendarByView(){ if(!eventsVisible){ calendarGrid.innerHTML='<div style="color:#aaa;">Ereignisse ausgeblendet</div>'; return; } const eventsSource=(icalEnabled&&icalEvents.length)?icalEvents:DEMO_EVENTS.map(ev=>{const now=new Date(); return{start:new Date(now.getFullYear(),now.getMonth(),ev.day),title:ev.title,colorClass:ev.colorClass};}); if(currentView==="month"){ const now=new Date(); renderMonthCalendar(now.getFullYear(),now.getMonth(),eventsSource); weekdaysRow.innerHTML=`<div class="weekday">S</div><div class="weekday">M</div><div class="weekday">T</div><div class="weekday">W</div><div class="weekday">T</div><div class="weekday">F</div><div class="weekday">S</div>`; }else{ renderWeekCalendar(currentDate,eventsSource); } const rightPanel=document.querySelector('.right-panel'); if(rightPanel) rightPanel.classList.toggle('events-hidden',!eventsVisible); }
+    function renderCalendarByView(){ if(!eventsVisible){ calendarGrid.innerHTML='<div style="color:#aaa;">Ereignisse ausgeblendet</div>'; return; } const eventsSource=(icalEnabled&&icalEvents.length)?icalEvents:DEMO_EVENTS.map(ev=>{const now=new Date(); return{start:new Date(now.getFullYear(),now.getMonth(),ev.day),title:ev.title,colorClass:ev.colorClass};}); if(currentView==="month"){ const now=new Date(); renderMonthCalendar(now.getFullYear(),now.getMonth(),eventsSource); weekdaysRow.innerHTML=`<div class="weekday">S</div><div class="weekday">M</div><div class="weekday">T</div><div class="weekday">W</div><div class="weekday">T</div><div class="weekday">F</div><div class="weekday">S</div>`; }else{ renderWeekCalendar(currentDate,eventsSource); } document.querySelector('.right-panel').classList.toggle('events-hidden',!eventsVisible); }
+    
+    // ---------- UHR, SPEICHERN, EINSTELLUNGEN ----------
     function updateClock(){ const n=new Date(); clockEl.innerText=showSeconds?`${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}:${n.getSeconds().toString().padStart(2,'0')}`:`${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}`; dateEl.innerText=n.toLocaleDateString('de-DE',{weekday:'long',year:'numeric',month:'long',day:'numeric'}); }
     function applyEventColors(){ let style=document.getElementById('eventColors'); if(!style){ style=document.createElement('style'); style.id='eventColors'; document.head.appendChild(style); } style.innerHTML=`.event-badge.blue-badge{background:${customColors.blue}!important}.event-badge.red-badge{background:${customColors.red}!important}.event-badge.green-badge{background:${customColors.green}!important}.event-badge.orange-badge{background:${customColors.orange}!important}.event-badge.purple-badge{background:${customColors.purple}!important}`; }
-    function saveSettings(){ localStorage.setItem('dakboard_full',JSON.stringify({slideshowImages,currentAnimation,eventsVisible,showSeconds,customColors,weatherCity,icalUrl,icalEnabled,currentView})); }
-    function loadSettings(){ const saved=localStorage.getItem('dakboard_full'); if(saved){ const s=JSON.parse(saved); if(s.slideshowImages) slideshowImages=s.slideshowImages; if(s.currentAnimation) currentAnimation=s.currentAnimation; if(typeof s.eventsVisible==='boolean') eventsVisible=s.eventsVisible; if(typeof s.showSeconds==='boolean') showSeconds=s.showSeconds; if(s.customColors) customColors={...customColors,...s.customColors}; if(s.weatherCity) weatherCity=s.weatherCity; if(s.icalUrl) icalUrl=s.icalUrl; if(typeof s.icalEnabled==='boolean') icalEnabled=s.icalEnabled; if(s.currentView) currentView=s.currentView; } if(!slideshowImages.length) slideshowImages=["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&h=700","https://images.unsplash.com/photo-1470071459604-3b5ec3c7fe05?w=900&h=700"]; startSlideshow(); applyEventColors(); if(icalEnabled && icalUrl) refreshICal(); }
+    function saveAllSettings(){ localStorage.setItem('dakboard_full',JSON.stringify({slideshowImages,currentAnimation,eventsVisible,showSeconds,customColors,weatherCity,icalUrl,icalEnabled,currentView})); }
+    function loadSettings(){ const saved=localStorage.getItem('dakboard_full'); if(saved){ const s=JSON.parse(saved); if(s.slideshowImages) slideshowImages=s.slideshowImages; if(s.currentAnimation) currentAnimation=s.currentAnimation; if(typeof s.eventsVisible==='boolean') eventsVisible=s.eventsVisible; if(typeof s.showSeconds==='boolean') showSeconds=s.showSeconds; if(s.customColors) customColors={...customColors,...s.customColors}; if(s.weatherCity) weatherCity=s.weatherCity; if(s.icalUrl) icalUrl=s.icalUrl; if(typeof s.icalEnabled==='boolean') icalEnabled=s.icalEnabled; if(s.currentView) currentView=s.currentView; } if(!slideshowImages.length) slideshowImages=["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&h=700","https://images.unsplash.com/photo-1470071459604-3b5ec3c7fe05?w=900&h=700"]; document.getElementById('animationSelect').value=currentAnimation; document.getElementById('toggleEventsVisibility').checked=eventsVisible; document.getElementById('toggleSeconds').checked=showSeconds; document.getElementById('weatherCity').value=weatherCity; document.getElementById('icalUrl').value=icalUrl; document.getElementById('icalEnabled').checked=icalEnabled; document.getElementById('colorBlue').value=customColors.blue; document.getElementById('colorRed').value=customColors.red; document.getElementById('colorGreen').value=customColors.green; document.getElementById('colorOrange').value=customColors.orange; document.getElementById('colorPurple').value=customColors.purple; applyEventColors(); if(icalEnabled && icalUrl) refreshICal(); }
+    function renderImageListUI(){ const c=document.getElementById('imageListContainer'); if(!c)return; c.innerHTML=slideshowImages.map((url,i)=>`<div style="display:flex;justify-content:space-between;margin:4px 0;background:#1e1e1e;padding:3px 8px;border-radius:20px;"><span style="font-size:11px;">${url.substring(0,40)}...</span><button data-idx="${i}" class="removeImgBtn">🗑️</button></div>`).join(''); document.querySelectorAll('.removeImgBtn').forEach(btn=>{ btn.onclick=()=>{ const idx=parseInt(btn.dataset.idx); slideshowImages.splice(idx,1); if(!slideshowImages.length) slideshowImages=["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&h=700"]; renderImageListUI(); startSlideshow(); saveAllSettings(); }; }); }
+    function applyAllAndRender(){ currentAnimation=document.getElementById('animationSelect').value; eventsVisible=document.getElementById('toggleEventsVisibility').checked; showSeconds=document.getElementById('toggleSeconds').checked; customColors={blue:document.getElementById('colorBlue').value, red:document.getElementById('colorRed').value, green:document.getElementById('colorGreen').value, orange:document.getElementById('colorOrange').value, purple:document.getElementById('colorPurple').value}; weatherCity=document.getElementById('weatherCity').value; icalUrl=document.getElementById('icalUrl').value; icalEnabled=document.getElementById('icalEnabled').checked; applyEventColors(); if(icalEnabled && icalUrl) refreshICal().then(()=>renderCalendarByView()); else { icalEvents=[]; renderCalendarByView(); } if(syncInterval) clearInterval(syncInterval); const intervalMin=parseInt(document.getElementById('icalInterval')?.value||30); if(icalEnabled && icalUrl) syncInterval=setInterval(()=>{ if(icalEnabled && icalUrl) refreshICal(); }, intervalMin*60*1000); startSlideshow(); fetchEnhancedWeather(weatherCity); saveAllSettings(); }
     
-    // einfache Einstellungen (Zahnrad)
-    const gear = document.createElement('div'); gear.className = 'settings-gear'; gear.innerHTML = '<i class="fas fa-cog"></i>'; gear.style.cssText = 'position:fixed; top:20px; right:20px; z-index:200; background:rgba(0,0,0,0.6); backdrop-filter:blur(12px); width:44px; height:44px; border-radius:40px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.5rem; border:1px solid rgba(255,255,255,0.2);'; document.body.appendChild(gear);
-    const modalDiv = document.createElement('div'); modalDiv.className = 'modal-overlay'; modalDiv.innerHTML = `<div class="settings-modal" style="background:#0e0e0e;padding:1.2rem;border-radius:32px;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:80%;max-width:400px;"><h2>Einstellungen</h2><div><label>🌍 Stadt</label><input type="text" id="weatherCityInput" placeholder="Berlin"><button id="saveWeatherBtn">Speichern</button></div><div><label>📅 iCal URL</label><input type="text" id="icalUrlInput" placeholder="URL"><label><input type="checkbox" id="icalToggle"> Aktivieren</label><button id="syncIcalBtn">Sync</button><div class="ical-status" id="icalStatusMsg"></div></div><div><label>🎨 Blau <input type="color" id="colBlue" value="#2c7da0"></label> <label>Rot <input type="color" id="colRed" value="#c44536"></label></div><div><label><input type="checkbox" id="secToggle"> Sekunden</label></div><button id="closeSettings">Schließen</button></div>`;
-    document.body.appendChild(modalDiv);
-    modalDiv.style.display = 'none';
-    gear.onclick = () => { document.getElementById('weatherCityInput').value = weatherCity; document.getElementById('icalUrlInput').value = icalUrl; document.getElementById('icalToggle').checked = icalEnabled; document.getElementById('secToggle').checked = showSeconds; document.getElementById('colBlue').value = customColors.blue; document.getElementById('colRed').value = customColors.red; modalDiv.style.display = 'flex'; };
-    document.getElementById('closeSettings').onclick = () => modalDiv.style.display = 'none';
-    document.getElementById('saveWeatherBtn').onclick = () => { weatherCity = document.getElementById('weatherCityInput').value; fetchEnhancedWeather(weatherCity); saveSettings(); modalDiv.style.display = 'none'; };
-    document.getElementById('syncIcalBtn').onclick = async () => { icalUrl = document.getElementById('icalUrlInput').value; icalEnabled = document.getElementById('icalToggle').checked; await refreshICal(); renderCalendarByView(); saveSettings(); };
-    document.getElementById('secToggle').onchange = (e) => { showSeconds = e.target.checked; saveSettings(); };
-    document.getElementById('colBlue').onchange = (e) => { customColors.blue = e.target.value; applyEventColors(); saveSettings(); };
-    document.getElementById('colRed').onchange = (e) => { customColors.red = e.target.value; applyEventColors(); saveSettings(); };
-    document.getElementById('monthViewBtn').onclick = () => { currentView="month"; renderCalendarByView(); document.getElementById('monthViewBtn').classList.add('active'); document.getElementById('weekViewBtn').classList.remove('active'); saveSettings(); };
-    document.getElementById('weekViewBtn').onclick = () => { currentView="week"; currentDate=new Date(); renderCalendarByView(); document.getElementById('weekViewBtn').classList.add('active'); document.getElementById('monthViewBtn').classList.remove('active'); saveSettings(); };
+    // EVENT LISTENER
+    document.getElementById('settingsGear').onclick=()=>{ renderImageListUI(); document.getElementById('settingsModal').classList.add('active'); };
+    document.getElementById('closeModalBtn').onclick=()=>document.getElementById('settingsModal').classList.remove('active');
+    document.getElementById('saveSettingsBtn').onclick=()=>{ applyAllAndRender(); document.getElementById('settingsModal').classList.remove('active'); };
+    document.getElementById('refreshWeatherBtn').onclick=()=>fetchEnhancedWeather(document.getElementById('weatherCity').value);
+    document.getElementById('syncIcalNowBtn').onclick=async()=>{ icalEnabled=true; icalUrl=document.getElementById('icalUrl').value; await refreshICal(); renderCalendarByView(); saveAllSettings(); };
+    document.getElementById('addUrlBtn').onclick=()=>{ const url=document.getElementById('imageUrlInput').value; if(url){ slideshowImages.push(url); renderImageListUI(); startSlideshow(); saveAllSettings(); } };
+    document.getElementById('clearImagesBtn').onclick=()=>{ slideshowImages=["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&h=700"]; renderImageListUI(); startSlideshow(); saveAllSettings(); };
+    document.getElementById('uploadImages').onchange=(e)=>{ Array.from(e.target.files).forEach(f=>{ const reader=new FileReader(); reader.onload=ev=>{ slideshowImages.push(ev.target.result); renderImageListUI(); startSlideshow(); saveAllSettings(); }; reader.readAsDataURL(f); }); };
+    document.getElementById('monthViewBtn').onclick=()=>{ currentView="month"; renderCalendarByView(); document.getElementById('monthViewBtn').classList.add('active'); document.getElementById('weekViewBtn').classList.remove('active'); saveAllSettings(); };
+    document.getElementById('weekViewBtn').onclick=()=>{ currentView="week"; currentDate=new Date(); renderCalendarByView(); document.getElementById('weekViewBtn').classList.add('active'); document.getElementById('monthViewBtn').classList.remove('active'); saveAllSettings(); };
+    document.getElementById('animationSelect').onchange = () => { currentAnimation = document.getElementById('animationSelect').value; };
     
-    setInterval(updateClock, 200); updateClock();
+    setInterval(updateClock,200); updateClock();
     loadSettings();
+    startSlideshow();
     fetchEnhancedWeather(weatherCity);
-    renderCalendarByView();
-    if(icalEnabled && icalUrl) refreshICal();
+    if(icalEnabled && icalUrl) refreshICal().then(()=>renderCalendarByView()); else renderCalendarByView();
 </script>
 </body>
 </html>
