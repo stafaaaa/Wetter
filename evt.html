@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DAKboard Style Dashboard</title>
+    <!-- Google Fonts: Inter & Fallback Helvetica -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 (free icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: #000000; /* tiefschwarz */
+            font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        /* Hauptcontainer: 2 Spalten, 35% / 65% */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 35% 65%;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ========= LINKE SPALTE (Medien & Info) ========= */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            background-color: #000000;
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Uhr & Datum (oben) */
+        .time-date {
+            margin-top: 2rem;
+            margin-left: 2rem;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .clock {
+            font-size: 5.2rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+            line-height: 1;
+            margin-bottom: 0.3rem;
+            font-feature-settings: "tnum";
+        }
+
+        .date {
+            font-size: 1.6rem;
+            font-weight: 400;
+            opacity: 0.85;
+            letter-spacing: 0.5px;
+        }
+
+        /* Mittlerer Bildbereich (atmosphärisches Hintergrundbild) */
+        .hero-image {
+            flex: 1;
+            min-height: 0;
+            margin: 1rem 0 0.5rem 0;
+            position: relative;
+            overflow: hidden;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .hero-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            opacity: 0.92;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Wetter-Bereich (unten links) */
+        .weather {
+            flex-shrink: 0;
+            margin-left: 2rem;
+            margin-bottom: 2rem;
+            margin-right: 1.5rem;
+            margin-top: 0.8rem;
+            padding: 0;
+        }
+
+        .weather-main {
+            display: flex;
+            align-items: baseline;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .temp {
+            font-size: 4rem;
+            font-weight: 300;
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+
+        .weather-icon {
+            font-size: 2.8rem;
+            color: #ffffff;
+        }
+
+        .minmax {
+            font-size: 1rem;
+            font-weight: 400;
+            opacity: 0.7;
+            margin-top: 0.5rem;
+            letter-spacing: 0.3px;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .minmax span {
+            font-size: 0.95rem;
+        }
+
+        /* ========= RECHTE SPALTE (Kalender-Grid) ========= */
+        .right-panel {
+            background-color: #000000;
+            overflow-y: auto;
+            padding: 1.8rem 2rem 2rem 1rem;
+            scrollbar-width: thin;
+            scrollbar-color: #333 #000;
+        }
+
+        .right-panel::-webkit-scrollbar {
+            width: 5px;
+        }
+        .right-panel::-webkit-scrollbar-track {
+            background: #000;
+        }
+        .right-panel::-webkit-scrollbar-thumb {
+            background-color: #444;
+            border-radius: 8px;
+        }
+
+        /* Kalender Grid */
+        .calendar {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+            padding-bottom: 0.6rem;
+        }
+
+        .weekday {
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.7;
+            text-align: left;
+            padding-left: 0.25rem;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.75rem 0.5rem;
+        }
+
+        /* Kalender-Zelle */
+        .cal-cell {
+            background-color: transparent;
+            border-radius: 12px;
+            padding: 0.4rem 0.2rem 0.4rem 0.4rem;
+            transition: background 0.1s ease;
+            min-height: 95px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .day-number {
+            font-size: 1.9rem;
+            font-weight: 350;
+            line-height: 1;
+            margin-bottom: 0.4rem;
+            display: inline-block;
+            width: fit-content;
+            padding: 0 0.15rem;
+            font-feature-settings: "tnum";
+            letter-spacing: -0.5px;
+        }
+
+        /* Heutiger Tag: auffälliger roter Kreis */
+        .today .day-number {
+            border: 2px solid #ff3b3b;
+            border-radius: 50%;
+            padding: 0.1rem 0.55rem;
+            background-color: transparent;
+            color: white;
+            line-height: 1.4;
+            margin-left: -0.2rem;
+        }
+
+        /* Events Container innerhalb der Zelle */
+        .events {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .event-badge {
+            font-size: 0.68rem;
+            font-weight: 500;
+            padding: 4px 6px;
+            border-radius: 20px;
+            background-color: rgba(50, 50, 70, 0.7);
+            color: white;
+            display: inline-block;
+            width: fit-content;
+            max-width: 100%;
+            white-space: nowrap;
+            overflow-x: hidden;
+            text-overflow: ellipsis;
+            letter-spacing: 0.2px;
+            transition: opacity 0.1s;
+            backdrop-filter: brightness(1.05);
+        }
+
+        /* individuelle farbige Balken (blau, rot, grün + custom) */
+        .event-badge.blue-badge { background-color: #2c7da0; }
+        .event-badge.red-badge { background-color: #c44536; }
+        .event-badge.green-badge { background-color: #2e9b6e; }
+        .event-badge.orange-badge { background-color: #e67e22; }
+        .event-badge.purple-badge { background-color: #8e44ad; }
+
+        /* leere Zellen (anderer Monat) sind transparent, aber unsichtbare events */
+        .cal-cell.empty-cell .day-number {
+            opacity: 0.3;
+        }
+        .cal-cell.empty-cell .events {
+            visibility: hidden;
+        }
+
+        /* kleine responsive anpassungen */
+        @media (max-width: 1000px) {
+            .clock { font-size: 4rem; }
+            .date { font-size: 1.2rem; }
+            .temp { font-size: 3rem; }
+            .weather-icon { font-size: 2rem; }
+            .day-number { font-size: 1.5rem; }
+            .right-panel { padding: 1rem; }
+            .calendar-grid { gap: 0.4rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <!-- Linke Spalte: Uhr, Bild, Wetter -->
+    <div class="left-panel">
+        <div class="time-date">
+            <div class="clock" id="liveClock">--:--</div>
+            <div class="date" id="liveDate">---</div>
+        </div>
+        <div class="hero-image">
+            <!-- atmosphärisches Platzhalter-Bild von Unsplash (hochwertige Landschaft) -->
+            <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&h=700&fit=crop&auto=format" 
+                 alt="moody landscape"
+                 loading="eager">
+        </div>
+        <div class="weather">
+            <div class="weather-main">
+                <span class="temp" id="weatherTemp">--°</span>
+                <i class="fas fa-sun weather-icon" id="weatherIcon"></i>
+            </div>
+            <div class="minmax">
+                <span id="weatherMinMax">⬇ --° ⬆ --°</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rechte Spalte: Kalender-Grid mit terminbalken -->
+    <div class="right-panel">
+        <div class="calendar">
+            <div class="weekdays">
+                <div class="weekday">S</div>
+                <div class="weekday">M</div>
+                <div class="weekday">T</div>
+                <div class="weekday">W</div>
+                <div class="weekday">T</div>
+                <div class="weekday">F</div>
+                <div class="weekday">S</div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ------------------------------
+    // 1. LIVE UHR & DATUM (aktualisiert jede Sekunde)
+    // ------------------------------
+    function updateClockAndDate() {
+        const now = new Date();
+        // Uhrzeit: HH:MM:SS (gut lesbar, große Zahlen)
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        const timeString = `${hours}:${minutes}:${seconds}`;
+        document.getElementById('liveClock').innerText = timeString;
+        
+        // Datum: "Montag, 6. Mai 2026" (deutsches Format)
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const dateString = now.toLocaleDateString('de-DE', options);
+        document.getElementById('liveDate').innerText = dateString;
+    }
+    
+    // Wetter Demo - statisch aber mit stilvollen Werten (DS-style)
+    // Im Sinne eines echten Dashboards nutzen wir "simulierte" Wetterdaten mit realistischem Look.
+    // Für einen dynamischen Effekt könnte man API nutzen, aber hier setzen wir ansprechende Dummy-Daten,
+    // die sich nicht störend verhalten. (Interne Werte, je nach Tageszeit minimal variierend)
+    function setWeatherDemo() {
+        // Stimmungsvolle echte Werte: aktuelle Temperatur, Min/Max
+        // Tatsächlich kann man auch leicht realistisch wirken lassen.
+        const nowHour = new Date().getHours();
+        let tempBase = 19;
+        let iconClass = "fa-sun";
+        let minVal = 14;
+        let maxVal = 24;
+        
+        if (nowHour < 8 || nowHour > 20) {
+            tempBase = 12;
+            iconClass = "fa-moon";
+            minVal = 9;
+            maxVal = 16;
+        } else if (nowHour < 12) {
+            tempBase = 18;
+            iconClass = "fa-cloud-sun";
+            minVal = 13;
+            maxVal = 23;
+        } else if (nowHour < 18) {
+            tempBase = 24;
+            iconClass = "fa-sun";
+            minVal = 16;
+            maxVal = 26;
+        } else {
+            tempBase = 17;
+            iconClass = "fa-cloud-moon";
+            minVal = 12;
+            maxVal = 20;
+        }
+        
+        document.getElementById('weatherTemp').innerHTML = `${tempBase}°`;
+        const weatherIconElem = document.getElementById('weatherIcon');
+        weatherIconElem.className = `fas ${iconClass} weather-icon`;
+        document.getElementById('weatherMinMax').innerHTML = `⬇ ${minVal}°  ⬆ ${maxVal}°`;
+    }
+    
+    // ------------------------------
+    // 2. KALENDER LOGIK (Monatsgrid mit farbigen Terminbalken)
+    // ------------------------------
+    // Beispieltermine (farbige Balken) — diese verteilen sich im aktuellen Monat
+    // Jeder Eintrag: tag (Zahl des Monats), titel, farbKategorie (entspricht CSS-Klasse)
+    // Farben: blau, rot, grün, orange, lila, wie DAKboard typisch
+    const DEMO_EVENTS_BASE = [
+        { day: 3,  title: "Design Review",    color: "blue-badge" },
+        { day: 5,  title: "Meeting Team",     color: "green-badge" },
+        { day: 8,  title: "Zahnarzt",         color: "red-badge" },
+        { day: 12, title: "Workshop",         color: "purple-badge" },
+        { day: 15, title: "Projekt-Deadline", color: "orange-badge" },
+        { day: 17, title: "Yoga",             color: "green-badge" },
+        { day: 20, title: "Geburtstag",       color: "red-badge" },
+        { day: 22, title: "Kundenmeeting",    color: "blue-badge" },
+        { day: 25, title: "Abgabetermin",     color: "orange-badge" },
+        { day: 28, title: "Reflexion",        color: "purple-badge" },
+        { day: 30, title: "Brunch",           color: "green-badge" }
+    ];
+    
+    // Variables für aktuellen Monat/Jahr
+    let currentDisplayYear = new Date().getFullYear();
+    let currentDisplayMonth = new Date().getMonth(); // 0-indexed
+    let todayDate = new Date();
+    let todayYear = todayDate.getFullYear();
+    let todayMonth = todayDate.getMonth();
+    let todayDayNumber = todayDate.getDate();
+    
+    // generiert events für den aktuell dargestellten Monat (year, month)
+    function getEventsForMonth(year, month) {
+        // Events basierend auf DEMO_EVENTS_BASE, aber nur wenn Tag innerhalb Monatsgrenzen existiert.
+        // zusätzlich können wir dynamisch ein "heutiges Event" hinzufügen, falls aktueller Monat mit Heute übereinstimmt
+        // + ermöglicht individuelle Anpassung
+        let eventsList = [];
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        DEMO_EVENTS_BASE.forEach(ev => {
+            if (ev.day >= 1 && ev.day <= daysInMonth) {
+                eventsList.push({
+                    day: ev.day,
+                    title: ev.title,
+                    colorClass: ev.color
+                });
+            }
+        });
+        
+        // Optional: füge ein aktuelles Event für den heutigen Tag hinzu, falls es nicht schon existiert und es im aktuellen Monat ist
+        if (year === todayYear && month === todayMonth) {
+            const hasTodayEvent = eventsList.some(ev => ev.day === todayDayNumber);
+            if (!hasTodayEvent && todayDayNumber <= daysInMonth) {
+                eventsList.push({
+                    day: todayDayNumber,
+                    title: "Heute • Fokus",
+                    colorClass: "red-badge"
+                });
+            }
+        }
+        
+        // Sortiere nach Tag, damit Konsistenz
+        eventsList.sort((a,b) => a.day - b.day);
+        return eventsList;
+    }
+    
+    // Erstellt den Kalender-Grid (CSS Grid, 7 Spalten, 6 Zeilen max)
+    function renderCalendar(year, month) {
+        const calendarGrid = document.getElementById('calendarGrid');
+        if (!calendarGrid) return;
+        
+        // Erster Tag des Monats (0=Sonntag, 1=Montag, ...)
+        const firstDayOfMonth = new Date(year, month, 1);
+        const startWeekday = firstDayOfMonth.getDay(); // 0 = Sonntag
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        // Events für diesen Monat laden
+        const monthEvents = getEventsForMonth(year, month);
+        
+        // leere vorherige Tage (Anfangslücken)
+        const totalCells = 42; // max. 6 Zeilen
+        let calendarHTML = '';
+        
+        let cellIndex = 0;
+        // Vorlauf: leere Zellen basierend auf startWeekday (Sonntag)
+        for (let i = 0; i < startWeekday; i++) {
+            calendarHTML += `<div class="cal-cell empty-cell">
+                                <div class="day-number" style="opacity:0.3;"></div>
+                                <div class="events"></div>
+                            </div>`;
+            cellIndex++;
+        }
+        
+        // Tage des aktuellen Monats
+        for (let d = 1; d <= daysInMonth; d++) {
+            const isToday = (year === todayYear && month === todayMonth && d === todayDayNumber);
+            const todayClass = isToday ? 'today' : '';
+            // Events für diesen spezifischen Tag filtern
+            const dayEvents = monthEvents.filter(ev => ev.day === d);
+            
+            // Events HTML generieren (farbige Balken)
+            let eventsHtml = '';
+            if (dayEvents.length > 0) {
+                eventsHtml = `<div class="events">`;
+                dayEvents.forEach(ev => {
+                    // Farbklasse: blue-badge, red-badge, green-badge etc.
+                    eventsHtml += `<div class="event-badge ${ev.colorClass}">${ev.title}</div>`;
+                });
+                eventsHtml += `</div>`;
+            } else {
+                eventsHtml = `<div class="events"></div>`;
+            }
+            
+            calendarHTML += `<div class="cal-cell ${todayClass}">
+                                <div class="day-number">${d}</div>
+                                ${eventsHtml}
+                            </div>`;
+            cellIndex++;
+        }
+        
+        // Auffüllen bis 42 Zellen (letzte Lücken)
+        const remainingCells = totalCells - cellIndex;
+        for (let i = 0; i < remainingCells; i++) {
+            calendarHTML += `<div class="cal-cell empty-cell">
+                                <div class="day-number" style="opacity:0.3;"></div>
+                                <div class="events"></div>
+                            </div>`;
+        }
+        
+        calendarGrid.innerHTML = calendarHTML;
+    }
+    
+    // ------------------------------
+    // 3. Initialer Aufruf + Monatswechsel sicherstellen (keine dynamische Änderung, aber bei Bedarf)
+    //    Da Dashboard hauptsächlich aktuellen Monat anzeigt & Uhr läuft, bleibt Monat gültig.
+    //    Um 0 Uhr wird automatisch neu geladen? Nicht notwendig. Zur Vorsicht: bei Datumsänderung prüfen wir auf Mitternacht (optional).
+    //    Für frische Darstellung bei Seitenaufruf reicht load. + Event Listener für potentielle Monatswechsel (alle 60min prüfen)
+    //    aber einfach initial.
+    // ------------------------------
+    
+    // Aktualisiert das Dashboard, falls der Monat sich durch Mitternacht ändern sollte (kein Reload nötig)
+    let lastCheckDate = new Date();
+    function checkForMonthRollover() {
+        const now = new Date();
+        if (now.getMonth() !== lastCheckDate.getMonth() || now.getFullYear() !== lastCheckDate.getFullYear()) {
+            // Monat oder Jahr geändert -> Kalender neu rendern
+            currentDisplayYear = now.getFullYear();
+            currentDisplayMonth = now.getMonth();
+            todayDate = new Date();
+            todayYear = todayDate.getFullYear();
+            todayMonth = todayDate.getMonth();
+            todayDayNumber = todayDate.getDate();
+            renderCalendar(currentDisplayYear, currentDisplayMonth);
+            lastCheckDate = new Date();
+        } else {
+            // Alle 60 Sekunden kleinen Sync für Datum?
+            if (now.getDate() !== lastCheckDate.getDate()) {
+                // Datumswechsel -> trotzdem neuen Tag und möglicherweise heute-Markierung aktualisieren
+                todayDate = new Date();
+                todayYear = todayDate.getFullYear();
+                todayMonth = todayDate.getMonth();
+                todayDayNumber = todayDate.getDate();
+                renderCalendar(currentDisplayYear, currentDisplayMonth);
+                lastCheckDate = new Date();
+            }
+        }
+    }
+    
+    // Alle Termine sind ansprechend, mit korrekter Wochentagsausrichtung.
+    // Zusätzlich simulieren wir eine dynamische Wetter-Optik, die minimal in Intervallen aktualisiert wird (jede Stunde)
+    function updateWeatherPeriodically() {
+        setWeatherDemo();
+        // alle 30 Minuten die Wetterdaten "frisch" anpassen (damit es lebendig wirkt)
+        setInterval(() => {
+            setWeatherDemo();
+        }, 30 * 60 * 1000);
+    }
+    
+    // Initialisierung der Uhr, des Kalenders und des Wetters
+    function initDashboard() {
+        updateClockAndDate();
+        setWeatherDemo();
+        // aktuellen Monat ausgeben (basierend auf heutigem Datum)
+        const now = new Date();
+        currentDisplayYear = now.getFullYear();
+        currentDisplayMonth = now.getMonth();
+        todayYear = currentDisplayYear;
+        todayMonth = currentDisplayMonth;
+        todayDayNumber = now.getDate();
+        renderCalendar(currentDisplayYear, currentDisplayMonth);
+        
+        // Uhrzeit jede Sekunde aktualisieren
+        setInterval(() => {
+            updateClockAndDate();
+            // zusätzlich prüfen auf Mitternachtswechsel für Kalender und roten Kreis
+            checkForMonthRollover();
+        }, 1000);
+        
+        // Wetter regelmäßig (oben bereits Intervall gesetzt)
+        updateWeatherPeriodically();
+        
+        // extra: bei Fenstergrößenänderung keine Änderungen nötig, alles responsiv
+    }
+    
+    // Start after page load
+    window.addEventListener('DOMContentLoaded', initDashboard);
+</script>
+</body>
+</html>
