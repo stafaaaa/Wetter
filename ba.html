@@ -51,7 +51,6 @@
             touch-action: none; display: flex; flex-direction: column; cursor: default;
         }
         .tile-content { flex:1; overflow-y:auto; cursor: default; }
-
         .resize-handle-edge, .resize-handle-corner { display: none; }
         #dashboard[data-resize-mode="true"] .resize-handle-edge,
         #dashboard[data-resize-mode="true"] .resize-handle-corner { display: block; }
@@ -67,7 +66,6 @@
             border: 1px solid rgba(255,255,255,0.3);
             box-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
-        /* Einstellungs-Overlay */
         #settings-overlay {
             position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.8);
             backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center;
@@ -77,7 +75,7 @@
             background: rgba(20,20,30,0.95); color: white; border-radius: 20px;
             padding: 20px; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto;
             box-shadow: 0 10px 40px rgba(0,0,0,0.7);
-            font-size: 1rem;
+            font-size: 1rem; position: relative;
         }
         #settings-panel h2 { margin-bottom: 16px; font-size: 1.6rem; }
         .settings-section { margin-bottom: 20px; }
@@ -90,10 +88,11 @@
         }
         .settings-row button { background: var(--accent); cursor: pointer; min-width: auto; flex: 0; }
         .settings-row input[type="range"] { padding: 0; height: 32px; }
-        .label-value { font-size: 0.9rem; opacity: 0.8; }
+        .settings-row input[type="checkbox"] { width: 24px; height: 24px; min-width: 24px; flex: 0; }
+        .label-value { font-size: 0.9rem; opacity: 0.8; min-width: 40px; text-align: center; }
         .close-btn {
-            position: absolute; top: 12px; right: 12px; background: none; border: none;
-            color: white; font-size: 2rem; cursor: pointer;
+            position: absolute; top: 10px; right: 14px; background: none; border: none;
+            color: white; font-size: 2rem; cursor: pointer; line-height: 1;
         }
 
         /* Wetter */
@@ -128,32 +127,71 @@
             cursor:pointer; min-height:60px; border-radius:6px; font-size:1.1rem;
         }
         .day:active { background:rgba(255,255,255,0.1); }
-        .day .day-number { width:1.8em; height:1.8em; border-radius:50%; font-weight:300; font-size:1.3rem; line-height:1.8em; }
+        .day .day-number { width:1.8em; height:1.8em; border-radius:50%; font-weight:300; font-size:1.3rem; line-height:1.8em; text-align:center; }
         .day.today .day-number { background: var(--accent); color:#fff; font-weight:400; }
         .day .event-title { font-size:0.65rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:95%; margin-top:2px; }
-        .week-day { font-size:1rem; }
+        .week-container { display:none; flex:1; flex-direction:column; gap:6px; }
+        .week-header { display:flex; justify-content:space-between; align-items:center; font-size:1rem; margin-bottom:6px; }
+        .week-days { display:flex; gap:6px; flex:1; }
+        .week-day {
+            flex:1; background:rgba(255,255,255,0.1); border-radius:10px; padding:10px 4px;
+            text-align:center; cursor:pointer; display:flex; flex-direction:column; gap:4px; min-height:80px;
+        }
+        .week-day.today { border:2px solid var(--accent); }
+        .week-day:active { background:rgba(255,255,255,0.2); }
+        .week-day-label { font-size:0.85rem; }
+        .week-day-date { font-size:1.2rem; font-weight:600; }
+        .week-event { font-size:0.7rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:2px 4px; border-radius:3px; margin-top:2px; }
         .event-details { background:rgba(0,0,0,0.9); padding:10px; border-radius:10px; margin-top:8px; display:none; font-size:0.9rem; }
         .event-details.show { display:block; }
         .month-slider-container { display:flex; align-items:center; gap:10px; margin-top:8px; }
-        .month-slider-container input[type=range] { flex:1; height:8px; }
-        .month-slider-container input[type=range]::-webkit-slider-thumb { width:32px; height:32px; }
+        .month-slider-container input[type=range] { flex:1; height:8px; background:rgba(255,255,255,0.2); }
+        .month-slider-container input[type=range]::-webkit-slider-thumb { width:32px; height:32px; background:var(--accent); }
+        .month-label { font-size:0.95rem; white-space:nowrap; min-width:100px; }
 
         /* Slideshow */
         #slideshow { background:#000; }
         #slideshow .tile-content { padding:0; }
         .slideshow-container { position:relative; width:100%; height:100%; background:#000; overflow:hidden; }
-        .slide-img { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; opacity:0; transition: opacity var(--slide-duration) ease-out, transform var(--slide-duration) ease-out; }
+        .slide-img {
+            position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;
+            opacity:0; transition: opacity var(--slide-duration) ease-out, transform var(--slide-duration) ease-out;
+        }
         .slide-img.active { opacity:1; }
-        /* (Animationen wie zuvor, aus Platzgründen nicht erneut aufgeführt) */
+        .slide-anim-fade .slide-img { transform:none; }
+        .slide-anim-slide-left .slide-img { transform:translateX(100%); opacity:1; }
+        .slide-anim-slide-left .slide-img.active { transform:translateX(0); }
+        .slide-anim-slide-up .slide-img { transform:translateY(100%); opacity:1; }
+        .slide-anim-slide-up .slide-img.active { transform:translateY(0); }
+        .slide-anim-zoom .slide-img { transform:scale(0.7); opacity:0; }
+        .slide-anim-zoom .slide-img.active { transform:scale(1); opacity:1; }
+        .slide-anim-rotate .slide-img { transform:rotate(-15deg) scale(0.8); opacity:0; }
+        .slide-anim-rotate .slide-img.active { transform:rotate(0) scale(1); opacity:1; }
+        .slide-anim-flip .slide-img { transform:perspective(800px) rotateY(90deg); opacity:0; }
+        .slide-anim-flip .slide-img.active { transform:perspective(800px) rotateY(0); opacity:1; }
+        .slide-anim-blur .slide-img { filter:blur(20px); opacity:0; }
+        .slide-anim-blur .slide-img.active { filter:blur(0); opacity:1; }
+        .slide-anim-ken-burns .slide-img.active { animation: kenBurns 8s infinite alternate; }
+        @keyframes kenBurns { from { transform:scale(1); } to { transform:scale(1.1); } }
+        .slide-anim-split .slide-img { clip-path:inset(50% 0 50% 0); opacity:0; }
+        .slide-anim-split .slide-img.active { clip-path:inset(0 0 0 0); opacity:1; }
+        .slide-anim-circle-reveal .slide-img { clip-path:circle(0% at 50% 50%); opacity:0; }
+        .slide-anim-circle-reveal .slide-img.active { clip-path:circle(100% at 50% 50%); opacity:1; }
+        .slide-anim-slide-diagonal .slide-img { transform:translate(100%,100%) rotate(10deg); opacity:0; }
+        .slide-anim-slide-diagonal .slide-img.active { transform:translate(0,0) rotate(0); opacity:1; }
         .slideshow-controls {
             position:absolute; bottom:16px; left:50%; transform:translateX(-50%);
             display:flex; gap:16px; background:rgba(0,0,0,0.6); padding:10px 20px; border-radius:30px; z-index:10;
         }
-        .slideshow-controls button { background:transparent; border:none; color:white; font-size:2rem; cursor:pointer; min-width:56px; min-height:56px; }
+        .slideshow-controls button {
+            background:transparent; border:none; color:white; font-size:2rem; cursor:pointer;
+            min-width:56px; min-height:56px;
+        }
         .upload-area { position:absolute; bottom:16px; right:16px; background:rgba(0,0,0,0.5); padding:8px 12px; border-radius:10px; display:flex; gap:10px; align-items:center; }
         .upload-btn { background:var(--accent); color:white; border:none; border-radius:14px; padding:10px 18px; cursor:pointer; font-size:1rem; }
+        input[type=file] { display:none; }
 
-        /* Resize-Modus-Button */
+        /* Resize-Modus Button */
         #resize-btn {
             position: fixed; bottom: 20px; right: 20px; z-index: 450;
             background: rgba(0,0,0,0.7); color: white; width: 56px; height: 56px;
@@ -172,6 +210,7 @@
 <!-- Einstellungs-Overlay -->
 <div id="settings-overlay">
     <div id="settings-panel">
+        <button class="close-btn" id="close-settings">&times;</button>
         <h2>Einstellungen</h2>
         <div class="settings-section">
             <h3>📐 Layout</h3>
@@ -315,24 +354,20 @@
     let resizeMode = false;
     const dashboard = document.getElementById('dashboard');
     const overlay = document.getElementById('settings-overlay');
+    const panel = document.getElementById('settings-panel');
+
+    // Slideshow vars
     let slides = [], currentSlide = 0, paused = false, timer, batteryMode = false;
+    // Weather
     let currentLat = 51.2277, currentLon = 6.7735, currentLocName = 'Düsseldorf';
+    // Calendar
     let calendarEvents = [];
     const palette = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63','#00bcd4','#ff5722'];
     const assignColor = i => palette[i % palette.length];
     let currentMonth = new Date().getMonth(), currentYear = new Date().getFullYear();
     let currentView = 'month';
 
-    // Overlay ein-/ausblenden
-    document.getElementById('settings-toggle').addEventListener('click', () => overlay.classList.toggle('open'));
-    // Einstellungen aus Overlay übernehmen
-    document.getElementById('layout-h-preset').addEventListener('change', e => applyPreset(e.target.value));
-    document.getElementById('layout-v-preset').addEventListener('change', e => applyPreset(e.target.value));
-    document.getElementById('theme-select').addEventListener('change', e => applyTheme(e.target.value));
-    document.getElementById('anim-select').addEventListener('change', e => { document.getElementById('slideshow-container').className = 'slideshow-container slide-anim-' + e.target.value; localStorage.setItem('slideAnim', e.target.value); });
-    document.getElementById('battery-mode').addEventListener('change', e => setBatteryMode(e.target.checked));
-    // Weitere Eventlistener für Slider etc. (ähnlich wie bisher, aber auf die neuen IDs)
-
+    // Helper: apply preset
     function applyPreset(key) {
         const p = presets[key]; if (!p) return;
         for (const id in p) {
@@ -348,11 +383,475 @@
         for (const [prop, val] of Object.entries(t)) document.documentElement.style.setProperty(prop, val);
         localStorage.setItem('theme', key);
     }
+    function updateInteractState() {
+        if (resizeMode) {
+            interact('.tile').draggable({ enabled: false }).resizable({ enabled: true });
+        } else {
+            interact('.tile').draggable({ enabled: false }).resizable({ enabled: false });
+        }
+    }
+    function toggleResizeMode() {
+        resizeMode = !resizeMode;
+        if (resizeMode) dashboard.setAttribute('data-resize-mode', 'true');
+        else dashboard.removeAttribute('data-resize-mode');
+        updateInteractState();
+    }
 
-    // ... restliche Logik (createTiles, fillTile, Wetter, Kalender, Slideshow) wie in der vorherigen Version, jedoch angepasst auf die neuen IDs und das Overlay.
-    // Aus Platzgründen kürze ich hier ab – die Struktur ist aber voll funktionsfähig in der tatsächlichen Datei.
+    // Overlay open/close
+    document.getElementById('settings-toggle').addEventListener('click', () => overlay.classList.add('open'));
+    document.getElementById('close-settings').addEventListener('click', () => overlay.classList.remove('open'));
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
 
-    // Hinweis: Die vollständige Version mit allen Details kann ich bei Bedarf nachliefern, der obige Code ist das Grundgerüst.
+    // Presets & Theme
+    document.getElementById('layout-h-preset').addEventListener('change', e => applyPreset(e.target.value));
+    document.getElementById('layout-v-preset').addEventListener('change', e => applyPreset(e.target.value));
+    document.getElementById('theme-select').addEventListener('change', e => applyTheme(e.target.value));
+    // Animation
+    document.getElementById('anim-select').addEventListener('change', e => {
+        const cont = document.getElementById('slideshow-container');
+        if (cont) cont.className = 'slideshow-container slide-anim-' + e.target.value;
+        localStorage.setItem('slideAnim', e.target.value);
+    });
+    // Battery
+    document.getElementById('battery-mode').addEventListener('change', e => setBatteryMode(e.target.checked));
+    // Gradient sliders
+    document.getElementById('gradient-position-slider').addEventListener('input', e => {
+        document.documentElement.style.setProperty('--gradient-position', e.target.value);
+        document.getElementById('gradient-pos-value').textContent = Math.round(e.target.value*100)+'%';
+        localStorage.setItem('gradientPosition', e.target.value);
+    });
+    document.getElementById('gradient-width-slider').addEventListener('input', e => {
+        document.documentElement.style.setProperty('--gradient-width', e.target.value);
+        localStorage.setItem('gradientWidth', e.target.value);
+    });
+    document.getElementById('gradient-opacity-slider').addEventListener('input', e => {
+        document.documentElement.style.setProperty('--gradient-opacity', e.target.value);
+        localStorage.setItem('gradientOpacity', e.target.value);
+    });
+    // Opacity & Font scale
+    document.getElementById('tile-opacity-slider').addEventListener('input', e => {
+        document.documentElement.style.setProperty('--tile-opacity', e.target.value);
+        document.getElementById('tile-opacity-value').textContent = Math.round(e.target.value*100)+'%';
+        localStorage.setItem('tileOpacity', e.target.value);
+    });
+    document.getElementById('font-scale-slider').addEventListener('input', e => {
+        document.documentElement.style.setProperty('--font-scale', e.target.value);
+        document.getElementById('font-scale-value').textContent = parseFloat(e.target.value).toFixed(1);
+        localStorage.setItem('fontScale', e.target.value);
+    });
+    // Location search
+    document.getElementById('location-search-btn2').addEventListener('click', () => {
+        const q = document.getElementById('location-search-input').value.trim();
+        if (q) searchLocation(q).then(results => {
+            if (results.length) {
+                setLocation(results[0].latitude, results[0].longitude, results[0].name);
+            } else {
+                document.getElementById('location-result').textContent = '❌ Nicht gefunden';
+            }
+        });
+    });
+    document.getElementById('gps-btn2').addEventListener('click', () => {
+        navigator.geolocation.getCurrentPosition(
+            pos => setLocation(pos.coords.latitude, pos.coords.longitude, 'GPS'),
+            () => document.getElementById('location-result').textContent = '❌ GPS fehlgeschlagen'
+        );
+    });
+    // iCal load
+    document.getElementById('load-ical').addEventListener('click', () => {
+        loadCalendar(document.getElementById('ical-urls').value);
+    });
+
+    // Resize mode button
+    document.getElementById('resize-btn').addEventListener('click', () => toggleResizeMode());
+
+    function createTiles() {
+        dashboard.querySelectorAll('.tile').forEach(t => t.remove());
+        for (const [id, dim] of Object.entries(layout)) {
+            const tile = document.createElement('div');
+            tile.className = 'tile'; tile.id = id;
+            tile.style.left = dim.x + 'px'; tile.style.top = dim.y + 'px';
+            tile.style.width = dim.w + 'px'; tile.style.height = dim.h + 'px';
+            tile.innerHTML = `<div class="tile-content"></div>
+                <div class="resize-handle-edge top"></div><div class="resize-handle-edge bottom"></div>
+                <div class="resize-handle-edge left"></div><div class="resize-handle-edge right"></div>
+                <div class="resize-handle-corner tl"></div><div class="resize-handle-corner tr"></div>
+                <div class="resize-handle-corner bl"></div><div class="resize-handle-corner br"></div>`;
+            dashboard.appendChild(tile);
+            fillTile(id, tile);
+        }
+        initInteract();
+        renderCurrentView();
+        if (slides.length) updateSlideDisplay();
+        else loadSlides();
+    }
+
+    function fillTile(id, tile) {
+        const content = tile.querySelector('.tile-content');
+        if (id === 'weather') {
+            content.innerHTML = `
+                <div class="weather-now">
+                    <div class="temp" id="current-temp">--°</div>
+                    <div class="details" id="current-details">Wetter wird geladen…</div>
+                    <div id="current-icon" style="font-size:2.5rem;"></div>
+                </div>
+                <div class="forecast-row" id="forecast-container"><div class="forecast-day">--</div></div>`;
+        } else if (id === 'calendar') {
+            content.innerHTML = `
+                <div class="view-switch">
+                    <button class="view-btn active" id="view-month">Monat</button>
+                    <button class="view-btn" id="view-week">Woche</button>
+                </div>
+                <div class="calendar-grid" id="calendar-grid"></div>
+                <div class="month-slider-container" id="month-slider-container">
+                    <span class="month-label" id="month-label"></span>
+                    <input type="range" id="month-slider" min="0" max="11" value="${new Date().getMonth()}">
+                </div>
+                <div class="week-container" id="week-container">
+                    <div class="week-header"><span id="week-label"></span></div>
+                    <div class="week-days" id="week-days"></div>
+                </div>
+                <div class="event-details" id="event-details"></div>`;
+        } else if (id === 'slideshow') {
+            content.innerHTML = `
+                <div class="slideshow-container slide-anim-fade" id="slideshow-container">
+                    <div class="slideshow-controls">
+                        <button id="prev-slide"><i class="fas fa-chevron-left"></i></button>
+                        <button id="play-pause"><i class="fas fa-pause"></i></button>
+                        <button id="next-slide"><i class="fas fa-chevron-right"></i></button>
+                        <button id="delete-slide"><i class="fas fa-trash"></i></button>
+                        <button id="download-slide"><i class="fas fa-download"></i></button>
+                    </div>
+                </div>
+                <div class="upload-area">
+                    <label for="file-upload" class="upload-btn"><i class="fas fa-upload"></i></label>
+                    <input type="file" id="file-upload" multiple accept="image/*">
+                    <span id="image-count">0</span>
+                </div>`;
+        }
+    }
+
+    function initInteract() {
+        interact('.tile')
+            .draggable({
+                enabled: false,
+                allowFrom: '.tile-content',
+                modifiers: [interact.modifiers.restrict({ restriction: 'parent', endOnly: true })],
+                listeners: {
+                    move(e) {
+                        const t = e.target;
+                        const x = (parseFloat(t.getAttribute('data-x'))||0) + e.dx;
+                        const y = (parseFloat(t.getAttribute('data-y'))||0) + e.dy;
+                        t.style.transform = `translate(${x}px,${y}px)`;
+                        t.setAttribute('data-x', x); t.setAttribute('data-y', y);
+                    },
+                    end(e) {
+                        const t = e.target;
+                        const x = parseFloat(t.getAttribute('data-x'))||0;
+                        const y = parseFloat(t.getAttribute('data-y'))||0;
+                        t.style.transform = '';
+                        t.style.left = (parseFloat(t.style.left)+x)+'px';
+                        t.style.top = (parseFloat(t.style.top)+y)+'px';
+                        t.setAttribute('data-x',0); t.setAttribute('data-y',0);
+                        saveLayout();
+                    }
+                }
+            })
+            .resizable({
+                enabled: false,
+                edges: { top:true, bottom:true, left:true, right:true },
+                modifiers: [
+                    interact.modifiers.restrict({ restriction: 'parent', endOnly: true }),
+                    interact.modifiers.restrictSize({ min: { width:80, height:80 } })
+                ],
+                listeners: {
+                    move(e) {
+                        const t = e.target;
+                        let x = (parseFloat(t.getAttribute('data-x'))||0);
+                        let y = (parseFloat(t.getAttribute('data-y'))||0);
+                        t.style.width = e.rect.width + 'px';
+                        t.style.height = e.rect.height + 'px';
+                        x += e.deltaRect.left; y += e.deltaRect.top;
+                        t.style.transform = `translate(${x}px,${y}px)`;
+                        t.setAttribute('data-x', x); t.setAttribute('data-y', y);
+                    },
+                    end(e) {
+                        const t = e.target;
+                        const x = parseFloat(t.getAttribute('data-x'))||0;
+                        const y = parseFloat(t.getAttribute('data-y'))||0;
+                        t.style.transform = '';
+                        t.style.left = (parseFloat(t.style.left)+x)+'px';
+                        t.style.top = (parseFloat(t.style.top)+y)+'px';
+                        t.setAttribute('data-x',0); t.setAttribute('data-y',0);
+                        saveLayout();
+                    }
+                }
+            });
+    }
+
+    function saveLayout() {
+        const tiles = {};
+        document.querySelectorAll('.tile').forEach(t => {
+            tiles[t.id] = {
+                x: parseFloat(t.style.left)||0,
+                y: parseFloat(t.style.top)||0,
+                w: parseFloat(t.style.width)||100,
+                h: parseFloat(t.style.height)||100
+            };
+        });
+        localStorage.setItem('kitchenLayout', JSON.stringify(tiles));
+    }
+
+    // Weather
+    async function fetchWeather() {
+        try {
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${currentLat}&longitude=${currentLon}&current=weather_code,temperature_2m,relative_humidity_2m,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5`);
+            return await res.json();
+        } catch(e) { return null; }
+    }
+    const wEmoji = c => ({0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌦️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',80:'🌧️',81:'🌧️',82:'🌧️',85:'🌨️',86:'🌨️',95:'⛈️'}[c]||'🌥️');
+    const wDesc = c => c===0?'Sonnig':c===1?'Heiter':c===2?'Wolkig':c===3?'Bedeckt':c>=45&&c<=48?'Nebel':c>=51?'Niesel':c>=61?'Regen':c>=71?'Schnee':c>=95?'Gewitter':'Bewölkt';
+
+    async function updateWeather() {
+        const data = await fetchWeather();
+        if (!data) {
+            const cached = localStorage.getItem('weatherCache');
+            if (cached) renderWeather(JSON.parse(cached));
+            else {
+                const tempEl = document.getElementById('current-temp');
+                const detailsEl = document.getElementById('current-details');
+                if (tempEl) tempEl.textContent = '--°';
+                if (detailsEl) detailsEl.textContent = 'Keine Verbindung';
+            }
+            return;
+        }
+        localStorage.setItem('weatherCache', JSON.stringify(data));
+        renderWeather(data);
+    }
+    function renderWeather(data) {
+        const tempEl = document.getElementById('current-temp');
+        const detailsEl = document.getElementById('current-details');
+        const iconEl = document.getElementById('current-icon');
+        const fc = document.getElementById('forecast-container');
+        if (tempEl) tempEl.textContent = Math.round(data.current.temperature_2m) + '°';
+        if (detailsEl) detailsEl.innerHTML = `${wDesc(data.current.weather_code)}<br>💧 ${data.current.relative_humidity_2m}% · 💨 ${Math.round(data.current.wind_speed_10m)} km/h`;
+        if (iconEl) iconEl.textContent = wEmoji(data.current.weather_code);
+        if (fc) {
+            fc.innerHTML = '';
+            data.daily.time.forEach((day,i) => {
+                const d = new Date(day);
+                const div = document.createElement('div');
+                div.className = 'forecast-day' + (i===0?' active':'');
+                div.innerHTML = `<div>${d.toLocaleDateString('de-DE',{weekday:'short'})}</div><div>${wEmoji(data.daily.weather_code[i])}</div><div>${Math.round(data.daily.temperature_2m_max[i])}°/${Math.round(data.daily.temperature_2m_min[i])}°</div>`;
+                fc.appendChild(div);
+            });
+        }
+    }
+    async function searchLocation(query) {
+        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=3&language=de`);
+        const data = await res.json();
+        return data.results || [];
+    }
+    async function setLocation(lat, lon, name) {
+        currentLat = lat; currentLon = lon; currentLocName = name;
+        localStorage.setItem('weatherLoc', JSON.stringify({lat,lon,name}));
+        document.getElementById('location-result').textContent = `✅ ${name} (${lat.toFixed(2)}, ${lon.toFixed(2)})`;
+        await updateWeather();
+    }
+
+    // Calendar
+    function renderCurrentView() { currentView === 'month' ? renderMonthCalendar() : renderWeekCalendar(); }
+    function renderMonthCalendar() {
+        const grid = document.getElementById('calendar-grid'); if(!grid) return;
+        grid.innerHTML = '';
+        ['So','Mo','Di','Mi','Do','Fr','Sa'].forEach(d => {
+            const div = document.createElement('div'); div.className = 'day-header'; div.textContent = d; grid.appendChild(div);
+        });
+        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+        for(let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div'));
+        for(let d=1; d<=daysInMonth; d++) {
+            const dayDiv = document.createElement('div'); dayDiv.className = 'day';
+            const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const eventsOnDay = calendarEvents.filter(e => e.start.startsWith(dateStr));
+            dayDiv.innerHTML = `<span class="day-number">${d}</span>`;
+            eventsOnDay.slice(0,3).forEach(ev => {
+                const title = document.createElement('div'); title.className = 'event-title'; title.style.color = ev.color; title.textContent = ev.summary;
+                dayDiv.appendChild(title);
+            });
+            const today = new Date();
+            if(d === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) dayDiv.classList.add('today');
+            dayDiv.addEventListener('click', () => showDayDetails(dateStr, eventsOnDay));
+            grid.appendChild(dayDiv);
+        }
+        document.getElementById('month-label').textContent = new Date(currentYear, currentMonth).toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+        document.getElementById('month-slider').value = currentMonth;
+        document.getElementById('calendar-grid').style.display = 'grid';
+        document.getElementById('month-slider-container').style.display = 'flex';
+        document.getElementById('week-container').style.display = 'none';
+    }
+    function renderWeekCalendar() {
+        const today = new Date();
+        const monday = new Date(today); monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+        const days = [];
+        for (let i=0; i<7; i++) { const d = new Date(monday); d.setDate(monday.getDate()+i); days.push(d); }
+        document.getElementById('week-label').textContent = `${days[0].toLocaleDateString('de-DE',{day:'numeric',month:'short'})} – ${days[6].toLocaleDateString('de-DE',{day:'numeric',month:'short'})}`;
+        const weekDaysDiv = document.getElementById('week-days'); weekDaysDiv.innerHTML = '';
+        days.forEach(date => {
+            const dateStr = date.toISOString().substring(0,10);
+            const eventsOnDay = calendarEvents.filter(e => e.start.startsWith(dateStr));
+            const dayDiv = document.createElement('div'); dayDiv.className = 'week-day';
+            if(date.toDateString() === today.toDateString()) dayDiv.classList.add('today');
+            dayDiv.innerHTML = `<div class="week-day-label">${date.toLocaleDateString('de-DE',{weekday:'short'})}</div><div class="week-day-date">${date.getDate()}</div>`;
+            eventsOnDay.slice(0,3).forEach(ev => {
+                const time = new Date(ev.start).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+                const eventEl = document.createElement('div'); eventEl.className = 'week-event'; eventEl.style.background = ev.color; eventEl.textContent = `${time} ${ev.summary}`;
+                dayDiv.appendChild(eventEl);
+            });
+            dayDiv.addEventListener('click', () => showDayDetails(dateStr, eventsOnDay));
+            weekDaysDiv.appendChild(dayDiv);
+        });
+        document.getElementById('calendar-grid').style.display = 'none';
+        document.getElementById('month-slider-container').style.display = 'none';
+        document.getElementById('week-container').style.display = 'flex';
+    }
+    function showDayDetails(dateStr, events) {
+        const details = document.getElementById('event-details'); if(!details) return;
+        details.innerHTML = events.length ? events.map(e => `<div style="margin-bottom:5px;"><span style="color:${e.color};">●</span> <strong>${e.summary}</strong><br><small>${new Date(e.start).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})}</small></div>`).join('') : '<em>Keine Termine</em>';
+        details.classList.add('show');
+    }
+    const CORS_PROXIES = ['https://corsproxy.io/?','https://api.allorigins.win/raw?url=','https://api.codetabs.com/v1/proxy?quest='];
+    async function fetchICSWithFallback(url) {
+        try { const r = await fetch(url); if(r.ok) return await r.text(); } catch(e) {}
+        for(const p of CORS_PROXIES) {
+            try {
+                const r = await fetch(p+encodeURIComponent(url));
+                if(r.ok) { const t = await r.text(); if(t.includes('BEGIN:VCALENDAR')) return t; }
+            } catch(e) {}
+        }
+        throw new Error('Kalender nicht erreichbar');
+    }
+    async function loadCalendar(urlsText) {
+        if(!urlsText.trim()) return;
+        const infoEl = document.getElementById('ical-info'), errEl = document.getElementById('ical-error');
+        infoEl.textContent = ''; errEl.textContent = '';
+        const urls = urlsText.split('\n').map(l => l.trim()).filter(l => l);
+        try {
+            const allEvents = [];
+            for(let i=0; i<urls.length; i++) {
+                const url = urls[i].replace(/^webcal:\/\//i, 'https://');
+                const data = await fetchICSWithFallback(url);
+                const jcal = ICAL.parse(data);
+                const comp = new ICAL.Component(jcal);
+                const vevents = comp.getAllSubcomponents('vevent');
+                vevents.forEach((v,j) => {
+                    const ev = new ICAL.Event(v);
+                    const start = ev.startDate ? ev.startDate.toJSDate() : new Date();
+                    allEvents.push({ summary: ev.summary || 'Ohne Titel', start: start.toISOString(), color: assignColor(allEvents.length) });
+                });
+            }
+            calendarEvents = allEvents;
+            localStorage.setItem('calendarCache', JSON.stringify(calendarEvents));
+            localStorage.setItem('icalUrls', urlsText);
+            renderCurrentView();
+            infoEl.textContent = `✅ ${calendarEvents.length} Termine aus ${urls.length} Kalendern`;
+        } catch(e) { errEl.textContent = '❌ ' + e.message; calendarEvents = []; renderCurrentView(); }
+    }
+
+    // Slideshow
+    function loadSlides() {
+        const saved = localStorage.getItem('slides');
+        if(saved) { slides = JSON.parse(saved); currentSlide = parseInt(localStorage.getItem('slideIdx'))||0; if(currentSlide >= slides.length) currentSlide = 0; }
+        updateSlideDisplay();
+    }
+    function updateSlideDisplay() {
+        const container = document.getElementById('slideshow-container'); if(!container) return;
+        container.querySelectorAll('.slide-img').forEach(i => i.remove());
+        if(slides.length && slides[currentSlide]) {
+            const img = document.createElement('img'); img.className = 'slide-img active'; img.src = slides[currentSlide];
+            container.appendChild(img);
+        } else {
+            const ph = document.createElement('div'); ph.className = 'slide-img active'; ph.style.cssText = 'position:absolute;inset:0;background:#222;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:1.5rem;'; ph.textContent = '📷 Fotos hochladen';
+            container.appendChild(ph);
+        }
+        const cnt = document.getElementById('image-count'); if(cnt) cnt.textContent = slides.length + ' Bilder';
+    }
+    function nextSlide() { if(slides.length) { currentSlide = (currentSlide+1)%slides.length; updateSlideDisplay(); localStorage.setItem('slideIdx', currentSlide); } }
+    function prevSlide() { if(slides.length) { currentSlide = (currentSlide-1+slides.length)%slides.length; updateSlideDisplay(); localStorage.setItem('slideIdx', currentSlide); } }
+    function startSS() { clearInterval(timer); if(!paused && slides.length) timer = setInterval(nextSlide, batteryMode ? 60000 : 10000); }
+    function setBatteryMode(on) { batteryMode = on; localStorage.setItem('batteryMode', on); if(on) { document.getElementById('anim-select').value = 'fade'; document.getElementById('slideshow-container').className = 'slideshow-container slide-anim-fade'; } startSS(); }
+    function downloadCurrentSlide() { if(slides.length && slides[currentSlide]) { const a = document.createElement('a'); a.href = slides[currentSlide]; a.download = 'foto.jpg'; a.click(); } }
+
+    // Click delegation
+    document.addEventListener('click', function(e) {
+        const t = e.target;
+        if(t.closest('#prev-slide')) { prevSlide(); startSS(); }
+        else if(t.closest('#next-slide')) { nextSlide(); startSS(); }
+        else if(t.closest('#play-pause')) {
+            paused = !paused;
+            t.closest('#play-pause').innerHTML = paused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+            paused ? clearInterval(timer) : startSS();
+        }
+        else if(t.closest('#delete-slide') && slides.length) {
+            slides.splice(currentSlide,1); if(currentSlide>=slides.length) currentSlide=0;
+            updateSlideDisplay(); localStorage.setItem('slides',JSON.stringify(slides)); startSS();
+        }
+        else if(t.closest('#download-slide')) downloadCurrentSlide();
+        else if(t.closest('#view-month')) { currentView='month'; document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active')); document.getElementById('view-month').classList.add('active'); renderCurrentView(); }
+        else if(t.closest('#view-week')) { currentView='week'; document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active')); document.getElementById('view-week').classList.add('active'); renderCurrentView(); }
+    });
+
+    document.addEventListener('change', function(e) {
+        if(e.target.id === 'file-upload') {
+            Array.from(e.target.files).forEach(f => {
+                const r = new FileReader();
+                r.onload = ev => { slides.push(ev.target.result); if(slides.length===1) currentSlide=0; updateSlideDisplay(); localStorage.setItem('slides',JSON.stringify(slides)); startSS(); };
+                r.readAsDataURL(f);
+            });
+            e.target.value = '';
+        }
+        if(e.target.id === 'month-slider' && currentView==='month') { currentMonth = parseInt(e.target.value); renderMonthCalendar(); }
+    });
+
+    // Touch swipe for slideshow
+    let touchStartX = 0;
+    document.addEventListener('touchstart', e => { if(e.target.closest('#slideshow-container')) touchStartX = e.changedTouches[0].screenX; }, {passive: true});
+    document.addEventListener('touchend', e => {
+        if(e.target.closest('#slideshow-container')) {
+            const diff = touchStartX - e.changedTouches[0].screenX;
+            if(Math.abs(diff) > 60) { diff > 0 ? nextSlide() : prevSlide(); startSS(); }
+        }
+    });
+
+    // Init
+    function init() {
+        const savedLoc = localStorage.getItem('weatherLoc'); if(savedLoc) { const l = JSON.parse(savedLoc); currentLat=l.lat; currentLon=l.lon; currentLocName=l.name; }
+        const savedTheme = localStorage.getItem('theme')||'kitchen'; applyTheme(savedTheme);
+        const savedLayout = localStorage.getItem('kitchenLayout'); if(savedLayout) { try { const parsed = JSON.parse(savedLayout); for(const id in parsed) { if(layout[id]) layout[id] = parsed[id]; } } catch(e) {} }
+        // Restore values
+        document.getElementById('gradient-position-slider').value = localStorage.getItem('gradientPosition')||0.38;
+        document.getElementById('gradient-width-slider').value = localStorage.getItem('gradientWidth')||0.05;
+        document.getElementById('gradient-opacity-slider').value = localStorage.getItem('gradientOpacity')||0.8;
+        document.getElementById('tile-opacity-slider').value = localStorage.getItem('tileOpacity')||0.85;
+        document.getElementById('font-scale-slider').value = localStorage.getItem('fontScale')||1;
+        // Apply CSS vars
+        document.documentElement.style.setProperty('--gradient-position', localStorage.getItem('gradientPosition')||0.38);
+        document.documentElement.style.setProperty('--gradient-width', localStorage.getItem('gradientWidth')||0.05);
+        document.documentElement.style.setProperty('--gradient-opacity', localStorage.getItem('gradientOpacity')||0.8);
+        document.documentElement.style.setProperty('--tile-opacity', localStorage.getItem('tileOpacity')||0.85);
+        document.documentElement.style.setProperty('--font-scale', localStorage.getItem('fontScale')||1);
+        document.getElementById('gradient-pos-value').textContent = Math.round((localStorage.getItem('gradientPosition')||0.38)*100)+'%';
+        document.getElementById('tile-opacity-value').textContent = Math.round((localStorage.getItem('tileOpacity')||0.85)*100)+'%';
+        document.getElementById('font-scale-value').textContent = parseFloat(localStorage.getItem('fontScale')||1).toFixed(1);
+        document.getElementById('battery-mode').checked = localStorage.getItem('batteryMode') === 'true';
+        document.getElementById('anim-select').value = localStorage.getItem('slideAnim')||'fade';
+        const savedIcal = localStorage.getItem('icalUrls'); if(savedIcal) { document.getElementById('ical-urls').value = savedIcal; loadCalendar(savedIcal); }
+        const cachedEvents = localStorage.getItem('calendarCache'); if(cachedEvents && !savedIcal) { calendarEvents = JSON.parse(cachedEvents); renderCurrentView(); }
+        if(localStorage.getItem('batteryMode') === 'true') setBatteryMode(true);
+
+        createTiles(); loadSlides(); updateWeather(); renderCurrentView();
+        setInterval(updateWeather, 900000); startSS();
+    }
+    init();
 })();
 </script>
 </body>
