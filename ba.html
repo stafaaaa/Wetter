@@ -2,857 +2,494 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Küchen Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>DAKboard · Responsiv für Tablets</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
     <style>
-        :root {
-            --bg: #000;
-            --text: #fff;
-            --accent: #E94545;
-            --slide-duration: 1s;
-            --gradient-position: 0.38;
-            --gradient-width: 0.05;
-            --gradient-opacity: 0.8;
-            --tile-opacity: 0.85;
-            --font-scale: 1;
-            --tile-bg: rgba(0,0,0,0.85);
-            --tile-border: none;
-            --tile-shadow: none;
-            --base-font-size: 18px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            height: 100vh; height: 100dvh;
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            font-family: 'Inter', 'Helvetica', sans-serif;
+            color: #fff;
             overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-            touch-action: manipulation;
-            font-size: calc(var(--base-font-size) * var(--font-scale));
-            transition: background 0.3s;
-            position: relative;
         }
-        #dashboard { width:100%; height:100%; position:relative; overflow:hidden; }
-        #gradient-overlay {
-            position: absolute; top:0;
-            left: calc(var(--gradient-position)*100% - var(--gradient-width)*100%);
-            width: calc(var(--gradient-width)*100%); height:100%;
-            background: linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,var(--gradient-opacity)) 60%, rgba(0,0,0,1) 100%);
-            z-index:5; pointer-events:none; transition: left 0.2s, width 0.2s;
-        }
-        .tile {
-            position: absolute; background: var(--tile-bg); border: var(--tile-border);
-            border-radius: 0; box-shadow: var(--tile-shadow); overflow: hidden;
-            touch-action: none; display: flex; flex-direction: column; cursor: default;
-        }
-        .tile-content { flex:1; overflow-y:auto; cursor: default; }
-        .resize-handle-edge, .resize-handle-corner { display: none; }
-        #dashboard[data-resize-mode="true"] .resize-handle-edge,
-        #dashboard[data-resize-mode="true"] .resize-handle-corner { display: block; }
 
-        /* Zahnrad */
-        #settings-toggle {
-            position: fixed; top: 12px; right: 12px; z-index: 400;
-            width: 52px; height: 52px; border-radius: 50%;
-            background: rgba(0,0,0,0.7); color: white;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; font-size: 24px;
+        /* DASHBOARD GRID – Standard (Desktop / Landscape Tablet) */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 35% 65%;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Linke Spalte: flexible Höhe, Scroll nur bei Bedarf */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            background: #000;
+            height: 100vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        /* Uhr & Datum mit clamp */
+        .time-date {
+            margin: clamp(1rem, 5vh, 2rem) 0 0 clamp(1rem, 4%, 2rem);
+        }
+        .clock {
+            font-size: clamp(2.2rem, 8vw, 5.2rem);
+            font-weight: 300;
+            letter-spacing: 2px;
+            line-height: 1.1;
+        }
+        .date {
+            font-size: clamp(1rem, 3vw, 1.6rem);
+            opacity: 0.85;
+        }
+
+        /* Slideshow – adaptive Höhe, bleibt zentral */
+        .slideshow-container {
+            flex: 1;
+            min-height: 140px;
+            margin: 1rem 0 0.5rem;
+            overflow: hidden;
+            background: #0a0a0a;
+        }
+        .slideshow-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.55s;
+            display: block;
+        }
+
+        /* WEATHER WIDGET – responsiv */
+        .weather-enhanced {
+            margin: 0.5rem clamp(0.8rem, 3vw, 1.8rem) 2rem clamp(0.8rem, 3vw, 2rem);
+            background: rgba(10,10,15,0.6);
+            border-radius: 28px;
+            padding: clamp(0.8rem, 2vw, 1.2rem) clamp(0.8rem, 2vw, 1rem);
             backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.3);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
-        #settings-overlay {
-            position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center;
+        .current-weather {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
         }
-        #settings-overlay.open { display: flex; }
-        #settings-panel {
-            background: rgba(20,20,30,0.95); color: white; border-radius: 20px;
-            padding: 20px; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
-            font-size: 1rem; position: relative;
+        .temp-big {
+            font-size: clamp(2rem, 7vw, 3.4rem);
+            font-weight: 300;
+            letter-spacing: -1px;
         }
-        #settings-panel h2 { margin-bottom: 16px; font-size: 1.6rem; }
-        .settings-section { margin-bottom: 20px; }
-        .settings-section h3 { font-size: 1.2rem; margin-bottom: 10px; color: var(--accent); }
-        .settings-row { display: flex; gap: 12px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
-        .settings-row label { min-width: 120px; font-weight: 600; }
-        .settings-row input, .settings-row select, .settings-row textarea, .settings-row button {
-            padding: 10px 14px; border-radius: 8px; border: none; background: rgba(255,255,255,0.15);
-            color: white; font-size: 1rem; flex: 1; min-width: 200px;
+        .temp-unit {
+            font-size: clamp(0.9rem, 3vw, 1.2rem);
         }
-        .settings-row button { background: var(--accent); cursor: pointer; min-width: auto; flex: 0; }
-        .settings-row input[type="range"] { padding: 0; height: 32px; }
-        .settings-row input[type="checkbox"] { width: 24px; height: 24px; min-width: 24px; flex: 0; }
-        .label-value { font-size: 0.9rem; opacity: 0.8; min-width: 40px; text-align: center; }
-        .close-btn {
-            position: absolute; top: 10px; right: 14px; background: none; border: none;
-            color: white; font-size: 2rem; cursor: pointer; line-height: 1;
+        .current-icon {
+            font-size: clamp(1.6rem, 5vw, 2.4rem);
+        }
+        .weather-details {
+            display: flex;
+            gap: clamp(0.8rem, 3vw, 1.2rem);
+            font-size: clamp(0.65rem, 2vw, 0.75rem);
+            flex-wrap: wrap;
+        }
+        .hourly-title {
+            font-size: clamp(0.6rem, 2vw, 0.7rem);
+            margin: 0.6rem 0 0.4rem;
+        }
+        .hourly-forecast {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            padding-bottom: 0.3rem;
+        }
+        .hour-card {
+            min-width: clamp(55px, 12vw, 70px);
+            text-align: center;
+            font-size: clamp(0.6rem, 2vw, 0.7rem);
+        }
+        .hour-temp {
+            font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+        }
+        .hour-icon {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+        }
+        .hour-bar-container {
+            height: 3px;
+            margin: 4px 0;
         }
 
-        /* Wetter */
-        #weather { z-index:10; height: 35vh; }
-        #weather .tile-content {
-            padding: 2vw; text-shadow:0 1px 4px rgba(0,0,0,0.7);
-            display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-end; text-align:right;
+        /* RECHTE SPALTE (Kalender) */
+        .right-panel {
+            background: #000;
+            overflow-y: auto;
+            padding: clamp(0.8rem, 3vh, 1.5rem) clamp(0.8rem, 3vw, 2rem) 2rem clamp(0.8rem, 2vw, 1rem);
         }
-        .weather-now .temp { font-size: 5rem; font-weight:300; line-height:1; }
-        .weather-now .details { font-size: 1.3rem; opacity:0.9; margin-top:4px; }
-        .forecast-row { display:flex; gap:12px; margin-top:16px; justify-content:flex-end; flex-wrap:wrap; }
-        .forecast-day {
-            background: rgba(255,255,255,0.15); border-radius:14px; padding:10px 14px;
-            text-align:center; font-size: 1rem; min-width:70px;
+        .view-toggle {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-bottom: 1rem;
         }
-        .forecast-day.active { background: var(--accent); color:white; }
-
-        /* Kalender */
-        #calendar { background:#000; }
-        #calendar .tile-content { padding:1.5vw; display:flex; flex-direction:column; height:100%; }
-        .view-switch { display: flex; gap: 6px; margin-bottom: 10px; }
         .view-btn {
-            background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:white;
-            padding:10px 22px; border-radius:10px; cursor:pointer; font-size:1rem; font-weight:600;
+            background: #1e1e1e;
+            padding: clamp(4px, 1.5vh, 6px) clamp(10px, 3vw, 14px);
+            font-size: clamp(0.7rem, 2vw, 0.8rem);
+            border-radius: 40px;
         }
-        .view-btn.active { background: var(--accent); border-color: var(--accent); }
-        .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; text-align:center; flex:1; }
-        .day-header { font-size:0.9rem; font-weight:400; color:#aaa; padding:6px 0; }
-        .day {
-            position:relative; padding:4px 2px; font-weight:300; color:#fff;
-            display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
-            cursor:pointer; min-height:60px; border-radius:6px; font-size:1.1rem;
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.4rem;
         }
-        .day:active { background:rgba(255,255,255,0.1); }
-        .day .day-number { width:1.8em; height:1.8em; border-radius:50%; font-weight:300; font-size:1.3rem; line-height:1.8em; text-align:center; }
-        .day.today .day-number { background: var(--accent); color:#fff; font-weight:400; }
-        .day .event-title { font-size:0.65rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:95%; margin-top:2px; }
-        .week-container { display:none; flex:1; flex-direction:column; gap:6px; }
-        .week-header { display:flex; justify-content:space-between; align-items:center; font-size:1rem; margin-bottom:6px; }
-        .week-days { display:flex; gap:6px; flex:1; }
-        .week-day {
-            flex:1; background:rgba(255,255,255,0.1); border-radius:10px; padding:10px 4px;
-            text-align:center; cursor:pointer; display:flex; flex-direction:column; gap:4px; min-height:80px;
+        .weekday {
+            font-size: clamp(0.7rem, 2.5vw, 0.9rem);
         }
-        .week-day.today { border:2px solid var(--accent); }
-        .week-day:active { background:rgba(255,255,255,0.2); }
-        .week-day-label { font-size:0.85rem; }
-        .week-day-date { font-size:1.2rem; font-weight:600; }
-        .week-event { font-size:0.7rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:2px 4px; border-radius:3px; margin-top:2px; }
-        .event-details { background:rgba(0,0,0,0.9); padding:10px; border-radius:10px; margin-top:8px; display:none; font-size:0.9rem; }
-        .event-details.show { display:block; }
-        .month-slider-container { display:flex; align-items:center; gap:10px; margin-top:8px; }
-        .month-slider-container input[type=range] { flex:1; height:8px; background:rgba(255,255,255,0.2); }
-        .month-slider-container input[type=range]::-webkit-slider-thumb { width:32px; height:32px; background:var(--accent); }
-        .month-label { font-size:0.95rem; white-space:nowrap; min-width:100px; }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: clamp(0.2rem, 1vw, 0.75rem) clamp(0.2rem, 1vw, 0.5rem);
+        }
+        .cal-cell {
+            padding: clamp(0.2rem, 1vh, 0.4rem) 0.1rem 0.2rem 0.2rem;
+            min-height: clamp(70px, 12vh, 95px);
+        }
+        .day-number {
+            font-size: clamp(1.2rem, 4vw, 1.9rem);
+            line-height: 1;
+            margin-bottom: 0.2rem;
+        }
+        .today .day-number {
+            border-width: 2px;
+            padding: 0.05rem 0.45rem;
+        }
+        .event-badge {
+            font-size: clamp(0.55rem, 1.8vw, 0.68rem);
+            padding: 2px 5px;
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.2;
+        }
 
-        /* Slideshow */
-        #slideshow { background:#000; }
-        #slideshow .tile-content { padding:0; }
-        .slideshow-container { position:relative; width:100%; height:100%; background:#000; overflow:hidden; }
-        .slide-img {
-            position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;
-            opacity:0; transition: opacity var(--slide-duration) ease-out, transform var(--slide-duration) ease-out;
+        /* ---------- MEDIA QUERIES: TABLET HOCHKANT (Portrait) ---------- */
+        @media (max-width: 950px) and (orientation: portrait) {
+            .dashboard {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto;
+                height: auto;
+                overflow-y: auto;
+            }
+            .left-panel, .right-panel {
+                height: auto;
+                overflow-y: visible;
+            }
+            .left-panel {
+                max-height: none;
+            }
+            .right-panel {
+                padding-top: 0.5rem;
+            }
+            .slideshow-container {
+                min-height: 200px;
+                max-height: 35vh;
+            }
+            .weather-enhanced {
+                margin-bottom: 1rem;
+            }
+            .calendar-grid {
+                gap: 0.3rem;
+            }
+            .cal-cell {
+                min-height: 75px;
+            }
         }
-        .slide-img.active { opacity:1; }
-        .slide-anim-fade .slide-img { transform:none; }
-        .slide-anim-slide-left .slide-img { transform:translateX(100%); opacity:1; }
-        .slide-anim-slide-left .slide-img.active { transform:translateX(0); }
-        .slide-anim-slide-up .slide-img { transform:translateY(100%); opacity:1; }
-        .slide-anim-slide-up .slide-img.active { transform:translateY(0); }
-        .slide-anim-zoom .slide-img { transform:scale(0.7); opacity:0; }
-        .slide-anim-zoom .slide-img.active { transform:scale(1); opacity:1; }
-        .slide-anim-rotate .slide-img { transform:rotate(-15deg) scale(0.8); opacity:0; }
-        .slide-anim-rotate .slide-img.active { transform:rotate(0) scale(1); opacity:1; }
-        .slide-anim-flip .slide-img { transform:perspective(800px) rotateY(90deg); opacity:0; }
-        .slide-anim-flip .slide-img.active { transform:perspective(800px) rotateY(0); opacity:1; }
-        .slide-anim-blur .slide-img { filter:blur(20px); opacity:0; }
-        .slide-anim-blur .slide-img.active { filter:blur(0); opacity:1; }
-        .slide-anim-ken-burns .slide-img.active { animation: kenBurns 8s infinite alternate; }
-        @keyframes kenBurns { from { transform:scale(1); } to { transform:scale(1.1); } }
-        .slide-anim-split .slide-img { clip-path:inset(50% 0 50% 0); opacity:0; }
-        .slide-anim-split .slide-img.active { clip-path:inset(0 0 0 0); opacity:1; }
-        .slide-anim-circle-reveal .slide-img { clip-path:circle(0% at 50% 50%); opacity:0; }
-        .slide-anim-circle-reveal .slide-img.active { clip-path:circle(100% at 50% 50%); opacity:1; }
-        .slide-anim-slide-diagonal .slide-img { transform:translate(100%,100%) rotate(10deg); opacity:0; }
-        .slide-anim-slide-diagonal .slide-img.active { transform:translate(0,0) rotate(0); opacity:1; }
-        .slideshow-controls {
-            position:absolute; bottom:16px; left:50%; transform:translateX(-50%);
-            display:flex; gap:16px; background:rgba(0,0,0,0.6); padding:10px 20px; border-radius:30px; z-index:10;
-        }
-        .slideshow-controls button {
-            background:transparent; border:none; color:white; font-size:2rem; cursor:pointer;
-            min-width:56px; min-height:56px;
-        }
-        .upload-area { position:absolute; bottom:16px; right:16px; background:rgba(0,0,0,0.5); padding:8px 12px; border-radius:10px; display:flex; gap:10px; align-items:center; }
-        .upload-btn { background:var(--accent); color:white; border:none; border-radius:14px; padding:10px 18px; cursor:pointer; font-size:1rem; }
-        input[type=file] { display:none; }
 
-        /* Resize-Modus Button */
-        #resize-btn {
-            position: fixed; bottom: 20px; right: 20px; z-index: 450;
-            background: rgba(0,0,0,0.7); color: white; width: 56px; height: 56px;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; font-size: 1.6rem; backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.3);
+        /* Für sehr schmale Geräte (max. 600px, Handys im Querformat oder kleine Tablets) */
+        @media (max-width: 600px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+                overflow-y: auto;
+                height: auto;
+            }
+            .left-panel, .right-panel {
+                height: auto;
+                overflow: visible;
+            }
+            .slideshow-container {
+                min-height: 160px;
+            }
+            .hour-card {
+                min-width: 60px;
+            }
+            .cal-cell {
+                min-height: 65px;
+            }
+            .event-badge {
+                white-space: normal;
+                font-size: 0.6rem;
+            }
         }
+
+        /* Für Tablets im Querformat und kleine Desktops: bleibt zweispaltig, aber kompakter */
+        @media (min-width: 951px) and (max-width: 1280px) {
+            .dashboard {
+                grid-template-columns: 38% 62%;
+            }
+            .clock {
+                font-size: 3.5rem;
+            }
+            .temp-big {
+                font-size: 2.6rem;
+            }
+            .cal-cell {
+                min-height: 85px;
+            }
+            .day-number {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Große Desktops (alles bleibt, nur etwas mehr Platz) */
+        @media (min-width: 1600px) {
+            .clock {
+                font-size: 6rem;
+            }
+            .temp-big {
+                font-size: 4rem;
+            }
+            .weather-details {
+                font-size: 0.9rem;
+            }
+            .cal-cell {
+                min-height: 110px;
+            }
+        }
+
+        /* Standard Animation-Klassen (bleiben bestehen) */
+        .anim-fade { animation: fadeEffect 0.8s ease; }
+        .anim-slide-left { animation: slideLeft 0.6s ease-out; }
+        .anim-slide-right { animation: slideRight 0.6s ease-out; }
+        .anim-slide-up { animation: slideUp 0.6s ease-out; }
+        .anim-slide-down { animation: slideDown 0.6s ease-out; }
+        .anim-zoom { animation: zoomEffect 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1); }
+        .anim-rotate { animation: rotateEffect 0.6s ease; }
+        .anim-flip { animation: flipEffect 0.7s ease; }
+        .anim-blur { animation: blurEffect 0.5s ease; }
+        .anim-glitch { animation: glitchEffect 0.4s ease; }
+        @keyframes fadeEffect { from { opacity: 0.4; } to { opacity: 1; } }
+        @keyframes slideLeft { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideRight { from { transform: translateX(-30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes zoomEffect { from { transform: scale(1.05); opacity: 0.7; } to { transform: scale(1); opacity: 1; } }
+        @keyframes rotateEffect { from { transform: rotate(3deg) scale(0.98); opacity: 0; } to { transform: rotate(0deg) scale(1); opacity: 1; } }
+        @keyframes flipEffect { from { transform: perspective(400px) rotateY(10deg); opacity: 0; } to { transform: perspective(400px) rotateY(0); opacity: 1; } }
+        @keyframes blurEffect { from { filter: blur(6px); opacity: 0.5; } to { filter: blur(0); opacity: 1; } }
+        @keyframes glitchEffect { 0% { transform: skew(2deg); opacity: 0.7; } 100% { transform: skew(0); opacity: 1; } }
+
+        /* Einstellungen-Overlay (bleibt unverändert, aber scrollfähig) */
+        .settings-gear { position: fixed; top: 20px; right: 20px; z-index: 200; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); width: 44px; height: 44px; border-radius: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.5rem; border: 1px solid rgba(255,255,255,0.2); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
+        .modal-overlay.active { visibility: visible; opacity: 1; }
+        .settings-modal { background: #0e0e0e; width: 90%; max-width: 680px; max-height: 85vh; border-radius: 32px; padding: 1.5rem; overflow-y: auto; border: 1px solid #2c2c2c; }
+        .setting-group { margin-bottom: 1.5rem; border-bottom: 1px solid #222; padding-bottom: 1rem; }
+        .setting-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 8px; opacity: 0.7; }
+        input, select, button { background: #1e1e1e; border: 1px solid #333; color: white; padding: 8px 12px; border-radius: 40px; font-family: inherit; }
+        button { cursor: pointer; transition: 0.2s; }
+        button.primary { background: #3a6ea5; }
+        .color-flex { display: flex; gap: 10px; flex-wrap: wrap; }
+        .color-item { display: flex; align-items: center; gap: 8px; background: #1a1a1a; padding: 5px 12px; border-radius: 40px; }
+        .ical-status { font-size: 0.75rem; margin-top: 6px; color: #aaa; }
+        .events-hidden .events { display: none; }
+        hr { border-color: #222; margin: 12px 0; }
+        #imageListContainer { max-height: 100px; overflow-y: auto; margin-bottom: 8px; }
+        .removeImgBtn { background: #a13e3e; border: none; padding: 2px 8px; border-radius: 20px; }
     </style>
 </head>
 <body>
-<div id="dashboard"><div id="gradient-overlay"></div></div>
-
-<!-- Zahnrad -->
-<div id="settings-toggle">⚙️</div>
-
-<!-- Einstellungs-Overlay -->
-<div id="settings-overlay">
-    <div id="settings-panel">
-        <button class="close-btn" id="close-settings">&times;</button>
-        <h2>Einstellungen</h2>
-        <div class="settings-section">
-            <h3>📐 Layout</h3>
-            <div class="settings-row">
-                <label>Horizontal</label>
-                <select id="layout-h-preset">
-                    <option value="h1">Bild groß</option>
-                    <option value="h2">Kalender groß</option>
-                    <option value="h3">Wetter oben</option>
-                    <option value="h4">Gleichmäßig</option>
-                    <option value="h5">Kino rechts</option>
-                </select>
+<div class="dashboard">
+    <div class="left-panel">
+        <div class="time-date"><div class="clock" id="liveClock">--:--:--</div><div class="date" id="liveDate"></div></div>
+        <div class="slideshow-container" id="slideshowContainer"><img id="slideshowImage" class="slideshow-img" alt="slideshow"></div>
+        <div class="weather-enhanced" id="weatherEnhanced">
+            <div class="current-weather">
+                <div><span class="temp-big" id="currentTemp">--</span><span class="temp-unit">°C</span></div>
+                <div><i class="fas fa-sun current-icon" id="currentWeatherIcon" style="color: #FFD966;"></i></div>
             </div>
-            <div class="settings-row">
-                <label>Vertikal</label>
-                <select id="layout-v-preset">
-                    <option value="v1">Kalender oben</option>
-                    <option value="v2">Wetter oben</option>
-                    <option value="v3">Bild oben</option>
-                    <option value="v4">Schmale Leiste</option>
-                    <option value="v5">Familien-Wand</option>
-                </select>
+            <div class="weather-details" id="weatherDetails">
+                <span><i class="fas fa-tint"></i> <span id="precip">--</span>%</span>
+                <span><i class="fas fa-water"></i> <span id="humidity">--</span>%</span>
+                <span><i class="fas fa-wind"></i> <span id="windSpeed">--</span> km/h</span>
             </div>
-        </div>
-        <div class="settings-section">
-            <h3>🎨 Theme</h3>
-            <div class="settings-row">
-                <select id="theme-select">
-                    <option value="kitchen">Kitchen (schwarz)</option>
-                    <option value="default">Hell</option>
-                    <option value="dark">Dunkel</option>
-                    <option value="neon">Neon</option>
-                    <option value="nordic">Nordic</option>
-                </select>
-            </div>
-        </div>
-        <div class="settings-section">
-            <h3>🖼️ Slideshow</h3>
-            <div class="settings-row">
-                <label>Animation</label>
-                <select id="anim-select">
-                    <option value="fade">Überblenden</option>
-                    <option value="slide-left">Seitlich schieben</option>
-                    <option value="slide-up">Nach oben schieben</option>
-                    <option value="zoom">Zoom</option>
-                    <option value="rotate">Drehen</option>
-                    <option value="flip">Flip 3D</option>
-                    <option value="blur">Unschärfe</option>
-                    <option value="ken-burns">Ken Burns</option>
-                    <option value="split">Vertikal teilen</option>
-                    <option value="circle-reveal">Kreis öffnen</option>
-                    <option value="slide-diagonal">Diagonal schieben</option>
-                </select>
-            </div>
-            <div class="settings-row">
-                <label><input type="checkbox" id="battery-mode"> Batteriesparmodus</label>
-            </div>
-        </div>
-        <div class="settings-section">
-            <h3>🌈 Farbverlauf</h3>
-            <div class="settings-row">
-                <label>Position</label>
-                <input type="range" id="gradient-position-slider" min="0" max="1" step="0.01" value="0.38">
-                <span class="label-value" id="gradient-pos-value">38%</span>
-            </div>
-            <div class="settings-row">
-                <label>Breite</label>
-                <input type="range" id="gradient-width-slider" min="0" max="0.3" step="0.01" value="0.05">
-            </div>
-            <div class="settings-row">
-                <label>Stärke</label>
-                <input type="range" id="gradient-opacity-slider" min="0" max="1" step="0.1" value="0.8">
-            </div>
-        </div>
-        <div class="settings-section">
-            <h3>👁️ Darstellung</h3>
-            <div class="settings-row">
-                <label>Kachel-Transparenz</label>
-                <input type="range" id="tile-opacity-slider" min="0" max="1" step="0.05" value="0.85">
-                <span class="label-value" id="tile-opacity-value">85%</span>
-            </div>
-            <div class="settings-row">
-                <label>Schriftgröße</label>
-                <input type="range" id="font-scale-slider" min="0.8" max="1.6" step="0.1" value="1.0">
-                <span class="label-value" id="font-scale-value">1.0</span>
-            </div>
-        </div>
-        <div class="settings-section">
-            <h3>📍 Wetter & Standort</h3>
-            <div class="settings-row">
-                <input type="text" id="location-search-input" placeholder="Stadt suchen...">
-                <button id="location-search-btn2">🔍</button>
-                <button id="gps-btn2">📍 GPS</button>
-            </div>
-            <div id="location-result" style="margin-top:6px; font-size:0.9rem;"></div>
-        </div>
-        <div class="settings-section">
-            <h3>📅 Kalender</h3>
-            <div class="settings-row">
-                <textarea id="ical-urls" rows="2" placeholder="iCal-URLs (eine pro Zeile)"></textarea>
-                <button id="load-ical">Laden</button>
-            </div>
-            <div id="ical-info" style="font-size:0.9rem; margin-top:6px; color:#a5f3fc;"></div>
-            <div id="ical-error" style="color:#f88; font-size:0.9rem; margin-top:6px;"></div>
+            <div class="hourly-title"><i class="fas fa-chart-line"></i> Stündliche Vorhersage (3h Intervalle)</div>
+            <div class="hourly-forecast" id="hourlyForecast"></div>
         </div>
     </div>
+    <div class="right-panel">
+        <div class="view-toggle"><button id="monthViewBtn" class="view-btn active">📅 Monat</button><button id="weekViewBtn" class="view-btn">📆 Woche</button></div>
+        <div class="calendar"><div class="weekdays" id="weekdaysRow"></div><div class="calendar-grid" id="calendarGrid"></div></div>
+    </div>
 </div>
-
-<!-- Resize-Modus Button -->
-<div id="resize-btn">⛶</div>
-
+<div class="settings-gear" id="settingsGear"><i class="fas fa-cog"></i></div>
+<div class="modal-overlay" id="settingsModal">
+    <div class="settings-modal">
+        <h2><i class="fas fa-sliders-h"></i> Dashboard Einstellungen</h2>
+        <div class="setting-group"><label>🖼️ Slideshow Bilder</label><div id="imageListContainer"></div><div style="display:flex; gap:6px; flex-wrap:wrap;"><input type="file" id="uploadImages" multiple accept="image/*"><input type="text" id="imageUrlInput" placeholder="Bild-URL" style="flex:1;"><button id="addUrlBtn">+</button></div><button id="clearImagesBtn" style="margin-top:6px;">Alle zurücksetzen</button></div>
+        <div class="setting-group"><label>🎞️ Animation</label><select id="animationSelect"><option value="anim-fade">Fade</option><option value="anim-slide-left">Slide Left</option><option value="anim-slide-right">Slide Right</option><option value="anim-slide-up">Slide Up</option><option value="anim-slide-down">Slide Down</option><option value="anim-zoom">Zoom</option><option value="anim-rotate">Rotate</option><option value="anim-flip">Flip</option><option value="anim-blur">Blur</option><option value="anim-glitch">Glitch</option></select></div>
+        <div class="setting-group"><label>🌍 Wetter-Stadt</label><input type="text" id="weatherCity" placeholder="z.B. Berlin"><button id="refreshWeatherBtn" style="margin-top:6px;">Aktualisieren</button></div>
+        <div class="setting-group"><label>📅 iCal / Google Calendar Sync</label><input type="text" id="icalUrl" placeholder="https://.../calendar.ics"><div style="margin-top:6px;"><label><input type="checkbox" id="icalEnabled"> iCal aktivieren (ersetzt Demo-Termine)</label><button id="syncIcalNowBtn" class="primary" style="margin-left:8px;">Jetzt sync</button></div><div class="ical-status" id="icalStatus">Keine iCal-URL</div><label style="margin-top:8px;">🔄 Aktualisierungsintervall (Minuten)</label><input type="number" id="icalInterval" min="5" max="240" value="30" style="width:100px;"></div>
+        <div class="setting-group"><label>🎨 Farben Termin-Balken</label><div class="color-flex"><div class="color-item">🔵 Blau <input type="color" id="colorBlue" value="#2c7da0"></div><div class="color-item">🔴 Rot <input type="color" id="colorRed" value="#c44536"></div><div class="color-item">🟢 Grün <input type="color" id="colorGreen" value="#2e9b6e"></div><div class="color-item">🟠 Orange <input type="color" id="colorOrange" value="#e67e22"></div><div class="color-item">🟣 Lila <input type="color" id="colorPurple" value="#8e44ad"></div></div><label><input type="checkbox" id="toggleEventsVisibility"> Ereignis-Balken anzeigen</label></div>
+        <div class="setting-group"><label>⏱️ Uhr</label><label><input type="checkbox" id="toggleSeconds" checked> Sekunden anzeigen</label></div>
+        <div class="close-modal"><button id="saveSettingsBtn" class="primary">Speichern & Übernehmen</button><button id="closeModalBtn">Schließen</button></div>
+    </div>
+</div>
 <script>
-(function() {
-    const W = window.innerWidth, H = window.innerHeight;
-    const presets = {
-        h1: { slideshow: {x:0, y:0, w:0.6, h:1}, calendar: {x:0.6, y:0, w:0.4, h:0.75}, weather: {x:0.6, y:0.75, w:0.4, h:0.25} },
-        h2: { slideshow: {x:0, y:0, w:0.35, h:1}, calendar: {x:0.35, y:0, w:0.65, h:0.8}, weather: {x:0, y:0.8, w:0.35, h:0.2} },
-        h3: { slideshow: {x:0, y:0.35, w:0.4, h:0.65}, calendar: {x:0.4, y:0, w:0.6, h:1}, weather: {x:0, y:0, w:0.4, h:0.35} },
-        h4: { slideshow: {x:0, y:0, w:0.5, h:0.6}, calendar: {x:0.5, y:0, w:0.5, h:0.6}, weather: {x:0, y:0.6, w:1, h:0.4} },
-        h5: { slideshow: {x:0.6, y:0, w:0.4, h:1}, calendar: {x:0, y:0, w:0.6, h:0.8}, weather: {x:0, y:0.8, w:0.6, h:0.2} },
-        v1: { slideshow: {x:0, y:0.45, w:1, h:0.55}, calendar: {x:0, y:0, w:1, h:0.45}, weather: {x:0, y:0.85, w:1, h:0.15} },
-        v2: { slideshow: {x:0, y:0.45, w:1, h:0.55}, calendar: {x:0, y:0.2, w:1, h:0.65}, weather: {x:0, y:0, w:1, h:0.2} },
-        v3: { slideshow: {x:0, y:0, w:1, h:0.55}, calendar: {x:0, y:0.55, w:1, h:0.3}, weather: {x:0, y:0.85, w:1, h:0.15} },
-        v4: { slideshow: {x:0, y:0, w:0.3, h:0.4}, calendar: {x:0.3, y:0, w:0.7, h:0.8}, weather: {x:0, y:0.8, w:0.3, h:0.2} },
-        v5: { slideshow: {x:0, y:0, w:1, h:0.5}, calendar: {x:0, y:0.5, w:0.7, h:0.5}, weather: {x:0.7, y:0.5, w:0.3, h:0.5} }
-    };
-    const themes = {
-        kitchen: { '--bg':'#000','--text':'#fff','--accent':'#E94545','--tile-bg':'rgba(0,0,0,0.85)','--tile-shadow':'none','--tile-border':'none' },
-        default: { '--bg':'#f0f2f5','--text':'#1e293b','--accent':'#3b82f6','--tile-bg':'rgba(255,255,255,0.8)','--tile-shadow':'0 8px 32px rgba(0,0,0,0.1)','--tile-border':'1px solid rgba(0,0,0,0.1)' },
-        dark:    { '--bg':'#1e293b','--text':'#e2e8f0','--accent':'#6366f1','--tile-bg':'rgba(30,41,59,0.6)','--tile-shadow':'0 8px 32px rgba(0,0,0,0.3)' },
-        neon:    { '--bg':'#0f0a1e','--text':'#d8b4fe','--accent':'#ec4899','--tile-bg':'rgba(88,28,135,0.4)','--tile-shadow':'0 0 20px rgba(236,72,153,0.4)' },
-        nordic:  { '--bg':'#e0f2fe','--text':'#0f172a','--accent':'#0284c7','--tile-bg':'rgba(255,255,255,0.7)','--tile-shadow':'0 8px 32px rgba(0,0,0,0.05)' }
-    };
+    // -----------------------------  GLOBALS  ----------------------------------
+    let slideshowImages = [];
+    let currentAnimation = "anim-fade";
+    let eventsVisible = true;
+    let showSeconds = true;
+    let customColors = { blue:"#2c7da0", red:"#c44536", green:"#2e9b6e", orange:"#e67e22", purple:"#8e44ad" };
+    let weatherCity = "Berlin";
+    let icalUrl = "";
+    let icalEnabled = false;
+    let icalEvents = [];
+    let syncInterval = null;
+    let currentView = "month";
+    let currentDate = new Date();
 
-    let layout = {
-        slideshow: { x:0, y:0, w: Math.round(W*0.38), h: H },
-        calendar:  { x: Math.round(W*0.38), y:0, w: Math.round(W*0.62), h: H },
-        weather:   { x:0, y: Math.round(H*0.58), w: Math.round(W*0.38), h: Math.round(H*0.42) }
-    };
+    const DEMO_EVENTS = [
+        { day: 3, title: "Design Review", colorClass: "blue-badge" }, { day: 5, title: "Meeting Team", colorClass: "green-badge" },
+        { day: 8, title: "Zahnarzt", colorClass: "red-badge" }, { day: 12, title: "Workshop", colorClass: "purple-badge" },
+        { day: 15, title: "Projekt-Deadline", colorClass: "orange-badge" }, { day: 17, title: "Yoga", colorClass: "green-badge" },
+        { day: 20, title: "Geburtstag", colorClass: "red-badge" }, { day: 22, title: "Kundenmeeting", colorClass: "blue-badge" },
+        { day: 25, title: "Abgabetermin", colorClass: "orange-badge" }, { day: 28, title: "Reflexion", colorClass: "purple-badge" },
+        { day: 30, title: "Brunch", colorClass: "green-badge" }
+    ];
 
-    let resizeMode = false;
-    const dashboard = document.getElementById('dashboard');
-    const overlay = document.getElementById('settings-overlay');
-    const panel = document.getElementById('settings-panel');
+    const clockEl = document.getElementById('liveClock');
+    const dateEl = document.getElementById('liveDate');
+    const calendarGrid = document.getElementById('calendarGrid');
+    const weekdaysRow = document.getElementById('weekdaysRow');
+    const slideshowImg = document.getElementById('slideshowImage');
+    const icalStatusSpan = document.getElementById('icalStatus');
 
-    // Slideshow vars
-    let slides = [], currentSlide = 0, paused = false, timer, batteryMode = false;
-    // Weather
-    let currentLat = 51.2277, currentLon = 6.7735, currentLocName = 'Düsseldorf';
-    // Calendar
-    let calendarEvents = [];
-    const palette = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63','#00bcd4','#ff5722'];
-    const assignColor = i => palette[i % palette.length];
-    let currentMonth = new Date().getMonth(), currentYear = new Date().getFullYear();
-    let currentView = 'month';
-
-    // Helper: apply preset
-    function applyPreset(key) {
-        const p = presets[key]; if (!p) return;
-        for (const id in p) {
-            layout[id].x = Math.round(p[id].x * W);
-            layout[id].y = Math.round(p[id].y * H);
-            layout[id].w = Math.round(p[id].w * W);
-            layout[id].h = Math.round(p[id].h * H);
-        }
-        createTiles(); renderCurrentView(); saveLayout();
-    }
-    function applyTheme(key) {
-        const t = themes[key]; if (!t) return;
-        for (const [prop, val] of Object.entries(t)) document.documentElement.style.setProperty(prop, val);
-        localStorage.setItem('theme', key);
-    }
-    function updateInteractState() {
-        if (resizeMode) {
-            interact('.tile').draggable({ enabled: false }).resizable({ enabled: true });
-        } else {
-            interact('.tile').draggable({ enabled: false }).resizable({ enabled: false });
-        }
-    }
-    function toggleResizeMode() {
-        resizeMode = !resizeMode;
-        if (resizeMode) dashboard.setAttribute('data-resize-mode', 'true');
-        else dashboard.removeAttribute('data-resize-mode');
-        updateInteractState();
+    function getWeatherIconAndColor(weatherCode) {
+        let iconClass = "fa-sun";
+        let color = "#FFD966";
+        if (weatherCode === 0) { iconClass = "fa-sun"; color = "#FFD966"; }
+        else if (weatherCode === 1 || weatherCode === 2) { iconClass = "fa-cloud-sun"; color = "#DDDDDD"; }
+        else if (weatherCode === 3) { iconClass = "fa-cloud"; color = "#AAAAAA"; }
+        else if ((weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82)) { iconClass = "fa-cloud-rain"; color = "#4a90e2"; }
+        else if (weatherCode >= 71 && weatherCode <= 77) { iconClass = "fa-snowflake"; color = "#7ec8e0"; }
+        else if (weatherCode >= 95 && weatherCode <= 99) { iconClass = "fa-bolt"; color = "#b980ea"; }
+        else if (weatherCode >= 45 && weatherCode <= 49) { iconClass = "fa-smog"; color = "#AAAAAA"; }
+        else { iconClass = "fa-cloud-sun"; color = "#DDDDDD"; }
+        return { iconClass, color };
     }
 
-    // Overlay open/close
-    document.getElementById('settings-toggle').addEventListener('click', () => overlay.classList.add('open'));
-    document.getElementById('close-settings').addEventListener('click', () => overlay.classList.remove('open'));
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
-
-    // Presets & Theme
-    document.getElementById('layout-h-preset').addEventListener('change', e => applyPreset(e.target.value));
-    document.getElementById('layout-v-preset').addEventListener('change', e => applyPreset(e.target.value));
-    document.getElementById('theme-select').addEventListener('change', e => applyTheme(e.target.value));
-    // Animation
-    document.getElementById('anim-select').addEventListener('change', e => {
-        const cont = document.getElementById('slideshow-container');
-        if (cont) cont.className = 'slideshow-container slide-anim-' + e.target.value;
-        localStorage.setItem('slideAnim', e.target.value);
-    });
-    // Battery
-    document.getElementById('battery-mode').addEventListener('change', e => setBatteryMode(e.target.checked));
-    // Gradient sliders
-    document.getElementById('gradient-position-slider').addEventListener('input', e => {
-        document.documentElement.style.setProperty('--gradient-position', e.target.value);
-        document.getElementById('gradient-pos-value').textContent = Math.round(e.target.value*100)+'%';
-        localStorage.setItem('gradientPosition', e.target.value);
-    });
-    document.getElementById('gradient-width-slider').addEventListener('input', e => {
-        document.documentElement.style.setProperty('--gradient-width', e.target.value);
-        localStorage.setItem('gradientWidth', e.target.value);
-    });
-    document.getElementById('gradient-opacity-slider').addEventListener('input', e => {
-        document.documentElement.style.setProperty('--gradient-opacity', e.target.value);
-        localStorage.setItem('gradientOpacity', e.target.value);
-    });
-    // Opacity & Font scale
-    document.getElementById('tile-opacity-slider').addEventListener('input', e => {
-        document.documentElement.style.setProperty('--tile-opacity', e.target.value);
-        document.getElementById('tile-opacity-value').textContent = Math.round(e.target.value*100)+'%';
-        localStorage.setItem('tileOpacity', e.target.value);
-    });
-    document.getElementById('font-scale-slider').addEventListener('input', e => {
-        document.documentElement.style.setProperty('--font-scale', e.target.value);
-        document.getElementById('font-scale-value').textContent = parseFloat(e.target.value).toFixed(1);
-        localStorage.setItem('fontScale', e.target.value);
-    });
-    // Location search
-    document.getElementById('location-search-btn2').addEventListener('click', () => {
-        const q = document.getElementById('location-search-input').value.trim();
-        if (q) searchLocation(q).then(results => {
-            if (results.length) {
-                setLocation(results[0].latitude, results[0].longitude, results[0].name);
-            } else {
-                document.getElementById('location-result').textContent = '❌ Nicht gefunden';
-            }
-        });
-    });
-    document.getElementById('gps-btn2').addEventListener('click', () => {
-        navigator.geolocation.getCurrentPosition(
-            pos => setLocation(pos.coords.latitude, pos.coords.longitude, 'GPS'),
-            () => document.getElementById('location-result').textContent = '❌ GPS fehlgeschlagen'
-        );
-    });
-    // iCal load
-    document.getElementById('load-ical').addEventListener('click', () => {
-        loadCalendar(document.getElementById('ical-urls').value);
-    });
-
-    // Resize mode button
-    document.getElementById('resize-btn').addEventListener('click', () => toggleResizeMode());
-
-    function createTiles() {
-        dashboard.querySelectorAll('.tile').forEach(t => t.remove());
-        for (const [id, dim] of Object.entries(layout)) {
-            const tile = document.createElement('div');
-            tile.className = 'tile'; tile.id = id;
-            tile.style.left = dim.x + 'px'; tile.style.top = dim.y + 'px';
-            tile.style.width = dim.w + 'px'; tile.style.height = dim.h + 'px';
-            tile.innerHTML = `<div class="tile-content"></div>
-                <div class="resize-handle-edge top"></div><div class="resize-handle-edge bottom"></div>
-                <div class="resize-handle-edge left"></div><div class="resize-handle-edge right"></div>
-                <div class="resize-handle-corner tl"></div><div class="resize-handle-corner tr"></div>
-                <div class="resize-handle-corner bl"></div><div class="resize-handle-corner br"></div>`;
-            dashboard.appendChild(tile);
-            fillTile(id, tile);
-        }
-        initInteract();
-        renderCurrentView();
-        if (slides.length) updateSlideDisplay();
-        else loadSlides();
-    }
-
-    function fillTile(id, tile) {
-        const content = tile.querySelector('.tile-content');
-        if (id === 'weather') {
-            content.innerHTML = `
-                <div class="weather-now">
-                    <div class="temp" id="current-temp">--°</div>
-                    <div class="details" id="current-details">Wetter wird geladen…</div>
-                    <div id="current-icon" style="font-size:2.5rem;"></div>
-                </div>
-                <div class="forecast-row" id="forecast-container"><div class="forecast-day">--</div></div>`;
-        } else if (id === 'calendar') {
-            content.innerHTML = `
-                <div class="view-switch">
-                    <button class="view-btn active" id="view-month">Monat</button>
-                    <button class="view-btn" id="view-week">Woche</button>
-                </div>
-                <div class="calendar-grid" id="calendar-grid"></div>
-                <div class="month-slider-container" id="month-slider-container">
-                    <span class="month-label" id="month-label"></span>
-                    <input type="range" id="month-slider" min="0" max="11" value="${new Date().getMonth()}">
-                </div>
-                <div class="week-container" id="week-container">
-                    <div class="week-header"><span id="week-label"></span></div>
-                    <div class="week-days" id="week-days"></div>
-                </div>
-                <div class="event-details" id="event-details"></div>`;
-        } else if (id === 'slideshow') {
-            content.innerHTML = `
-                <div class="slideshow-container slide-anim-fade" id="slideshow-container">
-                    <div class="slideshow-controls">
-                        <button id="prev-slide"><i class="fas fa-chevron-left"></i></button>
-                        <button id="play-pause"><i class="fas fa-pause"></i></button>
-                        <button id="next-slide"><i class="fas fa-chevron-right"></i></button>
-                        <button id="delete-slide"><i class="fas fa-trash"></i></button>
-                        <button id="download-slide"><i class="fas fa-download"></i></button>
-                    </div>
-                </div>
-                <div class="upload-area">
-                    <label for="file-upload" class="upload-btn"><i class="fas fa-upload"></i></label>
-                    <input type="file" id="file-upload" multiple accept="image/*">
-                    <span id="image-count">0</span>
-                </div>`;
-        }
-    }
-
-    function initInteract() {
-        interact('.tile')
-            .draggable({
-                enabled: false,
-                allowFrom: '.tile-content',
-                modifiers: [interact.modifiers.restrict({ restriction: 'parent', endOnly: true })],
-                listeners: {
-                    move(e) {
-                        const t = e.target;
-                        const x = (parseFloat(t.getAttribute('data-x'))||0) + e.dx;
-                        const y = (parseFloat(t.getAttribute('data-y'))||0) + e.dy;
-                        t.style.transform = `translate(${x}px,${y}px)`;
-                        t.setAttribute('data-x', x); t.setAttribute('data-y', y);
-                    },
-                    end(e) {
-                        const t = e.target;
-                        const x = parseFloat(t.getAttribute('data-x'))||0;
-                        const y = parseFloat(t.getAttribute('data-y'))||0;
-                        t.style.transform = '';
-                        t.style.left = (parseFloat(t.style.left)+x)+'px';
-                        t.style.top = (parseFloat(t.style.top)+y)+'px';
-                        t.setAttribute('data-x',0); t.setAttribute('data-y',0);
-                        saveLayout();
-                    }
-                }
-            })
-            .resizable({
-                enabled: false,
-                edges: { top:true, bottom:true, left:true, right:true },
-                modifiers: [
-                    interact.modifiers.restrict({ restriction: 'parent', endOnly: true }),
-                    interact.modifiers.restrictSize({ min: { width:80, height:80 } })
-                ],
-                listeners: {
-                    move(e) {
-                        const t = e.target;
-                        let x = (parseFloat(t.getAttribute('data-x'))||0);
-                        let y = (parseFloat(t.getAttribute('data-y'))||0);
-                        t.style.width = e.rect.width + 'px';
-                        t.style.height = e.rect.height + 'px';
-                        x += e.deltaRect.left; y += e.deltaRect.top;
-                        t.style.transform = `translate(${x}px,${y}px)`;
-                        t.setAttribute('data-x', x); t.setAttribute('data-y', y);
-                    },
-                    end(e) {
-                        const t = e.target;
-                        const x = parseFloat(t.getAttribute('data-x'))||0;
-                        const y = parseFloat(t.getAttribute('data-y'))||0;
-                        t.style.transform = '';
-                        t.style.left = (parseFloat(t.style.left)+x)+'px';
-                        t.style.top = (parseFloat(t.style.top)+y)+'px';
-                        t.setAttribute('data-x',0); t.setAttribute('data-y',0);
-                        saveLayout();
-                    }
-                }
-            });
-    }
-
-    function saveLayout() {
-        const tiles = {};
-        document.querySelectorAll('.tile').forEach(t => {
-            tiles[t.id] = {
-                x: parseFloat(t.style.left)||0,
-                y: parseFloat(t.style.top)||0,
-                w: parseFloat(t.style.width)||100,
-                h: parseFloat(t.style.height)||100
-            };
-        });
-        localStorage.setItem('kitchenLayout', JSON.stringify(tiles));
-    }
-
-    // Weather
-    async function fetchWeather() {
+    async function fetchEnhancedWeather(city) {
         try {
-            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${currentLat}&longitude=${currentLon}&current=weather_code,temperature_2m,relative_humidity_2m,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5`);
-            return await res.json();
-        } catch(e) { return null; }
-    }
-    const wEmoji = c => ({0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌦️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',80:'🌧️',81:'🌧️',82:'🌧️',85:'🌨️',86:'🌨️',95:'⛈️'}[c]||'🌥️');
-    const wDesc = c => c===0?'Sonnig':c===1?'Heiter':c===2?'Wolkig':c===3?'Bedeckt':c>=45&&c<=48?'Nebel':c>=51?'Niesel':c>=61?'Regen':c>=71?'Schnee':c>=95?'Gewitter':'Bewölkt';
-
-    async function updateWeather() {
-        const data = await fetchWeather();
-        if (!data) {
-            const cached = localStorage.getItem('weatherCache');
-            if (cached) renderWeather(JSON.parse(cached));
-            else {
-                const tempEl = document.getElementById('current-temp');
-                const detailsEl = document.getElementById('current-details');
-                if (tempEl) tempEl.textContent = '--°';
-                if (detailsEl) detailsEl.textContent = 'Keine Verbindung';
+            const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&format=json`);
+            const geo = await geoRes.json();
+            if (!geo.results) throw new Error("Stadt nicht gefunden");
+            const { latitude, longitude } = geo.results[0];
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,precipitation_probability,windspeed_10m,weathercode&timezone=auto&forecast_days=2`;
+            const res = await fetch(url);
+            const data = await res.json();
+            const current = data.current_weather;
+            const hourly = data.hourly;
+            const now = new Date();
+            const currentHour = now.getHours();
+            document.getElementById('currentTemp').innerText = Math.round(current.temperature);
+            const currentCode = current.weathercode;
+            const { iconClass, color } = getWeatherIconAndColor(currentCode);
+            const currentIconElem = document.getElementById('currentWeatherIcon');
+            currentIconElem.className = `fas ${iconClass} current-icon`;
+            currentIconElem.style.color = color;
+            let currentPrecip = 0, currentHumidity = 0, currentWind = Math.round(current.windspeed);
+            for (let i=0; i<hourly.time.length; i++) {
+                const t = new Date(hourly.time[i]);
+                if (t.getHours() === currentHour && t.getDate() === now.getDate()) {
+                    currentPrecip = hourly.precipitation_probability[i] || 0;
+                    currentHumidity = hourly.relativehumidity_2m[i] || 0;
+                    currentWind = Math.round(hourly.windspeed_10m[i]);
+                    break;
+                }
             }
-            return;
-        }
-        localStorage.setItem('weatherCache', JSON.stringify(data));
-        renderWeather(data);
-    }
-    function renderWeather(data) {
-        const tempEl = document.getElementById('current-temp');
-        const detailsEl = document.getElementById('current-details');
-        const iconEl = document.getElementById('current-icon');
-        const fc = document.getElementById('forecast-container');
-        if (tempEl) tempEl.textContent = Math.round(data.current.temperature_2m) + '°';
-        if (detailsEl) detailsEl.innerHTML = `${wDesc(data.current.weather_code)}<br>💧 ${data.current.relative_humidity_2m}% · 💨 ${Math.round(data.current.wind_speed_10m)} km/h`;
-        if (iconEl) iconEl.textContent = wEmoji(data.current.weather_code);
-        if (fc) {
-            fc.innerHTML = '';
-            data.daily.time.forEach((day,i) => {
-                const d = new Date(day);
-                const div = document.createElement('div');
-                div.className = 'forecast-day' + (i===0?' active':'');
-                div.innerHTML = `<div>${d.toLocaleDateString('de-DE',{weekday:'short'})}</div><div>${wEmoji(data.daily.weather_code[i])}</div><div>${Math.round(data.daily.temperature_2m_max[i])}°/${Math.round(data.daily.temperature_2m_min[i])}°</div>`;
-                fc.appendChild(div);
-            });
-        }
-    }
-    async function searchLocation(query) {
-        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=3&language=de`);
-        const data = await res.json();
-        return data.results || [];
-    }
-    async function setLocation(lat, lon, name) {
-        currentLat = lat; currentLon = lon; currentLocName = name;
-        localStorage.setItem('weatherLoc', JSON.stringify({lat,lon,name}));
-        document.getElementById('location-result').textContent = `✅ ${name} (${lat.toFixed(2)}, ${lon.toFixed(2)})`;
-        await updateWeather();
-    }
-
-    // Calendar
-    function renderCurrentView() { currentView === 'month' ? renderMonthCalendar() : renderWeekCalendar(); }
-    function renderMonthCalendar() {
-        const grid = document.getElementById('calendar-grid'); if(!grid) return;
-        grid.innerHTML = '';
-        ['So','Mo','Di','Mi','Do','Fr','Sa'].forEach(d => {
-            const div = document.createElement('div'); div.className = 'day-header'; div.textContent = d; grid.appendChild(div);
-        });
-        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-        const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
-        for(let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div'));
-        for(let d=1; d<=daysInMonth; d++) {
-            const dayDiv = document.createElement('div'); dayDiv.className = 'day';
-            const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const eventsOnDay = calendarEvents.filter(e => e.start.startsWith(dateStr));
-            dayDiv.innerHTML = `<span class="day-number">${d}</span>`;
-            eventsOnDay.slice(0,3).forEach(ev => {
-                const title = document.createElement('div'); title.className = 'event-title'; title.style.color = ev.color; title.textContent = ev.summary;
-                dayDiv.appendChild(title);
-            });
-            const today = new Date();
-            if(d === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) dayDiv.classList.add('today');
-            dayDiv.addEventListener('click', () => showDayDetails(dateStr, eventsOnDay));
-            grid.appendChild(dayDiv);
-        }
-        document.getElementById('month-label').textContent = new Date(currentYear, currentMonth).toLocaleDateString('de-DE', {month:'long', year:'numeric'});
-        document.getElementById('month-slider').value = currentMonth;
-        document.getElementById('calendar-grid').style.display = 'grid';
-        document.getElementById('month-slider-container').style.display = 'flex';
-        document.getElementById('week-container').style.display = 'none';
-    }
-    function renderWeekCalendar() {
-        const today = new Date();
-        const monday = new Date(today); monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
-        const days = [];
-        for (let i=0; i<7; i++) { const d = new Date(monday); d.setDate(monday.getDate()+i); days.push(d); }
-        document.getElementById('week-label').textContent = `${days[0].toLocaleDateString('de-DE',{day:'numeric',month:'short'})} – ${days[6].toLocaleDateString('de-DE',{day:'numeric',month:'short'})}`;
-        const weekDaysDiv = document.getElementById('week-days'); weekDaysDiv.innerHTML = '';
-        days.forEach(date => {
-            const dateStr = date.toISOString().substring(0,10);
-            const eventsOnDay = calendarEvents.filter(e => e.start.startsWith(dateStr));
-            const dayDiv = document.createElement('div'); dayDiv.className = 'week-day';
-            if(date.toDateString() === today.toDateString()) dayDiv.classList.add('today');
-            dayDiv.innerHTML = `<div class="week-day-label">${date.toLocaleDateString('de-DE',{weekday:'short'})}</div><div class="week-day-date">${date.getDate()}</div>`;
-            eventsOnDay.slice(0,3).forEach(ev => {
-                const time = new Date(ev.start).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
-                const eventEl = document.createElement('div'); eventEl.className = 'week-event'; eventEl.style.background = ev.color; eventEl.textContent = `${time} ${ev.summary}`;
-                dayDiv.appendChild(eventEl);
-            });
-            dayDiv.addEventListener('click', () => showDayDetails(dateStr, eventsOnDay));
-            weekDaysDiv.appendChild(dayDiv);
-        });
-        document.getElementById('calendar-grid').style.display = 'none';
-        document.getElementById('month-slider-container').style.display = 'none';
-        document.getElementById('week-container').style.display = 'flex';
-    }
-    function showDayDetails(dateStr, events) {
-        const details = document.getElementById('event-details'); if(!details) return;
-        details.innerHTML = events.length ? events.map(e => `<div style="margin-bottom:5px;"><span style="color:${e.color};">●</span> <strong>${e.summary}</strong><br><small>${new Date(e.start).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})}</small></div>`).join('') : '<em>Keine Termine</em>';
-        details.classList.add('show');
-    }
-    const CORS_PROXIES = ['https://corsproxy.io/?','https://api.allorigins.win/raw?url=','https://api.codetabs.com/v1/proxy?quest='];
-    async function fetchICSWithFallback(url) {
-        try { const r = await fetch(url); if(r.ok) return await r.text(); } catch(e) {}
-        for(const p of CORS_PROXIES) {
-            try {
-                const r = await fetch(p+encodeURIComponent(url));
-                if(r.ok) { const t = await r.text(); if(t.includes('BEGIN:VCALENDAR')) return t; }
-            } catch(e) {}
-        }
-        throw new Error('Kalender nicht erreichbar');
-    }
-    async function loadCalendar(urlsText) {
-        if(!urlsText.trim()) return;
-        const infoEl = document.getElementById('ical-info'), errEl = document.getElementById('ical-error');
-        infoEl.textContent = ''; errEl.textContent = '';
-        const urls = urlsText.split('\n').map(l => l.trim()).filter(l => l);
-        try {
-            const allEvents = [];
-            for(let i=0; i<urls.length; i++) {
-                const url = urls[i].replace(/^webcal:\/\//i, 'https://');
-                const data = await fetchICSWithFallback(url);
-                const jcal = ICAL.parse(data);
-                const comp = new ICAL.Component(jcal);
-                const vevents = comp.getAllSubcomponents('vevent');
-                vevents.forEach((v,j) => {
-                    const ev = new ICAL.Event(v);
-                    const start = ev.startDate ? ev.startDate.toJSDate() : new Date();
-                    allEvents.push({ summary: ev.summary || 'Ohne Titel', start: start.toISOString(), color: assignColor(allEvents.length) });
-                });
+            document.getElementById('precip').innerText = currentPrecip;
+            document.getElementById('humidity').innerText = currentHumidity;
+            document.getElementById('windSpeed').innerText = currentWind;
+            const hourlyItems = [];
+            for (let i=0; i<hourly.time.length; i++) {
+                const dt = new Date(hourly.time[i]);
+                if (dt >= now) {
+                    const temp = Math.round(hourly.temperature_2m[i]);
+                    const precipProb = hourly.precipitation_probability[i] || 0;
+                    const wCode = hourly.weathercode[i];
+                    const { iconClass: ic, color: col } = getWeatherIconAndColor(wCode);
+                    const hourLabel = dt.getHours() + ":00";
+                    const daySuffix = dt.toLocaleDateString('de-DE', { weekday:'short' });
+                    hourlyItems.push({ hour: hourLabel, day: daySuffix, temp, precip: precipProb, iconClass: ic, iconColor: col });
+                    if (hourlyItems.length >= 12) break;
+                }
             }
-            calendarEvents = allEvents;
-            localStorage.setItem('calendarCache', JSON.stringify(calendarEvents));
-            localStorage.setItem('icalUrls', urlsText);
-            renderCurrentView();
-            infoEl.textContent = `✅ ${calendarEvents.length} Termine aus ${urls.length} Kalendern`;
-        } catch(e) { errEl.textContent = '❌ ' + e.message; calendarEvents = []; renderCurrentView(); }
+            const container = document.getElementById('hourlyForecast');
+            container.innerHTML = hourlyItems.map(h => `
+                <div class="hour-card">
+                    <div class="hour-time">${h.day} ${h.hour}</div>
+                    <i class="fas ${h.iconClass} hour-icon" style="color: ${h.iconColor};"></i>
+                    <div class="hour-temp">${h.temp}°</div>
+                    <div class="hour-bar-container"><div class="hour-bar" style="width: ${Math.min(h.precip,100)}%; background: #4aa3ff;"></div></div>
+                    <div class="hour-precip">${h.precip}%</div>
+                </div>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+            document.getElementById('weatherEnhanced').innerHTML += `<div style="color:#ff8866; margin-top:8px;">Wetterfehler: ${err.message}</div>`;
+        }
     }
 
-    // Slideshow
-    function loadSlides() {
-        const saved = localStorage.getItem('slides');
-        if(saved) { slides = JSON.parse(saved); currentSlide = parseInt(localStorage.getItem('slideIdx'))||0; if(currentSlide >= slides.length) currentSlide = 0; }
-        updateSlideDisplay();
-    }
-    function updateSlideDisplay() {
-        const container = document.getElementById('slideshow-container'); if(!container) return;
-        container.querySelectorAll('.slide-img').forEach(i => i.remove());
-        if(slides.length && slides[currentSlide]) {
-            const img = document.createElement('img'); img.className = 'slide-img active'; img.src = slides[currentSlide];
-            container.appendChild(img);
-        } else {
-            const ph = document.createElement('div'); ph.className = 'slide-img active'; ph.style.cssText = 'position:absolute;inset:0;background:#222;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:1.5rem;'; ph.textContent = '📷 Fotos hochladen';
-            container.appendChild(ph);
-        }
-        const cnt = document.getElementById('image-count'); if(cnt) cnt.textContent = slides.length + ' Bilder';
-    }
-    function nextSlide() { if(slides.length) { currentSlide = (currentSlide+1)%slides.length; updateSlideDisplay(); localStorage.setItem('slideIdx', currentSlide); } }
-    function prevSlide() { if(slides.length) { currentSlide = (currentSlide-1+slides.length)%slides.length; updateSlideDisplay(); localStorage.setItem('slideIdx', currentSlide); } }
-    function startSS() { clearInterval(timer); if(!paused && slides.length) timer = setInterval(nextSlide, batteryMode ? 60000 : 10000); }
-    function setBatteryMode(on) { batteryMode = on; localStorage.setItem('batteryMode', on); if(on) { document.getElementById('anim-select').value = 'fade'; document.getElementById('slideshow-container').className = 'slideshow-container slide-anim-fade'; } startSS(); }
-    function downloadCurrentSlide() { if(slides.length && slides[currentSlide]) { const a = document.createElement('a'); a.href = slides[currentSlide]; a.download = 'foto.jpg'; a.click(); } }
-
-    // Click delegation
-    document.addEventListener('click', function(e) {
-        const t = e.target;
-        if(t.closest('#prev-slide')) { prevSlide(); startSS(); }
-        else if(t.closest('#next-slide')) { nextSlide(); startSS(); }
-        else if(t.closest('#play-pause')) {
-            paused = !paused;
-            t.closest('#play-pause').innerHTML = paused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
-            paused ? clearInterval(timer) : startSS();
-        }
-        else if(t.closest('#delete-slide') && slides.length) {
-            slides.splice(currentSlide,1); if(currentSlide>=slides.length) currentSlide=0;
-            updateSlideDisplay(); localStorage.setItem('slides',JSON.stringify(slides)); startSS();
-        }
-        else if(t.closest('#download-slide')) downloadCurrentSlide();
-        else if(t.closest('#view-month')) { currentView='month'; document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active')); document.getElementById('view-month').classList.add('active'); renderCurrentView(); }
-        else if(t.closest('#view-week')) { currentView='week'; document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active')); document.getElementById('view-week').classList.add('active'); renderCurrentView(); }
-    });
-
-    document.addEventListener('change', function(e) {
-        if(e.target.id === 'file-upload') {
-            Array.from(e.target.files).forEach(f => {
-                const r = new FileReader();
-                r.onload = ev => { slides.push(ev.target.result); if(slides.length===1) currentSlide=0; updateSlideDisplay(); localStorage.setItem('slides',JSON.stringify(slides)); startSS(); };
-                r.readAsDataURL(f);
-            });
-            e.target.value = '';
-        }
-        if(e.target.id === 'month-slider' && currentView==='month') { currentMonth = parseInt(e.target.value); renderMonthCalendar(); }
-    });
-
-    // Touch swipe for slideshow
-    let touchStartX = 0;
-    document.addEventListener('touchstart', e => { if(e.target.closest('#slideshow-container')) touchStartX = e.changedTouches[0].screenX; }, {passive: true});
-    document.addEventListener('touchend', e => {
-        if(e.target.closest('#slideshow-container')) {
-            const diff = touchStartX - e.changedTouches[0].screenX;
-            if(Math.abs(diff) > 60) { diff > 0 ? nextSlide() : prevSlide(); startSS(); }
-        }
-    });
-
-    // Init
-    function init() {
-        const savedLoc = localStorage.getItem('weatherLoc'); if(savedLoc) { const l = JSON.parse(savedLoc); currentLat=l.lat; currentLon=l.lon; currentLocName=l.name; }
-        const savedTheme = localStorage.getItem('theme')||'kitchen'; applyTheme(savedTheme);
-        const savedLayout = localStorage.getItem('kitchenLayout'); if(savedLayout) { try { const parsed = JSON.parse(savedLayout); for(const id in parsed) { if(layout[id]) layout[id] = parsed[id]; } } catch(e) {} }
-        // Restore values
-        document.getElementById('gradient-position-slider').value = localStorage.getItem('gradientPosition')||0.38;
-        document.getElementById('gradient-width-slider').value = localStorage.getItem('gradientWidth')||0.05;
-        document.getElementById('gradient-opacity-slider').value = localStorage.getItem('gradientOpacity')||0.8;
-        document.getElementById('tile-opacity-slider').value = localStorage.getItem('tileOpacity')||0.85;
-        document.getElementById('font-scale-slider').value = localStorage.getItem('fontScale')||1;
-        // Apply CSS vars
-        document.documentElement.style.setProperty('--gradient-position', localStorage.getItem('gradientPosition')||0.38);
-        document.documentElement.style.setProperty('--gradient-width', localStorage.getItem('gradientWidth')||0.05);
-        document.documentElement.style.setProperty('--gradient-opacity', localStorage.getItem('gradientOpacity')||0.8);
-        document.documentElement.style.setProperty('--tile-opacity', localStorage.getItem('tileOpacity')||0.85);
-        document.documentElement.style.setProperty('--font-scale', localStorage.getItem('fontScale')||1);
-        document.getElementById('gradient-pos-value').textContent = Math.round((localStorage.getItem('gradientPosition')||0.38)*100)+'%';
-        document.getElementById('tile-opacity-value').textContent = Math.round((localStorage.getItem('tileOpacity')||0.85)*100)+'%';
-        document.getElementById('font-scale-value').textContent = parseFloat(localStorage.getItem('fontScale')||1).toFixed(1);
-        document.getElementById('battery-mode').checked = localStorage.getItem('batteryMode') === 'true';
-        document.getElementById('anim-select').value = localStorage.getItem('slideAnim')||'fade';
-        const savedIcal = localStorage.getItem('icalUrls'); if(savedIcal) { document.getElementById('ical-urls').value = savedIcal; loadCalendar(savedIcal); }
-        const cachedEvents = localStorage.getItem('calendarCache'); if(cachedEvents && !savedIcal) { calendarEvents = JSON.parse(cachedEvents); renderCurrentView(); }
-        if(localStorage.getItem('batteryMode') === 'true') setBatteryMode(true);
-
-        createTiles(); loadSlides(); updateWeather(); renderCurrentView();
-        setInterval(updateWeather, 900000); startSS();
-    }
-    init();
-})();
+    function parseICal(icalData) { /* gleiche wie bisher, platzsparend */ let events=[]; const lines=icalData.split(/\r?\n/); let curr=null; for(let line of lines){ line=line.trim(); if(line==="BEGIN:VEVENT") curr={}; else if(line==="END:VEVENT"){ if(curr&&curr.summary&&curr.dtstart_value){ let start=null; let val=curr.dtstart_value; if(val&&val.length===8){ let y=parseInt(val.slice(0,4)),m=parseInt(val.slice(4,6))-1,d=parseInt(val.slice(6,8)); start=new Date(y,m,d); }else if(val&&val.length>=15){ let y=parseInt(val.slice(0,4)),m=parseInt(val.slice(4,6))-1,d=parseInt(val.slice(6,8)),h=parseInt(val.slice(9,11)),min=parseInt(val.slice(11,13)); start=new Date(y,m,d,h,min); } if(start) events.push({start,title:curr.summary,colorClass:getRandomColorClass()}); } curr=null; }else if(curr){ if(line.startsWith("SUMMARY:")) curr.summary=line.substring(8).replace(/\\,/g,','); else if(line.startsWith("DTSTART")) curr.dtstart_value=line.split(":")[1]; else if(line.includes("DTSTART;")&&line.includes("VALUE=DATE")){ let parts=line.split(":"); if(parts[1]) curr.dtstart_value=parts[1]; } } } return events; }
+    async function fetchICalEvents(url){ if(!url) return []; const proxy="https://api.allorigins.win/raw?url="; try{ const resp=await fetch(proxy+encodeURIComponent(url)); if(!resp.ok) throw new Error(`HTTP ${resp.status}`); const text=await resp.text(); const parsed=parseICal(text); icalStatusSpan.innerText=`✅ ${parsed.length} Termine geladen`; return parsed; }catch(err){ icalStatusSpan.innerText=`❌ Fehler: ${err.message}`; return []; } }
+    async function refreshICal(){ if(!icalEnabled||!icalUrl) return []; icalStatusSpan.innerText="🔄 Lade iCal ..."; const events=await fetchICalEvents(icalUrl); icalEvents=events; renderCalendarByView(); return events; }
+    function getRandomColorClass(){ const cols=["blue-badge","red-badge","green-badge","orange-badge","purple-badge"]; return cols[Math.floor(Math.random()*cols.length)]; }
+    function getEventsForDate(date,eventsArray){ if(!eventsArray.length) return []; const start=new Date(date.getFullYear(),date.getMonth(),date.getDate()); const end=new Date(date.getFullYear(),date.getMonth(),date.getDate(),23,59,59); return eventsArray.filter(ev=>ev.start&&ev.start>=start&&ev.start<=end); }
+    function renderMonthCalendar(year,month,eventsList){ const firstDay=new Date(year,month,1).getDay(); const daysInMonth=new Date(year,month+1,0).getDate(); const today=new Date(); let html=''; for(let i=0;i<firstDay;i++) html+=`<div class="cal-cell empty-cell"><div class="day-number"></div><div class="events"></div></div>`; for(let d=1;d<=daysInMonth;d++){ const cellDate=new Date(year,month,d); const isToday=(year===today.getFullYear()&&month===today.getMonth()&&d===today.getDate()); const dayEvents=getEventsForDate(cellDate,eventsList); let evHtml=''; if(dayEvents.length){ evHtml=`<div class="events">`; dayEvents.slice(0,2).forEach(ev=>evHtml+=`<div class="event-badge ${ev.colorClass||'blue-badge'}">${ev.title.substring(0,18)}</div>`); if(dayEvents.length>2) evHtml+=`<div class="event-badge">+${dayEvents.length-2}</div>`; evHtml+=`</div>`; } html+=`<div class="cal-cell ${isToday?'today':''}"><div class="day-number">${d}</div>${evHtml}</div>`; } let total=firstDay+daysInMonth; for(let i=total;i<42;i++) html+=`<div class="cal-cell empty-cell"><div class="day-number"></div><div class="events"></div></div>`; calendarGrid.innerHTML=html; }
+    function renderWeekCalendar(refDate,eventsList){ const startOfWeek=new Date(refDate); const dow=refDate.getDay(); const diffToMonday=(dow===0?-6:1-dow); startOfWeek.setDate(refDate.getDate()+diffToMonday); const weekDays=[]; for(let i=0;i<7;i++){ let d=new Date(startOfWeek); d.setDate(startOfWeek.getDate()+i); weekDays.push(d); } const today=new Date(); let html=''; weekDays.forEach(day=>{ const isToday=(day.toDateString()===today.toDateString()); const dayEvents=getEventsForDate(day,eventsList); let evHtml=''; if(dayEvents.length){ evHtml=`<div class="events">`; dayEvents.slice(0,2).forEach(ev=>evHtml+=`<div class="event-badge ${ev.colorClass||'blue-badge'}">${ev.title.substring(0,18)}</div>`); if(dayEvents.length>2) evHtml+=`<div class="event-badge">+${dayEvents.length-2}</div>`; evHtml+=`</div>`; } html+=`<div class="cal-cell ${isToday?'today':''}"><div class="day-number">${day.getDate()}</div>${evHtml}</div>`; }); calendarGrid.innerHTML=html; weekdaysRow.innerHTML=weekDays.map((d,i)=>`<div class="weekday">${["S","M","T","W","T","F","S"][i]} ${d.getDate()}.${d.getMonth()+1}</div>`).join(''); }
+    function renderCalendarByView(){ if(!eventsVisible){ calendarGrid.innerHTML='<div style="color:#aaa;">Ereignisse ausgeblendet</div>'; return; } const eventsSource=(icalEnabled&&icalEvents.length)?icalEvents:DEMO_EVENTS.map(ev=>{const now=new Date(); return{start:new Date(now.getFullYear(),now.getMonth(),ev.day),title:ev.title,colorClass:ev.colorClass};}); if(currentView==="month"){ const now=new Date(); renderMonthCalendar(now.getFullYear(),now.getMonth(),eventsSource); weekdaysRow.innerHTML=`<div class="weekday">S</div><div class="weekday">M</div><div class="weekday">T</div><div class="weekday">W</div><div class="weekday">T</div><div class="weekday">F</div><div class="weekday">S</div>`; }else{ renderWeekCalendar(currentDate,eventsSource); } document.querySelector('.right-panel').classList.toggle('events-hidden',!eventsVisible); }
+    function updateClock(){ const n=new Date(); clockEl.innerText=showSeconds?`${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}:${n.getSeconds().toString().padStart(2,'0')}`:`${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}`; dateEl.innerText=n.toLocaleDateString('de-DE',{weekday:'long',year:'numeric',month:'long',day:'numeric'}); }
+    let slideInterval; function startSlideshow(){ if(slideInterval) clearInterval(slideInterval); if(!slideshowImages.length) slideshowImages=["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&h=700"]; let idx=0; const upd=()=>{ slideshowImg.classList.remove(...slideshowImg.classList); slideshowImg.classList.add('slideshow-img',currentAnimation); slideshowImg.src=slideshowImages[idx]; idx=(idx+1)%slideshowImages.length; }; upd(); slideInterval=setInterval(upd,7000); }
+    function renderImageListUI(){ const c=document.getElementById('imageListContainer'); if(!c)return; c.innerHTML=slideshowImages.map((url,i)=>`<div style="display:flex;justify-content:space-between;background:#1e1e1e;margin:4px 0;padding:4px 8px;border-radius:20px;"><span style="font-size:11px; overflow:hidden;">${url.substring(0,40)}...</span><button data-idx="${i}" class="removeImgBtn">🗑️</button></div>`).join(''); document.querySelectorAll('.removeImgBtn').forEach(btn=>{ btn.onclick=()=>{ const idx=parseInt(btn.dataset.idx); slideshowImages.splice(idx,1); if(!slideshowImages.length) slideshowImages=["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&h=700"]; renderImageListUI(); startSlideshow(); saveAllSettings(); }; }); }
+    function saveAllSettings(){ localStorage.setItem('dakboard_full',JSON.stringify({slideshowImages,currentAnimation,eventsVisible,showSeconds,customColors,weatherCity,icalUrl,icalEnabled,currentView})); }
+    function loadSettings(){ const saved=localStorage.getItem('dakboard_full'); if(saved){ try{ const s=JSON.parse(saved); if(s.slideshowImages) slideshowImages=s.slideshowImages; if(s.currentAnimation) currentAnimation=s.currentAnimation; if(typeof s.eventsVisible==='boolean') eventsVisible=s.eventsVisible; if(typeof s.showSeconds==='boolean') showSeconds=s.showSeconds; if(s.customColors) customColors={...customColors,...s.customColors}; if(s.weatherCity) weatherCity=s.weatherCity; if(s.icalUrl) icalUrl=s.icalUrl; if(typeof s.icalEnabled==='boolean') icalEnabled=s.icalEnabled; if(s.currentView) currentView=s.currentView; }catch(e){} } if(!slideshowImages.length) slideshowImages=["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&h=700","https://images.unsplash.com/photo-1470071459604-3b5ec3c7fe05?w=900&h=700"]; document.getElementById('animationSelect').value=currentAnimation; document.getElementById('toggleEventsVisibility').checked=eventsVisible; document.getElementById('toggleSeconds').checked=showSeconds; document.getElementById('weatherCity').value=weatherCity; document.getElementById('icalUrl').value=icalUrl; document.getElementById('icalEnabled').checked=icalEnabled; document.getElementById('colorBlue').value=customColors.blue; document.getElementById('colorRed').value=customColors.red; document.getElementById('colorGreen').value=customColors.green; document.getElementById('colorOrange').value=customColors.orange; document.getElementById('colorPurple').value=customColors.purple; if(icalEnabled && icalUrl) refreshICal(); applyEventColors(); }
+    function applyEventColors(){ let style=document.getElementById('eventColors'); if(!style){ style=document.createElement('style'); style.id='eventColors'; document.head.appendChild(style); } style.innerHTML=`.event-badge.blue-badge{background:${customColors.blue}!important}.event-badge.red-badge{background:${customColors.red}!important}.event-badge.green-badge{background:${customColors.green}!important}.event-badge.orange-badge{background:${customColors.orange}!important}.event-badge.purple-badge{background:${customColors.purple}!important}`; }
+    function applyAllAndRender(){ currentAnimation=document.getElementById('animationSelect').value; eventsVisible=document.getElementById('toggleEventsVisibility').checked; showSeconds=document.getElementById('toggleSeconds').checked; customColors={blue:document.getElementById('colorBlue').value, red:document.getElementById('colorRed').value, green:document.getElementById('colorGreen').value, orange:document.getElementById('colorOrange').value, purple:document.getElementById('colorPurple').value}; weatherCity=document.getElementById('weatherCity').value; icalUrl=document.getElementById('icalUrl').value; icalEnabled=document.getElementById('icalEnabled').checked; applyEventColors(); if(icalEnabled && icalUrl) refreshICal().then(()=>renderCalendarByView()); else { icalEvents=[]; renderCalendarByView(); } if(syncInterval) clearInterval(syncInterval); const intervalMin=parseInt(document.getElementById('icalInterval').value)||30; if(icalEnabled && icalUrl) syncInterval=setInterval(()=>{ if(icalEnabled && icalUrl) refreshICal(); }, intervalMin*60*1000); startSlideshow(); fetchEnhancedWeather(weatherCity); saveAllSettings(); }
+    document.getElementById('settingsGear').onclick=()=>{ renderImageListUI(); document.getElementById('settingsModal').classList.add('active'); };
+    document.getElementById('closeModalBtn').onclick=()=>document.getElementById('settingsModal').classList.remove('active');
+    document.getElementById('saveSettingsBtn').onclick=()=>{ applyAllAndRender(); document.getElementById('settingsModal').classList.remove('active'); };
+    document.getElementById('refreshWeatherBtn').onclick=()=>fetchEnhancedWeather(document.getElementById('weatherCity').value);
+    document.getElementById('syncIcalNowBtn').onclick=async()=>{ icalEnabled=true; icalUrl=document.getElementById('icalUrl').value; await refreshICal(); renderCalendarByView(); saveAllSettings(); };
+    document.getElementById('addUrlBtn').onclick=()=>{ const url=document.getElementById('imageUrlInput').value; if(url){ slideshowImages.push(url); renderImageListUI(); startSlideshow(); saveAllSettings(); } };
+    document.getElementById('clearImagesBtn').onclick=()=>{ slideshowImages=["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=900&h=700"]; renderImageListUI(); startSlideshow(); saveAllSettings(); };
+    document.getElementById('uploadImages').onchange=(e)=>{ Array.from(e.target.files).forEach(f=>{ const reader=new FileReader(); reader.onload=ev=>{ slideshowImages.push(ev.target.result); renderImageListUI(); startSlideshow(); saveAllSettings(); }; reader.readAsDataURL(f); }); };
+    document.getElementById('monthViewBtn').onclick=()=>{ currentView="month"; renderCalendarByView(); document.getElementById('monthViewBtn').classList.add('active'); document.getElementById('weekViewBtn').classList.remove('active'); saveAllSettings(); };
+    document.getElementById('weekViewBtn').onclick=()=>{ currentView="week"; currentDate=new Date(); renderCalendarByView(); document.getElementById('weekViewBtn').classList.add('active'); document.getElementById('monthViewBtn').classList.remove('active'); saveAllSettings(); };
+    setInterval(updateClock,200); updateClock(); loadSettings(); applyEventColors(); startSlideshow(); fetchEnhancedWeather(weatherCity); if(icalEnabled && icalUrl) refreshICal().then(()=>renderCalendarByView()); else renderCalendarByView(); const icalInt=parseInt(document.getElementById('icalInterval')?.value||30); if(icalEnabled && icalUrl) syncInterval=setInterval(()=>{ if(icalEnabled && icalUrl) refreshICal(); }, icalInt*60*1000);
 </script>
 </body>
 </html>
