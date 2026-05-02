@@ -1,808 +1,1114 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <title>Alpine Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>AnnaLove · Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,700&family=Space+Grotesk:wght@300;400;500;600&family=Crimson+Pro:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
+<style>
+/* THEMES */
+:root, [data-theme="aubergine"] {
+  --bg1:#1a1530; --bg2:#2a1f4a; --bg3:#3d1a4a; --bg4:#4a1f3d;
+  --text:#f5f0e8; --accent:#ffb8a8; --accent2:#ffd4a3;
+  --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+}
+[data-theme="midnight"] {
+  --bg1:#0a0e1a; --bg2:#1a2540; --bg3:#0d3a5c; --bg4:#1a4a7a;
+  --text:#e8f0ff; --accent:#7eb8ff; --accent2:#a8d4ff;
+  --serif:'Playfair Display',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+}
+[data-theme="forest"] {
+  --bg1:#0d1f15; --bg2:#1a3a25; --bg3:#2a4a30; --bg4:#3d5a2a;
+  --text:#f0ebe0; --accent:#c4d97b; --accent2:#e8c98c;
+  --serif:'Crimson Pro',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+}
+[data-theme="sunset"] {
+  --bg1:#2a0e1a; --bg2:#5a1e2e; --bg3:#8a3a2a; --bg4:#c45a3a;
+  --text:#fff5e8; --accent:#ffd166; --accent2:#ffb088;
+  --serif:'Fraunces',Georgia,serif; --sans:'Space Grotesk',system-ui,sans-serif;
+}
+[data-theme="paper"] {
+  --bg1:#f5f0e8; --bg2:#ebe2d3; --bg3:#d8cdb8; --bg4:#e8dcc6;
+  --text:#2a2520; --accent:#c44d3a; --accent2:#d4a056;
+  --serif:'Playfair Display',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+}
+[data-theme="mono"] {
+  --bg1:#0a0a0a; --bg2:#1a1a1a; --bg3:#252525; --bg4:#1f1f1f;
+  --text:#e8e8e8; --accent:#ff4040; --accent2:#ff6060;
+  --serif:'Space Grotesk',system-ui,sans-serif; --sans:'Space Grotesk',system-ui,sans-serif;
+}
+:root {
+  --glass:rgba(255,255,255,0.08); --glass2:rgba(255,255,255,0.14);
+  --border:rgba(255,255,255,0.15); --border2:rgba(255,255,255,0.25);
+  --muted:color-mix(in srgb,var(--text) 65%,transparent);
+  --faint:color-mix(in srgb,var(--text) 40%,transparent);
+  --shadow:0 8px 32px rgba(0,0,0,0.25);
+  --shadow2:0 20px 60px rgba(0,0,0,0.4);
+  --r:24px; --r-sm:16px; --r-lg:32px;
+  --ease:cubic-bezier(0.4,0,0.2,1);
+  --spring:cubic-bezier(0.34,1.56,0.64,1);
+}
+[data-theme="paper"] { --glass:rgba(255,255,255,0.4); --glass2:rgba(255,255,255,0.6); --border:rgba(0,0,0,0.08); --border2:rgba(0,0,0,0.15); }
+[data-theme="mono"]  { --glass:rgba(255,255,255,0.04); --glass2:rgba(255,255,255,0.08); }
 
-  <!-- Tailwind CSS via CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body {
+  width:100%; height:100vh; height:100dvh; overflow:hidden;
+  font-family:var(--sans); color:var(--text); background:var(--bg1);
+  user-select:none; -webkit-user-select:none;
+}
+body::before {
+  content:''; position:fixed; inset:-10%;
+  background:
+    radial-gradient(ellipse at 20% 30%, var(--bg3) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, var(--bg4) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, var(--bg2) 0%, transparent 60%),
+    var(--bg1);
+  z-index:-2;
+  animation:bgDrift 30s ease-in-out infinite alternate;
+}
+@keyframes bgDrift {
+  0%   { transform:translate(0,0) scale(1); }
+  50%  { transform:translate(-2%,2%) scale(1.05); }
+  100% { transform:translate(2%,-1%) scale(1.02); }
+}
 
-  <style>
-    html, body, #root {
-      height: 100%;
-      margin: 0;
-      background: #000;
-      overscroll-behavior: none;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
-      color: white;
-      overflow: hidden;
-    }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    .shadow-well { box-shadow: 0 0 100px rgba(0,0,0,1), inset 0 0 50px rgba(255,255,255,0.02); }
-    input[type='range']::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      height: 24px; width: 24px; border-radius: 50%;
-      background: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.5); cursor: pointer;
-    }
-    input[type='range']::-moz-range-thumb {
-      height: 24px; width: 24px; border-radius: 50%;
-      background: #3b82f6; border: none; box-shadow: 0 0 15px rgba(59,130,246,0.5); cursor: pointer;
-    }
-    /* Loading + error screens (visible BEFORE React mounts so user always sees something) */
-    #loading-screen {
-      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-      flex-direction: column; gap: 20px; z-index: 9999;
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-      color: rgba(255,255,255,0.6); font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
-    }
-    #loading-screen.hidden { display: none; }
-    .spinner {
-      width: 40px; height: 40px; border: 2px solid rgba(255,255,255,0.1);
-      border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    #error-screen {
-      position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
-      flex-direction: column; gap: 16px; z-index: 9999; padding: 30px;
-      background: #1a0a0a; color: #fca5a5; font-family: monospace; font-size: 13px;
-    }
-    #error-screen.shown { display: flex; }
-    #error-screen pre {
-      max-width: 600px; max-height: 60vh; overflow: auto; background: rgba(0,0,0,0.4);
-      padding: 16px; border-radius: 12px; border: 1px solid rgba(255,100,100,0.2);
-      white-space: pre-wrap; word-break: break-word;
-    }
-  </style>
+.dashboard {
+  display:grid;
+  grid-template-columns:1fr 1.4fr;
+  grid-template-rows:auto 1fr auto;
+  grid-template-areas:"h h" "m c" "w w";
+  gap:20px; padding:24px; height:100vh; height:100dvh;
+}
+@media (max-width:900px) {
+  .dashboard {
+    grid-template-columns:1fr;
+    grid-template-areas:"h" "c" "m" "w";
+    gap:14px; padding:14px;
+  }
+}
+
+.glass {
+  background:var(--glass);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,0.1);
+  position:relative; overflow:hidden;
+}
+
+/* HEADER */
+.header { grid-area:h; display:flex; justify-content:space-between; align-items:center; padding:18px 28px; }
+.header-time { display:flex; align-items:baseline; gap:18px; flex-wrap:wrap; }
+.clock { font-family:var(--serif); font-size:clamp(2.4rem,5vw,3.6rem); font-weight:400; letter-spacing:-0.02em; line-height:1; }
+.clock-sec { font-size:0.9rem; font-weight:300; color:var(--faint); letter-spacing:0.1em; font-variant-numeric:tabular-nums; }
+.date-block { cursor:pointer; }
+.date-day { font-family:var(--serif); font-style:italic; font-size:1.4rem; color:var(--accent); line-height:1; }
+.date-full { font-size:0.8rem; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; margin-top:4px; }
+.gear {
+  width:56px; height:56px; border-radius:50%;
+  background:var(--glass2); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:all 0.4s var(--ease);
+  opacity:0.6; color:var(--text);
+}
+.gear:hover, .gear:active { opacity:1; transform:rotate(60deg); box-shadow:0 0 40px color-mix(in srgb,var(--accent) 25%,transparent); }
+.gear svg { width:26px; height:26px; }
+
+/* SLIDESHOW */
+.media { grid-area:m; display:flex; flex-direction:column; min-height:0; }
+.slideshow { flex:1; position:relative; overflow:hidden; border-radius:inherit; min-height:320px; background:var(--bg2); }
+.slide {
+  position:absolute; inset:0;
+  background-size:cover; background-position:center; background-repeat:no-repeat;
+  opacity:0; transition:opacity 1.5s ease-in-out; z-index:1;
+}
+.slide.active {
+  opacity:1; z-index:2;
+  animation:kenBurns 14s ease-in-out infinite alternate;
+}
+@keyframes kenBurns {
+  0%   { transform:scale(1) translate(0,0); }
+  100% { transform:scale(1.12) translate(-2%,2%); }
+}
+.slide-overlay {
+  position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.05) 30%, transparent 60%);
+  z-index:5; pointer-events:none;
+}
+.slide-empty {
+  position:absolute; inset:0; z-index:3;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  color:var(--muted); font-family:var(--serif); font-style:italic;
+  gap:12px; padding:24px; text-align:center;
+}
+.slide-empty svg { width:64px; height:64px; opacity:0.4; }
+.slide-counter { position:absolute; bottom:16px; left:16px; z-index:6; display:flex; gap:4px; }
+.slide-dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.4); transition:all 0.4s var(--ease); }
+.slide-dot.active { background:var(--accent); width:20px; border-radius:3px; }
+
+/* CALENDAR */
+.cal-panel { grid-area:c; display:flex; flex-direction:column; min-height:0; padding:24px; }
+.cal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+.cal-title { font-family:var(--serif); font-size:1.7rem; font-weight:500; }
+.cal-title-m { font-style:italic; color:var(--accent); }
+.cal-nav { display:flex; gap:8px; align-items:center; }
+.cal-btn {
+  width:44px; height:44px; border-radius:50%;
+  border:1px solid var(--border); background:var(--glass);
+  color:var(--text); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.2rem; transition:all 0.2s var(--ease);
+}
+.cal-btn:hover, .cal-btn:active { background:var(--glass2); transform:scale(1.05); }
+.toggle { display:flex; background:var(--glass); border:1px solid var(--border); border-radius:14px; padding:3px; margin-left:8px; }
+.toggle-btn {
+  padding:8px 16px; border:none; background:transparent;
+  color:var(--muted); font-family:var(--sans);
+  font-size:0.85rem; font-weight:500; cursor:pointer;
+  border-radius:11px; transition:all 0.3s var(--ease);
+}
+.toggle-btn.active { background:var(--accent); color:var(--bg1); }
+.cal-month { flex:1; display:flex; flex-direction:column; min-height:0; }
+.cal-wd { display:grid; grid-template-columns:36px repeat(7,1fr); gap:4px; margin-bottom:8px; }
+.cal-wd-cell { text-align:center; font-size:0.7rem; color:var(--faint); font-weight:600; text-transform:uppercase; letter-spacing:0.1em; padding:6px 0; }
+.cal-wd-num { color:var(--accent); }
+.cal-grid { flex:1; display:grid; grid-template-columns:36px repeat(7,1fr); grid-auto-rows:1fr; gap:4px; min-height:0; }
+.cal-kw {
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.75rem; font-weight:600; color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 8%,transparent);
+  border-radius:10px; cursor:pointer; transition:all 0.2s var(--ease);
+}
+.cal-kw:hover, .cal-kw:active { background:color-mix(in srgb,var(--accent) 22%,transparent); transform:scale(1.08); }
+.cal-day {
+  position:relative; display:flex; flex-direction:column;
+  align-items:center; justify-content:flex-start;
+  padding:6px 4px 4px; border-radius:12px;
+  cursor:pointer; transition:all 0.2s var(--ease);
+  background:rgba(255,255,255,0.02); border:1px solid transparent;
+  min-height:44px;
+}
+[data-theme="paper"] .cal-day { background:rgba(0,0,0,0.02); }
+.cal-day:hover, .cal-day:active { background:var(--glass); border-color:var(--border); }
+.cal-day.other { opacity:0.3; }
+.cal-day.today {
+  background:linear-gradient(135deg, color-mix(in srgb,var(--accent) 25%,transparent), color-mix(in srgb,var(--accent2) 15%,transparent));
+  border-color:var(--accent); font-weight:600;
+}
+.cal-day-n { font-size:0.95rem; line-height:1; font-variant-numeric:tabular-nums; }
+.cal-dots { display:flex; gap:2px; margin-top:4px; flex-wrap:wrap; justify-content:center; }
+.cal-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+.cal-week { flex:1; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
+.cal-wd-day {
+  background:rgba(255,255,255,0.04); border:1px solid var(--border);
+  border-radius:var(--r-sm); padding:14px 18px; min-height:70px;
+}
+[data-theme="paper"] .cal-wd-day { background:rgba(0,0,0,0.03); }
+.cal-wd-day.today { background:linear-gradient(135deg, color-mix(in srgb,var(--accent) 18%,transparent), color-mix(in srgb,var(--accent2) 8%,transparent)); border-color:var(--accent); }
+.cal-wd-h { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+.cal-wd-name { font-family:var(--serif); font-size:1.1rem; font-weight:500; }
+.cal-wd-date { font-size:0.85rem; color:var(--muted); }
+.cal-wd-empty { font-size:0.8rem; color:var(--faint); font-style:italic; }
+.cal-ev {
+  display:flex; align-items:center; gap:10px;
+  padding:8px 10px; margin-top:6px; border-radius:10px;
+  background:rgba(255,255,255,0.04);
+  cursor:pointer; transition:all 0.2s var(--ease);
+  border-left:3px solid var(--accent);
+}
+[data-theme="paper"] .cal-ev { background:rgba(0,0,0,0.04); }
+.cal-ev:hover, .cal-ev:active { background:rgba(255,255,255,0.1); transform:translateX(2px); }
+.cal-ev-t { font-size:0.75rem; color:var(--muted); min-width:80px; font-weight:500; font-variant-numeric:tabular-nums; }
+.cal-ev-n { font-size:0.9rem; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* WEATHER */
+.weather { grid-area:w; display:grid; grid-template-columns:minmax(280px,1fr) 2fr; padding:0; min-height:200px; }
+@media (max-width:760px) { .weather { grid-template-columns:1fr; grid-template-rows:auto auto; } }
+.w-cur { padding:24px 28px; display:flex; flex-direction:column; justify-content:space-between; border-right:1px solid var(--border); }
+@media (max-width:760px) { .w-cur { border-right:none; border-bottom:1px solid var(--border); } }
+.w-loc { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:0.85rem; font-weight:500; }
+.w-loc svg { width:14px; height:14px; }
+.w-main { display:flex; align-items:center; gap:18px; margin:16px 0 12px; }
+.w-icon { width:86px; height:86px; flex-shrink:0; }
+.w-temp { font-family:var(--serif); font-size:4.2rem; font-weight:300; line-height:0.9; letter-spacing:-0.04em; font-variant-numeric:tabular-nums; }
+.w-temp-u { font-size:1.6rem; vertical-align:super; color:var(--muted); }
+.w-desc { font-family:var(--serif); font-style:italic; font-size:1.1rem; color:var(--accent); margin-bottom:8px; text-transform:capitalize; }
+.w-range { display:flex; gap:16px; font-size:0.9rem; color:var(--muted); flex-wrap:wrap; font-variant-numeric:tabular-nums; }
+.w-fc { padding:24px 24px 24px 0; display:flex; gap:8px; overflow-x:auto; }
+.w-fc::-webkit-scrollbar { display:none; }
+@media (max-width:760px) { .w-fc { padding:20px 24px; } }
+.fc-day {
+  flex:1; min-width:90px;
+  display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+  padding:14px 8px; border-radius:var(--r-sm);
+  background:rgba(255,255,255,0.03); border:1px solid transparent;
+}
+[data-theme="paper"] .fc-day { background:rgba(0,0,0,0.03); }
+.fc-name { font-size:0.8rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; }
+.fc-icon { width:48px; height:48px; margin:6px 0; }
+.fc-temps { display:flex; flex-direction:column; gap:2px; align-items:center; font-variant-numeric:tabular-nums; }
+.fc-max { font-family:var(--serif); font-size:1.2rem; font-weight:500; }
+.fc-min { font-size:0.78rem; color:var(--faint); }
+
+/* WEATHER ICONS */
+.wi-sun { fill:#ffd166; filter:drop-shadow(0 0 6px rgba(255,209,102,0.5)); }
+.wi-rays { stroke:#ffd166; stroke-width:2.5; stroke-linecap:round; transform-origin:center; animation:spin 20s linear infinite; }
+.wi-cloud { fill:#e8e4f0; opacity:0.95; }
+.wi-cloud-d { fill:#a8a4b8; }
+.wi-rain { stroke:#7eb8e0; stroke-width:2; stroke-linecap:round; animation:rain 1s linear infinite; }
+.wi-snow { fill:#fff; }
+.wi-bolt { fill:#ffd166; }
+.wi-moon { fill:#f0e8d8; }
+.wi-fog { stroke:#c8c4d0; stroke-width:3; stroke-linecap:round; opacity:0.8; }
+@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes rain { 0% { transform:translateY(-3px); opacity:0; } 20% { opacity:1; } 100% { transform:translateY(8px); opacity:0; } }
+
+/* MODAL */
+.backdrop {
+  position:fixed; inset:0;
+  background:rgba(15,10,30,0.7);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  z-index:1000; display:flex; align-items:center; justify-content:center;
+  padding:24px; opacity:0; pointer-events:none; transition:opacity 0.4s var(--ease);
+}
+.backdrop.active { opacity:1; pointer-events:auto; }
+.modal {
+  background:var(--glass2);
+  backdrop-filter:blur(40px) saturate(180%); -webkit-backdrop-filter:blur(40px) saturate(180%);
+  border:1px solid var(--border2); border-radius:var(--r-lg);
+  padding:32px; max-width:540px; width:100%; max-height:80vh;
+  overflow-y:auto; box-shadow:var(--shadow2);
+  transform:scale(0.9) translateY(20px); transition:transform 0.5s var(--spring);
+  position:relative; color:var(--text);
+}
+.backdrop.active .modal { transform:scale(1) translateY(0); }
+.x-btn {
+  position:absolute; top:16px; right:16px;
+  width:40px; height:40px; border-radius:50%;
+  border:none; background:rgba(255,255,255,0.1);
+  color:var(--text); font-size:1.2rem; cursor:pointer;
+  transition:all 0.2s var(--ease);
+}
+[data-theme="paper"] .x-btn { background:rgba(0,0,0,0.1); }
+.x-btn:hover { background:rgba(255,255,255,0.2); transform:rotate(90deg); }
+.modal h2 { font-family:var(--serif); font-size:1.6rem; font-weight:500; margin-bottom:6px; padding-right:40px; line-height:1.2; }
+.bar { width:60px; height:4px; background:var(--accent); border-radius:2px; margin-bottom:18px; }
+.meta { display:flex; flex-direction:column; gap:14px; }
+.row { display:flex; align-items:flex-start; gap:14px; font-size:0.95rem; }
+.row svg { width:20px; height:20px; flex-shrink:0; color:var(--muted); margin-top:2px; }
+.row-l { color:var(--faint); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:2px; }
+.row-v { line-height:1.5; white-space:pre-wrap; }
+
+/* SETTINGS */
+.settings {
+  position:fixed; top:0; right:0; bottom:0;
+  width:min(420px,100vw);
+  background:var(--bg2);
+  backdrop-filter:blur(40px); -webkit-backdrop-filter:blur(40px);
+  border-left:1px solid var(--border2);
+  z-index:999;
+  transform:translateX(100%); transition:transform 0.5s var(--ease);
+  overflow-y:auto; padding:28px 24px;
+  box-shadow:-20px 0 60px rgba(0,0,0,0.4);
+  color:var(--text);
+}
+.settings.active { transform:translateX(0); }
+.settings-h { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+.settings-h h2 { font-family:var(--serif); font-size:1.6rem; font-weight:500; }
+.section { margin-bottom:28px; }
+.section h3 {
+  font-size:0.78rem; font-weight:600;
+  text-transform:uppercase; letter-spacing:0.1em;
+  color:var(--accent); margin-bottom:12px;
+  padding-bottom:8px; border-bottom:1px solid var(--border);
+}
+.fld { margin-bottom:14px; }
+.lbl { display:block; font-size:0.82rem; color:var(--muted); margin-bottom:6px; font-weight:500; }
+.inp, .ta {
+  width:100%; padding:12px 14px; border-radius:12px;
+  border:1px solid var(--border); background:rgba(255,255,255,0.06);
+  color:var(--text); font-family:var(--sans); font-size:0.9rem;
+}
+[data-theme="paper"] .inp, [data-theme="paper"] .ta { background:rgba(255,255,255,0.5); }
+.inp:focus, .ta:focus { outline:none; border-color:var(--accent); }
+.ta { min-height:70px; resize:vertical; font-family:'SF Mono',Consolas,monospace; font-size:0.78rem; }
+.btn {
+  padding:11px 16px; border-radius:12px; border:none;
+  background:var(--accent); color:var(--bg1);
+  font-weight:600; font-size:0.88rem; cursor:pointer;
+  transition:all 0.2s var(--ease);
+}
+.btn:hover { transform:translateY(-1px); }
+.btn-2 { background:var(--glass2); color:var(--text); border:1px solid var(--border); }
+.btn-x { background:rgba(255,100,100,0.2); color:#ffaaaa; border:1px solid rgba(255,100,100,0.3); }
+[data-theme="paper"] .btn-x { color:#c44d3a; }
+
+/* THEME PICKER */
+.themes { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.th-opt {
+  position:relative; aspect-ratio:1.4;
+  border-radius:12px; cursor:pointer;
+  border:2px solid transparent; overflow:hidden;
+  transition:all 0.2s var(--ease);
+}
+.th-opt:hover { transform:translateY(-2px); }
+.th-opt.active { border-color:var(--accent); box-shadow:0 4px 16px color-mix(in srgb,var(--accent) 30%,transparent); }
+.th-prev { position:absolute; inset:0; }
+.th-lbl {
+  position:absolute; bottom:4px; left:0; right:0;
+  text-align:center; font-size:0.72rem; font-weight:600;
+  color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.7);
+  letter-spacing:0.05em; z-index:2;
+}
+.th-opt[data-id="paper"] .th-lbl { color:#2a2520; text-shadow:0 1px 2px rgba(255,255,255,0.7); }
+.th-chk {
+  position:absolute; top:4px; right:4px;
+  width:22px; height:22px; border-radius:50%;
+  background:var(--accent);
+  display:none; align-items:center; justify-content:center; z-index:3;
+}
+.th-opt.active .th-chk { display:flex; }
+.th-chk svg { width:13px; height:13px; color:var(--bg1); }
+
+.cal-src {
+  display:flex; align-items:center; gap:10px;
+  padding:10px; background:rgba(255,255,255,0.04);
+  border-radius:10px; margin-bottom:8px;
+}
+[data-theme="paper"] .cal-src { background:rgba(0,0,0,0.04); }
+.cal-src-c { width:16px; height:16px; border-radius:50%; flex-shrink:0; border:2px solid rgba(255,255,255,0.2); }
+.cal-src-n { flex:1; font-size:0.88rem; font-weight:500; min-width:0; overflow:hidden; }
+.cal-src-u { font-size:0.7rem; color:var(--faint); font-family:monospace; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cal-src-x { width:28px; height:28px; border-radius:50%; border:none; background:rgba(255,100,100,0.2); color:#ffaaaa; cursor:pointer; }
+
+.imgs { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:8px; max-height:200px; overflow-y:auto; }
+.img-i { position:relative; aspect-ratio:1; background-size:cover; background-position:center; background-color:var(--glass); border-radius:8px; border:1px solid var(--border); }
+.img-x { position:absolute; top:2px; right:2px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,0.7); color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.7rem; border:none; cursor:pointer; }
+
+.load { display:flex; align-items:center; justify-content:center; gap:8px; color:var(--muted); padding:16px; }
+.load-d { width:8px; height:8px; border-radius:50%; background:var(--accent); animation:pulse 1.4s ease-in-out infinite; }
+.load-d:nth-child(2) { animation-delay:0.2s; }
+.load-d:nth-child(3) { animation-delay:0.4s; }
+@keyframes pulse { 0%,80%,100% { opacity:0.3; transform:scale(0.8); } 40% { opacity:1; transform:scale(1.1); } }
+
+.toast {
+  position:fixed; bottom:24px; left:50%;
+  transform:translateX(-50%) translateY(100px);
+  background:var(--bg3); border:1px solid var(--border);
+  padding:12px 20px; border-radius:14px;
+  font-size:0.88rem; z-index:2000;
+  transition:transform 0.4s var(--spring);
+  box-shadow:var(--shadow2); color:var(--text);
+}
+.toast.active { transform:translateX(-50%) translateY(0); }
+</style>
 </head>
-<body>
-  <!-- Loading screen — visible immediately, hidden once React mounts -->
-  <div id="loading-screen">
-    <div class="spinner"></div>
-    <div id="loading-status">Lade Dashboard…</div>
-  </div>
+<body data-theme="aubergine">
 
-  <!-- Error screen — shown if anything fails -->
-  <div id="error-screen">
-    <h2 style="color:#fca5a5; margin:0;">Fehler beim Laden</h2>
-    <pre id="error-detail"></pre>
-    <div style="font-size:11px; opacity:0.6;">Prüfe die Internetverbindung. Tippe und halte hier zum Neuladen.</div>
-  </div>
-
-  <div id="root"></div>
-
-  <script>
-    // Global error display
-    window.__showError = function(msg) {
-      var s = document.getElementById('error-screen');
-      var d = document.getElementById('error-detail');
-      if (d) d.textContent = String(msg);
-      if (s) s.classList.add('shown');
-      var l = document.getElementById('loading-screen');
-      if (l) l.classList.add('hidden');
-    };
-    window.addEventListener('error', function(e) {
-      // Only show error screen if root is still empty (i.e. app didn't mount)
-      var root = document.getElementById('root');
-      if (root && root.innerHTML.length === 0) {
-        window.__showError((e.message || 'Unknown error') + '\n\n' + (e.filename || '') + ':' + (e.lineno || ''));
-      }
-    });
-    // Status updates while loading
-    function setStatus(msg) {
-      var el = document.getElementById('loading-status');
-      if (el) el.textContent = msg;
-    }
-    setStatus('Lade React…');
-  </script>
-
-  <!-- React 18 + ReactDOM (UMD) — loaded synchronously so they're ready before app script -->
-  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"
-          onerror="window.__showError('React konnte nicht geladen werden (CDN nicht erreichbar)')"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"
-          onerror="window.__showError('ReactDOM konnte nicht geladen werden')"></script>
-
-  <!-- Day.js + German locale (real UMD bundle, exposes window.dayjs) -->
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"
-          onerror="window.__showError('dayjs konnte nicht geladen werden')"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/locale/de.js"
-          onerror="window.__showError('dayjs DE locale konnte nicht geladen werden')"></script>
-
-  <!-- ical.js (exposes window.ICAL) -->
-  <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"
-          onerror="window.__showError('ical.js konnte nicht geladen werden')"></script>
-
-  <!-- Babel for in-browser JSX -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"
-          onerror="window.__showError('Babel konnte nicht geladen werden')"></script>
-
-  <script>
-    setStatus('Initialisiere App…');
-    (function() {
-      var missing = [];
-      if (typeof React === 'undefined') missing.push('React');
-      if (typeof ReactDOM === 'undefined') missing.push('ReactDOM');
-      if (typeof window.dayjs === 'undefined') missing.push('dayjs');
-      if (typeof ICAL === 'undefined') missing.push('ICAL');
-      if (typeof Babel === 'undefined') missing.push('Babel');
-      if (missing.length) {
-        window.__showError('Fehlende Bibliotheken: ' + missing.join(', ') +
-          '\n\nMögliche Ursachen:\n• Keine Internetverbindung\n• CDN blockiert (Firewall/Adblocker)\n• Tablet-Browser sehr alt');
-      } else {
-        // Activate German locale globally
-        try { dayjs.locale('de'); } catch(e) {}
-      }
-    })();
-  </script>
-
-  <script type="text/babel" data-presets="react">
-    const { useState, useEffect, useRef } = React;
-
-    // Lightweight motion shims (CSS-based) — no framer-motion needed.
-    // motion.div / AnimatePresence drop-in replacements for the props this app uses.
-    const motion = {
-      div: React.forwardRef(function MotionDiv({ initial, animate, exit, transition, style, className, children, ...rest }, ref) {
-        // We mostly use animate for the final state. Apply animate styles directly,
-        // and let CSS transitions handle the smooth change from initial.
-        const [mounted, setMounted] = useState(false);
-        useEffect(() => { setMounted(true); }, []);
-        const dur = (transition && transition.duration) ? transition.duration : 0.6;
-        const target = mounted ? (animate || {}) : (initial || {});
-        const animStyle = {
-          transition: `all ${dur}s ${(transition && transition.ease) || 'ease'}`,
-          opacity: target.opacity !== undefined ? target.opacity : 1,
-          transform: [
-            target.x !== undefined ? `translateX(${typeof target.x === 'number' ? target.x + 'px' : target.x})` : '',
-            target.y !== undefined ? `translateY(${typeof target.y === 'number' ? target.y + 'px' : target.y})` : '',
-            target.scale !== undefined ? `scale(${target.scale})` : ''
-          ].filter(Boolean).join(' ') || 'none',
-        };
-        return <div ref={ref} className={className} style={{ ...animStyle, ...style }} {...rest}>{children}</div>;
-      })
-    };
-    // AnimatePresence: render children when truthy; rely on CSS for fade-in.
-    // Exit animations are skipped (acceptable trade-off for single-file build).
-    const AnimatePresence = ({ children }) => <>{children}</>;
-
-    // ---------------- date utilities (powered by Day.js) ----------------
-    // Wrappers with date-fns-compatible signatures so the rest of the app stays untouched.
-    // dayjs.locale('de') was already activated globally before Babel ran.
-
-    // date-fns format token → dayjs format token
-    // Single-pass replacement so longer tokens don't get clobbered by their substrings.
-    // (The naive sequential approach turned 'dddd' into 'DDDD' because the 'dd→DD' rule fired again.)
-    function _convertFmt(t) {
-      return t.replace(/yyyy|yy|EEEE|EEE|MMMM|MMM|dd|d|HH|H|mm|m|ss|s/g, function(m) {
-        switch (m) {
-          case 'yyyy': return 'YYYY';
-          case 'yy':   return 'YY';
-          case 'EEEE': return 'dddd';
-          case 'EEE':  return 'ddd';
-          case 'dd':   return 'DD';
-          case 'd':    return 'D';
-          // Day.js already uses MMMM/MMM/HH/H/mm/m/ss/s — return unchanged
-          default:     return m;
-        }
-      });
-    }
-    const format = (d, fmt /*, opts (locale ignored, set globally) */) =>
-      dayjs(d).locale('de').format(_convertFmt(fmt));
-
-    const addDays         = (d, n)   => dayjs(d).add(n, 'day').toDate();
-    const startOfMonth    = (d)      => dayjs(d).startOf('month').toDate();
-    const endOfMonth      = (d)      => dayjs(d).endOf('month').toDate();
-    const startOfWeek     = (d, opt) => {
-      const ws = (opt && typeof opt.weekStartsOn === 'number') ? opt.weekStartsOn : 0;
-      const m = dayjs(d);
-      const day = m.day();                    // 0..6 (Sun..Sat)
-      const diff = (day - ws + 7) % 7;
-      return m.subtract(diff, 'day').startOf('day').toDate();
-    };
-    const isSameDay       = (a, b) => dayjs(a).isSame(dayjs(b), 'day');
-    const isSameMonth     = (a, b) => dayjs(a).isSame(dayjs(b), 'month');
-    const isToday         = (d)    => dayjs(d).isSame(dayjs(), 'day');
-    const eachDayOfInterval = ({ start, end }) => {
-      const out = [];
-      let cur = dayjs(start).startOf('day');
-      const last = dayjs(end).startOf('day');
-      while (!cur.isAfter(last, 'day')) {
-        out.push(cur.toDate());
-        cur = cur.add(1, 'day');
-      }
-      return out;
-    };
-    // Locale object kept as a no-op stub so existing { locale: de } calls don't break
-    const de = {};
-
-    const DEFAULT_BG = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop";
-
-    // ---------------- ICONS ----------------
-    const SunIcon = () => (
-      <svg viewBox="0 0 24 24" className="w-full h-full text-yellow-400" style={{filter: "drop-shadow(0 0 10px rgba(250,204,21,0.6))"}}>
-        <circle cx="12" cy="12" r="5" fill="currentColor" />
-        <g stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <line x1="12" y1="1" x2="12" y2="3" />
-          <line x1="12" y1="21" x2="12" y2="23" />
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-          <line x1="1" y1="12" x2="3" y2="12" />
-          <line x1="21" y1="12" x2="23" y2="12" />
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-        </g>
+<div class="dashboard">
+  <header class="header glass">
+    <div class="header-time">
+      <div class="clock" id="clock">--:--</div>
+      <div class="date-block" id="date-block">
+        <div class="date-day" id="date-day">—</div>
+        <div class="date-full" id="date-full">—</div>
+      </div>
+      <div class="clock-sec" id="clock-sec">--</div>
+    </div>
+    <button class="gear" id="gear">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
       </svg>
-    );
+    </button>
+  </header>
 
-    const CloudIcon = () => (
-      <svg viewBox="0 0 24 24" className="w-full h-full text-white/80" style={{filter: "drop-shadow(0 0 8px rgba(255,255,255,0.4))"}}>
-        <path fill="currentColor" d="M17.5,19c-3.037,0-5.5-2.463-5.5-5.5c0-0.084,0.002-0.168,0.006-0.251C11.664,13.111,11.339,13,11,13 c-2.209,0-4,1.791-4,4c0,2.209,1.791,4,4,4h6.5c2.485,0,4.5-2.015,4.5-4.5S19.985,12,17.5,12c-0.222,0-0.44,0.016-0.652,0.046 C16.518,10.285,14.9,9,13,9c-2.209,0-4,1.791-4,4c0,0.084,0.002,0.168,0.006,0.251C8.664,13.111,8.339,13,8,13c-2.209,0-4,1.791-4,4 c0,2.209,1.791,4,4,4h9.5c2.485,0,4.5-2.015,4.5-4.5S19.985,14,17.5,14c-0.222,0-0.44,0.016-0.652,0.046 C16.518,12.285,14.9,11,13,11c-0.21,0-0.414,0.016-0.614,0.047C12.181,9.851,11.189,9,10,9c-1.657,0-3,1.343-3,3 c0,0.147,0.011,0.29,0.032,0.43C5.195,12.871,4,14.298,4,16c0,2.209,1.791,4,4,4h9.5c1.933,0,3.5-1.567,3.5-3.5S19.433,13,17.5,13 z" />
-      </svg>
-    );
+  <section class="media glass">
+    <div class="slideshow" id="slideshow">
+      <div class="slide-empty" id="slide-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="9" cy="9" r="2"/>
+          <path d="M21 15l-5-5L5 21"/>
+        </svg>
+        <div>Noch keine Bilder.<br>Über das Zahnrad hinzufügen.</div>
+      </div>
+      <div class="slide-overlay"></div>
+      <div class="slide-counter" id="slide-counter"></div>
+    </div>
+  </section>
 
-    // Tiny Lucide-equivalents (line icons) — match style/size of original
-    const Icon = ({ d, size = 18, className = "" }) => (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        {d}
-      </svg>
-    );
-    const X            = (p) => <Icon size={p.size} className={p.className} d={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>}/>;
-    const ChevronLeft  = (p) => <Icon size={p.size} className={p.className} d={<polyline points="15 18 9 12 15 6"/>}/>;
-    const ChevronRight = (p) => <Icon size={p.size} className={p.className} d={<polyline points="9 18 15 12 9 6"/>}/>;
-    const Music        = (p) => <Icon size={p.size} className={p.className} d={<><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></>}/>;
-    const Settings2    = (p) => <Icon size={p.size} className={p.className} d={<><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></>}/>;
-    const ImageIcon    = (p) => <Icon size={p.size} className={p.className} d={<><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></>}/>;
-    const MapPin       = (p) => <Icon size={p.size} className={p.className} d={<><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></>}/>;
-    const ClockIcon    = (p) => <Icon size={p.size} className={p.className} d={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>}/>;
-    const AlignLeft    = (p) => <Icon size={p.size} className={p.className} d={<><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></>}/>;
-    const CalendarIcon = (p) => <Icon size={p.size} className={p.className} d={<><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>}/>;
-
-    // ---------------- iCal parsing in browser (replaces /api/calendar) ----------------
-    function parseIcalToEvents(icsText) {
-      try {
-        const jcalData = ICAL.parse(icsText);
-        const comp = new ICAL.Component(jcalData);
-        const vevents = comp.getAllSubcomponents('vevent');
-        return vevents.map(ve => {
-          const ev = new ICAL.Event(ve);
-          const start = ev.startDate ? ev.startDate.toJSDate() : null;
-          const end   = ev.endDate   ? ev.endDate.toJSDate()   : start;
-          const allDay = ev.startDate ? ev.startDate.isDate : false;
-          return {
-            summary: ev.summary || '(ohne Titel)',
-            start, end, allDay,
-            location: ev.location || '',
-            description: ev.description || ''
-          };
-        }).filter(e => e.start);
-      } catch (err) {
-        console.error('iCal parse error:', err);
-        return [];
-      }
-    }
-
-    async function fetchIcal(icalUrl) {
-      // Direct fetch first; if CORS blocks, fall back to a public CORS proxy.
-      const tryFetch = async (url) => {
-        const r = await fetch(url, { cache: 'no-store' });
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return await r.text();
-      };
-      try {
-        return await tryFetch(icalUrl);
-      } catch (e) {
-        const proxied = 'https://corsproxy.io/?' + encodeURIComponent(icalUrl);
-        return await tryFetch(proxied);
-      }
-    }
-
-    // ---------------- MAIN APP ----------------
-    function App() {
-      const [currentTime, setCurrentTime] = useState(new Date());
-      const [icalUrl, setIcalUrl] = useState(() => localStorage.getItem('alpine-ical-url') || '');
-      const [events, setEvents] = useState([]);
-      const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-      const [isLoadingEvents, setIsLoadingEvents] = useState(false);
-      const [selectedEvent, setSelectedEvent] = useState(null);
-
-      const [bgImages, setBgImages] = useState(() => {
-        const saved = localStorage.getItem('alpine-bg-images');
-        return saved ? JSON.parse(saved) : [DEFAULT_BG];
-      });
-      const [currentBgIndex, setCurrentBgIndex] = useState(0);
-      const [slideshowInterval, setSlideshowInterval] = useState(() => Number(localStorage.getItem('alpine-interval')) || 30);
-      const [transitionType, setTransitionType] = useState(() => localStorage.getItem('alpine-transition') || 'fade');
-      const [brightness, setBrightness] = useState(() => Number(localStorage.getItem('alpine-brightness')) || 100);
-      const [bgBlur, setBgBlur] = useState(() => Number(localStorage.getItem('alpine-blur')) || 0);
-
-      const [viewedMonth, setViewedMonth] = useState(new Date());
-      const fileInputRef = useRef(null);
-
-      // slideshow
-      useEffect(() => {
-        if (bgImages.length <= 1) return;
-        const timer = setInterval(() => {
-          setCurrentBgIndex((prev) => (prev + 1) % bgImages.length);
-        }, slideshowInterval * 1000);
-        return () => clearInterval(timer);
-      }, [bgImages, slideshowInterval]);
-
-      // clock
-      useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-        return () => clearInterval(timer);
-      }, []);
-
-      // ical fetch
-      useEffect(() => { if (icalUrl) fetchEvents(); }, [icalUrl]);
-
-      const fetchEvents = async () => {
-        if (!icalUrl) return;
-        setIsLoadingEvents(true);
-        try {
-          const text = await fetchIcal(icalUrl);
-          setEvents(parseIcalToEvents(text));
-        } catch (err) {
-          console.error("Failed to fetch events:", err);
-        } finally {
-          setIsLoadingEvents(false);
-        }
-      };
-
-      const saveSettings = () => {
-        localStorage.setItem('alpine-ical-url', icalUrl);
-        localStorage.setItem('alpine-bg-images', JSON.stringify(bgImages));
-        localStorage.setItem('alpine-brightness', brightness.toString());
-        localStorage.setItem('alpine-blur', bgBlur.toString());
-        localStorage.setItem('alpine-interval', slideshowInterval.toString());
-        localStorage.setItem('alpine-transition', transitionType);
-        setIsSettingsOpen(false);
-        fetchEvents();
-      };
-
-      const handleImageUpload = (e) => {
-        const files = e.target.files;
-        if (files) {
-          Array.from(files).forEach((file) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              setBgImages(prev => [...prev, reader.result]);
-            };
-            reader.readAsDataURL(file);
-          });
-        }
-      };
-
-      const removeImage = (index) => {
-        if (bgImages.length <= 1) return;
-        setBgImages(prev => prev.filter((_, i) => i !== index));
-        if (currentBgIndex >= index) setCurrentBgIndex(prev => Math.max(0, prev - 1));
-      };
-
-      const getAnimationProps = () => {
-        switch (transitionType) {
-          case 'slide':
-            return { initial: { x: '100%', opacity: 0 }, animate: { x: 0, opacity: 1 }, exit: { x: '-100%', opacity: 0 }, transition: { duration: 1, ease: 'easeInOut' } };
-          case 'zoom':
-            return { initial: { scale: 1.2, opacity: 0 }, animate: { scale: 1, opacity: 1 }, exit: { scale: 0.8, opacity: 0 }, transition: { duration: 1.5, ease: 'easeOut' } };
-          default:
-            return { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 1 } };
-        }
-      };
-
-      const getDaysInMonthGrid = () => {
-        const start = startOfWeek(startOfMonth(viewedMonth), { weekStartsOn: 1 });
-        const end = addDays(start, 41);
-        return eachDayOfInterval({ start, end });
-      };
-      const monthGrid = getDaysInMonthGrid();
-
-      return (
-        <div className="relative h-screen w-full bg-black text-white font-sans overflow-hidden">
-          {/* Background Slideshow Layer */}
-          <div className="fixed inset-0 z-0 bg-black overflow-hidden pointer-events-none">
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.div
-                key={currentBgIndex}
-                {...getAnimationProps()}
-                className="absolute inset-0 bg-cover bg-center"
-                style={{
-                  backgroundImage: `url(${bgImages[currentBgIndex]})`,
-                  filter: `brightness(${brightness}%) blur(${bgBlur}px)`
-                }}
-              />
-            </AnimatePresence>
-          </div>
-
-          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20 pointer-events-none" style={{zIndex: 1}} />
-
-          {/* TOP LEFT: Month Navigation */}
-          <div className="absolute top-6 left-10 z-30">
-            <div className="flex items-center gap-1 px-4 py-2 bg-black/20 backdrop-blur-lg rounded-2xl border border-white/5 shadow-2xl">
-              <button onClick={() => setViewedMonth(addDays(startOfMonth(viewedMonth), -1))} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white">
-                <ChevronLeft size={18} />
-              </button>
-              <span className="text-[11px] font-bold px-3 w-[160px] text-center tracking-widest uppercase text-white">{format(viewedMonth, 'MMMM yyyy', { locale: de })}</span>
-              <button onClick={() => setViewedMonth(addDays(endOfMonth(viewedMonth), 1))} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white">
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          </div>
-
-          {/* TOP CENTER: Clock */}
-          <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30">
-            <div className="flex flex-col items-center">
-              <h1 className="text-6xl font-extralight tracking-tighter tabular-nums flex items-baseline">
-                {format(currentTime, 'H:mm')}
-                <span className="text-xl ml-2 font-thin opacity-30 tracking-normal">{format(currentTime, 'ss')}</span>
-              </h1>
-              <p className="text-[10px] font-bold text-white tracking-[0.3em] uppercase mt-1">
-                {format(currentTime, 'EEEE, dd. MMMM', { locale: de })}
-              </p>
-            </div>
-          </div>
-
-          {/* TOP RIGHT: Music Apps */}
-          <div className="absolute top-6 right-10 z-30 flex items-center gap-4">
-            <div className="flex items-center gap-3 bg-black/10 backdrop-blur-md p-1.5 rounded-[2rem] border border-white/5">
-              <a href="https://open.spotify.com" target="_blank" rel="noreferrer" className="hover:scale-105 transition-transform active:scale-95 group">
-                <div className="p-3 bg-white/5 rounded-2xl border border-white/5 shadow-xl transition-all hover:bg-[#1DB954]/10">
-                  <Music className="w-8 h-8 text-[#1DB954]" />
-                </div>
-              </a>
-              <a href="https://music.amazon.de" target="_blank" rel="noreferrer" className="hover:scale-105 transition-transform active:scale-95 group">
-                <div className="p-3 bg-white/5 rounded-2xl border border-white/5 shadow-xl transition-all hover:bg-[#00A8E1]/10 flex flex-col items-center justify-center relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-[2px] bg-[#00A8E1]" />
-                  <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z" fill="#00A8E1" fillOpacity="0.1"/>
-                    <path d="M12 4C7.58 4 4 7.58 4 12C4 16.42 7.58 20 12 20C16.42 20 20 16.42 20 12C20 7.58 16.42 4 12 4Z" stroke="#00A8E1" strokeWidth="1" strokeOpacity="0.3"/>
-                    <path d="M7 13.5C7 13.5 9 15.5 12 15.5C15 15.5 17 13.5 17 13.5" stroke="#00A8E1" strokeWidth="2" strokeLinecap="round"/>
-                    <path d="M16 14.5C17 15.5 18 17 17 18.5" stroke="#00A8E1" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </div>
-              </a>
-            </div>
-
-            <div className="p-3 bg-black/10 backdrop-blur-md rounded-2xl border border-white/5 shadow-xl flex items-center justify-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                <AlignLeft size={16} className="text-blue-400 opacity-50" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest">Display</span>
-                <span className="text-xs font-light text-white/60">Active</span>
-              </div>
-            </div>
-          </div>
-
-          {/* SETTINGS BUTTON */}
-          <div className="absolute bottom-10 left-10 z-40">
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="p-4 bg-black/20 backdrop-blur-lg rounded-2xl border border-white/10 hover:bg-white/10 transition-all shadow-2xl"
-            >
-              <Settings2 size={24} className="text-white" />
-            </button>
-          </div>
-
-          {/* MAIN LAYOUT */}
-          <div className="relative z-10 w-full h-screen grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
-
-            {/* LEFT: Weather */}
-            <div className="relative flex flex-col justify-end p-12 pb-32">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex flex-col mb-12"
-              >
-                <div className="flex items-center gap-4">
-                  <span className="text-[10rem] font-extralight tracking-tighter leading-none">21</span>
-                  <div className="flex flex-col mb-10 w-24 h-24">
-                    <span className="text-5xl font-thin opacity-60 ml-2">°C</span>
-                    <div className="w-full h-full"><SunIcon /></div>
-                  </div>
-                </div>
-                <div className="text-white font-light space-y-1 mt-[-20px] ml-4">
-                  <p className="text-lg tracking-wide opacity-80">Gefühlt 20°</p>
-                  <p className="text-3xl font-bold tracking-tight uppercase">Sonnig</p>
-                </div>
-
-                {/* 5-Day Forecast */}
-                <div className="mt-10 flex gap-10">
-                  {['Heute', 'Di', 'Mi', 'Do', 'Fr'].map((day, i) => (
-                    <div key={day} className="flex flex-col items-center gap-3">
-                      <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white underline underline-offset-4 decoration-white/20">{day}</span>
-                      <div className="w-8 h-8">
-                        {i === 0 || i === 3 ? <SunIcon /> : <CloudIcon />}
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <span className="text-base font-bold text-white">20°</span>
-                        <span className="text-[10px] text-white/60">8°</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Hourly Strip */}
-                <div className="mt-12 flex bg-white/5 backdrop-blur-md rounded-2xl border border-white/5 py-4 overflow-x-auto no-scrollbar max-w-xl">
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} className="flex flex-col items-center border-r border-white/5 gap-1.5 px-6 last:border-none">
-                      <span className="text-[9px] text-white font-bold tracking-widest whitespace-nowrap">{(10 + i) % 24}:00</span>
-                      <div className="w-5 h-5 opacity-80">
-                        {i < 4 || i > 9 ? <SunIcon /> : <CloudIcon />}
-                      </div>
-                      <span className="text-[10px] tabular-nums font-bold text-white">{18 + (i % 3)}°</span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            </div>
-
-            {/* RIGHT: Calendar */}
-            <div className="bg-white/[0.02] border-l border-white/5 h-full pt-16 px-12 pb-24 overflow-hidden flex flex-col" style={{boxShadow: '-40px 0 100px rgba(0,0,0,0.5)'}}>
-              <div className="flex justify-end mb-8">
-                <div className="flex items-center gap-2 text-white/20">
-                  <CalendarIcon size={14} />
-                  <span className="text-[8px] font-bold tracking-[0.2em] uppercase">Sync Status</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-7 gap-px h-full text-center">
-                {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(d => (
-                  <div key={d} className="text-[10px] font-bold uppercase tracking-[0.5em] text-white/90 py-4 mb-2">{d}</div>
-                ))}
-
-                {monthGrid.map((day, i) => {
-                  const dayEvents = events.filter(e => isSameDay(new Date(e.start), day));
-                  const currentMonth = isSameMonth(day, viewedMonth);
-                  const today = isToday(day);
-
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => dayEvents.length > 0 && setSelectedEvent(dayEvents[0])}
-                      className={`relative border-t border-white/10 flex flex-col items-center pt-6 h-full transition-all hover:bg-white/[0.08] active:scale-[0.98] ${!currentMonth ? 'opacity-5' : ''}`}
-                    >
-                      <span className={`text-base mb-3 transition-all ${today ? 'text-blue-400 font-black scale-125' : 'text-white font-bold'}`}>
-                        {format(day, 'd')}
-                      </span>
-                      <div className="flex flex-wrap justify-center gap-2 px-1">
-                        {dayEvents.map((_, idx) => (
-                          <div key={idx} className="w-3.5 h-3.5 rounded-full bg-blue-500" style={{boxShadow: '0 0 12px rgba(59,130,246,0.9)'}} />
-                        ))}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* EVENT DETAIL */}
-          <AnimatePresence>
-            {selectedEvent && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 flex items-center justify-center p-8 bg-black/60 backdrop-blur-md"
-                style={{zIndex: 60}}
-                onClick={() => setSelectedEvent(null)}
-              >
-                <motion.div
-                  initial={{ scale: 0.9, y: 30 }}
-                  animate={{ scale: 1, y: 0 }}
-                  exit={{ scale: 0.9, y: 30 }}
-                  className="bg-zinc-900 border border-white/10 p-10 rounded-[2.5rem] w-full max-w-lg"
-                  style={{boxShadow: '0 50px 100px rgba(0,0,0,0.8)'}}
-                  onClick={e => e.stopPropagation()}
-                >
-                  <div className="flex justify-between items-start mb-8">
-                    <h3 className="text-3xl font-bold tracking-tight pr-8">{selectedEvent.summary}</h3>
-                    <button onClick={() => setSelectedEvent(null)} className="p-2 hover:bg-white/5 rounded-full"><X size={20}/></button>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4 text-gray-300">
-                      <div className="p-3 bg-white/5 rounded-2xl"><ClockIcon size={20} className="text-blue-400" /></div>
-                      <div>
-                        <p className="text-sm font-bold text-white">{format(new Date(selectedEvent.start), 'dd. MMMM yyyy', { locale: de })}</p>
-                        <p className="text-xs">{selectedEvent.allDay ? 'Ganztägig' : `${format(new Date(selectedEvent.start), 'HH:mm')} - ${format(new Date(selectedEvent.end), 'HH:mm')}`}</p>
-                      </div>
-                    </div>
-
-                    {selectedEvent.location && (
-                      <div className="flex items-center gap-4 text-gray-300">
-                        <div className="p-3 bg-white/5 rounded-2xl"><MapPin size={20} className="text-red-400" /></div>
-                        <p className="text-sm">{selectedEvent.location}</p>
-                      </div>
-                    )}
-
-                    {selectedEvent.description && (
-                      <div className="flex items-start gap-4 text-gray-300">
-                        <div className="p-3 bg-white/5 rounded-2xl"><AlignLeft size={20} className="text-gray-400" /></div>
-                        <p className="text-sm font-light leading-relaxed whitespace-pre-wrap">{selectedEvent.description}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => setSelectedEvent(null)}
-                    className="w-full mt-10 bg-white/5 hover:bg-white/10 text-white font-bold py-5 rounded-2xl transition-all"
-                  >
-                    Schließen
-                  </button>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* SETTINGS */}
-          <AnimatePresence>
-            {isSettingsOpen && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-end justify-end p-6 bg-black/20"
-                style={{backdropFilter: 'blur(2px)'}}
-              >
-                <motion.div
-                  initial={{ scale: 0.95, opacity: 0, y: 50, x: 50 }}
-                  animate={{ scale: 1, opacity: 1, y: 0, x: 0 }}
-                  exit={{ scale: 0.95, opacity: 0, y: 50, x: 50 }}
-                  className="bg-black/95 border border-white/10 p-8 rounded-[2.5rem] w-full max-w-sm shadow-well overflow-y-auto max-h-[85vh] no-scrollbar"
-                >
-                  <div className="flex justify-between items-center mb-8">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-500/20 rounded-xl"><Settings2 size={20} className="text-blue-400" /></div>
-                      <h3 className="text-xl font-bold tracking-tight">System</h3>
-                    </div>
-                    <button onClick={() => setIsSettingsOpen(false)} className="bg-white/5 p-3 rounded-full hover:bg-white/10 transition-colors"><X size={18} /></button>
-                  </div>
-
-                  <div className="space-y-8">
-                    <div className="space-y-3">
-                      <label className="text-[8px] font-bold uppercase tracking-[0.3em] text-gray-500 block pl-1">Calendar URL</label>
-                      <input
-                        type="text"
-                        value={icalUrl}
-                        onChange={(e) => setIcalUrl(e.target.value)}
-                        placeholder="https://..."
-                        className="w-full bg-white/5 border border-white/10 rounded-[1.2rem] px-6 py-4 text-sm font-light focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all text-white"
-                      />
-                    </div>
-
-                    <div className="space-y-4">
-                      <label className="text-[8px] font-bold uppercase tracking-[0.3em] text-gray-500 pl-1 flex items-center justify-between">
-                        <span>Background Slideshow ({bgImages.length})</span>
-                        <button
-                          onClick={() => {
-                            const url = prompt("Bild URL eingeben:");
-                            if (url) setBgImages(prev => [...prev, url]);
-                          }}
-                          className="text-blue-400 hover:underline"
-                        >
-                          + URL hinzufügen
-                        </button>
-                      </label>
-
-                      <div className="grid grid-cols-4 gap-2">
-                        {bgImages.map((img, i) => (
-                          <div key={i} className="relative group aspect-square rounded-xl overflow-hidden border border-white/10">
-                            <img src={img} className="w-full h-full object-cover" alt="" />
-                            <button
-                              onClick={() => removeImage(i)}
-                              className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <X size={10} />
-                            </button>
-                          </div>
-                        ))}
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="aspect-square rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors"
-                        >
-                          <ImageIcon size={16} className="text-gray-500" />
-                        </button>
-                      </div>
-
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleImageUpload}
-                        multiple
-                        accept="image/*"
-                        className="hidden"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-3">
-                        <label className="text-[8px] font-bold uppercase tracking-[0.3em] text-gray-500 block pl-1 text-center">Intervall (Sek)</label>
-                        <input
-                          type="number"
-                          value={slideshowInterval}
-                          onChange={(e) => setSlideshowInterval(Number(e.target.value))}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-center text-sm font-bold text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div className="space-y-3">
-                        <label className="text-[8px] font-bold uppercase tracking-[0.3em] text-gray-500 block pl-1 text-center">Animation</label>
-                        <select
-                          value={transitionType}
-                          onChange={(e) => setTransitionType(e.target.value)}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        >
-                          <option value="fade">Fade</option>
-                          <option value="slide">Slide</option>
-                          <option value="zoom">Zoom</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-6 p-5 bg-white/[0.03] rounded-3xl border border-white/5">
-                      <div className="space-y-3">
-                        <label className="text-[8px] font-bold uppercase tracking-[0.3em] text-gray-400 flex items-center justify-between">
-                          Helligkeit <span className="text-blue-400 font-mono">{brightness}%</span>
-                        </label>
-                        <input
-                          type="range" min="10" max="150" value={brightness}
-                          onChange={(e) => setBrightness(Number(e.target.value))}
-                          className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                        />
-                      </div>
-                      <div className="space-y-3">
-                        <label className="text-[8px] font-bold uppercase tracking-[0.3em] text-gray-400 flex items-center justify-between">
-                          Unschärfe <span className="text-blue-400 font-mono">{bgBlur}px</span>
-                        </label>
-                        <input
-                          type="range" min="0" max="20" value={bgBlur}
-                          onChange={(e) => setBgBlur(Number(e.target.value))}
-                          className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="pt-4">
-                      <button
-                        onClick={saveSettings}
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-5 rounded-[1.2rem] transition-all shadow-xl active:scale-[0.98] text-sm"
-                      >
-                        Bestätigen & Speichern
-                      </button>
-                      <button
-                        onClick={() => setBgImages([DEFAULT_BG])}
-                        className="w-full mt-2 text-[10px] text-red-400/50 hover:text-red-400 transition-colors uppercase tracking-widest font-bold"
-                      >
-                        Hintergrund-Reset
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+  <section class="cal-panel glass">
+    <div class="cal-head">
+      <div class="cal-title">
+        <span class="cal-title-m" id="cal-title-m">Monat</span>
+        <span id="cal-title-y">2026</span>
+      </div>
+      <div class="cal-nav">
+        <button class="cal-btn" id="cal-prev">‹</button>
+        <button class="cal-btn" id="cal-today">●</button>
+        <button class="cal-btn" id="cal-next">›</button>
+        <div class="toggle">
+          <button class="toggle-btn active" data-view="month">Monat</button>
+          <button class="toggle-btn" data-view="week">Woche</button>
         </div>
-      );
-    }
+      </div>
+    </div>
+    <div class="cal-month" id="cal-month-view"></div>
+    <div class="cal-week" id="cal-week-view" style="display:none"></div>
+  </section>
 
-    try {
-      const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(<App />);
-      // hide loading screen once React has scheduled the first render
-      requestAnimationFrame(() => {
-        var l = document.getElementById('loading-screen');
-        if (l) l.classList.add('hidden');
-      });
-    } catch (err) {
-      window.__showError('Render-Fehler: ' + (err && err.message ? err.message : err) +
-        (err && err.stack ? '\n\n' + err.stack : ''));
+  <section class="weather glass">
+    <div class="w-cur" id="w-cur">
+      <div class="load"><div class="load-d"></div><div class="load-d"></div><div class="load-d"></div></div>
+    </div>
+    <div class="w-fc" id="w-fc"></div>
+  </section>
+</div>
+
+<div class="backdrop" id="ev-modal">
+  <div class="modal">
+    <button class="x-btn" id="ev-close">×</button>
+    <div class="bar" id="ev-bar"></div>
+    <h2 id="ev-title">—</h2>
+    <div class="meta" id="ev-meta"></div>
+  </div>
+</div>
+
+<aside class="settings" id="settings">
+  <div class="settings-h">
+    <h2>Einstellungen</h2>
+    <button class="x-btn" id="settings-close">×</button>
+  </div>
+
+  <div class="section">
+    <h3>Theme — Aussehen</h3>
+    <div class="themes" id="themes"></div>
+  </div>
+
+  <div class="section">
+    <h3>Wetter — Standort</h3>
+    <div class="fld">
+      <label class="lbl">Stadt oder PLZ</label>
+      <input type="text" id="loc-inp" class="inp" placeholder="Düsseldorf,DE">
+    </div>
+    <button class="btn" id="loc-save">Speichern</button>
+  </div>
+
+  <div class="section">
+    <h3>Kalender — Quellen</h3>
+    <div id="cal-list"></div>
+    <div class="fld" style="margin-top:14px"><label class="lbl">Name</label><input type="text" id="cal-n" class="inp" placeholder="Mein Kalender"></div>
+    <div class="fld"><label class="lbl">iCal-URL</label><textarea id="cal-u" class="ta" placeholder="https://calendar.google.com/calendar/ical/..."></textarea></div>
+    <div class="fld"><label class="lbl">Farbe</label><input type="color" id="cal-c" class="inp" value="#ffb8a8" style="height:44px;padding:4px"></div>
+    <button class="btn" id="cal-add">Kalender hinzufügen</button>
+  </div>
+
+  <div class="section">
+    <h3>Bilder — Slideshow</h3>
+    <div class="fld">
+      <label class="lbl">Bild-URLs oder Drive-IDs (eine pro Zeile)</label>
+      <textarea id="drive" class="ta" placeholder="https://example.com/bild.jpg&#10;1AbCdEfG..."></textarea>
+    </div>
+    <div class="fld">
+      <label class="lbl">Lokal hochladen</label>
+      <input type="file" id="upload" accept="image/*" multiple class="inp">
+    </div>
+    <div class="fld">
+      <label class="lbl">Intervall (Sekunden)</label>
+      <input type="number" id="interval" class="inp" min="3" max="300" value="8">
+    </div>
+    <div class="imgs" id="imgs"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <button class="btn" id="img-save">Speichern</button>
+      <button class="btn btn-x" id="img-clr">Lokale löschen</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>System</h3>
+    <button class="btn btn-2" id="reload">Neu laden</button>
+  </div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+const THEMES = [
+  { id:'aubergine', label:'Aubergine', bg:'linear-gradient(135deg,#1a1530,#4a1f3d)' },
+  { id:'midnight',  label:'Midnight',  bg:'linear-gradient(135deg,#0a0e1a,#1a4a7a)' },
+  { id:'forest',    label:'Forest',    bg:'linear-gradient(135deg,#0d1f15,#3d5a2a)' },
+  { id:'sunset',    label:'Sunset',    bg:'linear-gradient(135deg,#2a0e1a,#c45a3a)' },
+  { id:'paper',     label:'Paper',     bg:'linear-gradient(135deg,#f5f0e8,#d8cdb8)' },
+  { id:'mono',      label:'Mono',      bg:'linear-gradient(135deg,#0a0a0a,#252525)' }
+];
+
+const DEFAULTS = {
+  weatherKey:'769c5861cd255a3982bafb1680abf194',
+  weatherLoc:'Düsseldorf,DE',
+  driveFolders:['1dlHXGOBT1NOSycOl5NfQnB-iAZGa33nv'],
+  slideInterval:8,
+  theme:'aubergine',
+  calSources:[{ id:'gcal-default', name:'Google Calendar', url:'https://calendar.google.com/calendar/ical/bee6bd50fed6997d7a4b9ad5a26e274fafe8499c2', color:'#ffb8a8' }],
+  proxies:['https://corsproxy.io/?','https://api.allorigins.win/raw?url=']
+};
+const SK = 'annalove4_cfg';
+const LK = 'annalove4_imgs';
+
+let cfg = (() => {
+  try {
+    const s = localStorage.getItem(SK);
+    if (s) return { ...DEFAULTS, ...JSON.parse(s) };
+  } catch(e) {}
+  return { ...DEFAULTS };
+})();
+
+let st = { view:'month', cursor:new Date(), events:[], slides:[], slideIndex:0, slideTimer:null, weather:null };
+
+function saveCfg() { try { localStorage.setItem(SK, JSON.stringify(cfg)); } catch(e) {} }
+function loadImgs() { try { const s = localStorage.getItem(LK); return s ? JSON.parse(s) : []; } catch(e) { return []; } }
+function saveImgs(a) { try { localStorage.setItem(LK, JSON.stringify(a)); return true; } catch(e) { toast('Speicher voll'); return false; } }
+
+function $(id) { return document.getElementById(id); }
+function $$(s) { return document.querySelectorAll(s); }
+function pad(n) { return String(n).padStart(2,'0'); }
+function esc(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(m, ms=2500) { const e = $('toast'); e.textContent = m; e.classList.add('active'); clearTimeout(toast._t); toast._t = setTimeout(() => e.classList.remove('active'), ms); }
+
+const M = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const D = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+const DS = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+function isoWk(d) {
+  const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dn = x.getUTCDay() || 7;
+  x.setUTCDate(x.getUTCDate() + 4 - dn);
+  const ys = new Date(Date.UTC(x.getUTCFullYear(), 0, 1));
+  return Math.ceil((((x - ys) / 86400000) + 1) / 7);
+}
+function sameDay(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
+function startOfWk(d) {
+  const r = new Date(d);
+  const dy = r.getDay();
+  r.setDate(r.getDate() + (dy === 0 ? -6 : 1 - dy));
+  r.setHours(0,0,0,0);
+  return r;
+}
+function fmtT(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+
+/* ============ THEMES ============ */
+function applyTheme(id) {
+  document.body.setAttribute('data-theme', id);
+  cfg.theme = id;
+  saveCfg();
+  renderThemes();
+}
+function renderThemes() {
+  $('themes').innerHTML = THEMES.map(t => `
+    <div class="th-opt ${t.id === cfg.theme ? 'active' : ''}" data-id="${t.id}">
+      <div class="th-prev" style="background:${t.bg}"></div>
+      <div class="th-lbl">${t.label}</div>
+      <div class="th-chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+    </div>
+  `).join('');
+  $$('.th-opt').forEach(o => o.addEventListener('click', () => applyTheme(o.dataset.id)));
+}
+
+/* ============ CLOCK ============ */
+function updClock() {
+  const n = new Date();
+  $('clock').textContent = pad(n.getHours()) + ':' + pad(n.getMinutes());
+  $('clock-sec').textContent = pad(n.getSeconds());
+  $('date-day').textContent = D[n.getDay()];
+  $('date-full').textContent = n.getDate() + '. ' + M[n.getMonth()] + ' ' + n.getFullYear();
+}
+setInterval(updClock, 1000);
+updClock();
+
+/* ============ WEATHER ICONS ============ */
+function wIcon(code, night, sz) {
+  const c = parseInt(code, 10);
+  const a = `viewBox="0 0 64 64" width="${sz}" height="${sz}" xmlns="http://www.w3.org/2000/svg"`;
+  if (c === 800) return night
+    ? `<svg ${a}><circle class="wi-moon" cx="34" cy="30" r="14"/><circle cx="40" cy="26" r="14" fill="rgb(40,30,60)"/></svg>`
+    : `<svg ${a}><g class="wi-rays"><line x1="32" y1="6" x2="32" y2="12"/><line x1="32" y1="52" x2="32" y2="58"/><line x1="6" y1="32" x2="12" y2="32"/><line x1="52" y1="32" x2="58" y2="32"/><line x1="13" y1="13" x2="17" y2="17"/><line x1="47" y1="47" x2="51" y2="51"/><line x1="13" y1="51" x2="17" y2="47"/><line x1="47" y1="17" x2="51" y2="13"/></g><circle class="wi-sun" cx="32" cy="32" r="11"/></svg>`;
+  if (c >= 801 && c <= 802) return night
+    ? `<svg ${a}><circle class="wi-moon" cx="22" cy="22" r="10"/><circle cx="26" cy="20" r="10" fill="rgb(40,30,60)"/><ellipse class="wi-cloud" cx="36" cy="40" rx="18" ry="10"/></svg>`
+    : `<svg ${a}><g class="wi-rays" style="transform-origin:22px 22px"><line x1="22" y1="4" x2="22" y2="9"/><line x1="22" y1="35" x2="22" y2="40"/><line x1="4" y1="22" x2="9" y2="22"/><line x1="35" y1="22" x2="40" y2="22"/></g><circle class="wi-sun" cx="22" cy="22" r="9"/><ellipse class="wi-cloud" cx="38" cy="40" rx="20" ry="11"/><ellipse class="wi-cloud" cx="48" cy="38" rx="11" ry="9"/></svg>`;
+  if (c >= 803) return `<svg ${a}><ellipse class="wi-cloud-d" cx="22" cy="32" rx="15" ry="9"/><ellipse class="wi-cloud" cx="36" cy="36" rx="22" ry="12"/><ellipse class="wi-cloud" cx="48" cy="32" rx="12" ry="9"/></svg>`;
+  if (c >= 500 && c <= 531) return `<svg ${a}><ellipse class="wi-cloud-d" cx="32" cy="22" rx="20" ry="11"/><ellipse class="wi-cloud" cx="40" cy="20" rx="14" ry="9"/><line class="wi-rain" x1="22" y1="38" x2="20" y2="46"/><line class="wi-rain" x1="32" y1="40" x2="30" y2="48" style="animation-delay:0.3s"/><line class="wi-rain" x1="42" y1="38" x2="40" y2="46" style="animation-delay:0.6s"/></svg>`;
+  if (c >= 300 && c <= 321) return `<svg ${a}><ellipse class="wi-cloud" cx="32" cy="22" rx="20" ry="11"/><line class="wi-rain" x1="22" y1="38" x2="22" y2="44"/><line class="wi-rain" x1="32" y1="40" x2="32" y2="46" style="animation-delay:0.3s"/><line class="wi-rain" x1="42" y1="38" x2="42" y2="44" style="animation-delay:0.6s"/></svg>`;
+  if (c >= 200 && c <= 232) return `<svg ${a}><ellipse class="wi-cloud-d" cx="32" cy="22" rx="22" ry="12"/><polygon class="wi-bolt" points="30,32 38,32 32,44 36,44 26,58 30,46 24,46"/></svg>`;
+  if (c >= 600 && c <= 622) return `<svg ${a}><ellipse class="wi-cloud" cx="32" cy="22" rx="20" ry="11"/><circle class="wi-snow" cx="22" cy="42" r="2.5"/><circle class="wi-snow" cx="32" cy="46" r="2.5"/><circle class="wi-snow" cx="42" cy="42" r="2.5"/></svg>`;
+  if (c >= 700 && c <= 781) return `<svg ${a}><line class="wi-fog" x1="10" y1="22" x2="54" y2="22"/><line class="wi-fog" x1="14" y1="32" x2="50" y2="32"/><line class="wi-fog" x1="8" y1="42" x2="56" y2="42"/><line class="wi-fog" x1="14" y1="52" x2="50" y2="52"/></svg>`;
+  return `<svg ${a}><circle cx="32" cy="32" r="14" class="wi-cloud"/></svg>`;
+}
+
+/* ============ WEATHER ============ */
+async function loadW() {
+  const loc = encodeURIComponent(cfg.weatherLoc);
+  const k = cfg.weatherKey;
+  try {
+    const c = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${loc}&appid=${k}&units=metric&lang=de`)).json();
+    const f = await (await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${loc}&appid=${k}&units=metric&lang=de`)).json();
+    if (c.cod && c.cod !== 200) throw new Error(c.message);
+    st.weather = { c, f };
+    renderW();
+  } catch(e) {
+    $('w-cur').innerHTML = `<div style="color:var(--muted);text-align:center;padding:20px">Wetter nicht ladbar<br><small style="color:var(--faint)">${esc(e.message)}</small></div>`;
+    $('w-fc').innerHTML = '';
+  }
+}
+
+function renderW() {
+  const { c, f } = st.weather;
+  const night = c.weather[0].icon.endsWith('n');
+  $('w-cur').innerHTML = `
+    <div class="w-loc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${c.name}</div>
+    <div class="w-main">
+      <div class="w-icon">${wIcon(c.weather[0].id, night, 86)}</div>
+      <div><div class="w-temp">${Math.round(c.main.temp)}<span class="w-temp-u">°C</span></div></div>
+    </div>
+    <div>
+      <div class="w-desc">${c.weather[0].description}</div>
+      <div class="w-range">
+        <span>↑ ${Math.round(c.main.temp_max)}°</span>
+        <span>↓ ${Math.round(c.main.temp_min)}°</span>
+        <span>· gefühlt ${Math.round(c.main.feels_like)}°</span>
+      </div>
+    </div>`;
+  const daily = aggDaily(f.list);
+  $('w-fc').innerHTML = daily.slice(0, 5).map(d => `
+    <div class="fc-day">
+      <div class="fc-name">${d.name}</div>
+      <div class="fc-icon">${wIcon(d.code, false, 48)}</div>
+      <div class="fc-temps">
+        <div class="fc-max">${Math.round(d.max)}°</div>
+        <div class="fc-min">${Math.round(d.min)}°</div>
+      </div>
+    </div>`).join('');
+}
+
+function aggDaily(list) {
+  const by = {};
+  const today = new Date(); today.setHours(0,0,0,0);
+  for (const i of list) {
+    const dt = new Date(i.dt * 1000);
+    if (dt < today) continue;
+    if (sameDay(dt, today)) continue;
+    const k = dt.toISOString().slice(0,10);
+    if (!by[k]) by[k] = { dt, temps:[], codes:[] };
+    by[k].temps.push(i.main.temp);
+    by[k].codes.push({ code:i.weather[0].id, hour:dt.getHours() });
+  }
+  return Object.values(by).map(d => {
+    const mid = d.codes.find(x => x.hour >= 11 && x.hour <= 14) || d.codes[0];
+    return { dt:d.dt, name:DS[(d.dt.getDay() + 6) % 7], min:Math.min(...d.temps), max:Math.max(...d.temps), code:mid.code };
+  }).sort((a, b) => a.dt - b.dt);
+}
+
+/* ============ ICAL ============ */
+function pIcalDate(s) {
+  if (!s) return null;
+  const x = s.replace(/[-:]/g, '');
+  if (x.length === 8) return new Date(parseInt(x.slice(0,4)), parseInt(x.slice(4,6))-1, parseInt(x.slice(6,8)));
+  const y = parseInt(x.slice(0,4)), mo = parseInt(x.slice(4,6))-1, d = parseInt(x.slice(6,8));
+  const h = parseInt(x.slice(9,11)), mi = parseInt(x.slice(11,13)), sec = parseInt(x.slice(13,15)) || 0;
+  if (x.endsWith('Z')) return new Date(Date.UTC(y, mo, d, h, mi, sec));
+  return new Date(y, mo, d, h, mi, sec);
+}
+
+function pIcal(text, src) {
+  const evs = [];
+  const lines = text.replace(/\r\n[ \t]/g, '').replace(/\n[ \t]/g, '').split(/\r?\n/);
+  let cur = null;
+  for (const r of lines) {
+    if (r === 'BEGIN:VEVENT') { cur = {}; continue; }
+    if (r === 'END:VEVENT') {
+      if (cur && cur.start) evs.push({ ...cur, source:src.id, sourceName:src.name, color:src.color, allDay:cur.allDay || false });
+      cur = null; continue;
     }
-  </script>
+    if (!cur) continue;
+    const co = r.indexOf(':');
+    if (co < 0) continue;
+    const kp = r.slice(0, co), v = r.slice(co+1);
+    const [k, ...ps] = kp.split(';');
+    const ps2 = ps.join(';');
+    switch (k) {
+      case 'SUMMARY': cur.title = uIcal(v); break;
+      case 'DESCRIPTION': cur.description = uIcal(v); break;
+      case 'LOCATION': cur.location = uIcal(v); break;
+      case 'DTSTART':
+        cur.start = pIcalDate(v);
+        if (ps2.includes('VALUE=DATE')) cur.allDay = true;
+        break;
+      case 'DTEND': cur.end = pIcalDate(v); break;
+      case 'ATTENDEE':
+        if (!cur.attendees) cur.attendees = [];
+        const cn = ps2.match(/CN=([^;:]+)/);
+        cur.attendees.push(cn ? cn[1] : v.replace(/^mailto:/i, ''));
+        break;
+      case 'RRULE': cur.rrule = v; break;
+    }
+  }
+  return evs;
+}
+function uIcal(s) { return s.replace(/\\n/g,'\n').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\'); }
+
+function expand(ev, rs, re) {
+  if (!ev.rrule) return [ev];
+  const rr = {};
+  for (const p of ev.rrule.split(';')) { const [k, v] = p.split('='); rr[k] = v; }
+  const f = rr.FREQ;
+  if (!f) return [ev];
+  const iv = parseInt(rr.INTERVAL || '1');
+  const ct = rr.COUNT ? parseInt(rr.COUNT) : null;
+  const ut = rr.UNTIL ? pIcalDate(rr.UNTIL) : null;
+  const out = [];
+  const dur = (ev.end ? ev.end - ev.start : 0);
+  let c = new Date(ev.start);
+  let i = 0;
+  while (i < 400) {
+    if (ut && c > ut) break;
+    if (ct && i >= ct) break;
+    if (c > re) break;
+    if (c >= rs) out.push({ ...ev, start:new Date(c), end:dur ? new Date(c.getTime() + dur) : ev.end });
+    if (f === 'DAILY') c.setDate(c.getDate() + iv);
+    else if (f === 'WEEKLY') c.setDate(c.getDate() + 7*iv);
+    else if (f === 'MONTHLY') c.setMonth(c.getMonth() + iv);
+    else if (f === 'YEARLY') c.setFullYear(c.getFullYear() + iv);
+    else break;
+    i++;
+  }
+  return out;
+}
+
+async function fetchIcal(src) {
+  const tries = [src.url, ...DEFAULTS.proxies.map(p => p + encodeURIComponent(src.url))];
+  for (const u of tries) {
+    try {
+      const r = await fetch(u);
+      if (!r.ok) continue;
+      const t = await r.text();
+      if (t.includes('BEGIN:VCALENDAR')) return pIcal(t, src);
+    } catch(e) {}
+  }
+  return [];
+}
+
+async function loadCal() {
+  const all = [];
+  for (const s of cfg.calSources) {
+    if (!s.url) continue;
+    try { all.push(...await fetchIcal(s)); } catch(e) {}
+  }
+  const rs = new Date(); rs.setFullYear(rs.getFullYear() - 1);
+  const re = new Date(); re.setFullYear(re.getFullYear() + 1);
+  const out = [];
+  for (const e of all) out.push(...expand(e, rs, re));
+  st.events = out;
+  renderCal();
+}
+
+function evsForDay(d) {
+  return st.events.filter(e => sameDay(new Date(e.start), d)).sort((a, b) => a.start - b.start);
+}
+
+/* ============ CALENDAR RENDER ============ */
+function renderCal() {
+  if (st.view === 'month') renderMonth();
+  else renderWeek();
+}
+
+function renderMonth() {
+  $('cal-month-view').style.display = '';
+  $('cal-week-view').style.display = 'none';
+  const cur = st.cursor;
+  $('cal-title-m').textContent = M[cur.getMonth()];
+  $('cal-title-y').textContent = cur.getFullYear();
+  const fom = new Date(cur.getFullYear(), cur.getMonth(), 1);
+  const start = startOfWk(fom);
+  const today = new Date();
+  let h = '<div class="cal-wd"><div class="cal-wd-cell cal-wd-num">KW</div>';
+  for (const w of DS) h += `<div class="cal-wd-cell">${w}</div>`;
+  h += '</div><div class="cal-grid">';
+  let c = new Date(start);
+  for (let w = 0; w < 6; w++) {
+    const ws = new Date(c);
+    h += `<div class="cal-kw" data-ws="${ws.toISOString()}">${isoWk(ws)}</div>`;
+    for (let d = 0; d < 7; d++) {
+      const evs = evsForDay(c);
+      const oth = c.getMonth() !== cur.getMonth();
+      const td = sameDay(c, today);
+      const dots = evs.slice(0, 4).map(e => `<span class="cal-dot" style="background:${e.color}"></span>`).join('');
+      h += `<div class="cal-day ${oth?'other':''} ${td?'today':''}" data-d="${c.toISOString()}"><span class="cal-day-n">${c.getDate()}</span><div class="cal-dots">${dots}</div></div>`;
+      c.setDate(c.getDate() + 1);
+    }
+  }
+  h += '</div>';
+  $('cal-month-view').innerHTML = h;
+  $$('.cal-kw').forEach(el => el.addEventListener('click', () => { st.cursor = new Date(el.dataset.ws); st.view = 'week'; $$('.toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.view === 'week')); renderCal(); }));
+  $$('.cal-day').forEach(el => el.addEventListener('click', () => { st.cursor = new Date(el.dataset.d); st.view = 'week'; $$('.toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.view === 'week')); renderCal(); }));
+}
+
+function renderWeek() {
+  $('cal-month-view').style.display = 'none';
+  $('cal-week-view').style.display = '';
+  const ws = startOfWk(st.cursor);
+  const we = new Date(ws); we.setDate(we.getDate() + 6);
+  const today = new Date();
+  $('cal-title-m').textContent = `KW ${isoWk(ws)}`;
+  $('cal-title-y').textContent = `${ws.getDate()}.${pad(ws.getMonth()+1)} – ${we.getDate()}.${pad(we.getMonth()+1)}.${we.getFullYear()}`;
+  let h = '';
+  const c = new Date(ws);
+  for (let i = 0; i < 7; i++) {
+    const evs = evsForDay(c);
+    const td = sameDay(c, today);
+    h += `<div class="cal-wd-day ${td?'today':''}"><div class="cal-wd-h"><div class="cal-wd-name">${D[c.getDay()]}</div><div class="cal-wd-date">${c.getDate()}. ${M[c.getMonth()]}</div></div>${evs.length === 0 ? '<div class="cal-wd-empty">— nichts geplant —</div>' : evs.map((e, idx) => `<div class="cal-ev" style="border-left-color:${e.color}" data-k="${c.toISOString()}__${idx}"><div class="cal-ev-t">${e.allDay ? 'ganztags' : fmtT(e.start) + (e.end ? '–' + fmtT(e.end) : '')}</div><div class="cal-ev-n">${esc(e.title || '(ohne Titel)')}</div></div>`).join('')}</div>`;
+    c.setDate(c.getDate() + 1);
+  }
+  $('cal-week-view').innerHTML = h;
+  $$('.cal-ev').forEach(el => el.addEventListener('click', () => {
+    const [iso, idx] = el.dataset.k.split('__');
+    const evs = evsForDay(new Date(iso));
+    openEv(evs[parseInt(idx)]);
+  }));
+}
+
+/* ============ MODAL ============ */
+function openEv(e) {
+  if (!e) return;
+  $('ev-title').textContent = e.title || '(ohne Titel)';
+  $('ev-bar').style.background = e.color;
+  const rows = [];
+  const ts = e.allDay
+    ? 'Ganztägig · ' + e.start.toLocaleDateString('de-DE', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+    : e.start.toLocaleString('de-DE', { weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit' }) + (e.end ? ' – ' + e.end.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }) : '');
+  rows.push({ i:'clock', l:'Zeit', v:ts });
+  if (e.location) rows.push({ i:'pin', l:'Ort', v:e.location });
+  if (e.description) rows.push({ i:'note', l:'Beschreibung', v:e.description });
+  if (e.attendees && e.attendees.length) rows.push({ i:'users', l:'Teilnehmer', v:e.attendees.join('\n') });
+  if (e.sourceName) rows.push({ i:'tag', l:'Kalender', v:e.sourceName });
+  const ic = {
+    clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    note:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>',
+    users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>',
+    tag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1"/></svg>'
+  };
+  $('ev-meta').innerHTML = rows.map(r => `<div class="row">${ic[r.i]}<div style="flex:1"><div class="row-l">${r.l}</div><div class="row-v">${esc(r.v)}</div></div></div>`).join('');
+  $('ev-modal').classList.add('active');
+}
+$('ev-close').addEventListener('click', () => $('ev-modal').classList.remove('active'));
+$('ev-modal').addEventListener('click', e => { if (e.target.id === 'ev-modal') $('ev-modal').classList.remove('active'); });
+
+/* ============ NAV ============ */
+$('cal-prev').addEventListener('click', () => { if (st.view === 'month') st.cursor.setMonth(st.cursor.getMonth()-1); else st.cursor.setDate(st.cursor.getDate()-7); renderCal(); });
+$('cal-next').addEventListener('click', () => { if (st.view === 'month') st.cursor.setMonth(st.cursor.getMonth()+1); else st.cursor.setDate(st.cursor.getDate()+7); renderCal(); });
+$('cal-today').addEventListener('click', () => { st.cursor = new Date(); renderCal(); });
+$$('.toggle-btn').forEach(b => b.addEventListener('click', () => { st.view = b.dataset.view; $$('.toggle-btn').forEach(x => x.classList.toggle('active', x === b)); renderCal(); }));
+
+/* ============ SLIDESHOW (FIXED) ============ */
+function buildSlides() {
+  const s = [];
+  for (const e of (cfg.driveFolders || [])) {
+    const t = (e || '').trim();
+    if (!t) continue;
+    if (t.startsWith('http')) s.push({ url:t });
+    else s.push({ url:`https://lh3.googleusercontent.com/d/${t}=w2000` });
+  }
+  for (const u of loadImgs()) s.push({ url:u });
+  st.slides = s;
+  console.log('[Slideshow] built', s.length);
+}
+
+function renderSlides() {
+  const ss = $('slideshow');
+  ss.querySelectorAll('.slide').forEach(x => x.remove());
+
+  if (st.slides.length === 0) {
+    $('slide-empty').style.display = '';
+    $('slide-counter').innerHTML = '';
+    if (st.slideTimer) { clearInterval(st.slideTimer); st.slideTimer = null; }
+    return;
+  }
+  $('slide-empty').style.display = 'none';
+
+  const overlay = ss.querySelector('.slide-overlay');
+  let activated = false;
+  let errors = 0;
+
+  st.slides.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'slide';
+    div.dataset.idx = i;
+    ss.insertBefore(div, overlay);
+
+    const probe = new Image();
+    probe.onload = () => {
+      div.style.backgroundImage = `url('${s.url}')`;
+      div.dataset.loaded = '1';
+      if (!activated) {
+        activated = true;
+        div.classList.add('active');
+        st.slideIndex = i;
+        updateDots();
+        startSlide();
+      }
+    };
+    probe.onerror = () => {
+      errors++;
+      div.dataset.broken = '1';
+      console.warn('[Slideshow] failed:', s.url);
+      if (errors === st.slides.length) {
+        $('slide-empty').style.display = '';
+        $('slide-empty').innerHTML = `<div style="color:var(--accent)">⚠ Bilder konnten nicht geladen werden</div><div style="font-size:0.8rem;color:var(--faint)">Prüfe URLs / Drive-Freigabe</div>`;
+      }
+    };
+    probe.src = s.url;
+  });
+
+  $('slide-counter').innerHTML = st.slides.map((_, i) => `<span class="slide-dot" data-idx="${i}"></span>`).join('');
+  updateDots();
+}
+
+function updateDots() {
+  $$('.slide-dot').forEach((d, i) => d.classList.toggle('active', i === st.slideIndex));
+}
+
+function startSlide() {
+  if (st.slideTimer) { clearInterval(st.slideTimer); st.slideTimer = null; }
+  if (st.slides.length < 2) return;
+  const iv = Math.max(3, parseInt(cfg.slideInterval) || 8) * 1000;
+  st.slideTimer = setInterval(advance, iv);
+  console.log('[Slideshow] timer:', iv, 'ms');
+}
+
+function advance() {
+  const slides = document.querySelectorAll('.slide');
+  if (slides.length < 2) return;
+  let next = st.slideIndex;
+  for (let i = 1; i <= slides.length; i++) {
+    const cand = (st.slideIndex + i) % slides.length;
+    const el = slides[cand];
+    if (el && el.dataset.loaded === '1' && el.dataset.broken !== '1') { next = cand; break; }
+  }
+  if (next === st.slideIndex) return;
+  slides[st.slideIndex].classList.remove('active');
+  slides[next].classList.add('active');
+  st.slideIndex = next;
+  updateDots();
+}
+
+/* ============ SETTINGS ============ */
+$('gear').addEventListener('click', openSettings);
+$('settings-close').addEventListener('click', () => $('settings').classList.remove('active'));
+
+function openSettings() {
+  $('loc-inp').value = cfg.weatherLoc;
+  $('interval').value = cfg.slideInterval;
+  $('drive').value = (cfg.driveFolders || []).join('\n');
+  renderThemes();
+  renderCalList();
+  renderImgs();
+  $('settings').classList.add('active');
+}
+
+function renderCalList() {
+  const l = $('cal-list');
+  if (cfg.calSources.length === 0) { l.innerHTML = '<div style="color:var(--faint);font-size:0.82rem">Noch keine Quellen.</div>'; return; }
+  l.innerHTML = cfg.calSources.map(s => `<div class="cal-src"><div class="cal-src-c" style="background:${s.color}"></div><div style="flex:1;min-width:0"><div class="cal-src-n">${esc(s.name)}</div><div class="cal-src-u">${esc(s.url || '—')}</div></div><button class="cal-src-x" data-id="${s.id}">×</button></div>`).join('');
+  l.querySelectorAll('.cal-src-x').forEach(b => b.addEventListener('click', () => {
+    cfg.calSources = cfg.calSources.filter(s => s.id !== b.dataset.id);
+    saveCfg(); renderCalList(); loadCal();
+  }));
+}
+
+$('cal-add').addEventListener('click', () => {
+  const n = $('cal-n').value.trim(), u = $('cal-u').value.trim(), c = $('cal-c').value || '#ffb8a8';
+  if (!n || !u) { toast('Name und URL erforderlich'); return; }
+  cfg.calSources.push({ id:'cal-'+Date.now(), name:n, url:u, color:c });
+  saveCfg();
+  $('cal-n').value = ''; $('cal-u').value = '';
+  renderCalList(); loadCal();
+  toast('Kalender hinzugefügt');
+});
+
+$('loc-save').addEventListener('click', () => {
+  const v = $('loc-inp').value.trim();
+  if (!v) { toast('Standort erforderlich'); return; }
+  cfg.weatherLoc = v; saveCfg(); loadW(); toast('Standort gespeichert');
+});
+
+$('img-save').addEventListener('click', () => {
+  cfg.driveFolders = $('drive').value.split('\n').map(s => s.trim()).filter(Boolean);
+  cfg.slideInterval = parseInt($('interval').value) || 8;
+  saveCfg();
+  buildSlides(); renderSlides();
+  toast('Slideshow aktualisiert (' + st.slides.length + ' Bilder)');
+});
+
+$('upload').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  const ex = loadImgs();
+  for (const f of files) {
+    if (!f.type.startsWith('image/')) continue;
+    const url = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); });
+    ex.push(url);
+  }
+  if (saveImgs(ex)) { renderImgs(); buildSlides(); renderSlides(); toast(files.length + ' Bild(er) hochgeladen'); }
+  e.target.value = '';
+});
+
+$('img-clr').addEventListener('click', () => {
+  if (!confirm('Lokale Bilder löschen?')) return;
+  localStorage.removeItem(LK);
+  renderImgs(); buildSlides(); renderSlides();
+  toast('Lokale Bilder gelöscht');
+});
+
+function renderImgs() {
+  const lo = loadImgs();
+  const dr = (cfg.driveFolders || []).filter(s => s.trim()).map(s => s.trim().startsWith('http') ? s.trim() : `https://lh3.googleusercontent.com/d/${s.trim()}=w400`);
+  const all = [...dr.map((url, i) => ({ url, t:'drive', idx:i })), ...lo.map((url, i) => ({ url, t:'local', idx:i }))];
+  if (all.length === 0) { $('imgs').innerHTML = '<div style="color:var(--faint);font-size:0.78rem;grid-column:1/-1;text-align:center;padding:12px">Keine Bilder</div>'; return; }
+  $('imgs').innerHTML = all.map(i => `<div class="img-i" style="background-image:url('${i.url}')">${i.t === 'local' ? `<button class="img-x" data-i="${i.idx}">×</button>` : ''}</div>`).join('');
+  $('imgs').querySelectorAll('.img-x').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const lo = loadImgs(); lo.splice(parseInt(b.dataset.i), 1); saveImgs(lo);
+    renderImgs(); buildSlides(); renderSlides();
+  }));
+}
+
+$('reload').addEventListener('click', () => location.reload());
+
+/* Long-press on date opens settings */
+let pt = null;
+['touchstart','mousedown'].forEach(ev => $('date-block').addEventListener(ev, () => { pt = setTimeout(openSettings, 1200); }, { passive:true }));
+['touchend','mouseup','mouseleave','touchcancel'].forEach(ev => $('date-block').addEventListener(ev, () => clearTimeout(pt)));
+
+/* ============ INIT ============ */
+applyTheme(cfg.theme || 'aubergine');
+buildSlides();
+renderSlides();
+loadW();
+loadCal();
+renderCal();
+
+setInterval(loadW, 15 * 60 * 1000);
+setInterval(loadCal, 30 * 60 * 1000);
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { if (st.slideTimer) { clearInterval(st.slideTimer); st.slideTimer = null; } }
+  else startSlide();
+});
+</script>
 </body>
 </html>
