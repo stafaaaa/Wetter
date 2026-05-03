@@ -6,7 +6,7 @@
 <title>AnnaLove4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Inter:wght@300,400,500,600,700&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Inter:wght@200,300,400,500,600,700&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-serif; font-size: 15px; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; overflow: hidden; }
@@ -36,38 +36,53 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
 .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.3); cursor: pointer; transition: background 0.2s; }
 .dot.active { background: #fb923c; }
 
-/* ========== CALENDAR — EXAKT WIE REFERENZBILD ========== */
+/* ========== CALENDAR ========== */
 .calendar-container { flex: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; background: #000000; }
-.cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 8px 8px 8px; }
+.cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 12px 6px 12px; }
 .month { font-family: "Inter", sans-serif; font-size: 18px; font-weight: 500; color: #ffffff; }
 .year { font-family: "Inter", sans-serif; font-size: 14px; color: rgba(255,255,255,0.4); margin-left: 6px; font-weight: 400; }
-.nav-btns { display: flex; gap: 8px; align-items: center; }
-.nav-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.12); background: transparent; color: #ffffff; cursor: pointer; display: grid; place-items: center; font-size: 16px; transition: border-color 0.2s; }
+.nav-btns { display: flex; gap: 6px; align-items: center; }
+.nav-btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.12); background: transparent; color: #ffffff; cursor: pointer; display: grid; place-items: center; font-size: 14px; transition: border-color 0.2s; }
 .nav-btn:hover { border-color: #ef4444; }
-#todayBtn { font-size: 12px; }
+#todayBtn { font-size: 10px; }
 
-.cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 0 8px 10px 8px; }
-.cal-wd { font-family: "Inter", sans-serif; font-size: 13px; font-weight: 400; color: rgba(255,255,255,0.4); text-align: center; letter-spacing: 0.1em; }
+.toggle { height: 32px; padding: 0 12px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: rgba(255,255,255,0.5); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; }
+.toggle:hover { border-color: rgba(255,255,255,0.4); color: #ffffff; }
+.toggle.active { border-color: #ef4444; color: #ffffff; background: rgba(239,68,68,0.12); }
 
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 0 8px 8px 8px; flex: 1; overflow-y: auto; align-content: start; }
+.cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; padding: 0 12px 8px 12px; }
+.cal-wd { font-family: "Inter", sans-serif; font-size: 12px; font-weight: 400; color: rgba(255,255,255,0.35); text-align: center; letter-spacing: 0.1em; }
+
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; padding: 0 12px 8px 12px; flex: 1; overflow-y: auto; align-content: start; }
 .cal-grid::-webkit-scrollbar { width: 3px; }
-.cal-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+.cal-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
 
-.cal-cell { display: flex; flex-direction: column; min-height: auto; padding: 2px 0; cursor: pointer; }
-.cal-cell-head { display: flex; align-items: center; gap: 3px; margin-bottom: 6px; justify-content: flex-start; }
-.cal-cell-month { font-family: "Inter", sans-serif; font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.05em; }
-.cal-cell-num { font-family: "Inter", sans-serif; font-size: 28px; font-weight: 300; color: #ffffff; line-height: 1; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; transition: background 0.15s; }
-.cal-cell.other .cal-cell-num { color: rgba(255,255,255,0.25); }
-.cal-cell.today .cal-cell-num { background: #ef4444; color: #ffffff; font-weight: 600; }
+.cal-cell { display: flex; flex-direction: column; padding: 4px 3px; cursor: pointer; min-height: 0; }
+.cal-cell-head { display: flex; align-items: flex-start; gap: 4px; margin-bottom: 5px; height: 28px; }
+.cal-cell-month { font-family: "Inter", sans-serif; font-size: 9px; font-weight: 500; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; white-space: nowrap; }
+.cal-cell-num { font-family: "Inter", sans-serif; font-size: 26px; font-weight: 300; color: #ffffff; line-height: 1; min-width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; }
+.cal-cell.other .cal-cell-num { color: rgba(255,255,255,0.2); }
+.cal-cell.today .cal-cell-num { background: #ef4444; color: #ffffff; font-weight: 500; }
 .cal-cell.other.today .cal-cell-num { background: #ef4444; }
 
 .cal-evs { display: flex; flex-direction: column; gap: 3px; }
-.cal-ev { display: flex; align-items: center; gap: 5px; height: auto; padding: 2px 0; font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.75); overflow: hidden; white-space: nowrap; cursor: pointer; }
-.cal-ev:hover { color: #fff; }
-.cal-ev-bar { width: 3px; height: 14px; border-radius: 2px; flex-shrink: 0; }
+.cal-ev { display: flex; align-items: center; gap: 4px; height: 18px; padding: 0 7px; border-radius: 4px; font-size: 10px; font-weight: 500; color: #ffffff; overflow: hidden; white-space: nowrap; cursor: pointer; line-height: 18px; }
+.cal-ev:hover { filter: brightness(1.15); }
+.cal-ev-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
 .cal-ev-title { overflow: hidden; text-overflow: ellipsis; }
 
-.week-view { display: none !important; }
+/* Week View */
+.week-view { display: none; position: absolute; inset: 0; background: #000000; flex-direction: column; padding: 16px; overflow-y: auto; gap: 10px; z-index: 5; }
+.week-view.active { display: flex; }
+.wk-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 12px; }
+.wk-header { font-size: 14px; font-weight: 500; color: #fff; margin-bottom: 2px; }
+.wk-date { font-size: 12px; color: rgba(255,255,255,0.35); margin-bottom: 8px; }
+.wk-evs { display: flex; flex-direction: column; gap: 4px; }
+.wk-ev { display: flex; align-items: center; gap: 6px; height: 20px; padding: 0 8px; border-radius: 4px; font-size: 11px; font-weight: 500; color: #fff; cursor: pointer; }
+.wk-ev:hover { filter: brightness(1.15); }
+.wk-ev-time { font-family: "JetBrains Mono", monospace; font-size: 10px; min-width: 42px; flex-shrink: 0; }
+.wk-ev-title { overflow: hidden; text-overflow: ellipsis; }
+.wk-empty { font-size: 11px; color: rgba(255,255,255,0.25); }
 
 /* ========== REST ========== */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 50; padding: 20px; opacity: 0; transition: opacity 0.25s; backdrop-filter: blur(8px); }
@@ -152,6 +167,8 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
           <button class="nav-btn" id="prevBtn">‹</button>
           <button class="nav-btn" id="todayBtn">●</button>
           <button class="nav-btn" id="nextBtn">›</button>
+          <button class="toggle active" id="monthToggle">Monat</button>
+          <button class="toggle" id="weekToggle">Woche</button>
         </div>
       </div>
       <div class="cal-weekdays">
@@ -199,11 +216,11 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
 (() => {
   const $ = s => document.querySelector(s);
   const $$ = s => document.querySelectorAll(s);
-  const CFG = 'annalove4_cfg_v3', DBN = 'annalove4_db';
+  const CFG = 'annalove4_cfg_v4', DBN = 'annalove4_db';
   const DEF = {theme:'eclipse',wloc:'Düsseldorf,DE',wkey:'769c5861cd255a3982bafb1680abf194',cals:[{n:'Kalender',c:'#ef4444',u:''}],imgs:[],int:25,style:'fade'};
   let cfg = {...DEF, ...JSON.parse(localStorage.getItem(CFG) || '{}')};
   let db, blobs = [], slides = [], curSlide = 0, timer;
-  let wData = null, evts = [], cMonth = new Date();
+  let wData = null, evts = [], cMonth = new Date(), view = 'month';
   let nx = () => {};
   const stmts = {m:'ein stiller Morgen',a:'Nachmittagslicht',e:'der Abend kehrt ein',n:'späte Stunden',r:'Regengedanken',s:'Schneefall'};
   const wdays = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
@@ -214,7 +231,7 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
   function eventColor(ev) {
     if (ev.cc) return ev.cc;
     const t = ((ev.sm || '') + ' ' + (ev.ds || '')).toLowerCase();
-    if (/sport|train|run|yoga|gym|walk|bike|swim/.test(t)) return '#34d399';
+    if (/sport|train|run|yoga|gym|walk|bike|swim|lauf/.test(t)) return '#34d399';
     if (/geburtstag|birthday|party|feier|wedding|hochzeit/.test(t)) return '#f472b6';
     if (/meet|meeting|call|zoom|termin|besprechung|review/.test(t)) return '#60a5fa';
     return '#fb923c';
@@ -316,11 +333,11 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
     render();
   }
 
-  // ========== CALENDAR RENDER — EXAKT WIE BILD ==========
-  function render() {
+  // ========== CALENDAR RENDER ==========
+  function renderMonth() {
     const f = new Date(cMonth.getFullYear(), cMonth.getMonth(), 1);
     const last = new Date(cMonth.getFullYear(), cMonth.getMonth()+1, 0);
-    const start = new Date(f); start.setDate(f.getDate() - f.getDay()); // Sonntag
+    const start = new Date(f); start.setDate(f.getDate() - f.getDay());
     const end = new Date(last); end.setDate(last.getDate() + (6 - last.getDay()));
     const today = new Date(); today.setHours(0,0,0,0);
     
@@ -337,7 +354,6 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
         const dayEvts = evts.filter(e => { const s=new Date(e.st); s.setHours(0,0,0,0); return s.getTime()===dt.getTime(); }).slice(0,4);
         
         html += `<div class="cal-cell${inM?'':' other'}${isT?' today':''}" data-d="${dt.toISOString().slice(0,10)}">`;
-        // Monat + Datum nebeneinander
         html += `<div class="cal-cell-head">`;
         if (!inM) html += `<span class="cal-cell-month">${mLabel}</span>`;
         html += `<div class="cal-cell-num">${dt.getDate()}</div></div>`;
@@ -346,7 +362,7 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
           html += `<div class="cal-evs">`;
           dayEvts.forEach(ev => {
             const col = eventColor(ev);
-            html += `<div class="cal-ev" data-id="${ev.id}"><div class="cal-ev-bar" style="background:${col}"></div><span class="cal-ev-title">${ev.sm||''}</span></div>`;
+            html += `<div class="cal-ev" data-id="${ev.id}" style="background:${col}"><span class="cal-ev-title">${ev.sm||''}</span></div>`;
           });
           html += `</div>`;
         }
@@ -355,6 +371,59 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
       }
     }
     $('#grid').innerHTML = html;
+  }
+
+  function renderWeek() {
+    const curr = new Date(cMonth);
+    const day = curr.getDay();
+    const diff = curr.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(curr.getFullYear(), curr.getMonth(), diff);
+    monday.setHours(0,0,0,0);
+    
+    let html = '';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const isToday = d.toDateString() === new Date().toDateString();
+      const dayEvts = evts.filter(e => { const st = new Date(e.st); st.setHours(0,0,0,0); return st.getTime() === d.getTime(); });
+      
+      html += `<div class="wk-card" style="${isToday ? 'border-color: rgba(239,68,68,0.4);' : ''}">`;
+      html += `<div class="wk-header">${wdays[d.getDay() === 0 ? 6 : d.getDay() - 1]}</div>`;
+      html += `<div class="wk-date tabular">${d.getDate()}. ${d.toLocaleString('de',{month:'long'})} ${d.getFullYear()}${isToday ? ' · <span style="color:#ef4444">Heute</span>' : ''}</div>`;
+      html += `<div class="wk-evs">`;
+      if (dayEvts.length) {
+        dayEvts.forEach(ev => {
+          const col = eventColor(ev);
+          const time = ev.al ? 'ganztags' : `${ev.st.getHours().toString().padStart(2,'0')}:${ev.st.getMinutes().toString().padStart(2,'0')}`;
+          html += `<div class="wk-ev" data-id="${ev.id}" style="background:${col}"><span class="wk-ev-time tabular">${time}</span><span class="wk-ev-title">${ev.sm||'Ohne'}</span></div>`;
+        });
+      } else {
+        html += `<div class="wk-empty">Keine Termine</div>`;
+      }
+      html += `</div></div>`;
+    }
+    $('#weekView').innerHTML = html;
+  }
+
+  function render() {
+    if (view === 'month') {
+      $('#grid').style.display = 'grid';
+      $('#weekView').classList.remove('active');
+      $('#weekView').style.display = 'none';
+      renderMonth();
+    } else {
+      $('#grid').style.display = 'none';
+      $('#weekView').style.display = 'flex';
+      $('#weekView').classList.add('active');
+      renderWeek();
+    }
+  }
+
+  function setView(mode) {
+    view = mode;
+    $('#monthToggle').classList.toggle('active', mode === 'month');
+    $('#weekToggle').classList.toggle('active', mode === 'week');
+    render();
   }
 
   function showM(ev) {
@@ -391,7 +460,7 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
     sg.querySelectorAll('.src-color').forEach((x,i)=>x.onchange=()=>{cfg.cals[i].c=x.value;save();});
     sg.querySelectorAll('.src-url').forEach((x,i)=>x.onchange=()=>{cfg.cals[i].u=x.value.trim();save();});
     const tg=$('#themeGrid');tg.innerHTML='';
-    themes.forEach(t=>{const co=themeColors[t];tg.innerHTML+=`<div class="card theme-card" data-theme="${t}"${cfg.theme===t?' class="card active"':''}><div class="card-prev" style="background:${co[0]};color:${co[1]}">${t}</div><div class="card-name">${t}</div></div>`;});
+    themes.forEach(t=>{const co=themeColors[t];tg.innerHTML+=`<div class="card theme-card${cfg.theme===t?' active':''}" data-theme="${t}"><div class="card-prev" style="background:${co[0]};color:${co[1]}">${t}</div><div class="card-name">${t}</div></div>`;});
     tg.querySelectorAll('.theme-card').forEach(c=>c.onclick=()=>setTheme(c.dataset.theme));
     $('#imgInp').value=cfg.imgs.join('\n');$('#imgInp').onchange=()=>{cfg.imgs=$('#imgInp').value.split('\n').filter(Boolean);save();};
     $('#sInt').value=cfg.int||25;$('#sInt').onchange=()=>{cfg.int=+$('#sInt').value;save();clearInterval(timer);if(slides.length>1)timer=setInterval(nx,cfg.int*1000);};
@@ -404,18 +473,33 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
   function setup() {
     $('#settingsBtn').onclick=()=>{$('#settings').classList.add('active');renderSet();};
     $('#setClose').onclick=()=>$('#settings').classList.remove('active');
-    $('#prevBtn').onclick=()=>{cMonth.setMonth(cMonth.getMonth()-1);render();};
-    $('#nextBtn').onclick=()=>{cMonth.setMonth(cMonth.getMonth()+1);render();};
+    $('#prevBtn').onclick=()=>{
+      if(view==='month') cMonth.setMonth(cMonth.getMonth()-1);
+      else cMonth.setDate(cMonth.getDate()-7);
+      render();
+    };
+    $('#nextBtn').onclick=()=>{
+      if(view==='month') cMonth.setMonth(cMonth.getMonth()+1);
+      else cMonth.setDate(cMonth.getDate()+7);
+      render();
+    };
     $('#todayBtn').onclick=()=>{cMonth=new Date();render();};
+    
+    // Toggle-Buttons mit event delegation
+    $('#monthToggle').onclick=()=>setView('month');
+    $('#weekToggle').onclick=()=>setView('week');
+    
     $('#addSrc').onclick=()=>{cfg.cals.push({n:'Neu',c:'#fb923c',u:''});save();renderSet();};
     $('#weatherCard').onclick=fetchFC;
-    $('#modalClose').onclick=$('#wClose').onclick=()=>$('#eventModal,#weatherModal').forEach?.(m=>m.classList.remove('active'))||[$('#eventModal'),$('#weatherModal')].forEach(m=>m.classList.remove('active'));
+    $('#modalClose').onclick=()=>$('#eventModal').classList.remove('active');
+    $('#wClose').onclick=()=>$('#weatherModal').classList.remove('active');
     $('#eventModal').addEventListener('click',e=>{if(e.target.id==='eventModal')e.target.classList.remove('active');});
     $('#weatherModal').addEventListener('click',e=>{if(e.target.id==='weatherModal')e.target.classList.remove('active');});
     $('#reloadBtn').onclick=()=>{if(confirm('Alles löschen?')){localStorage.removeItem(CFG);indexedDB.deleteDatabase(DBN).onsuccess=()=>location.reload();}};
     $('#fileInp').onchange=async e=>{for(const f of e.target.files){await saveImg(await resize(f),'l_'+Date.now()+Math.random().toString(36).slice(2));}save();renderSet();initSl();e.target.value='';};
     $('#clrLocal').onclick=async()=>{for(const b of blobs.filter(x=>x.id.startsWith('l_')))await delImg(b.id);save();renderSet();initSl();};
     $('#grid').addEventListener('click',e=>{const p=e.target.closest('.cal-ev');if(p?.dataset.id){const ev=evts.find(x=>x.id===p.dataset.id);if(ev)showM(ev);}});
+    $('#weekView').addEventListener('click',e=>{const p=e.target.closest('.wk-ev');if(p?.dataset.id){const ev=evts.find(x=>x.id===p.dataset.id);if(ev)showM(ev);}});
     let t;$('#time').addEventListener('pointerdown',()=>t=setTimeout(()=>{if(!$('#settings').classList.contains('active')){$('#settings').classList.add('active');renderSet();}},1200));$('#time').addEventListener('pointerup',()=>clearTimeout(t));$('#time').addEventListener('pointermove',()=>clearTimeout(t));
   }
 
