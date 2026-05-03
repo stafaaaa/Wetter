@@ -3,87 +3,92 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>SmartHub Pro - Fridge Display</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@700&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+<title>SmartHub Ultimate - Fridge OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #000; --surface: #111; --text: #fff; --accent: #ef4444; --glass: rgba(255,255,255,0.08);
-}
-[data-theme="oled"] { --bg: #000; --surface: #000; --text: #fff; --accent: #3b82f6; --glass: rgba(255,255,255,0.15); }
-[data-theme="white"] { --bg: #f4f4f5; --surface: #fff; --text: #09090b; --accent: #ef4444; --glass: rgba(0,0,0,0.05); }
-[data-theme="sea"] { --bg: #020617; --surface: #0f172a; --text: #f1f5f9; --accent: #38bdf8; --glass: rgba(255,255,255,0.05); }
+/* 10 MODERNE THEMEN */
+:root { --bg: #000; --surface: #111; --text: #fff; --accent: #ef4444; --glass: rgba(255,255,255,0.1); --anim-speed: 1.5s; }
+[data-theme="oled"] { --bg: #000; --surface: #000; --accent: #3b82f6; }
+[data-theme="glass"] { --bg: #1a1c2c; --surface: rgba(255,255,255,0.1); --glass: rgba(255,255,255,0.15); --accent: #00d2ff; }
+[data-theme="nordic"] { --bg: #2e3440; --surface: #3b4252; --accent: #88c0d0; --text: #eceff4; }
+[data-theme="cyber"] { --bg: #050505; --surface: #000; --accent: #f0f; --text: #0ff; }
+[data-theme="forest"] { --bg: #0f1a14; --surface: #1a2e23; --accent: #4ade80; }
+[data-theme="sunset"] { --bg: #2d1b2d; --surface: #432a43; --accent: #fb923c; }
+[data-theme="ocean"] { --bg: #0f172a; --surface: #1e293b; --accent: #38bdf8; }
+[data-theme="minimal"] { --bg: #f4f4f5; --surface: #fff; --text: #09090b; --accent: #ef4444; --glass: rgba(0,0,0,0.05); }
+[data-theme="crimson"] { --bg: #1a0505; --surface: #2d0a0a; --accent: #f87171; }
+[data-theme="royal"] { --bg: #1e1b4b; --surface: #312e81; --accent: #a5b4fc; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { 
-    font-family: "Inter", sans-serif; background: var(--bg); color: var(--text); 
-    height: 100dvh; overflow: hidden; -webkit-font-smoothing: antialiased; 
-}
+body { font-family: "Inter", sans-serif; background: var(--bg); color: var(--text); height: 100dvh; overflow: hidden; }
 
 .app { display: grid; grid-template-columns: 42fr 58fr; height: 100dvh; gap: 20px; padding: 20px; }
 @media (max-width: 1100px) { .app { grid-template-columns: 1fr; grid-template-rows: 35vh 1fr; } }
 
 .panel { border-radius: 32px; overflow: hidden; position: relative; background: var(--surface); border: 1px solid var(--glass); }
 
-.slideshow { position: absolute; inset: 0; z-index: 0; }
-.slide { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity 1.5s ease; }
+/* SLIDESHOW LOGIK */
+.slideshow { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.slide { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: all var(--anim-speed) ease-in-out; }
 .slide.active { opacity: 1; }
-.vignette { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.9)); z-index: 1; }
 
+/* ANIMATIONSTYPEN */
+.anim-zoom.active { transform: scale(1.1); }
+.anim-slide.active { transform: translateX(0); }
+.anim-slide { transform: translateX(100%); }
+.anim-blur { filter: blur(20px); }
+.anim-blur.active { filter: blur(0); }
+
+.vignette { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.85)); z-index: 1; }
 .overlay-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 50px; pointer-events: none; }
-.time { font-family: "JetBrains Mono", monospace; font-size: clamp(90px, 10vw, 180px); font-weight: 700; line-height: 1; letter-spacing: -6px; pointer-events: auto; }
-.date-label { font-size: 32px; font-weight: 700; color: var(--accent); margin-top: 15px; }
 
-/* KALENDER OPTIMIERUNG */
+/* WETTER BOX MODERN */
+.weather-card { display: flex; align-items: center; gap: 25px; pointer-events: auto; background: var(--glass); padding: 20px; border-radius: 24px; width: fit-content; backdrop-filter: blur(10px); }
+.weather-icon { width: 80px; height: 80px; }
+.temp-val { font-family: "JetBrains Mono", monospace; font-size: 70px; font-weight: 700; line-height: 1; }
+
+/* KALENDER & NAV */
 .cal-container { display: flex; flex-direction: column; height: 100%; padding: 30px; }
-.cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-.view-switcher { display: flex; background: var(--glass); padding: 6px; border-radius: 18px; pointer-events: auto; }
-.view-btn { padding: 12px 24px; border-radius: 14px; border: none; background: transparent; color: var(--text); cursor: pointer; font-weight: 700; font-size: 16px; transition: 0.3s; }
+.cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+.view-btn { padding: 12px 24px; border-radius: 14px; border: none; background: var(--glass); color: var(--text); cursor: pointer; font-weight: 700; font-size: 16px; pointer-events: auto; }
 .view-btn.active { background: var(--accent); color: white; }
 
-.grid-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; margin-bottom: 15px; font-weight: 700; font-size: 14px; opacity: 0.6; text-transform: uppercase; }
-.grid-body { display: grid; grid-template-columns: repeat(7, 1fr); flex: 1; gap: 3px; background: var(--glass); border-radius: 20px; overflow: hidden; }
-
-.day-cell { background: var(--surface); padding: 12px; min-height: 0; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; }
-.day-num { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
-.day-cell.other { opacity: 0.15; }
-.day-cell.today { background: rgba(239, 68, 68, 0.1); border: 2px solid var(--accent); }
+.grid-body { display: grid; grid-template-columns: repeat(7, 1fr); flex: 1; gap: 4px; background: var(--glass); border-radius: 20px; overflow: hidden; }
+.day-cell { background: var(--surface); padding: 15px; cursor: pointer; display: flex; flex-direction: column; min-height: 0; }
+.day-num { font-size: 26px; font-weight: 700; margin-bottom: 10px; }
+.day-cell.today { border: 3px solid var(--accent); background: rgba(239,68,68,0.05); }
 
 .ev-item { font-size: 13px; padding: 5px 10px; border-radius: 8px; margin-bottom: 4px; background: var(--accent); color: white; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* WOCHE */
-.week-view { display: none; flex-direction: column; gap: 15px; overflow-y: auto; height: 100%; }
-.week-view.active { display: flex; }
-.week-day-card { background: var(--glass); border-radius: 24px; padding: 25px; display: grid; grid-template-columns: 120px 1fr; gap: 20px; align-items: center; border: 1px solid transparent; }
-.week-day-card.today { border-color: var(--accent); background: rgba(239, 68, 68, 0.05); }
-
-/* SIDEBAR & MODAL */
+/* SIDEBAR & MODALS */
 .settings-panel { position: fixed; top: 0; right: 0; width: 450px; height: 100%; background: #000; z-index: 100; transform: translateX(100%); transition: 0.4s ease; padding: 40px; border-left: 1px solid var(--glass); overflow-y: auto; }
 .settings-panel.active { transform: translateX(0); }
-.settings-trigger { position: absolute; top: 30px; left: 30px; z-index: 10; width: 60px; height: 60px; border-radius: 50%; background: var(--glass); border: none; color: white; cursor: pointer; font-size: 24px; display: grid; place-items: center; pointer-events: auto; }
-
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; display: none; place-items: center; padding: 20px; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; display: none; place-items: center; padding: 20px; }
 .modal.active { display: grid; }
 .modal-content { background: var(--surface); padding: 50px; border-radius: 40px; width: 100%; max-width: 600px; border: 1px solid var(--glass); }
 
 .input-field { width: 100%; background: #111; border: 1px solid var(--glass); color: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 16px; }
-.btn-main { background: var(--accent); color: white; border: none; padding: 18px; border-radius: 15px; cursor: pointer; font-weight: 700; width: 100%; font-size: 18px; }
 </style>
 </head>
 <body data-theme="oled">
 
 <div class="app">
     <div class="panel left">
-        <button class="settings-trigger" id="openSettings">⚙️</button>
+        <button class="view-btn" style="position:absolute; top:30px; left:30px; z-index:10; width:60px; height:60px; border-radius:50%;" id="openSettings">⚙️</button>
         <div class="slideshow" id="slideshow"></div>
         <div class="vignette"></div>
         <div class="overlay-content">
             <div class="time-box">
-                <div class="time" id="clock">00:00</div>
-                <div class="date-label" id="dateFull">Wird geladen...</div>
+                <div id="clock" style="font-family:'JetBrains Mono'; font-size: clamp(80px, 9vw, 150px); font-weight:700; letter-spacing:-5px; pointer-events:auto;">00:00</div>
+                <div id="dateFull" style="font-size: 30px; font-weight:700; color:var(--accent); margin-top:10px;">Datum</div>
             </div>
-            <div class="weather-box" id="weatherCard" style="pointer-events: auto; cursor: pointer;">
-                <h1 id="mainTemp" style="font-size: 80px; font-weight: 700;">--°</h1>
-                <p id="weatherLoc" style="font-size: 24px; opacity: 0.8;">Standort...</p>
+            
+            <div class="weather-card" id="weatherDisplay">
+                <div id="weatherIcon" class="weather-icon"></div>
+                <div>
+                    <div class="temp-val" id="mainTemp">--°</div>
+                    <div id="weatherLoc" style="font-size: 20px; opacity: 0.8; font-weight: 700;">Standort...</div>
+                </div>
             </div>
         </div>
     </div>
@@ -91,171 +96,177 @@ body {
     <div class="panel right">
         <div class="cal-container">
             <div class="cal-nav">
-                <h2 id="monthTitle" style="font-size: 32px; font-weight: 700;">Monat</h2>
-                <div class="view-switcher">
+                <h2 id="monthTitle" style="font-size: 32px; font-weight:700;">Monat</h2>
+                <div class="view-switcher" style="display:flex; gap:10px;">
                     <button class="view-btn active" id="btnMonth">Monat</button>
                     <button class="view-btn" id="btnWeek">Woche</button>
                 </div>
-                <div style="display: flex; gap: 10px;">
+                <div style="display:flex; gap:10px;">
                     <button class="view-btn" id="goPrev">‹</button>
                     <button class="view-btn" id="goToday">Heute</button>
                     <button class="view-btn" id="goNext">›</button>
                 </div>
             </div>
 
-            <div id="monthDisplay" style="display: flex; flex-direction: column; flex: 1;">
-                <div class="grid-header">
-                    <div>So</div><div>Mo</div><div>Di</div><div>Mi</div><div>Do</div><div>Fr</div><div>Sa</div>
-                </div>
+            <div id="monthDisplay" style="display:flex; flex-direction:column; flex:1;">
                 <div class="grid-body" id="calendarGrid"></div>
             </div>
-
-            <div id="weekDisplay" class="week-view"></div>
+            <div id="weekDisplay" style="display:none; flex-direction:column; gap:15px; overflow-y:auto; flex:1;"></div>
         </div>
     </div>
 </div>
 
+<!-- SETTINGS -->
 <div class="settings-panel" id="settingsPanel">
-    <h2>SmartHub Settings</h2><br>
-    <label>Theme</label>
+    <h2>Einstellungen</h2><br>
+    <label>Design-Thema</label>
     <select class="input-field" id="themeSelect">
-        <option value="oled">OLED Black</option>
-        <option value="white">Snow White</option>
-        <option value="sea">Deep Sea</option>
+        <option value="oled">OLED Deep Black</option>
+        <option value="glass">Frosted Glass</option>
+        <option value="nordic">Nordic Frost</option>
+        <option value="cyber">Cyberpunk Neon</option>
+        <option value="forest">Emerald Forest</option>
+        <option value="sunset">Sunset Purple</option>
+        <option value="ocean">Midnight Ocean</option>
+        <option value="minimal">Minimal White</option>
+        <option value="crimson">Crimson Red</option>
+        <option value="royal">Royal Indigo</option>
     </select>
-    <label>Google Kalender ICS URL (Proxy genutzt)</label>
-    <input type="text" class="input-field" id="calUrl" placeholder="https://calendar.google.com/.../basic.ics">
-    <label>Bilder-URLs (pro Zeile)</label>
+    
+    <label>Slideshow Animation</label>
+    <select class="input-field" id="animSelect">
+        <option value="fade">Klassisches Fading</option>
+        <option value="zoom">Sanfter Zoom</option>
+        <option value="slide">Horizontaler Slide</option>
+        <option value="blur">Blur Transition</option>
+    </select>
+
+    <label>Cloud Bilder-URLs (pro Zeile)</label>
     <textarea class="input-field" id="imgList" rows="4"></textarea>
-    <label>Wetter-Stadt</label>
+
+    <label>Google Kalender (ICS URL)</label>
+    <input type="text" class="input-field" id="calUrl">
+
+    <label>Stadt für Wetter</label>
     <input type="text" class="input-field" id="cityInput">
-    <button class="btn-main" id="saveBtn">Speichern & Aktualisieren</button><br><br>
-    <button class="view-btn" id="closeSettings" style="width:100%">Abbrechen</button>
+
+    <button class="view-btn active" style="width:100%" id="saveBtn">Speichern & Neustart</button><br><br>
+    <button class="view-btn" style="width:100%" id="closeSettings">Schließen</button>
 </div>
 
+<!-- MODAL -->
 <div class="modal" id="eventModal">
     <div class="modal-content">
         <h2 id="mTitle" style="font-size: 40px; margin-bottom: 20px;">Termin</h2>
-        <div id="mDetails" style="font-size: 22px; line-height: 1.6; opacity: 0.9;"></div>
-        <button class="btn-main" style="margin-top: 40px;" onclick="document.getElementById('eventModal').classList.remove('active')">Schließen</button>
+        <div id="mDetails" style="font-size: 24px; opacity: 0.9; line-height:1.5;"></div>
+        <button class="view-btn active" style="margin-top: 40px; width:100%" onclick="document.getElementById('eventModal').classList.remove('active')">OK</button>
     </div>
 </div>
 
 <script>
+/** SMART HUB CORE LOGIK **/
 let state = {
-    date: new Date(),
-    view: 'month',
-    theme: 'oled',
-    city: 'Düsseldorf',
-    calUrl: '',
-    images: ['https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=2000'],
-    events: []
+    date: new Date(), view: 'month', theme: 'oled', anim: 'fade', city: 'Düsseldorf',
+    calUrl: '', images: ['https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1500'], events: []
 };
 
-async function fetchExternalCal() {
-    if (!state.calUrl) return;
+// Wetter Icons Mapping
+const weatherIcons = {
+    Clear: `<svg viewBox="0 0 24 24" fill="#fb923c"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.2 4.2l1.4 1.4m12.8 12.8l1.4 1.4M1 12h2m18 0h2M4.2 19.8l1.4-1.4m12.8-12.8l1.4-1.4"/></svg>`,
+    Clouds: `<svg viewBox="0 0 24 24" fill="#94a3b8"><path d="M17.5 19c2.5 0 4.5-2 4.5-4.5 0-2.3-1.7-4.2-4-4.5-.8-3.7-4-6.5-7.5-6.5C7.2 3.5 4.5 6 4.1 9.1 1.8 9.6 0 11.6 0 14c0 2.8 2.2 5 5 5h12.5z"/></svg>`,
+    Rain: `<svg viewBox="0 0 24 24" fill="#38bdf8"><path d="M17.5 19c2.5 0 4.5-2 4.5-4.5 0-2.3-1.7-4.2-4-4.5-.8-3.7-4-6.5-7.5-6.5C7.2 3.5 4.5 6 4.1 9.1 1.8 9.6 0 11.6 0 14c0 2.8 2.2 5 5 5h12.5z"/><path d="M8 20v3M12 21v3M16 20v3" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/></svg>`,
+    Snow: `<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`
+};
+
+async function fetchWeather() {
+    try {
+        // Fallback: Stadt automatisch über IP finden, falls nicht gesetzt
+        if(!state.city) {
+            const ipRes = await fetch('https://ipapi.co/json/');
+            const ipData = await ipRes.json();
+            state.city = ipData.city;
+        }
+        
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${state.city}&appid=769c5861cd255a3982bafb1680abf194&units=metric&lang=de`);
+        const data = await res.json();
+        document.getElementById('mainTemp').textContent = Math.round(data.main.temp) + '°';
+        document.getElementById('weatherLoc').textContent = data.name;
+        const condition = data.weather[0].main;
+        document.getElementById('weatherIcon').innerHTML = weatherIcons[condition] || weatherIcons.Clouds;
+    } catch (e) { console.error("Wetter Fehler", e); }
+}
+
+async function fetchCal() {
+    if(!state.calUrl) return;
     try {
         const proxy = "https://corsproxy.io/?" + encodeURIComponent(state.calUrl);
         const res = await fetch(proxy);
         const text = await res.text();
-        parseICS(text);
-    } catch (e) { console.error("Kalender Fehler", e); }
-}
-
-function parseICS(data) {
-    const evs = [];
-    const lines = data.split(/\r?\n/);
-    let cur = null;
-    lines.forEach(l => {
-        if(l.startsWith('BEGIN:VEVENT')) cur = {};
-        else if(l.startsWith('END:VEVENT')) { if(cur.start) evs.push(cur); cur = null; }
-        else if(cur) {
-            if(l.startsWith('SUMMARY:')) cur.title = l.slice(8);
-            if(l.startsWith('DTSTART')) {
-                const match = l.match(/\d{8}T\d{6}/);
-                if(match) cur.start = match[0].slice(0,4)+'-'+match[0].slice(4,6)+'-'+match[0].slice(6,8);
-                cur.time = match ? match[0].slice(9,11)+':'+match[0].slice(11,13) : "Ganztägig";
+        const evs = [];
+        const lines = text.split('\n');
+        let cur = null;
+        lines.forEach(l => {
+            if(l.includes('BEGIN:VEVENT')) cur = {};
+            if(l.includes('SUMMARY:')) cur.title = l.split(':')[1];
+            if(l.includes('DTSTART')) {
+                const match = l.match(/\d{8}/);
+                if(match) cur.date = match[0].slice(0,4)+'-'+match[0].slice(4,6)+'-'+match[0].slice(6,8);
             }
-            if(l.startsWith('LOCATION:')) cur.loc = l.slice(9);
-            if(l.startsWith('DESCRIPTION:')) cur.desc = l.slice(12);
-        }
-    });
-    state.events = evs;
-    renderAll();
-}
-
-function renderAll() {
-    document.body.dataset.theme = state.theme;
-    document.getElementById('monthTitle').textContent = state.date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
-    if(state.view === 'month') {
-        renderMonth();
-        document.getElementById('monthDisplay').style.display = 'flex';
-        document.getElementById('weekDisplay').classList.remove('active');
-    } else {
-        renderWeek();
-        document.getElementById('monthDisplay').style.display = 'none';
-        document.getElementById('weekDisplay').classList.add('active');
-    }
+            if(l.includes('END:VEVENT')) { evs.push(cur); cur = null; }
+        });
+        state.events = evs;
+        renderAll();
+    } catch(e) { console.error("Kalender Fehler", e); }
 }
 
 function renderMonth() {
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = '';
     const firstDay = new Date(state.date.getFullYear(), state.date.getMonth(), 1).getDay();
-    const daysInMonth = new Date(state.date.getFullYear(), state.date.getMonth() + 1, 0).getDate();
+    const days = new Date(state.date.getFullYear(), state.date.getMonth() + 1, 0).getDate();
     
-    for(let i=0; i<firstDay; i++) grid.appendChild(Object.assign(document.createElement('div'), {className:'day-cell other'}));
-
-    for(let d=1; d<=daysInMonth; d++) {
+    for(let i=0; i<firstDay; i++) grid.appendChild(Object.assign(document.createElement('div'), {className:'day-cell', style:'opacity:0'}));
+    
+    for(let d=1; d<=days; d++) {
         const cell = document.createElement('div');
         cell.className = 'day-cell';
-        const dObj = new Date(state.date.getFullYear(), state.date.getMonth(), d);
-        const dStr = dObj.toISOString().split('T')[0];
-        
+        const dStr = `${state.date.getFullYear()}-${String(state.date.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         if(new Date().toISOString().split('T')[0] === dStr) cell.classList.add('today');
+        
         cell.innerHTML = `<div class="day-num">${d}</div>`;
-        
-        state.events.filter(e => e.start === dStr).forEach(e => {
-            const item = document.createElement('div');
-            item.className = 'ev-item';
-            item.textContent = e.title;
-            item.onclick = (ev) => { ev.stopPropagation(); showEvent(e); };
-            cell.appendChild(item);
+        state.events.filter(e => e.date === dStr).forEach(e => {
+            const div = document.createElement('div');
+            div.className = 'ev-item';
+            div.textContent = e.title;
+            div.onclick = (ev) => { ev.stopPropagation(); showEvent(e); };
+            cell.appendChild(div);
         });
-
-        cell.onclick = () => { state.date = dObj; state.view = 'week'; renderAll(); };
         grid.appendChild(cell);
-    }
-}
-
-function renderWeek() {
-    const container = document.getElementById('weekDisplay');
-    container.innerHTML = '';
-    let start = new Date(state.date);
-    start.setDate(state.date.getDate() - state.date.getDay());
-
-    for(let i=0; i<7; i++) {
-        let d = new Date(start); d.setDate(start.getDate() + i);
-        const dStr = d.toISOString().split('T')[0];
-        const card = document.createElement('div');
-        card.className = 'week-day-card' + (new Date().toISOString().split('T')[0] === dStr ? ' today' : '');
-        
-        const dayEvs = state.events.filter(e => e.start === dStr);
-        let evHtml = dayEvs.length ? dayEvs.map(e => `
-            <div class="ev-item" style="font-size: 20px; padding: 12px;" onclick='showEvent(${JSON.stringify(e)})'>
-                <b>${e.time}</b> ${e.title}
-            </div>
-        `).join('') : '<p style="opacity:0.3">Keine Termine</p>';
-
-        card.innerHTML = `<div><div style="font-size:24px;font-weight:700">${d.toLocaleDateString('de-DE',{weekday:'short'})}</div><div style="font-size:18px">${d.getDate()}.${d.getMonth()+1}.</div></div><div>${evHtml}</div>`;
-        container.appendChild(card);
     }
 }
 
 function showEvent(e) {
     document.getElementById('mTitle').textContent = e.title;
-    document.getElementById('mDetails').innerHTML = `<p><b>Zeit:</b> ${e.time}</p><p><b>Ort:</b> ${e.loc || '-'}</p><p><b>Info:</b> ${e.desc || '-'}</p>`;
+    document.getElementById('mDetails').innerHTML = `<p><b>Datum:</b> ${e.date}</p><p><b>Info:</b> Google Kalender Termin</p>`;
     document.getElementById('eventModal').classList.add('active');
+}
+
+function startSlideshow() {
+    const ss = document.getElementById('slideshow');
+    let idx = 0;
+    const update = () => {
+        const s = document.createElement('div');
+        s.className = `slide anim-${state.anim}`;
+        s.style.backgroundImage = `url('${state.images[idx]}')`;
+        ss.appendChild(s);
+        setTimeout(() => {
+            s.classList.add('active');
+            if(ss.children.length > 2) ss.removeChild(ss.children[0]);
+        }, 100);
+        idx = (idx + 1) % state.images.length;
+    };
+    update();
+    if(state.images.length > 1) setInterval(update, 15000);
 }
 
 function updateClock() {
@@ -264,54 +275,42 @@ function updateClock() {
     document.getElementById('dateFull').textContent = now.toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'});
 }
 
-function setup() {
-    const saved = localStorage.getItem('hub_v5');
+function renderAll() {
+    document.body.dataset.theme = state.theme;
+    document.getElementById('monthTitle').textContent = state.date.toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+    renderMonth();
+}
+
+function init() {
+    const saved = localStorage.getItem('hub_ultimate');
     if(saved) state = {...state, ...JSON.parse(saved)};
-    
-    document.getElementById('btnMonth').onclick = () => { state.view = 'month'; renderAll(); };
-    document.getElementById('btnWeek').onclick = () => { state.view = 'week'; renderAll(); };
-    document.getElementById('goPrev').onclick = () => { if(state.view === 'month') state.date.setMonth(state.date.getMonth()-1); else state.date.setDate(state.date.getDate()-7); renderAll(); };
-    document.getElementById('goNext').onclick = () => { if(state.view === 'month') state.date.setMonth(state.date.getMonth()+1); else state.date.setDate(state.date.getDate()+7); renderAll(); };
-    document.getElementById('goToday').onclick = () => { state.date = new Date(); renderAll(); };
     
     document.getElementById('openSettings').onclick = () => {
         document.getElementById('imgList').value = state.images.join('\n');
-        document.getElementById('cityInput').value = state.city;
         document.getElementById('themeSelect').value = state.theme;
-        document.getElementById('calUrl').value = state.calUrl;
+        document.getElementById('animSelect').value = state.anim;
         document.getElementById('settingsPanel').classList.add('active');
     };
     document.getElementById('closeSettings').onclick = () => document.getElementById('settingsPanel').classList.remove('active');
     document.getElementById('saveBtn').onclick = () => {
         state.images = document.getElementById('imgList').value.split('\n').filter(l => l.trim());
-        state.city = document.getElementById('cityInput').value;
         state.theme = document.getElementById('themeSelect').value;
+        state.anim = document.getElementById('animSelect').value;
+        state.city = document.getElementById('cityInput').value;
         state.calUrl = document.getElementById('calUrl').value;
-        localStorage.setItem('hub_v5', JSON.stringify(state));
+        localStorage.setItem('hub_ultimate', JSON.stringify(state));
         location.reload();
     };
-    
+
+    renderAll();
+    updateClock();
+    setInterval(updateClock, 1000);
     startSlideshow();
-    fetchExternalCal();
+    fetchWeather();
+    fetchCal();
 }
 
-function startSlideshow() {
-    const ss = document.getElementById('slideshow');
-    let idx = 0;
-    const update = () => {
-        const s = document.createElement('div');
-        s.className = 'slide'; s.style.backgroundImage = `url('${state.images[idx]}')`;
-        ss.appendChild(s);
-        setTimeout(() => { s.classList.add('active'); if(ss.children.length > 2) ss.removeChild(ss.children[0]); }, 100);
-        idx = (idx + 1) % state.images.length;
-    };
-    update(); if(state.images.length > 1) setInterval(update, 20000);
-}
-
-setup();
-updateClock();
-setInterval(updateClock, 1000);
-renderAll();
+init();
 </script>
 </body>
 </html>
