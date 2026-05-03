@@ -1,231 +1,231 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="oled">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SmartHub Ultimate + Video Memories</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartHub Ultimate Dashboard</title>
     <style>
-        /* THEMEN & BASIS (Optimiert für Tablet) */
+        /* --- 1. THEME-DEFINITIONEN --- */
         :root {
-            --bg: #000; --panel: #111; --text: #fff; --accent: #ef4444; --glass: rgba(255,255,255,0.1);
-            --anim-speed: 1.5s;
+            --bg: #000000; --txt: #ffffff; --acc: #444; --card: rgba(255,255,255,0.05);
+            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
-        [data-theme="oled"] { --bg: #000; --panel: #000; --accent: #3b82f6; }
-        [data-theme="glass"] { --bg: #1a1c2c; --panel: rgba(255,255,255,0.1); --glass: rgba(255,255,255,0.15); --accent: #00d2ff; }
-        [data-theme="cyber"] { --bg: #050505; --panel: #000; --accent: #f0f; --text: #0ff; }
-        /* ... weitere 7 Themes im Hintergrund aktiv ... */
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: "Inter", sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; transition: all 0.5s ease; }
+        [data-theme="oled"]         { --bg: #000000; --txt: #ffffff; --acc: #222; }
+        [data-theme="nordic"]       { --bg: #2e3440; --txt: #eceff4; --acc: #88c0d0; }
+        [data-theme="cyberpunk"]    { --bg: #0d0208; --txt: #00ff41; --acc: #ff003c; }
+        [data-theme="frosted"]      { --bg: #e2e8f0; --txt: #1a202c; --acc: #3182ce; --card: rgba(255,255,255,0.7); }
+        [data-theme="emerald"]      { --bg: #064e3b; --txt: #ecfdf5; --acc: #10b981; }
+        [data-theme="sunset"]       { --bg: #2d1b4e; --txt: #fee2e2; --acc: #f43f5e; }
+        [data-theme="ocean"]        { --bg: #0c4a6e; --txt: #f0f9ff; --acc: #0ea5e9; }
+        [data-theme="minimal"]      { --bg: #ffffff; --txt: #000000; --acc: #eeeeee; --card: #f9f9f9; }
+        [data-theme="crimson"]      { --bg: #450a0a; --txt: #fef2f2; --acc: #ef4444; }
+        [data-theme="indigo"]       { --bg: #1e1b4b; --txt: #e0e7ff; --acc: #6366f1; }
 
-        .app-container { display: grid; grid-template-columns: 42vw 58vw; height: 100vh; gap: 20px; padding: 20px; }
-        .panel { border-radius: 32px; overflow: hidden; position: relative; background: var(--panel); border: 1px solid var(--glass); }
+        /* --- 2. LAYOUT-STRUKTUR --- */
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; background: var(--bg); color: var(--txt);
+            font-family: var(--font-main); transition: background 0.8s ease;
+            height: 100vh; overflow: hidden;
+            display: grid; grid-template-columns: 42vw 58vw;
+        }
 
-        /* MULTI-MEDIA ENGINE (Bilder & Video) */
-        .slideshow { position: absolute; inset: 0; z-index: 0; }
-        .media-item { position: absolute; inset: 0; opacity: 0; transition: all var(--anim-speed) ease-in-out; display: flex; align-items: center; justify-content: center; }
-        .media-item.active { opacity: 1; }
+        .left-panel { padding: 2.5rem; display: flex; flex-direction: column; justify-content: space-between; }
+        .right-panel { 
+            background: var(--card); margin: 1rem; border-radius: 2rem; 
+            padding: 2rem; overflow-y: auto; backdrop-filter: blur(10px);
+        }
+
+        /* --- 3. TYPOGRAFIE (Fernlesbarkeit) --- */
+        .clock { font-size: 11rem; font-weight: 900; line-height: 0.9; margin-bottom: 1rem; }
+        .date { font-size: 2.5rem; opacity: 0.8; margin-bottom: 2rem; }
         
-        /* Video Styling */
-        video.media-content { width: 100%; height: 100%; object-fit: cover; }
-        img.media-content { width: 100%; height: 100%; object-fit: cover; }
+        .weather-main { display: flex; align-items: center; gap: 2rem; margin-bottom: 2rem; }
+        .temp-big { font-size: 6rem; font-weight: 700; }
+        .weather-icon { width: 120px; height: 120px; }
+        
+        .forecast-bar { display: flex; justify-content: space-between; margin-bottom: 2rem; }
+        .forecast-day { text-align: center; font-size: 1.2rem; }
+
+        /* --- 4. MEDIA ENGINE & ANIMATIONEN --- */
+        #media-viewport {
+            flex-grow: 1; position: relative; border-radius: 1.5rem; overflow: hidden;
+            background: #111; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .media-obj {
+            position: absolute; width: 100%; height: 100%; object-fit: cover;
+            opacity: 0; transition: opacity 1s ease-in-out;
+        }
+        .media-active { opacity: 1; }
 
         /* Animationen */
-        .anim-zoom-in { transform: scale(1.2); } .anim-zoom-in.active { transform: scale(1); }
-        .anim-blur-in { filter: blur(20px); } .anim-blur-in.active { filter: blur(0); }
-        .anim-ken-burns.active { animation: kenburns 20s infinite alternate; }
-        @keyframes kenburns { from { transform: scale(1); } to { transform: scale(1.2); } }
+        .anim-zoom-in { transform: scale(1.2); transition: transform 10s linear, opacity 1s; }
+        .anim-slide-links { transform: translateX(-100%); }
 
-        .vignette { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.85)); z-index: 1; pointer-events: none; }
+        /* --- 5. KALENDER-STYLING --- */
+        .event-bar {
+            margin-bottom: 0.8rem; padding: 1.2rem; border-radius: 1rem;
+            font-size: 1.4rem; font-weight: 600; border-left: 12px solid #ccc;
+            background: rgba(255,255,255,0.05); cursor: pointer;
+        }
+        .cat-arbeit { border-color: #3b82f6; }
+        .cat-muell { border-color: #22c55e; }
+        .cat-geburtstag { border-color: #ec4899; }
+        .cat-termin { border-color: #f59e0b; }
 
-        /* UI ELEMENTE[cite: 2] */
-        .overlay-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 40px; pointer-events: none; }
-        .time { font-family: "JetBrains Mono", monospace; font-size: clamp(80px, 10vw, 150px); font-weight: 700; pointer-events: auto; }
-        .weather-hub { pointer-events: auto; background: var(--glass); padding: 25px; border-radius: 28px; backdrop-filter: blur(10px); }
-
-        /* KALENDER & BALKEN[cite: 2] */
-        .grid-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; padding: 20px; height: calc(100% - 100px); }
-        .day-cell { background: var(--panel); border-radius: 18px; padding: 12px; border: 1px solid var(--glass); }
-        .ev-bar { font-size: 13px; padding: 4px 10px; border-radius: 8px; margin-bottom: 3px; color: white; font-weight: 700; cursor: pointer; }
-
-        /* SETTINGS[cite: 2] */
-        .settings-pane { position: fixed; right: 0; top: 0; width: 450px; height: 100%; background: #000; z-index: 100; transform: translateX(100%); transition: 0.4s ease; padding: 40px; border-left: 1px solid var(--glass); overflow-y: auto; }
-        .settings-pane.active { transform: translateX(0); }
-        .control { width: 100%; background: #111; border: 1px solid var(--glass); color: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        /* Modal */
+        #modal {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: var(--bg); border: 2px solid var(--acc); padding: 2rem;
+            z-index: 100; border-radius: 1rem; width: 50%;
+        }
     </style>
 </head>
-<body data-theme="oled">
+<body>
 
-<div class="app-container">
-    <div class="panel">
-        <button id="toggleSettings" style="position:absolute; top:30px; left:30px; z-index:10; border:none; background:var(--glass); color:white; width:60px; height:60px; border-radius:50%; cursor:pointer; pointer-events:auto;">⚙️</button>
-        <div class="slideshow" id="mediaContainer"></div>
-        <div class="vignette"></div>
-        <div class="overlay-content">
-            <div class="time-box">
-                <div id="clock" class="time">00:00</div>
-                <div id="date" style="font-size: 30px; font-weight: 700; color: var(--accent);">Datum</div>
-            </div>
-            <div class="weather-hub">
-                <div style="display:flex; align-items:center; gap:20px;">
-                    <div id="wIcon" style="width:80px;"></div>
-                    <div id="currTemp" style="font-size:60px; font-weight:700;">--°</div>
-                </div>
-                <div id="forecast" style="display:flex; gap:15px; margin-top:15px; border-top:1px solid var(--glass); padding-top:15px;"></div>
-            </div>
+<div class="left-panel">
+    <div>
+        <div id="clock" class="clock">00:00</div>
+        <div id="date" class="date">Wird geladen...</div>
+        
+        <div class="weather-main">
+            <div id="weather-svg"></div>
+            <div id="temp" class="temp-big">--°C</div>
         </div>
+        
+        <div id="forecast" class="forecast-bar"></div>
     </div>
 
-    <div class="panel">
-        <div style="padding:25px; display:flex; justify-content:space-between; align-items:center;">
-            <h2 id="monthLabel" style="font-size: 32px;">Kalender</h2>
-            <div style="display:flex; gap:10px;">
-                <button class="view-btn active" id="btnMonth">Monat</button>
-                <button class="view-btn" id="btnWeek">Woche</button>
-            </div>
-        </div>
-        <div class="grid-container" id="calGrid"></div>
+    <div id="media-viewport">
+        <!-- Media (Bilder/Videos) werden hier injiziert -->
     </div>
 </div>
 
-<!-- SETTINGS[cite: 2] -->
-<div class="settings-pane" id="sidebar">
-    <h2>Konfiguration</h2><br>
-    <label>Design Thema</label>
-    <select class="control" id="setTheme">
-        <option value="oled">OLED Deep Black</option>
-        <option value="glass">Frosted Glass</option>
-        <option value="cyber">Cyberpunk Neon</option>
-    </select>
-    <label>Cloud Bild/Video-Links (Amazon, Drive, etc.)</label>
-    <textarea class="control" id="urlIn" rows="5" placeholder="Pro Zeile eine Bild- oder Video-URL"></textarea>
-    <label>Wetter Stadt</label>
-    <input type="text" class="control" id="cityIn" placeholder="z.B. Bonn">
-    <label>Kalender ICS URL</label>
-    <input type="text" class="control" id="calIn">
-    <button class="control" style="background:var(--accent); font-weight:700;" id="saveBtn">Änderungen Speichern</button><br>
-    <button class="control" id="closeBtn">Abbrechen</button>
+<div class="right-panel">
+    <h2 style="font-size: 3rem; margin-top: 0;">Kalender</h2>
+    <div id="event-list"></div>
+</div>
+
+<div id="modal">
+    <h2 id="m-title"></h2>
+    <p id="m-time"></p>
+    <p id="m-loc"></p>
+    <button onclick="closeModal()">Schließen</button>
 </div>
 
 <script>
-/** STATE MANAGEMENT & MEDIA LOGIC[cite: 2] **/
-let state = {
-    theme: 'oled', city: 'Bonn', anim: 'ken-burns',
-    calUrl: '', media: [], events: []
-};
+    /* --- KONFIGURATION (In LocalStorage änderbar) --- */
+    const config = {
+        weatherCity: 'Berlin',
+        weatherApi: 'YOUR_API_KEY_HERE', // OpenWeatherMap API Key
+        icsUrl: '', // Deine Google Kalender ICS URL
+        mediaUrls: [
+            'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1000&q=80',
+            'https://www.w3schools.com/html/mov_bbb.mp4' // Beispiel Video
+        ],
+        theme: localStorage.getItem('theme') || 'oled'
+    };
 
-function init() {
-    const saved = localStorage.getItem('hub_master_v3');
-    if(saved) state = {...state, ...JSON.parse(saved)};
-
-    applySettings();
-    updateClock();
+    /* --- UHRZEIT --- */
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('clock').textContent = now.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
+        document.getElementById('date').textContent = now.toLocaleDateString('de-DE', {weekday: 'long', day: '2-digit', month: 'long'});
+    }
     setInterval(updateClock, 1000);
-    fetchWeather();
-    fetchCal();
-    startMediaEngine();
-}
+    updateClock();
 
-/** MEDIA ENGINE (VIDEO & IMAGE)[cite: 2] **/
-let mediaIdx = 0;
-function startMediaEngine() {
-    const container = document.getElementById('mediaContainer');
-    if(state.media.length === 0) return;
-
-    const showNext = () => {
-        const url = state.media[mediaIdx];
-        const isVideo = url.match(/\.(mp4|webm|ogg|mov)/i) || url.includes('video');
+    /* --- WETTER STATION --- */
+    async function fetchWeather() {
+        if(config.weatherApi === 'YOUR_API_KEY_HERE') return;
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${config.weatherCity}&units=metric&appid=${config.weatherApi}&lang=de`);
+        const data = await res.json();
         
-        const wrapper = document.createElement('div');
-        wrapper.className = `media-item anim-${state.anim}`;
+        // Aktuelles Wetter
+        document.getElementById('temp').textContent = Math.round(data.list[0].main.temp) + "°C";
+        // SVG Icon Logik hier... (vereinfacht)
+        document.getElementById('weather-svg').innerHTML = `☀️`; 
+    }
+
+    /* --- ICS KALENDER PARSER --- */
+    async function loadCalendar() {
+        if(!config.icsUrl) return;
+        const proxy = "https://corsproxy.io/?" + encodeURIComponent(config.icsUrl);
+        try {
+            const res = await fetch(proxy);
+            const text = await res.text();
+            parseICS(text);
+        } catch (e) { console.error("Kalender Fehler", e); }
+    }
+
+    function parseICS(data) {
+        const events = [];
+        const vevents = data.split("BEGIN:VEVENT");
+        vevents.shift(); // Header entfernen
+
+        vevents.forEach(ev => {
+            const title = ev.match(/SUMMARY:(.*)/)?.[1] || "Unbenannt";
+            const start = ev.match(/DTSTART[:;](.*)/)?.[1] || "";
+            const loc = ev.match(/LOCATION:(.*)/)?.[1] || "";
+            
+            let cat = 'termin';
+            if(title.toLowerCase().includes('müll')) cat = 'muell';
+            if(title.toLowerCase().includes('arbeit')) cat = 'arbeit';
+            if(title.toLowerCase().includes('geburtstag')) cat = 'geburtstag';
+
+            events.push({title, start, loc, cat});
+        });
+        renderEvents(events.slice(0, 8)); // Top 8 Termine
+    }
+
+    function renderEvents(events) {
+        const container = document.getElementById('event-list');
+        container.innerHTML = events.map(e => `
+            <div class="event-bar cat-${e.cat}" onclick="showModal('${e.title}', '${e.loc}')">
+                ${e.title}
+            </div>
+        `).join('');
+    }
+
+    /* --- HYBRIDE MEDIA ENGINE --- */
+    let mediaIndex = 0;
+    function rotateMedia() {
+        const viewport = document.getElementById('media-viewport');
+        const url = config.mediaUrls[mediaIndex];
+        const isVideo = url.endsWith('.mp4') || url.endsWith('.mov');
+
+        viewport.innerHTML = '';
+        const el = document.createElement(isVideo ? 'video' : 'img');
+        el.src = url;
+        el.className = 'media-obj media-active anim-zoom-in';
         
         if(isVideo) {
-            const video = document.createElement('video');
-            video.src = url;
-            video.className = 'media-content';
-            video.muted = true;
-            video.autoplay = true;
-            video.onended = () => { setTimeout(showNext, 500); }; // Wechsel nach Videoende
-            wrapper.appendChild(video);
+            el.muted = true; el.autoplay = true;
+            el.onended = () => { mediaIndex = (mediaIndex + 1) % config.mediaUrls.length; rotateMedia(); };
         } else {
-            const img = document.createElement('img');
-            img.src = url;
-            img.className = 'media-content';
-            wrapper.appendChild(img);
-            setTimeout(showNext, 15000); // 15 Sek für Bilder
+            setTimeout(() => {
+                mediaIndex = (mediaIndex + 1) % config.mediaUrls.length;
+                rotateMedia();
+            }, 8000); // 8 Sek pro Bild
         }
-
-        container.appendChild(wrapper);
-        setTimeout(() => {
-            wrapper.classList.add('active');
-            if(container.children.length > 2) container.removeChild(container.children[0]);
-        }, 100);
-
-        mediaIdx = (mediaIdx + 1) % state.media.length;
-    };
-    showNext();
-}
-
-/** KALENDER LOGIK (Bunte Balken)[cite: 2] **/
-async function fetchCal() {
-    if(!state.calUrl) return;
-    try {
-        const proxy = "https://corsproxy.io/?" + encodeURIComponent(state.calUrl);
-        const res = await fetch(proxy);
-        const text = await res.text();
-        // ICS Parsing Logik...
-        renderCalendar();
-    } catch(e) {}
-}
-
-function renderCalendar() {
-    const grid = document.getElementById('calGrid');
-    grid.innerHTML = '';
-    const now = new Date();
-    document.getElementById('monthLabel').textContent = now.toLocaleDateString('de-DE', {month:'long', year:'numeric'});
-    
-    for(let d=1; d<=31; d++) {
-        const cell = document.createElement('div');
-        cell.className = 'day-cell';
-        cell.innerHTML = `<div style="font-size:24px; font-weight:700;">${d}</div>`;
-        grid.appendChild(cell);
+        viewport.appendChild(el);
     }
-}
 
-/** WETTER STATION[cite: 1, 2] **/
-async function fetchWeather() {
-    const apiKey = '769c5861cd255a3982bafb1680abf194';
-    try {
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${state.city}&appid=${apiKey}&units=metric&lang=de`);
-        const data = await res.json();
-        document.getElementById('currTemp').textContent = Math.round(data.main.temp) + '°';
-        document.getElementById('wCity').textContent = data.name;
-    } catch(e) {}
-}
+    /* --- MODAL --- */
+    function showModal(title, loc) {
+        document.getElementById('m-title').textContent = title;
+        document.getElementById('m-loc').textContent = loc;
+        document.getElementById('modal').style.display = 'block';
+    }
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-function updateClock() {
-    const n = new Date();
-    document.getElementById('clock').textContent = n.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
-    document.getElementById('date').textContent = n.toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'});
-}
+    /* --- INIT --- */
+    document.documentElement.setAttribute('data-theme', config.theme);
+    rotateMedia();
+    fetchWeather();
+    loadCalendar();
 
-function applySettings() {
-    document.body.dataset.theme = state.theme;
-}
-
-document.getElementById('toggleSettings').onclick = () => document.getElementById('sidebar').classList.add('active');
-document.getElementById('closeBtn').onclick = () => document.getElementById('sidebar').classList.remove('active');
-document.getElementById('saveBtn').onclick = () => {
-    state.theme = document.getElementById('setTheme').value;
-    state.city = document.getElementById('cityIn').value || state.city;
-    state.calUrl = document.getElementById('calIn').value;
-    state.media = document.getElementById('urlIn').value.split('\n').filter(u => u.trim());
-    localStorage.setItem('hub_master_v3', JSON.stringify(state));
-    location.reload(); // Für Video-Engine Neustart nötig
-};
-
-init();
 </script>
 </body>
 </html>
