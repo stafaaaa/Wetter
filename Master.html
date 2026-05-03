@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SmartHub Ultimate Pro - High Contrast & Natural Weather</title>
+    <title>SmartHub Ultimate Pro - Persistence & 10 Anim Fix</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
         /* 1. THEMEN-SYSTEM (16 THEMES)[cite: 2] */
@@ -14,69 +14,71 @@
         [data-theme="neon"] { --bg: #000; --panel: #0a0a0a; --accent: #39ff14; }
         [data-theme="candy"] { --bg: #2b0b3b; --panel: #4a148c; --accent: #ff4081; }
         [data-theme="tropical"] { --bg: #004d40; --panel: #00695c; --accent: #ffeb3b; }
-        /* Weitere Themes bleiben im System erhalten[cite: 2] */
+        [data-theme="golden"] { --bg: #3e2723; --panel: #4e342e; --accent: #ffc107; }
+        [data-theme="violet"] { --bg: #1a0033; --panel: #310062; --accent: #e040fb; }
+        [data-theme="cherry"] { --bg: #33000d; --panel: #4d0014; --accent: #ff5252; }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: "Inter", sans-serif; background: var(--bg); color: var(--text); height: 100dvh; overflow: hidden; transition: 0.5s ease; }
 
-        /* DYNAMISCHES LAYOUT[cite: 2] */
         .app-container { display: grid; grid-template-columns: var(--split) 1fr; height: 100dvh; gap: 15px; padding: 15px; }
         @media (max-width: 1100px) { .app-container { grid-template-columns: 1fr; grid-template-rows: 50vh 1fr; } }
 
         .panel { border-radius: 28px; overflow: hidden; position: relative; background: var(--panel); border: 1px solid var(--glass); }
 
-        /* SLIDESHOW & ANIMATIONEN[cite: 2] */
+        /* 2. SLIDESHOW & 10 ANIMATIONEN[cite: 2] */
         .slideshow { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
         .media-item { position: absolute; inset: 0; opacity: 0; transition: all var(--anim-speed) cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; }
         .media-item.active { opacity: 1; }
         .media-content { width: 100%; height: 100%; object-fit: cover; }
 
-        /* LESBARKEITS-FIX & VIGNETTE[cite: 2] */
-        .vignette { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.8) 100%); z-index: 1; pointer-events: none; }
+        /* Animation Styles[cite: 2] */
+        .anim-fade.active { opacity: 1; }
+        .anim-zoom-in { transform: scale(1.4); } .anim-zoom-in.active { transform: scale(1); }
+        .anim-zoom-out { transform: scale(0.6); } .anim-zoom-out.active { transform: scale(1); }
+        .anim-slide-left { transform: translateX(100%); } .anim-slide-left.active { transform: translateX(0); }
+        .anim-slide-right { transform: translateX(-100%); } .anim-slide-right.active { transform: translateX(0); }
+        .anim-blur-in { filter: blur(25px); } .anim-blur-in.active { filter: blur(0); }
+        .anim-rotate { transform: rotate(15deg) scale(1.3); } .anim-rotate.active { transform: rotate(0) scale(1); }
+        .anim-flip { transform: rotateY(90deg); opacity: 0; } .anim-flip.active { transform: rotateY(0); opacity: 1; }
+        .anim-bounce { transform: translateY(-100%); } .anim-bounce.active { transform: translateY(0); }
+        .anim-ken-burns { transform: scale(1); } .anim-ken-burns.active { animation: kb 20s infinite alternate; }
+        @keyframes kb { to { transform: scale(1.2) translate(-2%, -2%); } }
+
+        /* OVERLAYS & KONTRAST[cite: 2] */
+        .vignette { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 35%, transparent 65%, rgba(0,0,0,0.8) 100%); z-index: 1; pointer-events: none; }
         .overlay-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 30px; pointer-events: none; }
         .time { font-family: "JetBrains Mono", monospace; font-size: clamp(50px, 7vw, 110px); font-weight: 700; text-shadow: 0 4px 20px #000; pointer-events: auto; }
-        .date { font-size: clamp(20px, 2.5vw, 32px); font-weight: 700; color: var(--accent); text-shadow: 0 2px 10px #000; }
+        .date { font-size: clamp(22px, 2.5vw, 34px); font-weight: 700; color: var(--accent); text-shadow: 0 2px 10px #000; }
 
-        /* PANORAMA WETTER STATION (NATÜRLICHE FARBEN)[cite: 2] */
-        .weather-hub { 
-            pointer-events: auto; background: var(--glass); padding: 25px 40px; border-radius: 24px; 
-            backdrop-filter: blur(25px); border: 1px solid var(--glass); 
-            display: flex; align-items: center; justify-content: space-between;
-            width: 100%; margin-top: auto; box-shadow: 0 15px 45px rgba(0,0,0,0.6);
-        }
+        /* WETTER PANORAMA[cite: 2] */
+        .weather-hub { pointer-events: auto; background: var(--glass); padding: 25px 40px; border-radius: 24px; backdrop-filter: blur(25px); border: 1px solid var(--glass); display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: auto; box-shadow: 0 15px 45px rgba(0,0,0,0.6); }
         .weather-main { display: flex; align-items: center; gap: 30px; border-right: 2px solid var(--glass); padding-right: 40px; }
         .weather-icon-large { width: 100px; height: 100px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3)); animation: float 4s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .temp-large { font-family: "JetBrains Mono", monospace; font-size: 55px; font-weight: 700; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         
         .forecast-panorama { display: flex; flex: 1; justify-content: space-around; padding-left: 30px; }
         .fc-item { text-align: center; font-size: 16px; font-weight: 700; }
-        .fc-icon { width: 55px; height: 55px; margin: 8px 0; }
+        .fc-icon { width: 50px; height: 50px; margin: 8px 0; }
 
-        /* MAXIMALE KALENDER-LESBARKEIT[cite: 2] */
+        /* KALENDER LESBARKEIT[cite: 2] */
         .cal-container { display: flex; flex-direction: column; height: 100%; padding: 20px; }
-        .cal-nav { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; pointer-events: auto; }
-        .month-label { font-size: clamp(28px, 3.5vw, 42px); font-weight: 700; color: var(--text); text-align: center; }
-        
-        .grid-header { 
-            display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; 
-            padding-bottom: 12px; font-weight: 700; font-size: 18px; color: var(--accent); 
-            text-transform: uppercase; letter-spacing: 1px;
-        }
+        .month-label { font-size: clamp(28px, 3.5vw, 42px); font-weight: 700; text-align: center; }
+        .grid-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; padding-bottom: 12px; font-weight: 700; font-size: 18px; color: var(--accent); text-transform: uppercase; }
         .grid-body { display: grid; grid-template-columns: repeat(7, 1fr); flex: 1; gap: 6px; background: var(--glass); border-radius: 20px; padding: 8px; }
-        .day-cell { background: var(--panel); padding: 12px; cursor: pointer; min-height: 0; display: flex; flex-direction: column; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
-        .day-num { font-size: 26px; font-weight: 700; margin-bottom: 5px; color: var(--text); }
+        .day-cell { background: var(--panel); padding: 12px; cursor: pointer; min-height: 0; display: flex; flex-direction: column; border-radius: 12px; }
+        .day-num { font-size: 26px; font-weight: 700; }
         .day-cell.today { border: 3px solid var(--accent); background: rgba(239, 68, 68, 0.15); }
         .day-cell.other { opacity: 0.2; }
         .ev-bar { font-size: 12px; padding: 5px 8px; border-radius: 8px; margin-top: 4px; color: white; font-weight: 700; background: var(--accent); white-space: nowrap; overflow: hidden; }
 
         /* SETTINGS & MODALS[cite: 2] */
-        .settings-pane { position: fixed; right: 0; top: 0; width: 400px; height: 100%; background: #000; z-index: 100; transform: translateX(100%); transition: 0.4s ease; padding: 30px; border-left: 1px solid var(--glass); overflow-y: auto; }
+        .settings-pane { position: fixed; right: 0; top: 0; width: 420px; height: 100%; background: #000; z-index: 100; transform: translateX(100%); transition: 0.4s ease; padding: 30px; border-left: 1px solid var(--glass); overflow-y: auto; }
         .settings-pane.active { transform: translateX(0); }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; display: none; place-items: center; padding: 20px; }
-        .modal.active { display: grid; }
-        .modal-box { background: var(--panel); padding: 40px; border-radius: 32px; border: 1px solid var(--glass); width: 100%; max-width: 550px; }
         .input-field { width: 100%; background: #111; border: 1px solid var(--glass); color: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; outline: none; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; display: none; place-items: center; }
+        .modal.active { display: grid; }
+        .modal-box { background: var(--panel); padding: 40px; border-radius: 32px; border: 1px solid var(--glass); width: 90%; max-width: 550px; }
     </style>
 </head>
 <body data-theme="oled">
@@ -91,12 +93,11 @@
                 <div id="clock" class="time">00:00</div>
                 <div id="date" class="date">Datum...</div>
             </div>
-            
             <div class="weather-hub">
                 <div class="weather-main">
                     <div id="wIcon" class="weather-icon-large"></div>
                     <div>
-                        <div id="mainTemp" class="temp-large">--°</div>
+                        <div id="mainTemp" style="font-size:55px; font-weight:700; font-family:'JetBrains Mono';">--°</div>
                         <div id="wCity" style="font-weight:700; font-size:22px; opacity:0.9;">Standort...</div>
                     </div>
                 </div>
@@ -107,21 +108,13 @@
 
     <div class="panel right">
         <div class="cal-container">
-            <div class="cal-nav">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <button class="nav-btn" style="font-size:20px; padding:12px 20px;" onclick="changeMonth(-1)">❮</button>
-                    <h2 id="monthTitle" class="month-label">Monat</h2>
-                    <button class="nav-btn" style="font-size:20px; padding:12px 20px;" onclick="changeMonth(1)">❯</button>
-                </div>
-                <div style="display:flex; gap:8px; margin-top:10px;">
-                    <button class="nav-btn" style="flex:1; font-size:14px;" id="btnViewMonth" onclick="setView('month')">Monat</button>
-                    <button class="nav-btn" style="flex:1; font-size:14px;" id="btnViewWeek" onclick="setView('week')">Woche</button>
-                </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <button class="nav-btn" style="background:var(--glass); border:none; color:white; padding:10px 15px; border-radius:10px;" onclick="changeMonth(-1)">❮</button>
+                <h2 id="monthTitle" class="month-label">Monat</h2>
+                <button class="nav-btn" style="background:var(--glass); border:none; color:white; padding:10px 15px; border-radius:10px;" onclick="changeMonth(1)">❯</button>
             </div>
             <div id="monthView" style="height:100%; display:flex; flex-direction:column;">
-                <div class="grid-header">
-                    <div>So</div><div>Mo</div><div>Di</div><div>Mi</div><div>Do</div><div>Fr</div><div>Sa</div>
-                </div>
+                <div class="grid-header"><div>So</div><div>Mo</div><div>Di</div><div>Mi</div><div>Do</div><div>Fr</div><div>Sa</div></div>
                 <div class="grid-body" id="calGrid"></div>
             </div>
             <div id="weekView" style="display:none; flex-direction:column; gap:12px; overflow-y:auto; flex:1;"></div>
@@ -129,28 +122,33 @@
     </div>
 </div>
 
-<!-- SETTINGS[cite: 2] -->
 <div class="settings-pane" id="sidebar">
-    <h3 style="margin-bottom:20px; font-size:24px;">Konfiguration</h3>
+    <h3 style="margin-bottom:20px; font-size:24px;">System-Setup</h3>
     <label>Slideshow-Fokus (%)</label>
     <input type="range" id="inSplit" min="30" max="85" value="65" class="input-field" style="padding:0;">
+    <label>Animation (10 Effekte)</label>
+    <select class="input-field" id="inAnim">
+        <option value="fade">Klassisch Fade</option>
+        <option value="zoom-in">Zoom In</option>
+        <option value="zoom-out">Zoom Out</option>
+        <option value="slide-left">Slide Links</option>
+        <option value="slide-right">Slide Rechts</option>
+        <option value="blur-in">Blur Effekt</option>
+        <option value="rotate">Rotation</option>
+        <option value="flip">3D Flip</option>
+        <option value="ken-burns">Ken Burns</option>
+        <option value="bounce">Bounce</option>
+    </select>
+    <label>Wetter Stadt</label><input type="text" class="input-field" id="inCity">
     <label>Thema</label>
     <select class="input-field" id="inTheme">
-        <option value="oled">OLED Deep Black</option><option value="glass">Frosted Glass</option>
-        <option value="cyber">Cyberpunk Neon</option><option value="neon">Neon Night</option>
-        <option value="candy">Candy Pop</option><option value="tropical">Tropical Breeze</option>
-        <option value="golden">Golden Hour</option><option value="violet">Electric Violet</option>
-        <option value="cherry">Cherry Blossom</option>
+        <option value="oled">OLED Black</option><option value="glass">Glass</option><option value="cyber">Cyber</option>
+        <option value="neon">Neon</option><option value="candy">Candy</option><option value="tropical">Tropical</option>
+        <option value="golden">Golden</option><option value="violet">Violet</option><option value="cherry">Cherry</option>
     </select>
-    <label>Animation</label>
-    <select class="input-field" id="inAnim">
-        <option value="fade">Fade</option><option value="zoom-in">Zoom In</option>
-        <option value="ken-burns">Ken Burns</option><option value="blur-in">Blur</option>
-    </select>
-    <label>Stadt</label><input type="text" class="input-field" id="inCity">
-    <label>ICS URL</label><input type="text" class="input-field" id="inCal">
-    <label>Online Bilder (pro Zeile)</label><textarea class="input-field" id="inMedia" rows="2"></textarea>
-    <label>Interner Fotoordner</label><input type="file" id="inLocal" class="input-field" multiple webkitdirectory directory>
+    <label>ICS Kalender URL</label><input type="text" class="input-field" id="inCal">
+    <label>Bild-Links (pro Zeile)</label><textarea class="input-field" id="inMedia" rows="3"></textarea>
+    <label>Lokaler Ordner</label><input type="file" id="inLocal" class="input-field" multiple webkitdirectory directory>
     <button class="input-field" style="background:var(--accent); font-weight:700; color:white; border:none;" id="btnSave">SPEICHERN</button>
     <button class="input-field" id="btnClose">Abbrechen</button>
 </div>
@@ -165,14 +163,13 @@
 </div>
 
 <script>
-/** STATE MANAGEMENT[cite: 2] **/
+/** 1. STATE & STORAGE[cite: 2] **/
 let state = {
     theme: 'oled', city: 'Düsseldorf', calUrl: '', anim: 'fade', split: 65,
     media: ['https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1500'],
     localMedia: [], events: [], date: new Date(), view: 'month'
 };
 
-/* NATÜRLICHE WETTER ICONS[cite: 2] */
 const weatherIcons = {
     Clear: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="#ffd700" stroke="#ffae00" stroke-width="1"/><path d="M12 2v3m0 14v3M4 4l2 2m12 12 2 2M2 12h3m14 0h3M4 20l2-2m12-12 2 2" stroke="#ffae00" stroke-width="2" stroke-linecap="round"/></svg>',
     Clouds: '<svg viewBox="0 0 24 24"><path d="M17.5 19c2.5 0 4.5-2 4.5-4.5 0-2.3-1.7-4.2-4-4.5-.8-3.7-4-6.5-7.5-6.5C7.2 3.5 4.5 6 4.1 9.1 1.8 9.6 0 11.6 0 14c0 2.8 2.2 5 5 5h12.5z" fill="#e0e0e0" stroke="#bdbdbd" stroke-width="1"/></svg>',
@@ -180,7 +177,7 @@ const weatherIcons = {
     Thunderstorm: '<svg viewBox="0 0 24 24"><path d="M17.5 19c2.5 0 4.5-2 4.5-4.5 0-2.3-1.7-4.2-4-4.5-.8-3.7-4-6.5-7.5-6.5C7.2 3.5 4.5 6 4.1 9.1 1.8 9.6 0 11.6 0 14c0 2.8 2.2 5 5 5h12.5z" fill="#78909c"/><path d="M13 16l-2 4h4l-2 4" fill="#ffd700"/></svg>'
 };
 
-/** KALENDER LOGIK[cite: 1, 2] **/
+/** 2. NAVIGATION & KALENDER[cite: 1, 2] **/
 function changeMonth(delta) { state.date.setMonth(state.date.getMonth() + delta); renderCal(); }
 function setView(v) { state.view = v; renderCal(); }
 
@@ -206,98 +203,111 @@ async function loadCal() {
 }
 
 function renderCal() {
-    const grid = document.getElementById('calGrid'); const week = document.getElementById('weekView');
+    const grid = document.getElementById('calGrid');
     document.getElementById('monthTitle').textContent = state.date.toLocaleDateString('de-DE', {month:'long', year:'numeric'});
-    if(state.view === 'month') {
-        document.getElementById('monthView').style.display = 'flex'; week.style.display = 'none'; grid.innerHTML = '';
-        const first = new Date(state.date.getFullYear(), state.date.getMonth(), 1).getDay();
-        const days = new Date(state.date.getFullYear(), state.date.getMonth() + 1, 0).getDate();
-        for(let i=0; i<first; i++) grid.appendChild(Object.assign(document.createElement('div'), {className:'day-cell other'}));
-        for(let d=1; d<=days; d++) {
-            const cell = document.createElement('div'); cell.className = 'day-cell';
-            const dStr = `${state.date.getFullYear()}-${String(state.date.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            if(new Date().toISOString().split('T')[0] === dStr) cell.classList.add('today');
-            cell.innerHTML = `<div class="day-num">${d}</div>`;
-            state.events.filter(e => e.date === dStr).slice(0,2).forEach(e => {
-                const bar = document.createElement('div'); bar.className = 'ev-bar'; bar.textContent = e.title;
-                bar.onclick = (ev) => {
-                    ev.stopPropagation();
-                    document.getElementById('mTitle').textContent = e.title;
-                    document.getElementById('mDate').textContent = new Date(e.date).toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'});
-                    document.getElementById('mDesc').innerHTML = e.desc || "Keine Details.";
-                    document.getElementById('eventModal').classList.add('active');
-                };
-                cell.appendChild(bar);
-            });
-            grid.appendChild(cell);
-        }
-    } else {
-        document.getElementById('monthView').style.display = 'none'; week.style.display = 'flex'; week.innerHTML = '';
-        let start = new Date(state.date); start.setDate(state.date.getDate() - state.date.getDay());
-        for(let i=0; i<7; i++) {
-            let d = new Date(start); d.setDate(start.getDate() + i);
-            const dStr = d.toISOString().split('T')[0];
-            const row = document.createElement('div'); row.style.background='var(--panel)'; row.style.padding='20px'; row.style.borderRadius='15px';
-            const evs = state.events.filter(e => e.date === dStr).map(e => `<div class="ev-bar">${e.title}</div>`).join('');
-            row.innerHTML = `<div style="font-weight:700; font-size:18px; color:var(--accent)">${d.toLocaleDateString('de-DE',{weekday:'long', day:'numeric'})}</div><div style="margin-top:10px">${evs || '-'}</div>`;
-            week.appendChild(row);
-        }
+    grid.innerHTML = '';
+    const first = new Date(state.date.getFullYear(), state.date.getMonth(), 1).getDay();
+    const days = new Date(state.date.getFullYear(), state.date.getMonth() + 1, 0).getDate();
+    for(let i=0; i<first; i++) grid.appendChild(Object.assign(document.createElement('div'), {className:'day-cell other'}));
+    for(let d=1; d<=days; d++) {
+        const cell = document.createElement('div'); cell.className = 'day-cell';
+        const dStr = `${state.date.getFullYear()}-${String(state.date.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        if(new Date().toISOString().split('T')[0] === dStr) cell.classList.add('today');
+        cell.innerHTML = `<div class="day-num">${d}</div>`;
+        state.events.filter(e => e.date === dStr).slice(0,2).forEach(e => {
+            const bar = document.createElement('div'); bar.className = 'ev-bar'; bar.textContent = e.title;
+            bar.onclick = (ev) => {
+                ev.stopPropagation();
+                document.getElementById('mTitle').textContent = e.title;
+                document.getElementById('mDate').textContent = new Date(e.date).toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'});
+                document.getElementById('mDesc').innerHTML = e.desc || "-";
+                document.getElementById('eventModal').classList.add('active');
+            };
+            cell.appendChild(bar);
+        });
+        grid.appendChild(cell);
     }
 }
 
-/** PANORAMA WETTER[cite: 2] **/
+/** 3. WETTER & SLIDESHOW[cite: 1, 2] **/
 async function updateWeather() {
     try {
         const apiKey = '769c5861cd255a3982bafb1680abf194';
         const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${state.city}&appid=${apiKey}&units=metric&lang=de`);
         const data = await res.json();
+        if(data.cod !== "200") return;
         document.getElementById('mainTemp').textContent = Math.round(data.list[0].main.temp) + '°';
         document.getElementById('wCity').textContent = data.city.name;
         document.getElementById('wIcon').innerHTML = weatherIcons[data.list[0].weather[0].main] || weatherIcons.Clouds;
-        
         const strip = document.getElementById('forecastStrip'); strip.innerHTML = '';
         data.list.filter(i => i.dt_txt.includes("12:00:00")).slice(0,5).forEach(day => {
             const d = new Date(day.dt * 1000);
-            strip.innerHTML += `
-                <div class="fc-item">
-                    <div style="font-size:18px; font-weight:700;">${d.toLocaleDateString('de-DE',{weekday:'short'})}</div>
-                    <div class="fc-icon">${weatherIcons[day.weather[0].main]||weatherIcons.Clouds}</div>
-                    <div style="font-weight:700; font-size:22px;">${Math.round(day.main.temp)}°</div>
-                </div>`;
+            strip.innerHTML += `<div class="fc-item"><div>${d.toLocaleDateString('de-DE',{weekday:'short'})}</div><div class="fc-icon">${weatherIcons[day.weather[0].main]||weatherIcons.Clouds}</div><div>${Math.round(day.main.temp)}°</div></div>`;
         });
     } catch(e) {}
 }
 
 let mIdx = 0;
 function playMedia() {
-    const hub = document.getElementById('mediaHub'); const pool = [...state.media, ...state.localMedia];
+    const hub = document.getElementById('mediaHub');
+    const pool = [...state.media, ...state.localMedia];
     if(!pool.length) return;
-    const wrap = document.createElement('div'); wrap.className = `media-item active anim-${state.anim}`;
-    const img = document.createElement('img'); img.src = pool[mIdx % pool.length]; img.className = 'media-content';
-    wrap.appendChild(img); hub.appendChild(wrap);
-    setTimeout(() => { wrap.classList.add('active'); if(hub.children.length > 2) hub.removeChild(hub.children[0]); }, 100);
+    const wrap = document.createElement('div');
+    wrap.className = `media-item anim-${state.anim}`; // ANIMATION FIX[cite: 2]
+    const img = document.createElement('img');
+    img.src = pool[mIdx % pool.length];
+    img.className = 'media-content';
+    wrap.appendChild(img);
+    hub.appendChild(wrap);
+    setTimeout(() => { 
+        wrap.classList.add('active');
+        if(hub.children.length > 2) hub.removeChild(hub.children[0]);
+    }, 100);
     mIdx++;
 }
 
+/** 4. INIT & PERSISTENCE[cite: 2] **/
 function init() {
-    const saved = localStorage.getItem('hub_master_v11_final');
-    if(saved) state = {...state, ...JSON.parse(saved), date: new Date()};
+    const saved = localStorage.getItem('hub_master_v12_final');
+    if(saved) {
+        const p = JSON.parse(saved);
+        state = {...state, ...p, date: new Date()};
+    }
+    
+    // UI Update von geladenen Daten[cite: 2]
     document.documentElement.style.setProperty('--split', state.split + 'vw');
     document.getElementById('inSplit').value = state.split;
+    document.getElementById('inCity').value = state.city;
+    document.getElementById('inAnim').value = state.anim;
+    document.getElementById('inTheme').value = state.theme;
+    document.getElementById('inCal').value = state.calUrl;
+    document.getElementById('inMedia').value = state.media.join('\n');
+
     document.getElementById('btnSet').onclick = () => document.getElementById('sidebar').classList.add('active');
     document.getElementById('btnClose').onclick = () => document.getElementById('sidebar').classList.remove('active');
+    
     document.getElementById('btnSave').onclick = () => {
-        state.split = document.getElementById('inSplit').value; state.city = document.getElementById('inCity').value;
-        state.calUrl = document.getElementById('inCal').value; state.theme = document.getElementById('inTheme').value;
-        state.anim = document.getElementById('inAnim').value; state.media = document.getElementById('inMedia').value.split('\n').filter(u=>u.trim());
-        localStorage.setItem('hub_master_v11_final', JSON.stringify(state));
-        location.reload();
+        state.split = document.getElementById('inSplit').value;
+        state.city = document.getElementById('inCity').value;
+        state.calUrl = document.getElementById('inCal').value;
+        state.theme = document.getElementById('inTheme').value;
+        state.anim = document.getElementById('inAnim').value;
+        state.media = document.getElementById('inMedia').value.split('\n').filter(u=>u.trim());
+        
+        localStorage.setItem('hub_master_v12_final', JSON.stringify({
+            split: state.split, city: state.city, calUrl: state.calUrl, 
+            theme: state.theme, anim: state.anim, media: state.media
+        }));
+        location.reload(); // Hard reload sichert Speicherung[cite: 2]
     };
+
     document.getElementById('inLocal').onchange = (e) => {
         state.localMedia = Array.from(e.target.files).filter(f => f.type.startsWith('image/')).map(f => URL.createObjectURL(f));
         mIdx = 0; playMedia();
     };
-    document.body.dataset.theme = state.theme; renderCal(); loadCal(); updateWeather();
+
+    document.body.dataset.theme = state.theme;
+    renderCal(); loadCal(); updateWeather();
     setInterval(playMedia, 15000); playMedia();
     setInterval(() => {
         const n = new Date();
