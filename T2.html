@@ -2,167 +2,180 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>AnnaLove4</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0a0b;--surface:#131316;--text:#fafafa;--muted:#71717a;--accent:#DEADBEEF;--border:rgba(255,255,255,0.06);--ease:cubic-bezier(0.16,1,0.3,1);--radius:8px;--font-body:Inter,system-ui,-apple-system,sans-serif;--font-serif:"Instrument Serif",serif;--font-mono:"JetBrains Mono",monospace}
-[data-theme="daylight"]{--bg:#fafaf9;--surface:#fff;--text:#0a0a0b;--muted:#71717a;--accent:#0a0a0b;--border:rgba(0,0,0,0.06)}
+:root{--bg:#0a0a0b;--surface:#131316;--text:#fafafa;--muted:#71717a;--accent:#DEADBEEF;--border:rgba(255,255,255,0.06);--ease:cubic-bezier(0.16,1,0.3,1);--radius:8px;--sans:Inter,system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",Consolas,monospace;--serif:"Instrument Serif",Georgia,serif}
+[data-theme="daylight"]{--bg:#fafaf9;--surface:#ffffff;--text:#0a0a0b;--muted:#71717a;--accent:#0a0a0b;--border:rgba(0,0,0,0.06)}
 [data-theme="aurora"]{--bg:#0a0e1a;--surface:#0f1420;--text:#fafafa;--muted:#64748b;--accent:#22d3ee}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:var(--font-body);font-size:14px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-body{overflow:hidden;transition:background .2s var(--ease),color .2s var(--ease)}
-[data-theme="aurora"] body{background:var(--bg);background-image:radial-gradient(ellipse at 20% 80%,rgba(34,211,238,.08),transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(34,211,238,.06),transparent 60%)}
-@media(prefers-reduced-motion:reduce){[data-theme="aurora"] body{background-image:none!important}}
-.tabular{font-variant-numeric:tabular-nums}
-.app{display:grid;grid-template-columns:35fr 65fr;height:100vh;gap:14px;padding:14px}
-@media(max-width:900px){.app{grid-template-columns:1fr;grid-template-rows:auto 1fr}}
-.panel{border-radius:var(--radius);overflow:hidden;position:relative}
-.left{background:var(--surface);display:flex;flex-direction:column}
-.right{background:var(--surface);display:flex;flex-direction:column}
-.slideshow{flex:1;position:relative;overflow:hidden}
-.slide{position:absolute;inset:0;opacity:0;transition:opacity 1.5s var(--ease);transform:translate3d(0,0,0) scale(1);will-change:transform,opacity}
-.slide.active{opacity:1;animation:kenburns 14s linear infinite alternate}
-@keyframes kenburns{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(0,0,0) scale(1.08)}}
-@media(prefers-reduced-motion:reduce){.slide{transition:none!important;animation:none!important}}
-.vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.3) 100%)}
-.dots{position:absolute;bottom:14px;right:14px;display:flex;gap:6px}
-.dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:background .2s var(--ease)}
-.dot.active{background:var(--accent)}
-.overlay{position:absolute;padding:14px 18px;border-radius:var(--radius);background:rgba(0,0,0,.35);backdrop-filter:none}
-.overlay-top-right{top:14px;right:14px;text-align:right}
-.statement{font-family:var(--font-serif);font-style:italic;font-size:18px;color:var(--muted);line-height:1.3}
-.time{font-family:var(--font-mono);font-weight:500;font-size:clamp(72px,9vw,128px);letter-spacing:-.05em;line-height:1;margin:.25em 0}
-.date{font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:500;color:var(--muted)}
-.overlay-bottom-left{bottom:14px;left:14px;min-width:180px;cursor:pointer}
-.weather-line{font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:500;color:var(--muted);display:flex;align-items:center;gap:6px}
-.temp{font-family:var(--font-mono);font-weight:300;font-size:clamp(56px,7vw,88px);line-height:1}
-.weather-icon{width:32px;height:32px;stroke:currentColor;stroke-width:1.5;fill:none;flex-shrink:0}
-@keyframes sun-spin{to{transform:rotate(360deg)}}@keyframes rain-pulse{50%{opacity:.4}}
-@media(prefers-reduced-motion:reduce){@keyframes sun-spin{to{transform:none}}@keyframes rain-pulse{50%{opacity:1}}}
-.settings-btn{position:absolute;top:14px;left:14px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.35);border:1px solid var(--border);display:grid;place-items:center;cursor:pointer;opacity:.4;transition:opacity .2s var(--ease)}
+html,body{height:100%;font-family:var(--sans);font-size:14px;color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow:hidden}
+body{transition:background-color .3s var(--ease),color .3s var(--ease)}
+.tabular{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.app{display:grid;grid-template-columns:35fr 65fr;height:100vh;gap:14px;padding:14px;box-sizing:border-box}
+@media(max-width:900px){.app{grid-template-columns:1fr;grid-template-rows:40vh 1fr}}
+.panel{border-radius:var(--radius);overflow:hidden;position:relative;background:var(--surface)}
+.left{display:flex;flex-direction:column}
+.slideshow{flex:1;position:relative;background:var(--bg)}
+.slide{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.2s var(--ease);transform:translate3d(0,0,0);will-change:transform,opacity}
+.slide.active{opacity:1}
+.slide.slide-in-left{transform:translate3d(100%,0,0);opacity:1;transition:transform 1.2s var(--ease)}
+.slide.slide-out-left{transform:translate3d(-100%,0,0);opacity:0;transition:transform 1.2s var(--ease)}
+.slide.zoom-in{transform:translate3d(0,0,0) scale(1.15);opacity:0;transition:transform 1.2s var(--ease),opacity 1.2s var(--ease)}
+.slide.zoom-active{transform:translate3d(0,0,0) scale(1);opacity:1}
+.slide.blur-in{filter:blur(20px);opacity:0;transition:filter 1.2s var(--ease),opacity 1.2s var(--ease)}
+.slide.blur-active{filter:blur(0);opacity:1}
+@keyframes kenburns-tlbr{0%{transform:translate3d(-2%,-2%,0) scale(1)}100%{transform:translate3d(2%,2%,0) scale(1.08)}}
+@keyframes kenburns-trbl{0%{transform:translate3d(2%,-2%,0) scale(1)}100%{transform:translate3d(-2%,2%,0) scale(1.08)}}
+@keyframes kenburns-bltr{0%{transform:translate3d(-2%,2%,0) scale(1)}100%{transform:translate3d(2%,-2%,0) scale(1.08)}}
+@keyframes kenburns-brtl{0%{transform:translate3d(2%,2%,0) scale(1)}100%{transform:translate3d(-2%,-2%,0) scale(1.08)}}
+@keyframes color-shift{0%{background:rgba(251,146,60,0.1)}25%{background:rgba(59,130,246,0.1)}50%{background:rgba(168,85,247,0.1)}75%{background:rgba(255,255,255,0.02)}100%{background:rgba(251,146,60,0.1)}}
+.kenburns{animation-duration:14s;animation-timing-function:ease-in-out;animation-iteration-count:infinite;animation-fill-mode:both;animation-direction:alternate}
+.color-shift{position:absolute;inset:0;z-index:1;mix-blend-mode:soft-light;pointer-events:none;animation:color-shift 20s linear infinite}
+@media(prefers-reduced-motion:reduce){.slide,.kenburns,.color-shift{transition-duration:0.001ms!important;animation-duration:0.001ms!important;animation-iteration-count:1!important}}
+.vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 50%,rgba(0,0,0,0.45) 100%);z-index:2}
+.overlay{position:absolute;z-index:3;background:rgba(0,0,0,0.4);border-radius:var(--radius);padding:12px 14px;backdrop-filter:none}
+.overlay-top{top:14px;right:14px;text-align:right}
+.statement{font-family:var(--serif);font-style:italic;font-size:18px;color:rgba(255,255,255,0.65);line-height:1.2}
+.time{font-family:var(--mono);font-weight:500;font-size:clamp(72px,9vw,128px);letter-spacing:-0.05em;line-height:1.05;margin:6px 0 8px}
+.date{font-family:var(--sans);font-size:12px;text-transform:uppercase;letter-spacing:0.12em;font-weight:500;color:rgba(255,255,255,0.55)}
+.overlay-bottom{bottom:14px;left:14px;cursor:pointer;min-width:160px}
+.weather-line{font-size:10px;text-transform:uppercase;letter-spacing:0.12em;font-weight:500;color:rgba(255,255,255,0.65);margin-bottom:2px}
+.weather-content{display:flex;align-items:flex-end;gap:8px}
+.temp{font-family:var(--mono);font-weight:300;font-size:clamp(56px,7vw,88px);line-height:1;color:#fff}
+.weather-icon-wrap{width:36px;height:36px;display:grid;place-items:center}
+.settings-btn{position:absolute;top:14px;left:14px;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.1);z-index:4;display:grid;place-items:center;cursor:pointer;opacity:0.5;transition:opacity .2s var(--ease);touch-action:manipulation}
 .settings-btn:hover{opacity:1}
-.settings-btn svg{width:18px;height:18px;stroke:var(--text);stroke-width:1.5;fill:none}
-.calendar{flex:1;display:flex;flex-direction:column;padding:14px;overflow:hidden}
-.cal-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px}
-.month{font-family:var(--font-serif);font-style:italic;font-size:32px}
-.year{font-family:var(--font-mono);font-size:14px;color:var(--muted);margin-left:6px}
-.nav-btns{display:flex;gap:8px;align-items:center}
-.nav-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;display:grid;place-items:center;font-size:14px;transition:border-color .2s var(--ease)}
-.nav-btn:hover{border-color:var(--accent)}
-.toggle{font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:500;color:var(--muted);background:transparent;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;margin-left:8px}
+.settings-btn svg{width:20px;height:20px;stroke:#fff;stroke-width:1.5;fill:none}
+.dots{position:absolute;bottom:14px;right:14px;z-index:3;display:flex;gap:6px;padding:4px}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.35);cursor:pointer;transition:background .2s var(--ease);touch-action:manipulation}
+.dot.active{background:var(--accent)}
+.calendar-container{flex:1;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.cal-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px;padding:0 2px}
+.month{font-family:var(--serif);font-style:italic;font-size:32px;line-height:1}
+.year{font-family:var(--mono);font-size:14px;color:var(--muted);margin-left:6px}
+.nav-btns{display:flex;gap:6px;align-items:center}
+.nav-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;display:grid;place-items:center;font-size:18px;transition:border-color .2s var(--ease),background .2s var(--ease);touch-action:manipulation}
+.nav-btn:hover{border-color:var(--accent);background:rgba(255,255,255,0.05)}
+.toggle{height:36px;padding:0 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;font-weight:600;cursor:pointer;transition:border-color .2s var(--ease),color .2s var(--ease);touch-action:manipulation}
 .toggle.active{border-color:var(--accent);color:var(--text)}
-.weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:8px}
-.wd{font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:500;color:var(--muted);text-align:center}
+.weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.wd{font-size:10px;text-transform:uppercase;letter-spacing:0.12em;font-weight:500;color:var(--muted);text-align:center}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(6,1fr);gap:1px;flex:1;overflow:hidden}
-.cell{padding:6px 4px;position:relative;transition:background .2s var(--ease)}
-.cell:hover{background:rgba(255,255,255,.04)}
-[data-theme="daylight"] .cell:hover{background:rgba(0,0,0,.04)}
-.cell.other{opacity:.3}
-.day-num{font-family:var(--font-mono);font-size:22px;font-weight:400;text-align:center;margin-bottom:4px}
-.today .day-num{color:var(--accent)}
-.today-indicator{width:4px;height:2px;background:var(--accent);border-radius:1px;margin:2px auto 6px;display:none}
-.today .today-indicator{display:block}
-.events{display:flex;flex-direction:column;gap:2px;overflow:hidden}
-.event{font-size:11px;padding:2px 6px;border-left:2px solid var(--accent);background:rgba(255,255,255,.04);border-radius:0 4px 4px 0;cursor:pointer;transition:background .2s var(--ease);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px}
-[data-theme="daylight"] .event{background:rgba(0,0,0,.04)}
-.event:hover{background:rgba(255,255,255,.08)}
-[data-theme="daylight"] .event:hover{background:rgba(0,0,0,.08)}
-.event-time{font-family:var(--font-mono);font-size:10px;color:var(--accent);flex-shrink:0}
-.event-title{font-family:var(--font-body);color:var(--text);overflow:hidden;text-overflow:ellipsis}
-.more{font-size:10px;color:var(--muted);padding:2px 6px;cursor:pointer}
+.cell{padding:4px;background:var(--surface);position:relative;overflow:hidden;cursor:pointer;touch-action:manipulation}
+.cell.other{opacity:0.25}
+.cell.today{background:color-mix(in srgb, var(--accent) 8%, var(--surface))}
+.day-num{font-family:var(--mono);font-size:16px;font-weight:400;text-align:center;margin-bottom:4px}
+.cell.today .day-num{color:var(--accent)}
+.today-bar{width:12px;height:2px;background:var(--accent);border-radius:1px;margin:2px auto 4px}
+.events{display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.pill{padding:3px 8px;border-radius:4px;height:20px;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;overflow:hidden;white-space:nowrap;cursor:pointer;touch-action:manipulation;transition:filter .2s var(--ease)}
+.pill:hover{filter:brightness(0.9)}
+.pill-time{font-family:var(--mono);font-size:10px;font-weight:600}
+.pill-title{font-family:var(--sans);overflow:hidden;text-overflow:ellipsis}
+.more{font-size:10px;color:var(--muted);padding:2px 0;cursor:pointer;text-align:center}
 .more:hover{color:var(--text)}
-.week-view{display:none;flex-direction:column;gap:10px;padding:14px;overflow-y:auto;position:absolute;inset:0;background:var(--surface);z-index:10}
+.week-view{display:none;position:absolute;inset:0;background:var(--surface);flex-direction:column;padding:14px;overflow-y:auto;gap:10px;z-index:5}
 .week-view.active{display:flex}
-.day-card{background:var(--bg);border-radius:var(--radius);padding:10px 12px;border:1px solid var(--border)}
-.day-name{font-size:14px;font-weight:500;margin-bottom:2px}
-.day-date{font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-bottom:8px}
+.day-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px}
+.day-card-header{font-family:var(--sans);font-size:14px;font-weight:500;margin-bottom:2px}
+.day-card-date{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:8px}
 .day-events{display:flex;flex-direction:column;gap:4px}
-.day-event{display:flex;gap:8px;align-items:flex-start;padding:4px 0;border-left:2px solid var(--accent);padding-left:8px}
-.day-event-time{font-family:var(--font-mono);font-size:11px;color:var(--accent);min-width:48px}
-.day-event-title{font-size:11px;line-height:1.4}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;opacity:0;transition:opacity .2s var(--ease)}
+.day-event{display:flex;align-items:flex-start;padding:4px 0 4px 8px;border-left:2px solid var(--evc,var(--accent));cursor:pointer}
+.day-ev-time{font-family:var(--mono);font-size:11px;color:var(--evc,var(--accent));min-width:50px;flex-shrink:0}
+.day-ev-title{font-family:var(--sans);font-size:11px;line-height:1.4;color:var(--text)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;opacity:0;transition:opacity .2s var(--ease)}
 .modal.active{display:flex;opacity:1}
-.modal-content{background:var(--surface);border-radius:var(--radius);padding:18px;max-width:420px;width:100%;border-top:2px solid var(--accent);transform:translateY(4px);transition:transform .2s var(--ease)}
+.modal-content{background:var(--surface);border-radius:var(--radius);padding:18px;max-width:440px;width:100%;border-top:3px solid var(--accent);transform:translateY(8px);transition:transform .25s var(--ease)}
 .modal.active .modal-content{transform:translateY(0)}
-.modal-title{font-size:18px;font-weight:500;margin-bottom:12px}
-.modal-row{display:flex;gap:8px;margin-bottom:8px;font-size:13px;color:var(--muted)}
-.modal-row strong{color:var(--text);min-width:70px}
-.modal-row svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.5;fill:none;flex-shrink:0;margin-top:2px}
-.modal-close{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;display:grid;place-items:center}
-.settings{position:fixed;top:0;right:0;width:380px;max-width:95vw;height:100vh;background:var(--surface);border-left:1px solid var(--border);transform:translateX(100%);transition:transform .2s var(--ease);z-index:50;display:flex;flex-direction:column}
-.settings.active{transform:translateX(0)}
-.settings-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.settings-title{font-weight:500}
-.settings-close{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;display:grid;place-items:center}
-.settings-body{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:20px}
-.section{display:flex;flex-direction:column;gap:10px}
-.section-title{font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:500;color:var(--muted)}
-.theme-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.theme-card{border:2px solid transparent;border-radius:var(--radius);padding:10px;cursor:pointer;transition:border-color .2s var(--ease);background:var(--bg)}
-.theme-card.active{border-color:var(--accent)}
-.theme-preview{height:40px;border-radius:4px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500}
-.theme-card[data-theme="eclipse"] .theme-preview{background:#131316;color:#fafafa}
-.theme-card[data-theme="daylight"] .theme-preview{background:#fff;color:#0a0a0b}
-.theme-card[data-theme="aurora"] .theme-preview{background:#0f1420;color:#fafafa}
-.theme-name{font-size:11px;text-align:center}
-.input{width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px}
-.input::placeholder{color:var(--muted)}
-.calendar-sources{display:flex;flex-direction:column;gap:8px}
-.source-row{display:flex;gap:6px;align-items:center}
-.source-name{flex:1}
-.source-color{width:36px;height:36px;border-radius:6px;border:1px solid var(--border);cursor:pointer}
-.source-url{width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;margin-top:4px}
-.source-del{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;display:grid;place-items:center;font-size:14px}
-.source-del:hover{color:var(--text);border-color:var(--accent)}
-.btn{padding:8px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:13px;cursor:pointer;transition:border-color .2s var(--ease),opacity .2s var(--ease)}
-.btn:hover{border-color:var(--accent)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.textarea{width:100%;min-height:80px;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:var(--font-mono);resize:vertical}
-.img-preview{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.img-thumb{position:relative;aspect-ratio:16/10;border-radius:6px;overflow:hidden;background:var(--bg);border:1px solid var(--border)}
-.img-thumb img{width:100%;height:100%;object-fit:cover}
-.img-del{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.6);border:1px solid var(--border);color:var(--text);cursor:pointer;display:grid;place-items:center;font-size:12px}
-.file-input{display:none}
-.file-label{display:inline-block;padding:8px 14px;border-radius:6px;border:1px dashed var(--border);background:var(--bg);color:var(--text);font-size:13px;cursor:pointer;text-align:center}
-.file-label:hover{border-color:var(--accent)}
-.weather-modal{max-width:520px}
+.modal-title{font-family:var(--sans);font-size:18px;font-weight:600;margin-bottom:14px;line-height:1.3}
+.modal-close{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer;display:grid;place-items:center;font-size:18px;touch-action:manipulation}
+.modal-row{display:flex;gap:10px;margin-bottom:10px;font-size:13px;color:var(--muted);align-items:flex-start}
+.modal-row strong{color:var(--text);min-width:60px;font-weight:500;font-family:var(--sans)}
+.modal-row span{font-family:var(--sans)}
+.weather-modal .modal-content{max-width:540px}
 .forecast{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
 .fc-day{text-align:center;padding:10px;border-radius:6px;background:var(--bg);border:1px solid var(--border)}
-.fc-date{font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-bottom:6px}
-.fc-icon{width:28px;height:28px;margin:0 auto 6px;stroke:currentColor;stroke-width:1.5;fill:none}
-.fc-temp{font-family:var(--font-mono);font-size:16px;font-weight:400}
+.fc-date{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:6px}
+.fc-icon{width:32px;height:32px;margin:0 auto 6px}
+.fc-temp{font-family:var(--mono);font-size:16px;font-weight:400}
 .fc-desc{font-size:11px;color:var(--muted);margin-top:4px}
-.hidden{display:none!important}
-[role="button"],button,input,textarea{user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.settings{position:fixed;top:0;right:0;width:380px;max-width:95vw;height:100vh;background:var(--surface);border-left:1px solid var(--border);transform:translateX(100%);transition:transform .2s var(--ease);z-index:60;display:flex;flex-direction:column;box-shadow:-4px 0 12px rgba(0,0,0,0.3)}
+.settings.active{transform:translateX(0)}
+.settings-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.settings-title{font-family:var(--sans);font-weight:600;font-size:16px}
+.settings-close{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer;display:grid;place-items:center;font-size:20px;touch-action:manipulation}
+.settings-body{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:20px}
+.section{display:flex;flex-direction:column;gap:10px}
+.section-title{font-size:12px;text-transform:uppercase;letter-spacing:0.12em;font-weight:600;color:var(--muted);font-family:var(--sans)}
+.theme-cards,.font-cards{display:grid;gap:10px}
+.theme-cards{grid-template-columns:repeat(3,1fr)}
+.font-cards{grid-template-columns:repeat(2,1fr)}
+.card{border:2px solid transparent;border-radius:var(--radius);padding:10px;cursor:pointer;transition:border-color .2s var(--ease),background .2s var(--ease);background:var(--bg);touch-action:manipulation}
+.card.active{border-color:var(--accent)}
+.theme-preview{height:44px;border-radius:4px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;font-family:var(--sans)}
+.theme-card[data-theme="eclipse"] .theme-preview{background:#131316;color:#fafafa}
+.theme-card[data-theme="daylight"] .theme-preview{background:#ffffff;color:#0a0a0b}
+.theme-card[data-theme="aurora"] .theme-preview{background:#0f1420;color:#fafafa}
+.theme-name,.font-name{font-size:11px;text-align:center;font-weight:500;font-family:var(--sans)}
+.font-preview{height:36px;display:flex;align-items:center;justify-content:center;gap:4px;font-size:14px;border-radius:4px;margin-bottom:6px}
+.font-preview .sans-part{font-family:var(--sans)}
+.font-preview .mono-part{font-family:var(--mono);color:var(--accent)}
+.card.disabled{opacity:0.5;pointer-events:none;cursor:not-allowed}
+.card.disabled::after{content:"Nicht verfügbar";font-size:9px;color:var(--muted);display:block;text-align:center}
+.input,.textarea{width:100%;padding:10px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:var(--mono);outline:none;transition:border-color .2s var(--ease)}
+.input:focus,.textarea:focus{border-color:var(--accent)}
+.textarea{min-height:80px;resize:vertical}
+.select{width:100%;padding:10px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:var(--sans);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.calendar-sources{display:flex;flex-direction:column;gap:8px}
+.source-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.source-row .input{flex:1;min-width:0}
+.source-color{width:44px;height:44px;border-radius:6px;border:1px solid var(--border);cursor:pointer;padding:0;background:none}
+.source-url{width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;margin-top:4px;font-family:var(--mono)}
+.source-del{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;display:grid;place-items:center;font-size:20px;touch-action:manipulation}
+.source-del:hover{color:var(--text);border-color:var(--accent)}
+.btn{padding:10px 14px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;transition:border-color .2s var(--ease),opacity .2s var(--ease);touch-action:manipulation;font-family:var(--sans)}
+.btn:hover{border-color:var(--accent)}
+.img-preview{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.img-thumb{position:relative;aspect-ratio:16/10;border-radius:6px;overflow:hidden;background:var(--bg);border:1px solid var(--border)}
+.img-thumb img{width:100%;height:100%;object-fit:cover}
+.img-del{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,0.7);border:1px solid var(--border);color:#fff;cursor:pointer;display:grid;place-items:center;font-size:16px;touch-action:manipulation}
+.file-label{display:inline-block;padding:10px 14px;border-radius:6px;border:1px dashed var(--border);background:var(--bg);color:var(--text);font-size:13px;cursor:pointer;text-align:center;margin-top:8px;touch-action:manipulation;font-family:var(--sans)}
+.file-input{display:none}
+.anim-rotate{animation:sun-spin 60s linear infinite}
+.anim-pulse{animation:rain-pulse 2s ease-in-out infinite}
+.anim-wobble{animation:snow-wobble 3s ease-in-out infinite}
+@keyframes sun-spin{to{transform:rotate(360deg)}}
+@keyframes rain-pulse{50%{opacity:0.4}}
+@keyframes snow-wobble{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@media(prefers-reduced-motion:reduce){.anim-rotate,.anim-pulse,.anim-wobble,.slide,.modal-content,.settings{animation-duration:0.001ms!important;transition-duration:0.001ms!important}body{transition:none!important}}
+[role="button"],button,input,textarea,select{user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 </style>
 </head>
 <body data-theme="eclipse">
 <div class="app">
-  <div class="panel left">
+  <div class="panel left" id="leftPanel">
     <div class="slideshow" id="slideshow"></div>
     <div class="vignette"></div>
-    <div class="overlay overlay-top-right">
+    <button class="settings-btn" id="settingsBtn" aria-label="Einstellungen">
+      <svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15 1.65 1.65 0 0 0 3.09 16H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7.04 4.3l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.67.28 1.22.83 1.5 1.5H21a2 2 0 1 1 0 4h-.09c-.28.67-.83 1.22-1.5 1.5Z"/></svg>
+    </button>
+    <div class="overlay overlay-top" id="timeOverlay">
       <div class="statement" id="statement">ein stiller Morgen</div>
       <div class="time tabular" id="time">00:00</div>
       <div class="date" id="date">Montag, 01. Januar</div>
     </div>
-    <div class="overlay overlay-bottom-left" id="weatherCard" role="button">
-      <div class="weather-line"><span id="weatherLoc">Düsseldorf</span></div>
-      <div style="display:flex;align-items:flex-end;gap:8px">
+    <div class="overlay overlay-bottom" id="weatherCard">
+      <div class="weather-line" id="weatherLoc">Lade...</div>
+      <div class="weather-content">
         <span class="temp tabular" id="temp">--</span>
-        <svg class="weather-icon" id="weatherIcon" viewBox="0 0 24 24"></svg>
+        <div class="weather-icon-wrap" id="weatherIcon"></div>
       </div>
     </div>
-    <button class="settings-btn" id="settingsBtn" aria-label="Einstellungen">
-      <svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15 1.65 1.65 0 0 0 3.09 16H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7.04 4.3l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.67.28 1.22.83 1.5 1.5H21a2 2 0 1 1 0 4h-.09c-.28.67-.83 1.22-1.5 1.5Z"/></svg>
-    </button>
     <div class="dots" id="dots"></div>
   </div>
   <div class="panel right">
-    <div class="calendar" id="calendarView">
+    <div class="calendar-container">
       <div class="cal-header">
         <div><span class="month" id="monthName">Mai</span><span class="year tabular" id="year">2026</span></div>
         <div class="nav-btns">
@@ -173,67 +186,356 @@ body{overflow:hidden;transition:background .2s var(--ease),color .2s var(--ease)
           <button class="toggle" id="weekToggle">Woche</button>
         </div>
       </div>
-      <div class="weekdays"><div class="wd">MO</div><div class="wd">DI</div><div class="wd">MI</div><div class="wd">DO</div><div class="wd">FR</div><div class="wd">SA</div><div class="wd">SO</div></div>
+      <div class="weekdays">
+        <div class="wd">MO</div><div class="wd">DI</div><div class="wd">MI</div>
+        <div class="wd">DO</div><div class="wd">FR</div><div class="wd">SA</div><div class="wd">SO</div>
+      </div>
       <div class="grid" id="grid"></div>
+      <div class="week-view" id="weekView"></div>
     </div>
-    <div class="week-view" id="weekView"></div>
   </div>
 </div>
 
-<div class="modal" id="eventModal"><div class="modal-content"><button class="modal-close" id="modalClose">✕</button><div class="modal-title" id="modalTitle">Titel</div><div class="modal-row"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><strong class="tabular" id="modalTime">--:--</strong><span id="modalDuration"></span></div><div class="modal-row" id="modalLocRow"><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><strong>Ort</strong><span id="modalLoc">--</span></div><div class="modal-row" id="modalDescRow"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><strong>Beschreibung</strong><span id="modalDesc">--</span></div><div class="modal-row" id="modalAttRow"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><strong>Teilnehmer</strong><span id="modalAtt">--</span></div><div class="modal-row"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><strong>Quelle</strong><span id="modalSource">--</span></div></div></div>
+<div class="modal" id="eventModal">
+  <div class="modal-content" style="position:relative">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-title" id="modalTitle">Titel</div>
+    <div class="modal-row"><strong class="tabular" id="modalTime">--:--</strong><span id="modalDuration"></span></div>
+    <div class="modal-row" id="modalLocRow"><strong>Ort</strong><span id="modalLoc">--</span></div>
+    <div class="modal-row" id="modalDescRow"><strong>Beschreibung</strong><span id="modalDesc">--</span></div>
+    <div class="modal-row" id="modalAttRow"><strong>Teilnehmer</strong><span id="modalAtt">--</span></div>
+    <div class="modal-row"><strong>Quelle</strong><span id="modalSource">--</span></div>
+  </div>
+</div>
 
-<div class="modal" id="weatherModal"><div class="modal-content weather-modal"><button class="modal-close" id="weatherClose">✕</button><div class="modal-title">5-Tage Vorhersage</div><div class="forecast" id="forecast"></div></div></div>
+<div class="modal weather-modal" id="weatherModal">
+  <div class="modal-content" style="position:relative">
+    <button class="modal-close" id="weatherClose">✕</button>
+    <div class="modal-title">5-Tage Vorhersage</div>
+    <div class="forecast" id="forecast"></div>
+  </div>
+</div>
 
-<div class="settings" id="settings"><div class="settings-header"><span class="settings-title">Einstellungen</span><button class="settings-close" id="settingsClose">✕</button></div><div class="settings-body"><div class="section"><div class="section-title">Theme</div><div class="theme-cards"><div class="theme-card" data-theme="eclipse"><div class="theme-preview">Eclipse</div><div class="theme-name">Eclipse</div></div><div class="theme-card" data-theme="daylight"><div class="theme-preview">Daylight</div><div class="theme-name">Daylight</div></div><div class="theme-card" data-theme="aurora"><div class="theme-preview">Aurora</div><div class="theme-name">Aurora</div></div></div></div><div class="section"><div class="section-title">Wetter-Standort</div><input class="input" type="text" id="weatherInput" placeholder="z.B. Düsseldorf,DE"></div><div class="section"><div class="section-title">Kalender-Quellen</div><div class="calendar-sources" id="calSources"></div><button class="btn" id="addSource">+ Quelle hinzufügen</button></div><div class="section"><div class="section-title">Bilder</div><textarea class="textarea" id="imgUrls" placeholder="Direkt-URLs oder Google-Drive-Datei-IDs (eine pro Zeile)"></textarea><label class="file-label"><input class="file-input" type="file" id="fileInput" accept="image/*" multiple>Lokale Bilder hochladen</label><div style="display:flex;gap:8px;align-items:center;margin-top:6px"><span style="font-size:12px;color:var(--muted)">Intervall:</span><input type="number" id="slideInterval" min="5" max="300" value="30" style="width:60px;padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text)"> <span style="font-size:12px;color:var(--muted)">Sekunden</span></div><div class="img-preview" id="imgPreview"></div><button class="btn" id="clearLocal" style="margin-top:8px">Lokale Bilder löschen</button></div><div class="section"><div class="section-title">System</div><button class="btn" id="reloadBtn">Alles neu laden</button></div></div></div>
+<div class="settings" id="settings">
+  <div class="settings-header">
+    <span class="settings-title">Einstellungen</span>
+    <button class="settings-close" id="settingsClose">✕</button>
+  </div>
+  <div class="settings-body">
+    <div class="section">
+      <div class="section-title">Theme</div>
+      <div class="theme-cards">
+        <div class="theme-card card" data-theme="eclipse"><div class="theme-preview">Eclipse</div><div class="theme-name">Eclipse</div></div>
+        <div class="theme-card card" data-theme="daylight"><div class="theme-preview">Daylight</div><div class="theme-name">Daylight</div></div>
+        <div class="theme-card card" data-theme="aurora"><div class="theme-preview">Aurora</div><div class="theme-name">Aurora</div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Schrift-Set</div>
+      <div class="font-cards" id="fontCards"></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Wetter-Standort</div>
+      <input class="input" type="text" id="weatherInput" placeholder="z.B. Düsseldorf,DE">
+    </div>
+    <div class="section">
+      <div class="section-title">Kalender-Quellen</div>
+      <div class="calendar-sources" id="calSources"></div>
+      <button class="btn" id="addSource">+ Quelle hinzufügen</button>
+    </div>
+    <div class="section">
+      <div class="section-title">Bilder</div>
+      <textarea class="textarea" id="imgUrls" placeholder="Direkt-URLs oder Google-Drive-Datei-IDs (eine pro Zeile)"></textarea>
+      <label class="file-label"><input class="file-input" type="file" id="fileInput" accept="image/*" multiple>Lokale Bilder hochladen</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <span style="font-size:12px;color:var(--muted)">Intervall:</span>
+        <input type="number" id="slideInterval" min="5" max="300" value="30" class="input" style="width:70px;padding:6px 8px">
+        <span style="font-size:12px;color:var(--muted)">Sekunden</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <span style="font-size:12px;color:var(--muted)">Übergang:</span>
+        <select class="select" id="transitionStyle">
+          <option value="auto">Auto (rotierend)</option>
+          <option value="fade">Nur Fade</option>
+          <option value="slide">Nur Slide</option>
+          <option value="zoom">Nur Zoom</option>
+          <option value="blur">Nur Blur</option>
+        </select>
+      </div>
+      <div class="img-preview" id="imgPreview"></div>
+      <button class="btn" id="clearLocal" style="margin-top:10px">Lokale Bilder löschen</button>
+    </div>
+    <div class="section">
+      <div class="section-title">System</div>
+      <button class="btn" id="reloadBtn">Alles neu laden</button>
+    </div>
+  </div>
+</div>
 
 <script>
 (() => {
   const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s);
   const cfgKey = 'annalove4_cfg', dbKey = 'annalove4_db';
-  const defaultCfg = {theme:'eclipse',weatherLoc:'Düsseldorf,DE',weatherKey:'769c5861cd255a3982bafb1680abf194',calendars:[{name:'Persönlich',color:'#DEADBEEF',url:''}],imgUrls:[],slideInterval:30,localImgIds:[]};
+  const defaultCfg = {theme:'eclipse',weatherLoc:'Düsseldorf,DE',weatherKey:'769c5861cd255a3982bafb1680abf194',calendars:[{name:'Persönlich',color:'#DEADBEEF',url:''}],imgUrls:[],slideInterval:30,transitionStyle:'auto',fontSet:'modern',localImgIds:[]};
   let cfg = JSON.parse(localStorage.getItem(cfgKey) || 'null') || {...defaultCfg};
-  let db, imgBlobs = [], slides = [], currentSlide = 0, slideTimer, weatherData = null, events = [], currentMonth = new Date(), viewMode = 'month', longPressTimer, settingsOpen = false;
+  let db, imgBlobs=[], slides=[], currentSlide=0, slideTimer;
+  let weatherData=null, events=[], currentMonth=new Date(), viewMode='month';
+  let settingsOpen=false, longPressTimer;
+  let transitionIdx=0;
+  const transitions=['fade','slide','zoom','blur'];
+  const kbAnims=['kenburns-tlbr','kenburns-trbl','kenburns-bltr','kenburns-brtl'];
+
+  const fontSets = {
+    modern: { sans:'Inter', mono:'JetBrains Mono', serif:'Instrument Serif', weights:'400;500;700|300;400;500|400italic', url:'Inter:wght@400;500;700&family=JetBrains+Mono:wght@300;400;500&family=Instrument+Serif:ital@1' },
+    editorial: { sans:'DM Sans', mono:'DM Mono', serif:'Fraunces', weights:'400;500;700|300;400;500|300italic', url:'DM+Sans:wght@400;500;700&family=DM+Mono:wght@300;400;500&family=Fraunces:ital,wght@0,400;1,400' },
+    brutalist: { sans:'Space Grotesk', mono:'Space Mono', serif:'Space Grotesk', weights:'400;500;700|400;700|400', url:'Space+Grotesk:wght@400;500;700&family=Space+Mono' },
+    classic: { sans:'Inter', mono:'IBM Plex Mono', serif:'Playfair Display', weights:'400;500;700|400;500|400italic', url:'Inter:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:ital@1' },
+    minimal: { sans:'Inter', mono:'JetBrains Mono', serif:'Inter', weights:'400;500;700|300;400;500|400', url:'Inter:wght@400;500;700&family=JetBrains+Mono:wght@300;400;500' },
+    handwritten: { sans:'Inter', mono:'JetBrains Mono', serif:'Caveat', weights:'400;500;700|300;400;500|400', url:'Inter:wght@400;500;700&family=JetBrains+Mono:wght@300;400;500&family=Caveat' }
+  };
 
   const statements = {morning:'ein stiller Morgen', afternoon:'Nachmittagslicht', evening:'der Abend kehrt ein', night:'späte Stunden', rain:'Regengedanken', snow:'Schneefall'};
   const weekdays = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
-  const weekdaysShort = ['MO','DI','MI','DO','FR','SA','SO'];
 
   function saveCfg(){ localStorage.setItem(cfgKey, JSON.stringify(cfg)); }
-  async function openDB(){ return new Promise((res,rej) => { const req = indexedDB.open(dbKey,1); req.onupgradeneeded = e => { const db = e.target.result; if(!db.objectStoreNames.contains('imgs')) db.createObjectStore('imgs',{keyPath:'id'}); }; req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error); }); }
-  async function loadImages(){ if(!db) return []; return new Promise(res => { const tx = db.transaction('imgs','readonly'), store = tx.objectStore('imgs'), req = store.getAll(); req.onsuccess = () => { imgBlobs = req.result.map(x => ({id:x.id, url:URL.createObjectURL(x.blob), src:x.src})); res(imgBlobs); }; req.onerror = () => res([]); }); }
-  async function saveImage(blob, id, src){ if(!db) return; return new Promise(res => { const tx = db.transaction('imgs','readwrite'), store = tx.objectStore('imgs'); const existing = imgBlobs.find(i => i.id === id); if(existing){ store.put({id,blob,src}); } else { store.add({id,blob,src}); } tx.oncomplete = () => { if(existing){ const idx = imgBlobs.findIndex(i => i.id === id); if(idx>=0){ URL.revokeObjectURL(imgBlobs[idx].url); imgBlobs[idx] = {id, url:URL.createObjectURL(blob), src}; } } else { imgBlobs.push({id, url:URL.createObjectURL(blob), src}); } res(); }; }); }
-  async function deleteImage(id){ if(!db) return; return new Promise(res => { const tx = db.transaction('imgs','readwrite'); tx.objectStore('imgs').delete(id); tx.oncomplete = () => { const idx = imgBlobs.findIndex(i => i.id === id); if(idx>=0){ URL.revokeObjectURL(imgBlobs[idx].url); imgBlobs.splice(idx,1); } res(); }; }); }
-  function resizeImage(file, maxWidth=1280, quality=0.82){ return new Promise(res => { const img = new Image(), url = URL.createObjectURL(file); img.onload = () => { URL.revokeObjectURL(url); const canvas = document.createElement('canvas'); let {width:w, height:h} = img; if(w > maxWidth){ h = Math.round(h * maxWidth / w); w = maxWidth; } canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0,w,h); canvas.toBlob(blob => res(blob), 'image/jpeg', quality); }; img.src = url; }); }
-  function expandDriveId(id){ return id.startsWith('http') ? id : `https://lh3.googleusercontent.com/d/${id}=w2000`; }
+  async function openDB(){ return new Promise((res,rej) => { const r=indexedDB.open(dbKey,1); r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('imgs'))d.createObjectStore('imgs',{keyPath:'id'});}; r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+  async function loadImages(){ if(!db)return[]; return new Promise(res=>{const tx=db.transaction('imgs','readonly'),st=tx.objectStore('imgs'),r=st.getAll();r.onsuccess=()=>{imgBlobs=r.result.map(x=>({id:x.id,url:URL.createObjectURL(x.blob),src:x.src}));res(imgBlobs);};r.onerror=()=>res([]);});}
+  async function saveImage(blob,id,src){if(!db)return;const tx=db.transaction('imgs','readwrite'),st=tx.objectStore('imgs'),idx=imgBlobs.findIndex(i=>i.id===id);if(idx>-1)st.put({id,blob,src});else st.add({id,blob,src});tx.oncomplete=()=>{if(idx>-1){URL.revokeObjectURL(imgBlobs[idx].url);imgBlobs[idx]={id,url:URL.createObjectURL(blob),src};}else{imgBlobs.push({id,url:URL.createObjectURL(blob),src});}};}
+  async function deleteImage(id){if(!db)return;return new Promise(res=>{const tx=db.transaction('imgs','readwrite');tx.objectStore('imgs').delete(id);tx.oncomplete=()=>{const i=imgBlobs.findIndex(x=>x.id===id);if(i>-1){URL.revokeObjectURL(imgBlobs[i].url);imgBlobs.splice(i,1);}res();};});}
+  function resizeImage(file,max=1280,q=0.82){return new Promise(res=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{URL.revokeObjectURL(url);const c=document.createElement('canvas');let{width:w,height:h}=img;if(w>max){h=Math.round(h*max/w);w=max;}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);c.toBlob(b=>res(b),'image/jpeg',q);};img.src=url;});}
+  function expandDriveId(id){return id.startsWith('http')?id:`https://lh3.googleusercontent.com/d/${id}=w2000`;}
+  function contrastText(hex){const c=hex.replace('#','');const r=parseInt(c.slice(0,2),16);const g=parseInt(c.slice(2,4),16);const b=parseInt(c.slice(4,6),16);const lum=(0.299*r+0.587*g+0.114*b)/255;return lum>0.6?'#0a0a0b':'#ffffff';}
 
-  function setTheme(t){ document.body.dataset.theme = t; cfg.theme = t; saveCfg(); $$('.theme-card').forEach(c => c.classList.toggle('active', c.dataset.theme===t)); }
-  function updateTime(){ const now = new Date(), h = now.getHours(), m = now.getMinutes(); $('#time').textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; const wd = weekdays[now.getDay()]; const dateStr = `${wd}, ${String(now.getDate()).padStart(2,'0')}. ${now.toLocaleString('de-DE',{month:'long'})}`; $('#date').textContent = dateStr; $('#year').textContent = now.getFullYear(); const stmtKey = (h>=5&&h<11)?'morning':(h>=11&&h<17)?'afternoon':(h>=17&&h<22)?'evening':'night'; let stmt = statements[stmtKey]; if(weatherData && weatherData.weather && weatherData.weather[0]){ const code = weatherData.weather[0].id; if(code>=200&&code<300||code===502||code===503) stmt = statements.rain; else if(code>=600&&code<700) stmt = statements.snow; } $('#statement').textContent = stmt; }
-  function startClock(){ updateTime(); setInterval(updateTime, 30000); }
+  async function loadFontSet(name){
+    const fs=fontSets[name]; if(!fs||name===cfg.fontSet)return;
+    const old=$('head link[data-font-set]'); if(old)old.remove();
+    const link=document.createElement('link');
+    link.rel='stylesheet';
+    link.href=`https://fonts.googleapis.com/css2?family=${fs.url}&display=swap`;
+    link.setAttribute('data-font-set', name);
+    document.head.appendChild(link);
+    cfg.fontSet=name; saveCfg();
+    document.documentElement.style.setProperty('--sans', `${fs.sans},system-ui,-apple-system,sans-serif`);
+    document.documentElement.style.setProperty('--mono', `"${fs.mono}",Consolas,monospace`);
+    document.documentElement.style.setProperty('--serif', `"${fs.serif}",Georgia,serif`);
+    renderSettings();
+  }
 
-  function iconSVG(type, animated=true){ const spin = animated?'style="animation:sun-spin 60s linear infinite"':''; const pulse = animated?'style="animation:rain-pulse 2s ease-in-out infinite"':''; const common = `stroke="currentColor" stroke-width="1.5" fill="none"`; switch(type){ case'sun':return `<svg class="weather-icon" ${common} viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" ${spin}/><g ${spin}><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.2" y1="4.2" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.8" y2="19.8"/><line x1="17.7" y1="6.3" x2="19.8" y2="4.2"/><line x1="4.2" y1="19.8" x2="6.3" y2="17.7"/></g></svg>`; case'cloud':return `<svg class="weather-icon" ${common} viewBox="0 0 24 24"><path d="M17.5 19a4.5 4.5 0 0 0 0-9 6.5 6.5 0 0 0-12.8 1.3A4 4 0 0 0 6 19h11.5Z"/></svg>`; case'rain':return `<svg class="weather-icon" ${common} viewBox="0 0 24 24"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6.5 6.5 0 0 0-12.8 1.3A4 4 0 0 0 6 17h11.5Z"/><g ${pulse}><line x1="8" y1="19" x2="8" y2="22"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="16" y1="19" x2="16" y2="22"/></g></svg>`; case'snow':return `<svg class="weather-icon" ${common} viewBox="0 0 24 24"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6.5 6.5 0 0 0-12.8 1.3A4 4 0 0 0 6 17h11.5Z"/><g ${pulse}><circle cx="8" cy="21" r="1"/><circle cx="12" cy="21" r="1"/><circle cx="16" cy="21" r="1"/></g></svg>`; case'thunder':return `<svg class="weather-icon" ${common} viewBox="0 0 24 24"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6.5 6.5 0 0 0-12.8 1.3A4 4 0 0 0 6 17h11.5Z"/><path d="M13 14l-2 4h3l-2 4"/></svg>`; case'moon':return `<svg class="weather-icon" ${common} viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`; case'fog':return `<svg class="weather-icon" ${common} viewBox="0 0 24 24"><line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="16" x2="21" y2="16"/><line x1="3" y1="20" x2="21" y2="20"/></svg>`; default: return iconSVG('cloud',false); } }
-  function weatherCodeToIcon(code){ if(code>=200&&code<300) return'thunder'; if(code>=300&&code<400||code>=500&&code<600) return'rain'; if(code>=600&&code<700) return'snow'; if(code===800) return'sun'; if(code===801) return'moon'; if(code>=802&&code<=804) return'cloud'; if(code>=700&&code<800) return'fog'; return'cloud'; }
+  function setTheme(t){ document.body.dataset.theme=t; cfg.theme=t; saveCfg(); $$('.theme-card').forEach(c=>c.classList.toggle('active',c.dataset.theme===t)); }
+  function updateTime(){ const now=new Date(),h=now.getHours(),m=now.getMinutes(); $('#time').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; $('#date').textContent=`${weekdays[now.getDay()]} ${String(now.getDate()).padStart(2,'0')}. ${now.toLocaleString('de-DE',{month:'long'})}`; $('#year').textContent=now.getFullYear(); let k=(h>=5&&h<11)?'morning':(h>=11&&h<17)?'afternoon':(h>=17&&h<22)?'evening':'night'; let s=statements[k]; if(weatherData?.weather?.[0]){const c=weatherData.weather[0].id;if((c>=200&&c<300)||c===502||c===503)s=statements.rain;else if(c>=600&&c<700)s=statements.snow;} $('#statement').textContent=s; }
+  function startClock(){ updateTime(); setInterval(updateTime,30000); }
 
-  async function fetchWeather(){ const loc = cfg.weatherLoc||'Düsseldorf,DE', key = cfg.weatherKey||'769c5861cd255a3982bafb1680abf194'; const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(loc)}&appid=${key}&units=metric&lang=de`; let data; try{ const r = await fetch(url); if(!r.ok) throw 1; data = await r.json(); }catch(e){ try{ const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`); if(!r.ok) throw 1; data = await r.json(); }catch(e2){ try{ const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`); if(!r.ok) throw 1; data = await r.json(); }catch(e3){ console.warn('Wetter-Fetch fehlgeschlagen'); return; } } } weatherData = data; const city = data.name||cfg.weatherLoc.split(',')[0]; $('#weatherLoc').textContent = city; $('#temp').textContent = Math.round(data.main.temp)+'°'; $('#weatherIcon').innerHTML = iconSVG(weatherCodeToIcon(data.weather[0].id)); }
-  async function fetchForecast(){ const loc = cfg.weatherLoc||'Düsseldorf,DE', key = cfg.weatherKey||'769c5861cd255a3982bafb1680abf194'; const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(loc)}&appid=${key}&units=metric&lang=de&cnt=40`; try{ let r; try{ r = await fetch(url); }catch{ r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`); } if(!r.ok) return; const data = await r.json(); const days = {}; data.list.forEach(item => { const d = item.dt_txt.split(' ')[0]; if(!days[d]) days[d] = {temp:[], icon:null, desc:''}; days[d].temp.push(item.main.temp); if(!days[d].icon) days[d].icon = item.weather[0].id; days[d].desc = item.weather[0].description; }); const f = Object.entries(days).slice(0,5); const el = $('#forecast'); el.innerHTML = f.map(([date,{temp,icon,desc}]) => { const avg = Math.round(temp.reduce((a,b)=>a+b,0)/temp.length); const d = new Date(date); return `<div class="fc-day"><div class="fc-date tabular">${d.toLocaleDateString('de-DE',{weekday:'short'})} ${d.getDate()}.</div>${iconSVG(weatherCodeToIcon(icon),false)}<div class="fc-temp tabular">${avg}°</div><div class="fc-desc">${desc}</div></div>`; }).join(''); $('#weatherModal').classList.add('active'); }catch(e){ console.warn('Vorhersage fehlgeschlagen'); } }
+  function getWeatherIcon(code, size=32){
+    const colors={sun:'#f59e0b',cloud:'#94a3b8',rain:'#38bdf8',snow:'#a5f3fc',thunder:'#eab308',thunderCloud:'#64748b',moon:'#cbd5e1',fog:'#94a3b8'};
+    const s=`width="${size}" height="${size}" viewBox="0 0 24 24" stroke-width="1.5" fill="none"`;
+    let svg='';
+    switch(true){
+      case code===800:svg=`<svg ${s} style="color:${colors.sun}"><g class="anim-rotate"><circle cx="12" cy="12" r="4" fill="${colors.sun}"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.2" y1="4.2" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.8" y2="19.8"/><line x1="17.7" y1="6.3" x2="19.8" y2="4.2"/><line x1="4.2" y1="19.8" x2="6.3" y2="17.7"/></g></svg>`;break;
+      case code===801:svg=`<svg ${s} style="color:${colors.moon}"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;break;
+      case code>=802&&code<=804:svg=`<svg ${s} style="color:${colors.cloud}"><path d="M17.5 19a4.5 4.5 0 0 0 0-9 6.5 6.5 0 0 0-12.8 1.3A4 4 0 0 0 6 19h11.5Z"/></svg>`;break;
+      case (code>=200&&code<300):svg=`<svg ${s}><g style="color:${colors.thunderCloud}"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6.5 6.5 0 0 0-12.8 1.3A4 4 0 0 0 6 17h11.5Z"/></g><path d="M13 14l-2 4h3l-2 4" stroke="${colors.thunder}" fill="${colors.thunder}" stroke-width="0" class="anim-pulse"/></svg>`;break;
+      case (code>=300&&code<600):svg=`<svg ${s} style="color:${colors.cloud}"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6.5 6.5 0 0 0-12.8 1.3A4 4 0 0 0 6 17h11.5Z"/><g class="anim-pulse" stroke="${colors.rain}"><line x1="8" y1="19" x2="8" y2="22"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="16" y1="19" x2="16" y2="22"/></g></svg>`;break;
+      case (code>=600&&code<700):svg=`<svg ${s} style="color:${colors.cloud}"><path d="M17.5 17a4.5 4.5 0 0 0 0-9 6.5 6.5 0 0 0-12.8 1.3A4 4 0 0 0 6 17h11.5Z"/><g class="anim-wobble" stroke="${colors.snow}"><circle cx="8" cy="21" r="1.5"/><circle cx="12" cy="21" r="1.5"/><circle cx="16" cy="21" r="1.5"/></g></svg>`;break;
+      case (code>=700&&code<800):svg=`<svg ${s} style="color:${colors.fog}"><line x1="3" y1="8" x2="21" y2="8"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="16" x2="21" y2="16"/><line x1="3" y1="20" x2="21" y2="20"/></svg>`;break;
+      default:svg=`<svg ${s} style="color:${colors.cloud}"><path d="M17.5 19a4.5 4.5 0 0 0 0-9 6.5 6.5 0 0 0-12.8 1.3A4 4 0 0 0 6 19h11.5Z"/></svg>`;
+    }
+    return svg;
+  }
 
-  function parseICS(text){ const lines = text.replace(/\r\n/g,'\n').split('\n'); let unfolded = [], buffer = ''; for(let line of lines){ if(line.startsWith(' ')||line.startsWith('\t')){ buffer += line.slice(1); } else { if(buffer) unfolded.push(buffer); buffer = line; } } if(buffer) unfolded.push(buffer); const events = []; let cur = null; for(let line of unfolded){ if(line.startsWith('BEGIN:VEVENT')) cur = {id:Math.random().toString(36).slice(2), allDay:false, attendees:[]}; else if(line.startsWith('END:VEVENT') && cur){ events.push(cur); cur = null; } else if(cur){ const [k,...v] = line.split(':'); const val = v.join(':'); if(k==='SUMMARY') cur.summary = val; else if(k==='DESCRIPTION') cur.description = val?.replace(/\\,/g,',').replace(/\\n/g,'\n'); else if(k==='LOCATION') cur.location = val; else if(k==='DTSTART'){ const m = val.match(/VALUE=DATE:(\d{8})/); if(m){ cur.start = new Date(m[1].slice(0,4), +m[1].slice(4,6)-1, +m[1].slice(6,8)); cur.allDay = true; } else { const m2 = val.match(/:(\d{8}T\d{6})Z?/); cur.start = m2 ? new Date(m2[1].replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/,'$1-$2-$3T$4:$5:$6Z')) : new Date(); } } else if(k==='DTEND'){ const m = val.match(/VALUE=DATE:(\d{8})/); if(m) cur.end = new Date(m[1].slice(0,4), +m[1].slice(4,6)-1, +m[1].slice(6,8)+1); else { const m2 = val.match(/:(\d{8}T\d{6})Z?/); cur.end = m2 ? new Date(m2[1].replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/,'$1-$2-$3T$4:$5:$6Z')) : new Date(); } } else if(k==='ATTENDEE' && val.includes('CN=')){ const cn = val.match(/CN=([^;]+)/); if(cn) cur.attendees.push(cn[1]); } else if(k==='RRULE') cur.rrule = parseRRULE(val); } } return events; }
-  function parseRRULE(str){ const r = {}; str.split(';').forEach(p => { const [k,v] = p.split('='); if(k==='FREQ') r.freq = v; else if(k==='INTERVAL') r.interval = +v; else if(k==='COUNT') r.count = +v; else if(k==='UNTIL') r.until = new Date(v.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z?/,'$1-$2-$3T$4:$5:$6Z')); }); return Object.keys(r).length ? r : null; }
-  function expandRRULE(ev, startRange, endRange){ if(!ev.rrule) return [ev]; const out = [], base = new Date(ev.start), maxIter = 400; let iter = 0, cur = new Date(base); while(iter < maxIter && cur <= endRange){ if(cur >= startRange){ const copy = {...ev, start:new Date(cur), end: ev.end ? new Date(cur.getTime() + (ev.end-base)) : null}; out.push(copy); } iter++; switch(ev.rrule.freq){ case'DAILY': cur.setDate(cur.getDate() + (ev.rrule.interval||1)); break; case'WEEKLY': cur.setDate(cur.getDate() + 7*(ev.rrule.interval||1)); break; case'MONTHLY': cur.setMonth(cur.getMonth() + (ev.rrule.interval||1)); break; case'YEARLY': cur.setFullYear(cur.getFullYear() + (ev.rrule.interval||1)); break; default: return [ev]; } if(ev.rrule.count && iter >= ev.rrule.count) break; if(ev.rrule.until && cur > ev.rrule.until) break; } return out; }
+  async function fetchWeather(){const loc=cfg.weatherLoc||'Düsseldorf,DE',key=cfg.weatherKey;let url=`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(loc)}&appid=${key}&units=metric&lang=de`;let data;try{const r=await fetch(url);if(!r.ok)throw 1;data=await r.json();}catch{try{const r=await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);if(!r.ok)throw 1;data=await r.json();}catch{try{const r=await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);if(!r.ok)throw 1;data=await r.json();}catch{return;}}}weatherData=data;$('#weatherLoc').textContent=data.name||cfg.weatherLoc.split(',')[0];$('#temp').textContent=Math.round(data.main.temp)+'°';$('#weatherIcon').innerHTML=getWeatherIcon(data.weather[0].id,40);}
+  async function fetchForecast(){const loc=cfg.weatherLoc||'Düsseldorf,DE',key=cfg.weatherKey;const url=`https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(loc)}&appid=${key}&units=metric&lang=de&cnt=40`;try{let r;try{r=await fetch(url);}catch{r=await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);}if(!r.ok)return;const data=await r.json();const days={};data.list.forEach(i=>{const d=i.dt_txt.split(' ')[0];if(!days[d])days[d]={temp:[],icon:null,desc:''};days[d].temp.push(i.main.temp);if(!days[d].icon)days[d].icon=i.weather[0].id;days[d].desc=i.weather[0].description;});const f=Object.entries(days).slice(0,5);let html='';f.forEach(([d,{temp,icon,desc}])=>{const avg=Math.round(temp.reduce((a,b)=>a+b,0)/temp.length);const dt=new Date(d);html+=`<div class="fc-day"><div class="fc-date tabular">${dt.toLocaleDateString('de-DE',{weekday:'short'})} ${dt.getDate()}.</div>${getWeatherIcon(icon,32)}<div class="fc-temp tabular">${avg}°</div><div class="fc-desc">${desc}</div></div>`;});$('#forecast').innerHTML=html;$('#weatherModal').classList.add('active');}catch{}}
 
-  async function fetchCalendars(){ const rangeStart = new Date(), rangeEnd = new Date(); rangeStart.setFullYear(rangeStart.getFullYear()-1); rangeEnd.setFullYear(rangeEnd.getFullYear()+1); let all = []; for(const cal of cfg.calendars){ if(!cal.url) continue; let text; try{ const r = await fetch(cal.url); if(!r.ok) throw 1; text = await r.text(); }catch(e){ try{ const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(cal.url)}`); if(!r.ok) throw 1; text = await r.text(); }catch(e2){ try{ const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(cal.url)}`); if(!r.ok) throw 1; text = await r.text(); }catch(e3){ console.warn(`Kalender "${cal.name}" fehlgeschlagen`); continue; } } } const parsed = parseICS(text); const expanded = parsed.flatMap(ev => expandRRULE(ev, rangeStart, rangeEnd)); all.push(...expanded.map(e => ({...e, source:cal.name, color:cal.color}))); } events = all.sort((a,b) => a.start - b.start); renderCalendar(); }
+  function parseICS(txt){const lines=txt.replace(/\r\n/g,'\n').split('\n');let u=[],b='';for(let l of lines){if(l[0]===' '||l[0]==='\t')b+=l.slice(1);else{if(b)u.push(b);b=l;}}if(b)u.push(b);const evs=[],cur={};let c=null;for(let l of u){if(l==='BEGIN:VEVENT')c={id:Math.random().toString(36).slice(2,9),allDay:false,attendees:[]};else if(l==='END:VEVENT'&&c){evs.push({...c});c=null;}else if(c){const[k,...v]=l.split(':');const val=v.join(':');if(k==='SUMMARY')c.summary=val;else if(k==='DESCRIPTION')c.description=val?.replace(/\\,/g,',').replace(/\\n/g,'\n').replace(/\\;/g,';');else if(k==='LOCATION')c.location=val;else if(k==='DTSTART'){const m=val.match(/VALUE=DATE:(\d{8})/);if(m){c.start=new Date(m[1].slice(0,4),+m[1].slice(4,6)-1,+m[1].slice(6,8));c.allDay=true;}else{const m2=val.match(/:(\d{8}T\d{6})Z?/);c.start=m2?new Date(m2[1].replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/,'$1-$2-$3T$4:$5:$6Z')):new Date();}}else if(k==='DTEND'){const m=val.match(/VALUE=DATE:(\d{8})/);if(m)c.end=new Date(m[1].slice(0,4),+m[1].slice(4,6)-1,+m[1].slice(6,8)+1);else{const m2=val.match(/:(\d{8}T\d{6})Z?/);c.end=m2?new Date(m2[1].replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/,'$1-$2-$3T$4:$5:$6Z')):new Date();}}else if(k==='ATTENDEE'&&val.includes('CN=')){const cn=val.match(/CN=([^;]+)/);if(cn)c.attendees.push(cn[1]);}else if(k==='RRULE')c.rrule=parseRRULE(val);}}return evs;}
+  function parseRRULE(str){const r={};str.split(';').forEach(p=>{const[k,v]=p.split('=');if(k==='FREQ')r.freq=v;else if(k==='INTERVAL')r.interval=+v;else if(k==='COUNT')r.count=+v;else if(k==='UNTIL')r.until=new Date(v.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z?/,'$1-$2-$3T$4:$5:$6Z'));});return Object.keys(r).length?r:null;}
+  function expandRRULE(ev,startR,endR){if(!ev.rrule)return[ev];const out=[],base=new Date(ev.start),max=400;let i=0,cur=new Date(base);while(i<max&&cur<=endR){if(cur>=startR){const c={...ev,start:new Date(cur),end:ev.end?new Date(cur.getTime()+(ev.end-base)):null};out.push(c);}i++;switch(ev.rrule.freq){case'DAILY':cur.setDate(cur.getDate()+(ev.rrule.interval||1));break;case'WEEKLY':cur.setDate(cur.getDate()+7*(ev.rrule.interval||1));break;case'MONTHLY':cur.setMonth(cur.getMonth()+(ev.rrule.interval||1));break;case'YEARLY':cur.setFullYear(cur.getFullYear()+(ev.rrule.interval||1));break;default:return[ev];}if(ev.rrule.count&&i>=ev.rrule.count)break;if(ev.rrule.until&&cur>ev.rrule.until)break;}return out;}
+  async function fetchCalendars(){const rs=new Date(),re=new Date();rs.setFullYear(rs.getFullYear()-1);re.setFullYear(re.getFullYear()+2);let all=[];for(const cal of cfg.calendars){if(!cal.url)continue;let txt;try{const r=await fetch(cal.url);if(!r.ok)throw 1;txt=await r.text();}catch{try{const r=await fetch(`https://corsproxy.io/?${encodeURIComponent(cal.url)}`);if(!r.ok)throw 1;txt=await r.text();}catch{try{const r=await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(cal.url)}`);if(!r.ok)throw 1;txt=await r.text();}catch{continue;}}}const p=parseICS(txt);const exp=p.flatMap(e=>expandRRULE(e,rs,re));all.push(...exp.map(e=>({...e,source:cal.name,color:cal.color||'#DEADBEEF'})));}events=all.sort((a,b)=>a.start-b.start);renderCalendar();}
 
-  function renderCalendar(){ const grid = $('#grid'), week = $('#weekView'); if(viewMode === 'month'){ week.classList.remove('active'); grid.style.display = 'grid'; const first = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1); const startDay = first.getDay()||7; const start = new Date(first); start.setDate(first.getDate() - (startDay-1)); $('#monthName').textContent = currentMonth.toLocaleString('de-DE',{month:'long'}); $('#year').textContent = currentMonth.getFullYear(); let html = ''; const today = new Date(); today.setHours(0,0,0,0); for(let i=0;i<42;i++){ const d = new Date(start); d.setDate(start.getDate()+i); const inMonth = d.getMonth()===currentMonth.getMonth(); const isToday = inMonth && d.getTime()===today.getTime(); const dayEvents = events.filter(e => { const s = new Date(e.start); s.setHours(0,0,0,0); return s.getTime()===d.getTime(); }).slice(0,4); const more = events.filter(e => { const s = new Date(e.start); s.setHours(0,0,0,0); return s.getTime()===d.getTime(); }).length - 4; html += `<div class="cell${inMonth?'':' other'}${isToday?' today':''}" data-date="${d.toISOString().slice(0,10)}"><div class="day-num tabular">${d.getDate()}</div><div class="today-indicator"></div><div class="events">`; for(const ev of dayEvents){ const time = ev.allDay ? 'ganztags' : `${String(ev.start.getHours()).padStart(2,'0')}:${String(ev.start.getMinutes()).padStart(2,'0')}`; html += `<div class="event" data-id="${ev.id}"><span class="event-time tabular">${time}</span><span class="event-title">${ev.summary||'Ohne Titel'}</span></div>`; } if(more>0) html += `<div class="more" data-date="${d.toISOString().slice(0,10)}">+${more} mehr</div>`; html += `</div></div>`; } grid.innerHTML = html; grid.onclick = e => { const cell = e.target.closest('.cell'); if(cell?.dataset.date){ const d = new Date(cell.dataset.date); showWeekView(d); } const ev = e.target.closest('.event'); if(ev?.dataset.id){ const evt = events.find(x => x.id===ev.dataset.id); if(evt) showModal(evt); } const more = e.target.closest('.more'); if(more?.dataset.date){ const d = new Date(more.dataset.date); showWeekView(d); } }; } else { grid.style.display = 'none'; week.classList.add('active'); showWeekView(currentMonth); } }
-  function showWeekView(date){ const week = $('#weekView'); week.innerHTML = ''; const start = new Date(date); start.setDate(date.getDate() - ((date.getDay()||7)-1)); for(let i=0;i<7;i++){ const d = new Date(start); d.setDate(start.getDate()+i); const dayEvents = events.filter(e => { const s = new Date(e.start); s.setHours(0,0,0,0); return s.getTime()===d.getTime(); }); const dayName = weekdays[d.getDay()]; const html = `<div class="day-card"><div class="day-name">${dayName}</div><div class="day-date tabular">${d.getDate()}. ${d.toLocaleString('de-DE',{month:'long'})} ${d.getFullYear()}</div><div class="day-events">${dayEvents.map(ev => { const time = ev.allDay?'ganztags':`${String(ev.start.getHours()).padStart(2,'0')}:${String(ev.start.getMinutes()).padStart(2,'0')}`; return `<div class="day-event"><span class="day-event-time tabular">${time}</span><span class="day-event-title">${ev.summary||'Ohne Titel'}</span></div>`; }).join('')||'<div style="font-size:11px;color:var(--muted)">Keine Termine</div>'}</div></div>`; week.insertAdjacentHTML('beforeend', html); } week.querySelectorAll('.day-event').forEach((el,idx) => { const ev = events.filter(e => { const s = new Date(e.start); s.setHours(0,0,0,0); return s.getTime()===new Date(start.getFullYear(),start.getMonth(),start.getDate()+Math.floor(idx/1)).getTime(); })[Math.floor(idx% (events.filter(e => { const s = new Date(e.start); s.setHours(0,0,0,0); return s.getTime()===new Date(start.getFullYear(),start.getMonth(),start.getDate()+Math.floor(idx/1)).getTime(); }).length||1))]; if(ev) el.onclick = () => showModal(ev); }); }
-  function showModal(ev){ $('#modalTitle').textContent = ev.summary||'Ohne Titel'; const timeStr = ev.allDay?'ganztägig':`${String(ev.start.getHours()).padStart(2,'0')}:${String(ev.start.getMinutes()).padStart(2,'0')}${ev.end?` – ${String(ev.end.getHours()).padStart(2,'0')}:${String(ev.end.getMinutes()).padStart(2,'0')}`:''}`; $('#modalTime').textContent = timeStr; $('#modalDuration').textContent = ev.end && !ev.allDay ? `(${Math.round((ev.end-ev.start)/60000)} Min)` : ''; $('#modalLoc').textContent = ev.location||'--'; $('#modalLocRow').style.display = ev.location?'flex':'none'; $('#modalDesc').textContent = ev.description||'--'; $('#modalDescRow').style.display = ev.description?'flex':'none'; $('#modalAtt').textContent = ev.attendees?.length? ev.attendees.join(', '):'--'; $('#modalAttRow').style.display = ev.attendees?.length?'flex':'none'; $('#modalSource').textContent = ev.source||'--'; $('#eventModal').classList.add('active'); }
-  function closeModal(){ $('#eventModal').classList.remove('active'); $('#weatherModal').classList.remove('active'); }
+  function renderCalendar(){
+    if(viewMode==='month'){
+      $('#grid').style.display='grid';$('#weekView').classList.remove('active');
+      const first=new Date(currentMonth.getFullYear(),currentMonth.getMonth(),1),sd=(first.getDay()||7)-1;
+      const start=new Date(first);start.setDate(first.getDate()-sd);
+      $('#monthName').textContent=currentMonth.toLocaleString('de-DE',{month:'long'});$('#year').textContent=currentMonth.getFullYear();
+      let h='';const today=new Date();today.setHours(0,0,0,0);
+      for(let i=0;i<42;i++){
+        const d=new Date(start);d.setDate(start.getDate()+i);
+        const inM=d.getMonth()===currentMonth.getMonth(),isT=inM&&d.getTime()===today.getTime();
+        const dayEv=events.filter(e=>{const s=new Date(e.start);s.setHours(0,0,0,0);return s.getTime()===d.getTime();});
+        const vis=dayEv.slice(0,4),more=dayEv.length-4;
+        h+=`<div class="cell${inM?'':' other'}${isT?' today':''}" data-d="${d.toISOString().slice(0,10)}"><div class="day-num tabular">${d.getDate()}</div>${isT?'<div class="today-bar"></div>':''}<div class="events">`;
+        vis.forEach(ev=>{
+          const col=ev.color||cfg.calendars.find(c=>c.name===ev.source)?.color||cfg.accent||'#DEADBEEF';
+          const txt=contrastText(col);
+          const t=ev.allDay?'':`${String(ev.start.getHours()).padStart(2,'0')}:${String(ev.start.getMinutes()).padStart(2,'0')} · `;
+          h+=`<div class="pill" data-id="${ev.id}" style="background:${col};color:${txt}"><span class="pill-time tabular">${t}</span><span class="pill-title">${ev.summary||'Ohne Titel'}</span></div>`;
+        });
+        if(more>0)h+=`<div class="more" data-d="${d.toISOString().slice(0,10)}">+${more} mehr</div>`;
+        h+=`</div></div>`;
+      }
+      $('#grid').innerHTML=h;
+    }
+  }
 
-  async function initSlideshow(){ const ss = $('#slideshow'), dots = $('#dots'); slides = []; for(const url of cfg.imgUrls){ if(url.startsWith('http')) slides.push(expandDriveId(url)); } for(const local of imgBlobs){ slides.push(local.url); } if(slides.length===0){ ss.innerHTML = '<div style="position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:14px">Keine Bilder</div>'; return; } ss.innerHTML = ''; dots.innerHTML = ''; slides.forEach((src,idx) => { const img = new Image(); img.className = 'slide'+(idx===0?' active':''); img.style.backgroundImage = `url(${src})`; img.style.backgroundSize = 'cover'; img.style.backgroundPosition = 'center'; ss.appendChild(img); const dot = document.createElement('div'); dot.className = 'dot'+(idx===0?' active':''); dot.onclick = () => goToSlide(idx); dots.appendChild(dot); }); function goToSlide(i){ slides.forEach((_,idx) => { $$('.slide')[idx]?.classList.toggle('active', idx===i); $$('.dot')[idx]?.classList.toggle('active', idx===i); }); currentSlide = i; } function next(){ goToSlide((currentSlide+1)%slides.length); } if(slides.length>1){ const interval = Math.max(5, Math.min(300, cfg.slideInterval||30))*1000; slideTimer = setInterval(next, interval); document.addEventListener('visibilitychange', () => { if(document.hidden) clearInterval(slideTimer); else slideTimer = setInterval(next, interval); }); } }
+  function showWeekView(date){
+    viewMode='week';$('#grid').style.display='none';$('#weekView').classList.add('active');
+    $('#monthToggle').classList.remove('active');$('#weekToggle').classList.add('active');
+    const start=new Date(date);start.setDate(date.getDate()-((date.getDay()||7)-1));
+    let h='';for(let i=0;i<7;i++){
+      const d=new Date(start);d.setDate(start.getDate()+i);
+      const dayEv=events.filter(e=>{const s=new Date(e.start);s.setHours(0,0,0,0);return s.getTime()===d.getTime();});
+      h+=`<div class="day-card"><div class="day-card-header">${weekdays[i]}</div><div class="day-card-date tabular">${d.getDate()}. ${d.toLocaleString('de-DE',{month:'long'})} ${d.getFullYear()}</div><div class="day-events">`;
+      dayEv.forEach(ev=>{const t=ev.allDay?'ganztags':`${String(ev.start.getHours()).padStart(2,'0')}:${String(ev.start.getMinutes()).padStart(2,'0')}`;h+=`<div class="day-event" data-id="${ev.id}"><span class="day-ev-time tabular">${t}</span><span class="day-ev-title">${ev.summary||'Ohne Titel'}</span></div>`;});
+      if(!dayEv.length)h+=`<div style="font-size:11px;color:var(--muted);padding:4px 0">Keine Termine</div>`;
+      h+=`</div></div>`;
+    }
+    $('#weekView').innerHTML=h;
+  }
 
-  function renderSettings(){ $('#weatherInput').value = cfg.weatherLoc||''; const srcs = $('#calSources'); srcs.innerHTML = ''; cfg.calendars.forEach((cal,idx) => { const row = document.createElement('div'); row.className = 'source-row'; row.innerHTML = `<input class="input source-name" type="text" value="${cal.name}" placeholder="Name"><input class="source-color" type="color" value="${cal.color}"><button class="source-del" data-idx="${idx}">×</button><textarea class="source-url" placeholder="iCal-URL">${cal.url||''}</textarea>`; srcs.appendChild(row); }); srcs.querySelectorAll('.source-del').forEach(btn => { btn.onclick = () => { cfg.calendars.splice(+btn.dataset.idx,1); saveCfg(); renderSettings(); }; }); srcs.querySelectorAll('.source-name').forEach((inp,idx) => { inp.onchange = () => { cfg.calendars[idx].name = inp.value; saveCfg(); }; }); srcs.querySelectorAll('.source-color').forEach((inp,idx) => { inp.onchange = () => { cfg.calendars[idx].color = inp.value; saveCfg(); }; }); srcs.querySelectorAll('.source-url').forEach((inp,idx) => { inp.onchange = () => { cfg.calendars[idx].url = inp.value.trim(); saveCfg(); }; }); $('#imgUrls').value = cfg.imgUrls.join('\n'); $('#imgUrls').onchange = () => { cfg.imgUrls = $('#imgUrls').value.split('\n').map(s=>s.trim()).filter(Boolean); saveCfg(); }; $('#slideInterval').value = cfg.slideInterval||30; $('#slideInterval').onchange = () => { cfg.slideInterval = +$('#slideInterval').value; saveCfg(); }; const preview = $('#imgPreview'); preview.innerHTML = ''; imgBlobs.forEach((img,idx) => { const div = document.createElement('div'); div.className = 'img-thumb'; div.innerHTML = `<img src="${img.url}" alt=""><button class="img-del" data-idx="${idx}">×</button>`; preview.appendChild(div); }); preview.querySelectorAll('.img-del').forEach(btn => { btn.onclick = async () => { await deleteImage(imgBlobs[+btn.dataset.idx].id); saveCfg(); renderSettings(); initSlideshow(); }; }); }
+  function showModal(ev){
+    $('#modalTitle').textContent=ev.summary||'Ohne Titel';
+    const t=ev.allDay?'ganztägig':`${String(ev.start.getHours()).padStart(2,'0')}:${String(ev.start.getMinutes()).padStart(2,'0')}${ev.end?` – ${String(ev.end.getHours()).padStart(2,'0')}:${String(ev.end.getMinutes()).padStart(2,'0')}`:''}`;
+    $('#modalTime').textContent=t;$('#modalDuration').textContent=ev.end&&!ev.allDay?` (${Math.round((ev.end-ev.start)/60000)} Min)`:'';
+    $('#modalLoc').textContent=ev.location||'--';$('#modalLocRow').style.display=ev.location?'flex':'none';
+    $('#modalDesc').textContent=ev.description||'--';$('#modalDescRow').style.display=ev.description?'flex':'none';
+    $('#modalAtt').textContent=ev.attendees?.length?ev.attendees.join(', '):'--';$('#modalAttRow').style.display=ev.attendees?.length?'flex':'none';
+    $('#modalSource').textContent=ev.source||'--';$('#eventModal').classList.add('active');
+  }
+  function closeModal(){$('#eventModal').classList.remove('active');$('#weatherModal').classList.remove('active');}
 
-  function setupEvents(){ $('#settingsBtn').onclick = () => { $('#settings').classList.add('active'); settingsOpen = true; renderSettings(); }; $('#settingsClose').onclick = () => { $('#settings').classList.remove('active'); settingsOpen = false; }; $$('.theme-card').forEach(c => { c.onclick = () => setTheme(c.dataset.theme); }); $('#prevBtn').onclick = () => { currentMonth.setMonth(currentMonth.getMonth()-1); renderCalendar(); }; $('#nextBtn').onclick = () => { currentMonth.setMonth(currentMonth.getMonth()+1); renderCalendar(); }; $('#todayBtn').onclick = () => { currentMonth = new Date(); renderCalendar(); }; $('#monthToggle').onclick = () => { viewMode='month'; $('#monthToggle').classList.add('active'); $('#weekToggle').classList.remove('active'); renderCalendar(); }; $('#weekToggle').onclick = () => { viewMode='week'; $('#weekToggle').classList.add('active'); $('#monthToggle').classList.remove('active'); renderCalendar(); }; $('#addSource').onclick = () => { cfg.calendars.push({name:'Neuer Kalender',color:'#DEADBEEF',url:''}); saveCfg(); renderSettings(); }; $('#weatherCard').onclick = fetchForecast; $('#weatherClose').onclick = closeModal; $('#modalClose').onclick = closeModal; $('#eventModal').onclick = e => { if(e.target.id==='eventModal') closeModal(); }; $('#weatherModal').onclick = e => { if(e.target.id==='weatherModal') closeModal(); }; $('#reloadBtn').onclick = async () => { if(confirm('Alle Einstellungen zurücksetzen und neu laden?')){ localStorage.removeItem(cfgKey); cfg = {...defaultCfg}; const req = indexedDB.deleteDatabase(dbKey); req.onsuccess = () => location.reload(); }; }; $('#fileInput').onchange = async e => { for(const file of e.target.files){ const blob = await resizeImage(file); const id = 'local_'+Date.now()+'_'+Math.random().toString(36).slice(2,8); await saveImage(blob, id, file.name); } saveCfg(); renderSettings(); initSlideshow(); e.target.value = ''; }; $('#clearLocal').onclick = async () => { if(!confirm('Alle lokal hochgeladenen Bilder löschen?')) return; for(const img of imgBlobs.filter(i=>i.id.startsWith('local_'))){ await deleteImage(img.id); } saveCfg(); renderSettings(); initSlideshow(); }; document.addEventListener('long-press', () => { if(!settingsOpen){ $('#settings').classList.add('active'); settingsOpen = true; renderSettings(); } }, {capture:true}); let pressTimer; $('#time').addEventListener('touchstart', e => { pressTimer = setTimeout(() => { if(!settingsOpen){ $('#settings').classList.add('active'); settingsOpen = true; renderSettings(); } }, 1200); }, {passive:true}); $('#time').addEventListener('touchend', () => clearTimeout(pressTimer)); $('#time').addEventListener('touchmove', () => clearTimeout(pressTimer)); }
+  function getNextTransition(){
+    const isLowMem=(navigator.deviceMemory||4)<2;
+    if(isLowMem||window.matchMedia('(prefers-reduced-motion:reduce)').matches)return'fade';
+    const style=cfg.transitionStyle||'auto';
+    if(style==='auto'){const t=transitions[transitionIdx%transitions.length];transitionIdx++;return t;}
+    return style;
+  }
 
-  async function init(){ await openDB().then(d => db = d).catch(()=>{}); await loadImages(); setTheme(cfg.theme); startClock(); fetchWeather(); setInterval(fetchWeather, 15*60*1000); fetchCalendars(); setInterval(fetchCalendars, 30*60*1000); await initSlideshow(); renderCalendar(); setupEvents(); setInterval(() => { if(document.visibilityState==='visible' && !settingsOpen) renderCalendar(); }, 60000); }
+  function applyTransition(newIdx){
+    const style=getNextTransition();
+    const slides=$$('.slide');
+    const prevSlide=slides[currentSlide];
+    const nextSlide=slides[newIdx];
+    if(prevSlide){
+      prevSlide.classList.remove('active','slide-in-left','slide-out-left','zoom-active','blur-active','kenburns');
+      if(style==='slide'){prevSlide.classList.add('slide-out-left');prevSlide.style.willChange='transform,opacity';setTimeout(()=>prevSlide.style.willChange='',1300);}
+    }
+    if(nextSlide){
+      nextSlide.classList.remove('slide-in-left','slide-out-left','zoom-in','blur-in','kenburns');
+      nextSlide.style.opacity='0';nextSlide.style.transform='';nextSlide.style.filter='';
+      if(style==='fade'){nextSlide.style.willChange='opacity';setTimeout(()=>{nextSlide.classList.add('active');nextSlide.style.willChange='';},50);}
+      else if(style==='slide'){nextSlide.classList.add('slide-in-left');nextSlide.style.willChange='transform,opacity';setTimeout(()=>{nextSlide.classList.add('active');nextSlide.classList.remove('slide-in-left');nextSlide.style.willChange='';},50);}
+      else if(style==='zoom'){nextSlide.classList.add('zoom-in');nextSlide.style.willChange='transform,opacity';setTimeout(()=>{nextSlide.classList.add('zoom-active');nextSlide.style.willChange='';},50);}
+      else if(style==='blur'){nextSlide.classList.add('blur-in');nextSlide.style.willChange='filter,opacity';setTimeout(()=>{nextSlide.classList.add('blur-active');nextSlide.style.willChange='';},50);}
+      else{nextSlide.classList.add('active');}
+    }
+    // Ken-Burns & Color-Shift auf aktiven Slide
+    const active=$('.slide.active');
+    if(active){
+      active.style.willChange='transform,opacity';
+      active.classList.add('kenburns');
+      active.style.animationName=kbAnims[Math.floor(Math.random()*kbAnims.length)];
+      if(!window.matchMedia('(prefers-reduced-motion:reduce)').matches&&(navigator.deviceMemory||4)>=2){
+        let cs=$('.color-shift');
+        if(!cs){cs=document.createElement('div');cs.className='color-shift';$('#slideshow').appendChild(cs);}
+      } else {
+        const cs=$('.color-shift');if(cs)cs.remove();
+      }
+    }
+    $$('.dot').forEach((d,i)=>d.classList.toggle('active',i===newIdx));
+    currentSlide=newIdx;
+  }
+
+  async function initSlideshow(){
+    const ss=$('#slideshow'),dots=$('#dots');
+    slides=[];
+    for(const u of cfg.imgUrls)if(u.startsWith('http')||u.length>5)slides.push(expandDriveId(u));
+    for(const l of imgBlobs)slides.push(l.url);
+    if(!slides.length){ss.innerHTML='<div style="position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:14px">Keine Bilder</div>';dots.innerHTML='';return;}
+    ss.innerHTML='';dots.innerHTML='';
+    const cs=document.createElement('div');cs.className='color-shift';ss.appendChild(cs);
+    slides.forEach((src,i)=>{
+      const img=document.createElement('div');img.className='slide'+(i===0?' active':'');
+      img.style.backgroundImage=`url(${src})`;
+      if(i===0){img.classList.add('kenburns');img.style.animationName=kbAnims[Math.floor(Math.random()*kbAnims.length)];}
+      ss.appendChild(img);
+      const dot=document.createElement('div');dot.className='dot'+(i===0?' active':'');
+      dot.onclick=()=>goToSlide(i);dots.appendChild(dot);
+    });
+    function goToSlide(i){if(i===currentSlide)return;applyTransition(i);}
+    function next(){goToSlide((currentSlide+1)%slides.length);}
+    if(slides.length>1){
+      const int=Math.max(5,Math.min(300,cfg.slideInterval||30))*1000;
+      slideTimer=setInterval(next,int);
+      document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInterval(slideTimer);else slideTimer=setInterval(next,int);});
+    }
+  }
+
+  function renderSettings(){
+    $('#weatherInput').value=cfg.weatherLoc||'';
+    const src=$('#calSources');src.innerHTML='';
+    cfg.calendars.forEach((c,i)=>{
+      const r=document.createElement('div');r.className='source-row';
+      r.innerHTML=`<input class="input source-name" type="text" value="${c.name}" placeholder="Name"><input class="source-color" type="color" value="${c.color}"><button class="source-del" data-i="${i}">×</button><textarea class="source-url" placeholder="iCal-URL">${c.url||''}</textarea>`;
+      src.appendChild(r);
+    });
+    src.querySelectorAll('.source-del').forEach(b=>b.onclick=()=>{cfg.calendars.splice(+b.dataset.i,1);saveCfg();renderSettings();});
+    src.querySelectorAll('.source-name').forEach((inp,i)=>inp.onchange=()=>{cfg.calendars[i].name=inp.value;saveCfg();});
+    src.querySelectorAll('.source-color').forEach((inp,i)=>inp.onchange=()=>{cfg.calendars[i].color=inp.value;saveCfg();});
+    src.querySelectorAll('.source-url').forEach((inp,i)=>inp.onchange=()=>{cfg.calendars[i].url=inp.value.trim();saveCfg();});
+    $('#imgUrls').value=cfg.imgUrls.join('\n');$('#imgUrls').onchange=()=>{cfg.imgUrls=$('#imgUrls').value.split('\n').map(s=>s.trim()).filter(Boolean);saveCfg();};
+    $('#slideInterval').value=cfg.slideInterval||30;$('#slideInterval').onchange=()=>{cfg.slideInterval=+$('#slideInterval').value;saveCfg();};
+    $('#transitionStyle').value=cfg.transitionStyle||'auto';$('#transitionStyle').onchange=()=>{cfg.transitionStyle=$('#transitionStyle').value;saveCfg();};
+    const fc=$('#fontCards');fc.innerHTML='';
+    const isLow=(navigator.deviceMemory||4)<2;
+    Object.entries(fontSets).forEach(([name,fs])=>{
+      const card=document.createElement('div');card.className='font-cards card'+(cfg.fontSet===name?' active':'');
+      if(isLow)card.classList.add('disabled');
+      card.innerHTML=`<div class="font-preview"><span class="sans-part">Aa</span> <span class="mono-part">12:34</span></div><div class="font-name">${name.charAt(0).toUpperCase()+name.slice(1)}</div>`;
+      if(!isLow)card.onclick=()=>loadFontSet(name);
+      fc.appendChild(card);
+    });
+    const pr=$('#imgPreview');pr.innerHTML='';imgBlobs.forEach((img,i)=>{
+      const d=document.createElement('div');d.className='img-thumb';
+      d.innerHTML=`<img src="${img.url}"><button class="img-del" data-i="${i}">×</button>`;pr.appendChild(d);
+    });
+    pr.querySelectorAll('.img-del').forEach(b=>b.onclick=async()=>{await deleteImage(imgBlobs[+b.dataset.i].id);saveCfg();renderSettings();initSlideshow();});
+  }
+
+  function setupEvents(){
+    $('#settingsBtn').onclick=()=>{$('#settings').classList.add('active');settingsOpen=true;renderSettings();};
+    $('#settingsClose').onclick=()=>{$('#settings').classList.remove('active');settingsOpen=false;};
+    $$('.theme-card').forEach(c=>c.onclick=()=>setTheme(c.dataset.theme));
+    $('#prevBtn').onclick=()=>{currentMonth.setMonth(currentMonth.getMonth()-1);viewMode==='month'?renderCalendar():showWeekView(currentMonth);};
+    $('#nextBtn').onclick=()=>{currentMonth.setMonth(currentMonth.getMonth()+1);viewMode==='month'?renderCalendar():showWeekView(currentMonth);};
+    $('#todayBtn').onclick=()=>{currentMonth=new Date();if(viewMode==='month')renderCalendar();else showWeekView(currentMonth);};
+    $('#monthToggle').onclick=()=>{viewMode='month';$('#monthToggle').classList.add('active');$('#weekToggle').classList.remove('active');renderCalendar();};
+    $('#weekToggle').onclick=()=>{showWeekView(currentMonth);};
+    $('#addSource').onclick=()=>{cfg.calendars.push({name:'Neuer Kalender',color:'#DEADBEEF',url:''});saveCfg();renderSettings();};
+    $('#weatherCard').onclick=fetchForecast;
+    $('#weatherClose').onclick=$('#modalClose').onclick=closeModal;
+    $('#eventModal').onclick=$('#weatherModal').onclick=e=>{if(e.target.classList.contains('modal'))closeModal();};
+    $('#reloadBtn').onclick=()=>{if(confirm('Alle Einstellungen zurücksetzen?')){localStorage.removeItem(cfgKey);indexedDB.deleteDatabase(dbKey).onsuccess=()=>location.reload();}};
+    $('#fileInput').onchange=async e=>{for(const f of e.target.files){const b=await resizeImage(f);await saveImage(b,'local_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),f.name);}saveCfg();renderSettings();initSlideshow();e.target.value='';};
+    $('#clearLocal').onclick=async()=>{if(!confirm('Lokale Bilder löschen?'))return;for(const i of imgBlobs.filter(x=>x.id.startsWith('local_')))await deleteImage(i.id);saveCfg();renderSettings();initSlideshow();};
+    $('#grid').onclick=e=>{const ev=e.target.closest('.pill')||e.target.closest('.event');if(ev?.dataset.id){const d=events.find(x=>x.id===ev.dataset.id);if(d)showModal(d);}const m=e.target.closest('.more');if(m?.dataset.d){const dt=new Date(m.dataset.d);currentMonth=dt;showWeekView(dt);}};
+    $('#weekView').onclick=e=>{const ev=e.target.closest('.day-event');if(ev?.dataset.id){const d=events.find(x=>x.id===ev.dataset.id);if(d)showModal(d);}};
+    let pt;$('#time').addEventListener('touchstart',e=>{pt=setTimeout(()=>{if(!settingsOpen){$('#settings').classList.add('active');settingsOpen=true;renderSettings();}},1200);},{passive:true});
+    $('#time').addEventListener('touchend',()=>clearTimeout(pt));$('#time').addEventListener('touchmove',()=>clearTimeout(pt));
+  }
+
+  async function init(){
+    try{await openDB().then(d=>db=d);}catch{}
+    await loadImages();
+    const fs=fontSets[cfg.fontSet]||fontSets.modern;
+    document.documentElement.style.setProperty('--sans',`${fs.sans},system-ui,-apple-system,sans-serif`);
+    document.documentElement.style.setProperty('--mono',`"${fs.mono}",Consolas,monospace`);
+    document.documentElement.style.setProperty('--serif',`"${fs.serif}",Georgia,serif`);
+    const old=$('head link[data-font-set]');if(old)old.remove();
+    const link=document.createElement('link');link.rel='stylesheet';link.href=`https://fonts.googleapis.com/css2?family=${fs.url}&display=swap`;link.setAttribute('data-font-set',cfg.fontSet);document.head.appendChild(link);
+    setTheme(cfg.theme);startClock();fetchWeather();setInterval(fetchWeather,15*60*1000);
+    fetchCalendars();setInterval(fetchCalendars,30*60*1000);
+    await initSlideshow();renderCalendar();setupEvents();
+  }
   init();
 })();
 </script>
