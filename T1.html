@@ -3,10 +3,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SmartHub Ultimate Pro - Repariert</title>
+    <title>SmartHub Ultimate Pro - Wetter Fix</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
-        /* THEMEN[cite: 3] */
+        /* THEMEN & BASIS[cite: 2] */
         :root { --bg: #000; --panel: #111; --text: #fff; --accent: #ef4444; --glass: rgba(255,255,255,0.1); --anim-speed: 1.5s; }
         [data-theme="oled"] { --bg: #000; --panel: #000; --accent: #3b82f6; }
         [data-theme="glass"] { --bg: #1a1c2c; --panel: rgba(255,255,255,0.1); --glass: rgba(255,255,255,0.15); --accent: #00d2ff; }
@@ -21,13 +21,13 @@
 
         .panel { border-radius: 32px; overflow: hidden; position: relative; background: var(--panel); border: 1px solid var(--glass); }
 
-        /* SLIDESHOW & ANIMATIONEN[cite: 3] */
+        /* SLIDESHOW & ANIMATIONEN[cite: 2] */
         .slideshow { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
         .media-item { position: absolute; inset: 0; opacity: 0; transition: all var(--anim-speed) ease-in-out; display: flex; align-items: center; justify-content: center; }
         .media-item.active { opacity: 1; }
         .media-content { width: 100%; height: 100%; object-fit: cover; }
 
-        /* 10 Animationen im CSS[cite: 3] */
+        /* 10 Animationen[cite: 2] */
         .anim-fade.active { opacity: 1; }
         .anim-zoom-in { transform: scale(1.5); } .anim-zoom-in.active { transform: scale(1); }
         .anim-zoom-out { transform: scale(0.5); } .anim-zoom-out.active { transform: scale(1); }
@@ -40,19 +40,21 @@
         .anim-ken-burns { transform: scale(1); } .anim-ken-burns.active { animation: kb 20s infinite alternate; }
         @keyframes kb { to { transform: scale(1.25) translate(-2%, -2%); } }
 
-        /* UI OVERLAYS[cite: 3] */
+        /* UI OVERLAYS[cite: 2] */
         .vignette { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.85)); z-index: 1; }
         .overlay-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 40px; pointer-events: none; }
         .time { font-family: "JetBrains Mono", monospace; font-size: clamp(80px, 11vw, 170px); font-weight: 700; letter-spacing: -6px; line-height: 0.85; pointer-events: auto; }
         .date { font-size: 32px; font-weight: 700; color: var(--accent); margin-top: 15px; }
 
-        /* WETTER[cite: 3] */
-        .weather-hub { pointer-events: auto; background: var(--glass); padding: 20px; border-radius: 30px; backdrop-filter: blur(15px); width: fit-content; border: 1px solid var(--glass); }
+        /* WETTER REPARIERT[cite: 1, 2] */
+        .weather-hub { pointer-events: auto; background: var(--glass); padding: 25px; border-radius: 30px; backdrop-filter: blur(15px); width: fit-content; border: 1px solid var(--glass); }
         .weather-main { display: flex; align-items: center; gap: 20px; }
-        .weather-icon svg { width: 70px; height: 70px; }
-        .temp-large { font-family: "JetBrains Mono", monospace; font-size: 60px; font-weight: 700; }
+        .weather-icon svg { width: 80px; height: 80px; }
+        .temp-large { font-family: "JetBrains Mono", monospace; font-size: 65px; font-weight: 700; line-height: 1; }
+        .forecast-strip { display: flex; gap: 15px; margin-top: 20px; border-top: 1px solid var(--glass); padding-top: 15px; }
+        .fc-day { text-align: center; min-width: 55px; font-size: 13px; font-weight: 700; }
 
-        /* KALENDER REPARATUR[cite: 4] */
+        /* KALENDER[cite: 2] */
         .cal-container { display: flex; flex-direction: column; height: 100%; padding: 25px; }
         .grid-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; padding-bottom: 15px; font-weight: 700; font-size: 14px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
         .grid-body { display: grid; grid-template-columns: repeat(7, 1fr); flex: 1; gap: 5px; background: var(--glass); border-radius: 20px; overflow: hidden; padding: 5px; }
@@ -60,9 +62,9 @@
         .day-num { font-size: 24px; font-weight: 700; margin-bottom: 5px; opacity: 0.9; }
         .day-cell.today { border: 2px solid var(--accent); background: rgba(239, 68, 68, 0.05); }
         .day-cell.other { opacity: 0.2; }
-        .ev-bar { font-size: 11px; padding: 4px 6px; border-radius: 6px; margin-bottom: 3px; color: white; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--accent); border-left: 3px solid rgba(0,0,0,0.3); }
+        .ev-bar { font-size: 11px; padding: 4px 6px; border-radius: 6px; margin-bottom: 3px; color: white; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--accent); }
 
-        /* SETTINGS[cite: 3] */
+        /* SETTINGS[cite: 2] */
         .settings-pane { position: fixed; right: 0; top: 0; width: 450px; height: 100%; background: #000; z-index: 100; transform: translateX(100%); transition: 0.4s ease; padding: 40px; border-left: 1px solid var(--glass); overflow-y: auto; }
         .settings-pane.active { transform: translateX(0); }
         .input-field { width: 100%; background: #111; border: 1px solid var(--glass); color: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 16px; }
@@ -88,6 +90,7 @@
                         <div id="wCity" style="font-weight:700; font-size:24px; opacity:0.8;">Ort...</div>
                     </div>
                 </div>
+                <div class="forecast-strip" id="forecastStrip"></div>
             </div>
         </div>
     </div>
@@ -107,12 +110,19 @@
 
 <div class="settings-pane" id="sidebar">
     <h2 style="margin-bottom:30px;">Konfiguration</h2>
+    <label>Thema</label>
+    <select class="input-field" id="inTheme">
+        <option value="oled">OLED Deep Black</option>
+        <option value="glass">Frosted Glass</option>
+        <option value="cyber">Cyberpunk Neon</option>
+        <option value="minimal">Minimal White</option>
+    </select>
     <label>Wetter Stadt</label>
-    <input type="text" class="input-field" id="inCity" placeholder="Düsseldorf">
-    <label>ICS Kalender URL (Google)</label>
+    <input type="text" class="input-field" id="inCity" placeholder="z.B. Düsseldorf">
+    <label>ICS Kalender URL</label>
     <input type="text" class="input-field" id="inCal" placeholder="https://...">
     <label>Bild-Links (pro Zeile)</label>
-    <textarea class="input-field" id="inMedia" rows="5"></textarea>
+    <textarea class="input-field" id="inMedia" rows="4"></textarea>
     <label>Ordner hochladen</label>
     <input type="file" id="inLocalFolder" class="input-field" multiple webkitdirectory directory>
     
@@ -121,14 +131,43 @@
 </div>
 
 <script>
-/** STATE MANAGEMENT[cite: 3] **/
+/** STATE MANAGEMENT[cite: 2] **/
 let state = {
     theme: 'oled', city: 'Düsseldorf', calUrl: '', anim: 'fade',
     media: ['https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1500'],
     localMedia: [], events: [], date: new Date()
 };
 
-/** KALENDER LOGIK REPARIERT[cite: 2, 4] **/
+const weatherSvgs = {
+    Clear: '<svg viewBox="0 0 24 24" fill="#fb923c"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.2 4.2l1.4 1.4m12.8 12.8l1.4 1.4M1 12h2m18 0h2M4.2 19.8l1.4-1.4m12.8-12.8l1.4-1.4" stroke="#fb923c" stroke-width="2"/></svg>',
+    Clouds: '<svg viewBox="0 0 24 24" fill="#94a3b8"><path d="M17.5 19c2.5 0 4.5-2 4.5-4.5 0-2.3-1.7-4.2-4-4.5-.8-3.7-4-6.5-7.5-6.5C7.2 3.5 4.5 6 4.1 9.1 1.8 9.6 0 11.6 0 14c0 2.8 2.2 5 5 5h12.5z"/></svg>',
+    Rain: '<svg viewBox="0 0 24 24" fill="#38bdf8"><path d="M17.5 19c2.5 0 4.5-2 4.5-4.5 0-2.3-1.7-4.2-4-4.5-.8-3.7-4-6.5-7.5-6.5C7.2 3.5 4.5 6 4.1 9.1 1.8 9.6 0 11.6 0 14c0 2.8 2.2 5 5 5h12.5z"/><path d="M8 20l-1 2M12 21l-1 2M16 20l-1 2" stroke="#38bdf8" stroke-width="2"/></svg>',
+    Snow: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 14"/></svg>'
+};
+
+/** WETTER REPARIERT[cite: 1, 2] **/
+async function updateWeather() {
+    try {
+        const apiKey = '769c5861cd255a3982bafb1680abf194';
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${state.city}&appid=${apiKey}&units=metric&lang=de`);
+        const data = await res.json();
+        
+        if(data.cod !== "200") return;
+
+        document.getElementById('mainTemp').textContent = Math.round(data.list[0].main.temp) + '°';
+        document.getElementById('wCity').textContent = data.city.name;
+        document.getElementById('wIcon').innerHTML = weatherSvgs[data.list[0].weather[0].main] || weatherSvgs.Clouds;
+
+        const strip = document.getElementById('forecastStrip');
+        strip.innerHTML = '';
+        data.list.filter(i => i.dt_txt.includes("12:00:00")).slice(0,5).forEach(d => {
+            const date = new Date(d.dt * 1000);
+            strip.innerHTML += `<div class="fc-day"><div>${date.toLocaleDateString('de-DE',{weekday:'short'})}</div>${weatherSvgs[d.weather[0].main] || weatherSvgs.Clouds}<div>${Math.round(d.main.temp)}°</div></div>`;
+        });
+    } catch(e) { console.error("Wetter-Fehler"); }
+}
+
+/** KALENDER REPARIERT[cite: 2] **/
 async function loadCal() {
     if(!state.calUrl) return;
     try {
@@ -180,7 +219,7 @@ function renderCal() {
     }
 }
 
-/** MEDIA ENGINE[cite: 3] **/
+/** MEDIA ENGINE[cite: 2] **/
 let mIdx = 0;
 function playMedia() {
     const hub = document.getElementById('mediaHub');
@@ -199,18 +238,19 @@ function playMedia() {
     mIdx++;
 }
 
-/** INIT[cite: 3] **/
+/** INIT[cite: 2] **/
 function init() {
-    const saved = localStorage.getItem('hub_v5_final');
+    const saved = localStorage.getItem('hub_master_v5');
     if(saved) state = {...state, ...JSON.parse(saved), date: new Date()};
     
     document.getElementById('btnSet').onclick = () => document.getElementById('sidebar').classList.add('active');
     document.getElementById('btnClose').onclick = () => document.getElementById('sidebar').classList.remove('active');
     document.getElementById('btnSave').onclick = () => {
-        state.city = document.getElementById('inCity').value;
-        state.calUrl = document.getElementById('inCal').value;
+        state.city = document.getElementById('inCity').value || state.city;
+        state.calUrl = document.getElementById('inCal').value || state.calUrl;
+        state.theme = document.getElementById('inTheme').value;
         state.media = document.getElementById('inMedia').value.split('\n').filter(u=>u.trim());
-        localStorage.setItem('hub_v5_final', JSON.stringify(state));
+        localStorage.setItem('hub_master_v5', JSON.stringify(state));
         location.reload();
     };
 
@@ -220,8 +260,10 @@ function init() {
         mIdx = 0; playMedia();
     };
 
+    document.body.dataset.theme = state.theme;
     renderCal();
     loadCal();
+    updateWeather();
     setInterval(playMedia, 15000); playMedia();
     setInterval(() => {
         const n = new Date();
