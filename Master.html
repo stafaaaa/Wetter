@@ -3,10 +3,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SmartHub Ultimate Pro - Persistence & 10 Anim Fix</title>
+    <title>SmartHub Ultimate Pro - Local Storage Fix</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
-        /* 1. THEMEN-SYSTEM (16 THEMES)[cite: 2] */
+        /* 1. THEMEN-SYSTEM (16 THEMES) */
         :root { --bg: #000; --panel: #111; --text: #fff; --accent: #ef4444; --glass: rgba(255,255,255,0.1); --anim-speed: 1.5s; --split: 65vw; }
         [data-theme="oled"] { --bg: #000; --panel: #000; --accent: #3b82f6; }
         [data-theme="glass"] { --bg: #1a1c2c; --panel: rgba(255,255,255,0.12); --glass: rgba(255,255,255,0.15); --accent: #00d2ff; }
@@ -26,13 +26,13 @@
 
         .panel { border-radius: 28px; overflow: hidden; position: relative; background: var(--panel); border: 1px solid var(--glass); }
 
-        /* 2. SLIDESHOW & 10 ANIMATIONEN[cite: 2] */
+        /* 2. SLIDESHOW & 10 ANIMATIONEN */
         .slideshow { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
         .media-item { position: absolute; inset: 0; opacity: 0; transition: all var(--anim-speed) cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; }
         .media-item.active { opacity: 1; }
         .media-content { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Animation Styles[cite: 2] */
+        /* Animation Styles */
         .anim-fade.active { opacity: 1; }
         .anim-zoom-in { transform: scale(1.4); } .anim-zoom-in.active { transform: scale(1); }
         .anim-zoom-out { transform: scale(0.6); } .anim-zoom-out.active { transform: scale(1); }
@@ -45,13 +45,13 @@
         .anim-ken-burns { transform: scale(1); } .anim-ken-burns.active { animation: kb 20s infinite alternate; }
         @keyframes kb { to { transform: scale(1.2) translate(-2%, -2%); } }
 
-        /* OVERLAYS & KONTRAST[cite: 2] */
+        /* OVERLAYS & KONTRAST */
         .vignette { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 35%, transparent 65%, rgba(0,0,0,0.8) 100%); z-index: 1; pointer-events: none; }
         .overlay-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 30px; pointer-events: none; }
         .time { font-family: "JetBrains Mono", monospace; font-size: clamp(50px, 7vw, 110px); font-weight: 700; text-shadow: 0 4px 20px #000; pointer-events: auto; }
         .date { font-size: clamp(22px, 2.5vw, 34px); font-weight: 700; color: var(--accent); text-shadow: 0 2px 10px #000; }
 
-        /* WETTER PANORAMA[cite: 2] */
+        /* WETTER PANORAMA */
         .weather-hub { pointer-events: auto; background: var(--glass); padding: 25px 40px; border-radius: 24px; backdrop-filter: blur(25px); border: 1px solid var(--glass); display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: auto; box-shadow: 0 15px 45px rgba(0,0,0,0.6); }
         .weather-main { display: flex; align-items: center; gap: 30px; border-right: 2px solid var(--glass); padding-right: 40px; }
         .weather-icon-large { width: 100px; height: 100px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3)); animation: float 4s ease-in-out infinite; }
@@ -61,7 +61,7 @@
         .fc-item { text-align: center; font-size: 16px; font-weight: 700; }
         .fc-icon { width: 50px; height: 50px; margin: 8px 0; }
 
-        /* KALENDER LESBARKEIT[cite: 2] */
+        /* KALENDER LESBARKEIT */
         .cal-container { display: flex; flex-direction: column; height: 100%; padding: 20px; }
         .month-label { font-size: clamp(28px, 3.5vw, 42px); font-weight: 700; text-align: center; }
         .grid-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; padding-bottom: 12px; font-weight: 700; font-size: 18px; color: var(--accent); text-transform: uppercase; }
@@ -72,7 +72,7 @@
         .day-cell.other { opacity: 0.2; }
         .ev-bar { font-size: 12px; padding: 5px 8px; border-radius: 8px; margin-top: 4px; color: white; font-weight: 700; background: var(--accent); white-space: nowrap; overflow: hidden; }
 
-        /* SETTINGS & MODALS[cite: 2] */
+        /* SETTINGS & MODALS */
         .settings-pane { position: fixed; right: 0; top: 0; width: 420px; height: 100%; background: #000; z-index: 100; transform: translateX(100%); transition: 0.4s ease; padding: 30px; border-left: 1px solid var(--glass); overflow-y: auto; }
         .settings-pane.active { transform: translateX(0); }
         .input-field { width: 100%; background: #111; border: 1px solid var(--glass); color: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; outline: none; }
@@ -163,7 +163,7 @@
 </div>
 
 <script>
-/** 1. STATE & STORAGE[cite: 2] **/
+/** 1. STATE & STORAGE **/
 let state = {
     theme: 'oled', city: 'Düsseldorf', calUrl: '', anim: 'fade', split: 65,
     media: ['https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1500'],
@@ -177,7 +177,7 @@ const weatherIcons = {
     Thunderstorm: '<svg viewBox="0 0 24 24"><path d="M17.5 19c2.5 0 4.5-2 4.5-4.5 0-2.3-1.7-4.2-4-4.5-.8-3.7-4-6.5-7.5-6.5C7.2 3.5 4.5 6 4.1 9.1 1.8 9.6 0 11.6 0 14c0 2.8 2.2 5 5 5h12.5z" fill="#78909c"/><path d="M13 16l-2 4h4l-2 4" fill="#ffd700"/></svg>'
 };
 
-/** 2. NAVIGATION & KALENDER[cite: 1, 2] **/
+/** 2. NAVIGATION & KALENDER **/
 function changeMonth(delta) { state.date.setMonth(state.date.getMonth() + delta); renderCal(); }
 function setView(v) { state.view = v; renderCal(); }
 
@@ -229,7 +229,7 @@ function renderCal() {
     }
 }
 
-/** 3. WETTER & SLIDESHOW[cite: 1, 2] **/
+/** 3. WETTER & SLIDESHOW **/
 async function updateWeather() {
     try {
         const apiKey = '769c5861cd255a3982bafb1680abf194';
@@ -253,7 +253,7 @@ function playMedia() {
     const pool = [...state.media, ...state.localMedia];
     if(!pool.length) return;
     const wrap = document.createElement('div');
-    wrap.className = `media-item anim-${state.anim}`; // ANIMATION FIX[cite: 2]
+    wrap.className = `media-item anim-${state.anim}`; 
     const img = document.createElement('img');
     img.src = pool[mIdx % pool.length];
     img.className = 'media-content';
@@ -266,15 +266,15 @@ function playMedia() {
     mIdx++;
 }
 
-/** 4. INIT & PERSISTENCE[cite: 2] **/
+/** 4. INIT & PERSISTENCE FIX **/
 function init() {
-    const saved = localStorage.getItem('hub_master_v12_final');
+    const saved = localStorage.getItem('hub_master_v13_final');
     if(saved) {
         const p = JSON.parse(saved);
         state = {...state, ...p, date: new Date()};
     }
     
-    // UI Update von geladenen Daten[cite: 2]
+    // Einstellungen in die Inputs laden
     document.documentElement.style.setProperty('--split', state.split + 'vw');
     document.getElementById('inSplit').value = state.split;
     document.getElementById('inCity').value = state.city;
@@ -294,11 +294,18 @@ function init() {
         state.anim = document.getElementById('inAnim').value;
         state.media = document.getElementById('inMedia').value.split('\n').filter(u=>u.trim());
         
-        localStorage.setItem('hub_master_v12_final', JSON.stringify({
+        localStorage.setItem('hub_master_v13_final', JSON.stringify({
             split: state.split, city: state.city, calUrl: state.calUrl, 
             theme: state.theme, anim: state.anim, media: state.media
         }));
-        location.reload(); // Hard reload sichert Speicherung[cite: 2]
+        
+        // WICHTIGER FIX: Kein location.reload()! 
+        // Dadurch bleiben deine hochgeladenen Ordner-Bilder im Speicher.
+        document.documentElement.style.setProperty('--split', state.split + 'vw');
+        document.body.dataset.theme = state.theme;
+        updateWeather();
+        loadCal();
+        document.getElementById('sidebar').classList.remove('active');
     };
 
     document.getElementById('inLocal').onchange = (e) => {
