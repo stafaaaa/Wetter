@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SmartHub Ultimate Pro - Full Image Responsive</title>
+    <title>SmartHub Ultimate Pro - Tablet Audio Enabled</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
         /* 1. THEMEN-SYSTEM (16 THEMES) */
@@ -30,7 +30,6 @@
         .slideshow { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
         .media-item { position: absolute; inset: 0; opacity: 0; transition: all var(--anim-speed) cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; }
         .media-item.active { opacity: 1; }
-        /* ÄNDERUNG HIER: object-fit: contain statt cover, damit das Bild komplett sichtbar bleibt */
         .media-content { width: 100%; height: 100%; object-fit: contain; }
 
         /* Animation Styles */
@@ -281,7 +280,7 @@ function playMedia() {
         mediaEl = document.createElement('video');
         mediaEl.src = src.replace('#video', ''); 
         mediaEl.autoplay = true;
-        mediaEl.muted = true; 
+        // mediaEl.muted = true; <-- GESTRICHEN! Videos spielen jetzt MIT TON ab.
         mediaEl.playsInline = true;
         mediaEl.onended = () => { playMedia(); };
         mediaEl.onerror = () => { slideTimer = setTimeout(playMedia, 5000); };
@@ -305,7 +304,7 @@ function playMedia() {
 
 /** 4. INIT & PERSISTENCE FIX **/
 function init() {
-    const saved = localStorage.getItem('hub_master_v15_contain');
+    const saved = localStorage.getItem('hub_master_v16_audio');
     if(saved) {
         const p = JSON.parse(saved);
         state = {...state, ...p, date: new Date()};
@@ -330,7 +329,7 @@ function init() {
         state.anim = document.getElementById('inAnim').value;
         state.media = document.getElementById('inMedia').value.split('\n').filter(u=>u.trim());
         
-        localStorage.setItem('hub_master_v15_contain', JSON.stringify({
+        localStorage.setItem('hub_master_v16_audio', JSON.stringify({
             split: state.split, city: state.city, calUrl: state.calUrl, 
             theme: state.theme, anim: state.anim, media: state.media
         }));
