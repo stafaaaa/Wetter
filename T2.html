@@ -6,7 +6,7 @@
 <title>AnnaLove4 Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Inter:opsz,wght@14..32,100..900&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Inter:wght@300,400,500,600,700&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
 <style>
 @supports (color: oklch(0 0 0)) {
   :root {
@@ -58,44 +58,38 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
 .dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.3); cursor: pointer; transition: all 0.2s cubic-bezier(0.2,0.8,0.2,1); }
 .dot:hover { transform: scale(1.2); }
 .dot.active { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-.calendar-container { flex: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; }
-.cal-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 14px; padding: 0 4px; }
-.month { font-family: "Instrument Serif", Georgia, serif; font-style: italic; font-size: 34px; line-height: 1; }
-.year { font-family: "JetBrains Mono", monospace; font-size: 14px; color: var(--muted); margin-left: 8px; font-weight: 500; }
-.nav-btns { display: flex; gap: 8px; align-items: center; }
-.nav-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--text); cursor: pointer; display: grid; place-items: center; font-size: 18px; transition: all 0.2s cubic-bezier(0.2,0.8,0.2,1); }
-.nav-btn:hover { border-color: var(--accent); background: var(--surface-hover); transform: scale(1.05); }
-.toggle { height: 38px; padding: 0 14px; border-radius: 24px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; cursor: pointer; transition: all 0.2s cubic-bezier(0.2,0.8,0.2,1); }
-.toggle:hover { border-color: var(--accent); color: var(--text); }
-.toggle.active { border-color: var(--accent); color: var(--text); background: color-mix(in srgb, var(--accent) 15%, transparent); }
-.weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
-.wd { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; color: var(--muted); text-align: center; }
-.grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(6, 1fr); gap: 1px; flex: 1; overflow: hidden; }
-.cell { padding: 5px; background: var(--surface); position: relative; overflow: hidden; cursor: pointer; transition: background 0.2s; contain: layout style; }
-.cell:hover { background: var(--surface-hover); }
-.cell.other { opacity: 0.15; }
-.cell.today { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
-.day-num { font-family: "JetBrains Mono", monospace; font-size: 16px; font-weight: 500; text-align: center; margin-bottom: 4px; }
-.cell.today .day-num { color: var(--accent); font-weight: 600; }
-.today-bar { width: 12px; height: 3px; background: var(--accent); border-radius: 2px; margin: 2px auto 4px; box-shadow: 0 0 6px var(--accent); }
-.events { display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
-.pill { padding: 4px 8px; border-radius: 6px; height: 22px; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; overflow: hidden; white-space: nowrap; cursor: pointer; transition: transform 0.15s cubic-bezier(0.2,0.8,0.2,1), filter 0.15s, box-shadow 0.15s; border: 1px solid rgba(0,0,0,0.15); }
-.pill:hover { transform: translateY(-1px) scale(1.02); filter: brightness(1.05); box-shadow: var(--shadow-sm); }
-.pill-time { font-family: "JetBrains Mono", monospace; font-size: 10px; font-weight: 700; }
-.pill-title { overflow: hidden; text-overflow: ellipsis; }
-.more { font-size: 10px; color: var(--muted); padding: 3px 0; cursor: pointer; text-align: center; transition: color 0.15s; }
-.more:hover { color: var(--accent); }
-.week-view { display: none; position: absolute; inset: 0; background: var(--surface); flex-direction: column; padding: 16px; overflow-y: auto; gap: 10px; z-index: 5; scroll-behavior: smooth; }
-.week-view.active { display: flex; }
-.day-card { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow-sm); opacity: 0; transform: translateY(8px); transition: opacity 0.3s cubic-bezier(0.2,0.8,0.2,1), transform 0.3s; }
-.day-card.visible { opacity: 1; transform: translateY(0); }
-.dc-header { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
-.dc-date { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--muted); margin-bottom: 10px; font-weight: 500; }
-.day-evs { display: flex; flex-direction: column; gap: 6px; }
-.day-ev { display: flex; align-items: flex-start; padding: 6px 0 6px 10px; border-left: 3px solid var(--evc, var(--accent)); border-radius: 0 6px 6px 0; cursor: pointer; transition: background 0.2s, transform 0.15s; }
-.day-ev:hover { background: rgba(0,0,0,0.05); transform: translateX(2px); }
-.de-time { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--evc, var(--accent)); min-width: 52px; flex-shrink: 0; font-weight: 600; }
-.de-title { font-size: 12px; line-height: 1.3; color: var(--text); font-weight: 500; }
+
+/* ========== CALENDAR (NEU - schwarzes Theme, horizontales Wochen-Grid) ========== */
+.calendar-container { flex: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; background: #000000; }
+.cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 4px; }
+.month { font-family: "Inter", sans-serif; font-style: normal; font-size: 18px; font-weight: 500; color: #ffffff; letter-spacing: 0.02em; }
+.year { font-family: "Inter", sans-serif; font-size: 15px; color: rgba(255,255,255,0.4); margin-left: 8px; font-weight: 400; }
+.nav-btns { display: flex; gap: 6px; align-items: center; }
+.nav-btn { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.12); background: transparent; color: #ffffff; cursor: pointer; display: grid; place-items: center; font-size: 16px; transition: all 0.2s cubic-bezier(0.2,0.8,0.2,1); }
+.nav-btn:hover { border-color: #ef4444; background: rgba(255,255,255,0.05); }
+#weekView { display: none !important; }
+.cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; padding: 0 0 10px 0; margin-bottom: 4px; border-bottom: none; }
+.cal-wd { font-family: "Inter", sans-serif; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.45); text-align: center; text-transform: uppercase; letter-spacing: 0.2em; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px 12px; flex: 1; overflow-y: auto; align-content: start; padding-bottom: 8px; }
+.cal-grid::-webkit-scrollbar { width: 4px; }
+.cal-grid::-webkit-scrollbar-track { background: transparent; }
+.cal-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+.cal-cell { display: flex; flex-direction: column; align-items: flex-start; min-height: 72px; padding: 4px 2px; cursor: pointer; position: relative; }
+.cal-cell-head { display: flex; flex-direction: column; align-items: flex-start; width: 100%; margin-bottom: 6px; }
+.cal-cell-wd { font-family: "Inter", sans-serif; font-size: 10px; font-weight: 400; color: rgba(255,255,255,0.25); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px; display: none; }
+.cal-cell-num { width: 38px; height: 38px; display: grid; place-items: center; font-family: "Inter", sans-serif; font-size: 15px; font-weight: 300; color: #ffffff; border-radius: 50%; line-height: 1; }
+.cal-cell.other .cal-cell-num { color: rgba(255,255,255,0.3); }
+.cal-cell.today .cal-cell-num { background: #ef4444; color: #ffffff; font-weight: 600; box-shadow: 0 0 10px rgba(239,68,68,0.4); }
+.cal-cell.other { opacity: 0.5; }
+.cal-evs { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.cal-ev { display: flex; align-items: center; gap: 5px; height: 16px; padding: 0 6px; border-radius: 4px; font-size: 10px; font-weight: 500; color: #ffffff; overflow: hidden; white-space: nowrap; cursor: pointer; transition: opacity 0.15s; background: rgba(255,255,255,0.08); }
+.cal-ev:hover { opacity: 0.85; }
+.cal-ev-bar { width: 3px; height: 14px; border-radius: 2px; flex-shrink: 0; }
+.cal-ev-title { overflow: hidden; text-overflow: ellipsis; }
+
+.week-view { display: none !important; }
+
+/* ========== REST (unverändert) ========== */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 50; padding: 20px; opacity: 0; transition: opacity 0.25s cubic-bezier(0.2,0.8,0.2,1); backdrop-filter: blur(8px); }
 .modal.active { display: flex; opacity: 1; }
 .modal-box { background: var(--surface); border-radius: 12px; padding: 20px; max-width: 440px; width: 100%; border-top: 4px solid var(--accent); box-shadow: var(--shadow-lg); transform: translateY(12px) scale(0.98); transition: transform 0.25s cubic-bezier(0.2,0.8,0.2,1); position: relative; }
@@ -107,7 +101,7 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
 .m-row strong { color: var(--text); min-width: 60px; font-weight: 600; }
 .weather-modal .modal-box { max-width: 520px; }
 .forecast { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 12px; }
-.fc { text-align: center; padding: 10px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); transition: transform 0.2s cubic-bezier(0.2,0.8,0.2,1); }
+.fc { text-align: center; padding: 10px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); transition: transform 0.2s; }
 .fc:hover { transform: translateY(-2px); }
 .fc-d { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
 .fc-i { width: 32px; height: 32px; margin: 0 auto 6px; }
@@ -115,7 +109,7 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
 .fc-desc { font-size: 11px; color: var(--muted); margin-top: 4px; }
 .settings { position: fixed; top: 0; right: 0; width: 380px; max-width: 100%; height: 100%; background: var(--surface); border-left: 1px solid var(--border); transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1); z-index: 60; display: flex; flex-direction: column; box-shadow: var(--shadow-lg); }
 .settings.active { transform: translateX(0); }
-.set-head { padding: 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(12px); background: color-mix(in srgb, var(--surface) 90%, transparent); }
+.set-head { padding: 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(12px); }
 .set-title { font-weight: 700; font-size: 16px; }
 .set-close { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; display: grid; place-items: center; font-size: 18px; transition: all 0.2s; }
 .set-close:hover { background: var(--surface-hover); transform: scale(1.05); }
@@ -123,13 +117,13 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
 .section { display: flex; flex-direction: column; gap: 10px; }
 .s-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--muted); }
 .themes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.card { border: 2px solid transparent; border-radius: 12px; padding: 10px; cursor: pointer; transition: all 0.2s cubic-bezier(0.2,0.8,0.2,1); background: var(--bg); box-shadow: var(--shadow-sm); }
+.card { border: 2px solid transparent; border-radius: 12px; padding: 10px; cursor: pointer; transition: all 0.2s; background: var(--bg); box-shadow: var(--shadow-sm); }
 .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-.card.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--bg)); }
+.card.active { border-color: var(--accent); }
 .card-prev { height: 40px; border-radius: 6px; margin-bottom: 8px; display: grid; place-items: center; font-size: 11px; font-weight: 600; background: var(--surface); color: var(--text); text-transform: capitalize; }
 .card-name { font-size: 11px; text-align: center; font-weight: 500; }
 .input, .textarea, .select { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 13px; font-family: "JetBrains Mono", monospace; outline: none; transition: all 0.2s; }
-.input:focus, .textarea:focus, .select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+.input:focus, .textarea:focus, .select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,255,255,0.1); }
 .textarea { min-height: 80px; resize: vertical; }
 .sources { display: flex; flex-direction: column; gap: 10px; }
 .src-row { display: flex; gap: 8px; align-items: center; }
@@ -137,23 +131,22 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
 .src-color { width: 44px; height: 44px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; padding: 2px; background: transparent; }
 .src-url { flex: 2; font-size: 12px; padding: 8px; }
 .src-del { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg); color: var(--muted); cursor: pointer; display: grid; place-items: center; font-size: 18px; transition: all 0.2s; }
-.src-del:hover { color: #f472b6; border-color: #f472b6; background: rgba(244,114,182,0.1); }
+.src-del:hover { color: #f472b6; border-color: #f472b6; }
 .btn { padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-.btn:hover { border-color: var(--accent); background: var(--surface-hover); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.btn:hover { border-color: var(--accent); background: var(--surface-hover); transform: translateY(-1px); }
 .img-prev { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
-.img-thumb { position: relative; aspect-ratio: 4/3; border-radius: 6px; overflow: hidden; background: var(--bg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); transition: transform 0.2s; }
-.img-thumb:hover { transform: scale(1.02); }
+.img-thumb { position: relative; aspect-ratio: 4/3; border-radius: 6px; overflow: hidden; background: var(--bg); border: 1px solid var(--border); }
 .img-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.img-del { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); color: rgba(255,255,255,0.9); cursor: pointer; display: grid; place-items: center; font-size: 14px; border: 1px solid rgba(255,255,255,0.2); transition: all 0.15s; }
-.img-del:hover { background: rgba(220,38,38,0.9); transform: scale(1.1); }
+.img-del { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0,0,0,0.7); color: rgba(255,255,255,0.9); cursor: pointer; display: grid; place-items: center; font-size: 14px; transition: all 0.15s; }
+.img-del:hover { background: rgba(220,38,38,0.9); }
 .file-lbl { display: inline-block; padding: 10px 14px; border-radius: 8px; border: 1px dashed var(--border); background: var(--bg); color: var(--text); font-size: 13px; cursor: pointer; text-align: center; margin-top: 8px; transition: all 0.2s; }
-.file-lbl:hover { border-color: var(--accent); background: var(--surface-hover); }
+.file-lbl:hover { border-color: var(--accent); }
 .f-inp { display: none; }
 .anim-r { animation: spin 40s linear infinite; }
 .anim-p { animation: pulse 1.8s ease-in-out infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes pulse { 50% { opacity: 0.35; transform: scale(0.95); } }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; } .pill:hover, .day-ev:hover, .fc:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
 [role="button"], button, input, textarea, select { user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 </style>
 </head>
@@ -187,12 +180,13 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
           <button class="nav-btn" id="prevBtn" aria-label="Zurück">‹</button>
           <button class="nav-btn" id="todayBtn" aria-label="Heute">●</button>
           <button class="nav-btn" id="nextBtn" aria-label="Weiter">›</button>
-          <button class="toggle active" id="monthToggle">Monat</button>
-          <button class="toggle" id="weekToggle">Woche</button>
         </div>
       </div>
-      <div class="weekdays"><div class="wd">MO</div><div class="wd">DI</div><div class="wd">MI</div><div class="wd">DO</div><div class="wd">FR</div><div class="wd">SA</div><div class="wd">SO</div></div>
-      <div class="grid" id="grid"></div>
+      <div class="cal-weekdays">
+        <div class="cal-wd">S</div><div class="cal-wd">M</div><div class="cal-wd">T</div>
+        <div class="cal-wd">W</div><div class="cal-wd">T</div><div class="cal-wd">F</div><div class="cal-wd">S</div>
+      </div>
+      <div class="cal-grid" id="grid"></div>
       <div class="week-view" id="weekView"></div>
     </div>
   </div>
@@ -238,17 +232,25 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
   
   let cfg = {...DEF, ...JSON.parse(localStorage.getItem(CFG) || '{}')};
   let db, blobs = [], slides = [], curSlide = 0, timer;
-  let wData = null, evts = [], cMonth = new Date(), view = 'month';
-  let nx = () => {}; // Scope-Fix: nx wird hier deklariert
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let wData = null, evts = [], cMonth = new Date();
+  let nx = () => {};
   const stmts = {m:'ein stiller Morgen', a:'Nachmittagslicht', e:'der Abend kehrt ein', n:'späte Stunden', r:'Regengedanken', s:'Schneefall'};
   const wdays = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
   const themes = ['eclipse','daylight','aurora','forest','ocean','midnight','rose'];
   const tr = ['fade','slide','zoom','blur'];
 
+  // Event color mapping based on keywords
+  function eventColor(ev) {
+    if (ev.cc) return ev.cc;
+    const t = (ev.sm || '').toLowerCase() + ' ' + (ev.ds || '').toLowerCase();
+    if (/sport|train|run|yoga|gym|walk|bike|swim|fitness/.test(t)) return '#34d399';
+    if (/geburtstag|birthday|party|feier|fest|celebrat|wedding|hochzeit/.test(t)) return '#f472b6';
+    if (/meet|meeting|call|zoom|termin|besprechung|review/.test(t)) return '#60a5fa';
+    return '#fb923c';
+  }
+
   function save() { localStorage.setItem(CFG, JSON.stringify(cfg)); }
-  
-  function isWebP() { try { return document.createElement('canvas').toDataURL('image/webp').startsWith('data:image/webp'); } catch { return false; } }
+  function isWebP() { try { return document.createElement('canvas').toDataURL('image/webp').startsWith('image/webp'); } catch { return false; } }
   const MAX_W = Math.min(2048, Math.round(window.innerWidth * 1.5));
   const MIME = isWebP() ? 'image/webp' : 'image/jpeg';
   const Q = 0.85;
@@ -331,7 +333,7 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
 
   function setTheme(t) {
     document.body.dataset.theme = t; cfg.theme = t; save();
-    $$('.theme-card').forEach(c => c.classList.toggle('active', c.dataset.theme === t)); // Fix: Doppelte Klammer entfernt
+    $$('.theme-card').forEach(c => c.classList.toggle('active', c.dataset.theme === t));
   }
 
   function updTime() {
@@ -351,7 +353,6 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
 
   function clock() { updTime(); setInterval(updTime, 30000); }
 
-  // Fix: Eindeutige Gradient-IDs pro Aufruf
   function wIcon(code) {
     const uid = 'w' + Math.random().toString(36).slice(2,8);
     const defs = `<defs><radialGradient id="${uid}s" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fde68a"/><stop offset="100%" stop-color="#f59e0b"/></radialGradient><linearGradient id="${uid}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#cbd5e1"/><stop offset="100%" stop-color="#64748b"/></linearGradient></defs>`;
@@ -403,7 +404,7 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
     const l = t.replace(/\r\n/g, '\n').split('\n'); let u = [], b = '';
     for (let x of l) { if (x[0]===' '||x[0]==='\t') b += x.slice(1); else { if (b) u.push(b); b = x; } }
     if (b) u.push(b);
-    const e = [], v = {}; let c = null;
+    const e = []; let c = null;
     for (let x of u) {
       if (x === 'BEGIN:VEVENT') c = {id: crypto.randomUUID?.() || Math.random().toString(36).slice(2,9), al:0, at:[]};
       else if (x === 'END:VEVENT' && c) { e.push({...c}); c = null; }
@@ -471,65 +472,70 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
   function closeModal(id) { $(`#${id}`).classList.remove('active'); }
   function cModal() { closeModal('eventModal'); closeModal('weatherModal'); }
 
-  // Fix: View Transitions mit Fallback
+  // ========== NEUES CALENDAR RENDERING (Horizontales Wochen-Grid, schwarzes Theme) ==========
   function render() {
-    const isVT = typeof document.startViewTransition === 'function';
-    const doRender = () => {
-      if (view === 'month') {
-        $('#grid').style.display = 'grid';
-        $('#weekView').style.display = 'none';
-        const f = new Date(cMonth.getFullYear(), cMonth.getMonth(), 1), sd = (f.getDay()||7)-1;
-        const s = new Date(f); s.setDate(f.getDate()-sd);
-        $('#monthName').textContent = cMonth.toLocaleString('de',{month:'long'});
-        $('#year').textContent = cMonth.getFullYear();
-        let h = '', t = new Date(); t.setHours(0,0,0,0);
-        for (let i = 0; i < 42; i++) {
-          const d = new Date(s); d.setDate(s.getDate()+i);
-          const im = d.getMonth() === cMonth.getMonth(), is = im && d.getTime() === t.getTime();
-          const ds = evts.filter(e => { const st = new Date(e.st); st.setHours(0,0,0,0); return st.getTime() === d.getTime(); });
-          const vs = ds.slice(0,4), mo = ds.length - 4;
-          h += `<div class="cell${im?'':' other'}${is?' today':''}" data-d="${d.toISOString().slice(0,10)}"><div class="day-num tabular">${d.getDate()}</div>${is?'<div class="today-bar"></div>':''}<div class="events">`;
-          vs.forEach(ev => {
-            const co = ev.cc || cfg.cals.find(x => x.n === ev.sc)?.c || '#fb923c';
-            const tx = cont(co);
-            const tm = ev.al ? '' : `${ev.st.getHours().toString().padStart(2,'0')}:${ev.st.getMinutes().toString().padStart(2,'0')} · `;
-            h += `<div class="pill" data-id="${ev.id}" style="background:${co};color:${tx}"><span class="pill-time tabular">${tm}</span><span class="pill-title">${ev.sm || 'Ohne'}</span></div>`;
-          });
-          if (mo > 0) h += `<div class="more" data-d="${d.toISOString().slice(0,10)}">+${mo}</div>`;
-          h += `</div></div>`;
+    const f = new Date(cMonth.getFullYear(), cMonth.getMonth(), 1);
+    const lastDay = new Date(cMonth.getFullYear(), cMonth.getMonth() + 1, 0);
+    
+    // Start: Sonntag der Woche, in der der 1. liegt (für Sunday-first Grid)
+    const start = new Date(f);
+    start.setDate(f.getDate() - f.getDay()); // f.getDay() = 0 für Sonntag
+    
+    // Ende: Samstag der letzten Woche des Monats
+    const end = new Date(lastDay);
+    end.setDate(lastDay.getDate() + (6 - lastDay.getDay()));
+    
+    $('#monthName').textContent = cMonth.toLocaleString('de', {month: 'long'});
+    $('#year').textContent = cMonth.getFullYear();
+    
+    const today = new Date(); today.setHours(0,0,0,0);
+    
+    let html = '';
+    const current = new Date(start);
+    
+    while (current <= end) {
+      // Zeilen-Start (jeder Sonntag beginnt eine neue Reihe)
+      // Wir rendern Zeile für Zeile
+      for (let day = 0; day < 7; day++) {
+        const d = new Date(current);
+        const inMonth = d.getMonth() === cMonth.getMonth();
+        const isToday = d.getTime() === today.getTime();
+        const dayOfWeek = d.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+        const dayLetters = ['S','M','T','W','T','F','S'];
+        const wdLetter = dayLetters[dayOfWeek];
+        
+        const dayEvts = evts.filter(e => {
+          const st = new Date(e.st); st.setHours(0,0,0,0);
+          return st.getTime() === d.getTime();
+        }).slice(0, 4);
+        
+        html += `<div class="cal-cell${inMonth?'':' other'}${isToday?' today':''}" data-d="${d.toISOString().slice(0,10)}">`;
+        html += `<div class="cal-cell-head">`;
+        // Wochentags-Buchstabe (nur in der ersten Zeile anzeigen)
+        if (current <= new Date(start.getTime() + 6 * 86400000)) {
+          html += `<div class="cal-cell-wd" style="display:block">${wdLetter}</div>`;
+        } else {
+          html += `<div class="cal-cell-wd" style="display:none">${wdLetter}</div>`;
         }
-        $('#grid').innerHTML = h;
-      } else {
-        showWk(cMonth);
+        html += `<div class="cal-cell-num">${d.getDate()}</div>`;
+        html += `</div>`;
+        
+        // Events
+        if (dayEvts.length) {
+          html += `<div class="cal-evs">`;
+          dayEvts.forEach(ev => {
+            const col = eventColor(ev);
+            html += `<div class="cal-ev" data-id="${ev.id}" style="background:${col}22"><div class="cal-ev-bar" style="background:${col}"></div><span class="cal-ev-title">${ev.sm || 'Ohne'}</span></div>`;
+          });
+          html += `</div>`;
+        }
+        
+        html += `</div>`;
+        current.setDate(current.getDate() + 1);
       }
-    };
-    if (isVT) document.startViewTransition(doRender);
-    else doRender();
-  }
-
-  function showWk(dt) {
-    view = 'week';
-    $('#grid').style.display = 'none';
-    $('#weekView').style.display = 'flex';
-    $('#monthToggle').classList.remove('active');
-    $('#weekToggle').classList.add('active');
-    const s = new Date(dt); s.setDate(dt.getDate() - ((dt.getDay()||7)-1));
-    let h = '';
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(s); d.setDate(s.getDate()+i);
-      const ds = evts.filter(e => { const st = new Date(e.st); st.setHours(0,0,0,0); return st.getTime() === d.getTime(); });
-      h += `<div class="day-card"><div class="dc-header">${wdays[i]}</div><div class="dc-date tabular">${d.getDate()}. ${d.toLocaleString('de',{month:'long'})} ${d.getFullYear()}</div><div class="day-evs">`;
-      ds.forEach(ev => {
-        h += `<div class="day-ev" data-id="${ev.id}"><span class="de-time tabular">${ev.al?'ganztags':`${ev.st.getHours().toString().padStart(2,'0')}:${ev.st.getMinutes().toString().padStart(2,'0')}`}</span><span class="de-title">${ev.sm || 'Ohne'}</span></div>`;
-      });
-      if (!ds.length) h += `<div style="font-size:12px;color:var(--muted);padding:6px 0">Keine Termine</div>`;
-      h += `</div></div>`;
     }
-    $('#weekView').innerHTML = h;
-    const io = new IntersectionObserver(e => {
-      e.forEach(x => { if (x.isIntersecting) { x.target.classList.add('visible'); io.unobserve(x.target); } });
-    }, {threshold: 0.1});
-    $$('#weekView .day-card').forEach(c => io.observe(c));
+    
+    $('#grid').innerHTML = html;
   }
 
   function showM(ev) {
@@ -543,19 +549,12 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
     openModal('eventModal');
   }
 
-  function setView(m) {
-    view = m;
-    $('#monthToggle').classList.toggle('active', m === 'month');
-    $('#weekToggle').classList.toggle('active', m === 'week');
-    render();
-  }
-
   async function initSl() {
     const ss = $('#slideshow'), dt = $('#dots');
     slides = [];
     for (const u of cfg.imgs) if (u) slides.push(expId(u));
     for (const b of blobs) slides.push(b.u);
-    console.log(`🖼️ Slides geladen: ${slides.length} (DB: ${blobs.length}, URL: ${cfg.imgs.length})`);
+    console.log(`️ Slides geladen: ${slides.length} (DB: ${blobs.length}, URL: ${cfg.imgs.length})`);
     ss.innerHTML = ''; dt.innerHTML = '';
     if (!slides.length) {
       ss.innerHTML = '<div style="position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:14px">Keine Bilder konfiguriert</div>';
@@ -660,8 +659,6 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
     $('#prevBtn').onclick = () => { cMonth.setMonth(cMonth.getMonth()-1); render(); };
     $('#nextBtn').onclick = () => { cMonth.setMonth(cMonth.getMonth()+1); render(); };
     $('#todayBtn').onclick = () => { cMonth = new Date(); render(); };
-    $('#monthToggle').onclick = () => setView('month');
-    $('#weekToggle').onclick = () => setView('week');
     $('#addSrc').onclick = () => { cfg.cals.push({n:'Neu', c:'#fb923c', u:''}); save(); renderSet(); };
     $('#weatherCard').onclick = fetchFC;
     $('#modalClose').onclick = $('#wClose').onclick = cModal;
@@ -671,13 +668,7 @@ html, body { height: 100%; font-family: "Inter", system-ui, -apple-system, sans-
     $('#fileInp').onchange = async e => { for (const f of e.target.files) { const b = await resize(f); await saveImg(b, 'l_'+Date.now()+Math.random().toString(36).slice(2)); } save(); renderSet(); initSl(); e.target.value = ''; };
     $('#clrLocal').onclick = async () => { for (const b of blobs.filter(x => x.id.startsWith('l_'))) await delImg(b.id); save(); renderSet(); initSl(); };
     $('#grid').addEventListener('click', e => {
-      const p = e.target.closest('.pill') || e.target.closest('.day-ev');
-      if (p?.dataset.id) { const ev = evts.find(x => x.id === p.dataset.id); if (ev) showM(ev); }
-      const m = e.target.closest('.more');
-      if (m?.dataset.d) { cMonth = new Date(m.dataset.d); setView('week'); }
-    });
-    $('#weekView').addEventListener('click', e => {
-      const p = e.target.closest('.day-ev');
+      const p = e.target.closest('.cal-ev') || e.target.closest('.cal-cell');
       if (p?.dataset.id) { const ev = evts.find(x => x.id === p.dataset.id); if (ev) showM(ev); }
     });
     let t;
