@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SmartHub Ultimate Pro - Multi-Folder Ready</title>
+    <title>SmartHub Ultimate Pro - Multi-Folder System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
         /* 1. THEMEN-SYSTEM (16 THEMES) */
@@ -155,7 +155,10 @@
     </select>
     <label>ICS Kalender URL</label><input type="text" class="input-field" id="inCal">
     <label>Medien-Links (Bilder & Videos)</label><textarea class="input-field" id="inMedia" rows="3"></textarea>
-    <label>Lokaler Ordner (Bilder & Videos)</label><input type="file" id="inLocal" class="input-field" multiple webkitdirectory directory>
+    
+    <label style="color: var(--accent);">Ordner nacheinander wählen (oder reinziehen)</label>
+    <input type="file" id="inLocal" class="input-field" multiple webkitdirectory directory>
+    
     <button class="input-field" style="background:var(--accent); font-weight:700; color:white; border:none;" id="btnSave">SPEICHERN</button>
     <button class="input-field" id="btnClose">Abbrechen</button>
 </div>
@@ -340,7 +343,7 @@ function init() {
         document.getElementById('sidebar').classList.remove('active');
     };
 
-    // NEU: Hängt neue Dateien an die bestehende Liste an, statt sie zu überschreiben!
+    // Ordner nacheinander hinzufügen
     document.getElementById('inLocal').onchange = (e) => {
         const newFiles = Array.from(e.target.files)
             .filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'))
@@ -349,7 +352,7 @@ function init() {
                 return URL.createObjectURL(f) + (isVid ? '#video' : '');
             });
             
-        // Die neuen Dateien an state.localMedia anhängen
+        // Neue Dateien an die Liste anhängen
         state.localMedia = [...state.localMedia, ...newFiles];
         
         mIdx = 0; 
