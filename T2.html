@@ -1,231 +1,378 @@
 <!DOCTYPE html>
-<html lang="de" data-theme="oled">
+<html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartHub Ultimate Dashboard</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SmartHub Ultimate Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
-        /* --- 1. THEME-DEFINITIONEN --- */
+        /* 1. VISUELLES DESIGN & 10 THEMES[cite: 2] */
         :root {
-            --bg: #000000; --txt: #ffffff; --acc: #444; --card: rgba(255,255,255,0.05);
-            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --bg: #000; --panel: #111; --text: #fff; --accent: #ef4444; --glass: rgba(255,255,255,0.1);
+            --anim-speed: 1.5s;
         }
+        [data-theme="oled"] { --bg: #000; --panel: #000; --accent: #3b82f6; }
+        [data-theme="glass"] { --bg: #1a1c2c; --panel: rgba(255,255,255,0.1); --glass: rgba(255,255,255,0.15); --accent: #00d2ff; }
+        [data-theme="nordic"] { --bg: #2e3440; --panel: #3b4252; --accent: #88c0d0; --text: #eceff4; }
+        [data-theme="cyber"] { --bg: #050505; --panel: #000; --accent: #f0f; --text: #0ff; }
+        [data-theme="forest"] { --bg: #0f1a14; --panel: #1a2e23; --accent: #4ade80; }
+        [data-theme="sunset"] { --bg: #2d1b2d; --panel: #432a43; --accent: #fb923c; }
+        [data-theme="ocean"] { --bg: #0f172a; --panel: #1e293b; --accent: #38bdf8; }
+        [data-theme="minimal"] { --bg: #f4f4f5; --panel: #fff; --text: #09090b; --accent: #ef4444; --glass: rgba(0,0,0,0.05); }
+        [data-theme="crimson"] { --bg: #1a0505; --panel: #2d0a0a; --accent: #f87171; }
+        [data-theme="royal"] { --bg: #1e1b4b; --panel: #312e81; --accent: #a5b4fc; }
 
-        [data-theme="oled"]         { --bg: #000000; --txt: #ffffff; --acc: #222; }
-        [data-theme="nordic"]       { --bg: #2e3440; --txt: #eceff4; --acc: #88c0d0; }
-        [data-theme="cyberpunk"]    { --bg: #0d0208; --txt: #00ff41; --acc: #ff003c; }
-        [data-theme="frosted"]      { --bg: #e2e8f0; --txt: #1a202c; --acc: #3182ce; --card: rgba(255,255,255,0.7); }
-        [data-theme="emerald"]      { --bg: #064e3b; --txt: #ecfdf5; --acc: #10b981; }
-        [data-theme="sunset"]       { --bg: #2d1b4e; --txt: #fee2e2; --acc: #f43f5e; }
-        [data-theme="ocean"]        { --bg: #0c4a6e; --txt: #f0f9ff; --acc: #0ea5e9; }
-        [data-theme="minimal"]      { --bg: #ffffff; --txt: #000000; --acc: #eeeeee; --card: #f9f9f9; }
-        [data-theme="crimson"]      { --bg: #450a0a; --txt: #fef2f2; --acc: #ef4444; }
-        [data-theme="indigo"]       { --bg: #1e1b4b; --txt: #e0e7ff; --acc: #6366f1; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: "Inter", sans-serif; background: var(--bg); color: var(--text); height: 100dvh; overflow: hidden; transition: all 0.5s ease; }
 
-        /* --- 2. LAYOUT-STRUKTUR --- */
-        * { box-sizing: border-box; }
-        body {
-            margin: 0; background: var(--bg); color: var(--txt);
-            font-family: var(--font-main); transition: background 0.8s ease;
-            height: 100vh; overflow: hidden;
-            display: grid; grid-template-columns: 42vw 58vw;
-        }
+        .app-container { display: grid; grid-template-columns: 42vw 58vw; height: 100dvh; gap: 20px; padding: 20px; }
+        @media (max-width: 1100px) { .app-container { grid-template-columns: 1fr; grid-template-rows: 40vh 1fr; } }
 
-        .left-panel { padding: 2.5rem; display: flex; flex-direction: column; justify-content: space-between; }
-        .right-panel { 
-            background: var(--card); margin: 1rem; border-radius: 2rem; 
-            padding: 2rem; overflow-y: auto; backdrop-filter: blur(10px);
-        }
+        .panel { border-radius: 32px; overflow: hidden; position: relative; background: var(--panel); border: 1px solid var(--glass); }
 
-        /* --- 3. TYPOGRAFIE (Fernlesbarkeit) --- */
-        .clock { font-size: 11rem; font-weight: 900; line-height: 0.9; margin-bottom: 1rem; }
-        .date { font-size: 2.5rem; opacity: 0.8; margin-bottom: 2rem; }
-        
-        .weather-main { display: flex; align-items: center; gap: 2rem; margin-bottom: 2rem; }
-        .temp-big { font-size: 6rem; font-weight: 700; }
-        .weather-icon { width: 120px; height: 120px; }
-        
-        .forecast-bar { display: flex; justify-content: space-between; margin-bottom: 2rem; }
-        .forecast-day { text-align: center; font-size: 1.2rem; }
+        /* MULTI-MEDIA ENGINE[cite: 2] */
+        .slideshow { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+        .media-item { position: absolute; inset: 0; opacity: 0; transition: all var(--anim-speed) cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; }
+        .media-item.active { opacity: 1; }
+        .media-content { width: 100%; height: 100%; object-fit: cover; }
 
-        /* --- 4. MEDIA ENGINE & ANIMATIONEN --- */
-        #media-viewport {
-            flex-grow: 1; position: relative; border-radius: 1.5rem; overflow: hidden;
-            background: #111; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .media-obj {
-            position: absolute; width: 100%; height: 100%; object-fit: cover;
-            opacity: 0; transition: opacity 1s ease-in-out;
-        }
-        .media-active { opacity: 1; }
+        /* 10 ANIMATIONEN[cite: 2] */
+        .anim-fade.active { opacity: 1; }
+        .anim-zoom-in { transform: scale(1.3); } .anim-zoom-in.active { transform: scale(1); }
+        .anim-zoom-out { transform: scale(0.7); } .anim-zoom-out.active { transform: scale(1); }
+        .anim-slide-left { transform: translateX(100%); } .anim-slide-left.active { transform: translateX(0); }
+        .anim-slide-right { transform: translateX(-100%); } .anim-slide-right.active { transform: translateX(0); }
+        .anim-blur-in { filter: blur(30px); } .anim-blur-in.active { filter: blur(0); }
+        .anim-rotate { transform: rotate(15deg) scale(1.2); } .anim-rotate.active { transform: rotate(0) scale(1); }
+        .anim-flip { transform: rotateY(90deg); } .anim-flip.active { transform: rotateY(0); }
+        .anim-bounce { transform: translateY(-100%); } .anim-bounce.active { transform: translateY(0); }
+        .anim-ken-burns { transform: scale(1); } .anim-ken-burns.active { animation: kb 20s infinite alternate; }
+        @keyframes kb { to { transform: scale(1.2) translate(-2%, -2%); } }
 
-        /* Animationen */
-        .anim-zoom-in { transform: scale(1.2); transition: transform 10s linear, opacity 1s; }
-        .anim-slide-links { transform: translateX(-100%); }
+        .vignette { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.85)); z-index: 1; }
 
-        /* --- 5. KALENDER-STYLING --- */
-        .event-bar {
-            margin-bottom: 0.8rem; padding: 1.2rem; border-radius: 1rem;
-            font-size: 1.4rem; font-weight: 600; border-left: 12px solid #ccc;
-            background: rgba(255,255,255,0.05); cursor: pointer;
-        }
-        .cat-arbeit { border-color: #3b82f6; }
-        .cat-muell { border-color: #22c55e; }
-        .cat-geburtstag { border-color: #ec4899; }
-        .cat-termin { border-color: #f59e0b; }
+        /* UI LESBARKEIT[cite: 2] */
+        .overlay-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 40px; pointer-events: none; }
+        .time { font-family: "JetBrains Mono", monospace; font-size: clamp(80px, 11vw, 170px); font-weight: 700; letter-spacing: -6px; line-height: 0.85; pointer-events: auto; }
+        .date { font-size: 32px; font-weight: 700; color: var(--accent); margin-top: 15px; }
 
-        /* Modal */
-        #modal {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: var(--bg); border: 2px solid var(--acc); padding: 2rem;
-            z-index: 100; border-radius: 1rem; width: 50%;
-        }
+        /* WETTER STATION[cite: 1, 2] */
+        .weather-hub { pointer-events: auto; background: var(--glass); padding: 25px; border-radius: 30px; backdrop-filter: blur(15px); width: fit-content; border: 1px solid var(--glass); }
+        .weather-main { display: flex; align-items: center; gap: 20px; }
+        .weather-icon svg { width: 85px; height: 85px; }
+        .temp-large { font-family: "JetBrains Mono", monospace; font-size: 65px; font-weight: 700; line-height: 1; }
+        .forecast-strip { display: flex; gap: 15px; margin-top: 20px; border-top: 1px solid var(--glass); padding-top: 15px; overflow-x: auto; }
+        .fc-day { text-align: center; min-width: 60px; }
+        .fc-day div { font-size: 13px; font-weight: 700; opacity: 0.6; text-transform: uppercase; }
+        .fc-day svg { width: 32px; height: 32px; margin: 5px 0; }
+
+        /* KALENDER & BUNTE BALKEN[cite: 2] */
+        .cal-container { display: flex; flex-direction: column; height: 100%; padding: 25px; }
+        .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .grid-body { display: grid; grid-template-columns: repeat(7, 1fr); flex: 1; gap: 5px; background: var(--glass); border-radius: 20px; overflow: hidden; }
+        .day-cell { background: var(--surface); padding: 12px; cursor: pointer; display: flex; flex-direction: column; min-height: 0; transition: background 0.2s; }
+        .day-num { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+        .day-cell.today { border: 3px solid var(--accent); background: rgba(239, 68, 68, 0.05); }
+        .ev-bar { font-size: 13px; padding: 5px 10px; border-radius: 8px; margin-bottom: 4px; color: white; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 4px solid rgba(0,0,0,0.2); }
+
+        /* SIDEBAR SETTINGS[cite: 2] */
+        .settings-pane { position: fixed; right: 0; top: 0; width: 450px; height: 100%; background: #000; z-index: 100; transform: translateX(100%); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 40px; border-left: 1px solid var(--glass); overflow-y: auto; }
+        .settings-pane.active { transform: translateX(0); }
+        .control-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 700; opacity: 0.6; }
+        .input-field { width: 100%; background: #111; border: 1px solid var(--glass); color: white; padding: 15px; border-radius: 12px; font-size: 16px; outline: none; }
+        .input-field:focus { border-color: var(--accent); }
+
+        /* MODAL[cite: 2] */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; display: none; place-items: center; padding: 20px; }
+        .modal.active { display: grid; }
+        .modal-box { background: var(--panel); padding: 45px; border-radius: 40px; border: 1px solid var(--glass); width: 100%; max-width: 600px; box-shadow: 0 20px 50px rgba(0,0,0,1); }
     </style>
 </head>
-<body>
+<body data-theme="oled">
 
-<div class="left-panel">
-    <div>
-        <div id="clock" class="clock">00:00</div>
-        <div id="date" class="date">Wird geladen...</div>
-        
-        <div class="weather-main">
-            <div id="weather-svg"></div>
-            <div id="temp" class="temp-big">--°C</div>
+<div class="app-container">
+    <div class="panel left">
+        <button id="btnOpenSet" style="position:absolute; top:30px; left:30px; z-index:10; width:65px; height:65px; border-radius:50%; border:none; background:var(--glass); color:white; cursor:pointer; font-size:24px; pointer-events:auto;">⚙️</button>
+        <div class="slideshow" id="mediaHub"></div>
+        <div class="vignette"></div>
+        <div class="overlay-content">
+            <div class="time-box">
+                <div id="clock" class="time">00:00</div>
+                <div id="date" class="date">Lädt...</div>
+            </div>
+            
+            <div class="weather-hub" id="weatherBox">
+                <div class="weather-main">
+                    <div id="wIcon" class="weather-icon"></div>
+                    <div>
+                        <div id="mainTemp" class="temp-large">--°</div>
+                        <div id="wCity" style="font-weight:700; font-size:24px; opacity:0.8;">Bonn</div>
+                    </div>
+                </div>
+                <div class="forecast-strip" id="forecastStrip"></div>
+            </div>
         </div>
-        
-        <div id="forecast" class="forecast-bar"></div>
     </div>
 
-    <div id="media-viewport">
-        <!-- Media (Bilder/Videos) werden hier injiziert -->
+    <div class="panel right">
+        <div class="cal-container">
+            <div class="cal-nav">
+                <h2 id="monthTitle" style="font-size:35px; font-weight:700;">Monat</h2>
+                <div style="display:flex; gap:12px;">
+                    <button class="view-btn active" id="modeMonth">Monat</button>
+                    <button class="view-btn" id="modeWeek">Woche</button>
+                </div>
+            </div>
+            <div class="grid-body" id="calGrid"></div>
+            <div id="weekView" style="display:none; flex-direction:column; gap:15px; overflow-y:auto;"></div>
+        </div>
     </div>
 </div>
 
-<div class="right-panel">
-    <h2 style="font-size: 3rem; margin-top: 0;">Kalender</h2>
-    <div id="event-list"></div>
+<div class="settings-pane" id="sidebar">
+    <h2 style="font-size:32px; margin-bottom:30px;">System-Setup</h2>
+    <div class="control-group">
+        <label>Thema</label>
+        <select class="input-field" id="inTheme">
+            <option value="oled">OLED Deep Black</option>
+            <option value="glass">Frosted Glass</option>
+            <option value="nordic">Nordic Dark</option>
+            <option value="cyber">Cyberpunk Neon</option>
+            <option value="forest">Emerald Forest</option>
+            <option value="sunset">Sunset Purple</option>
+            <option value="ocean">Midnight Ocean</option>
+            <option value="minimal">Minimal White</option>
+            <option value="crimson">Crimson Red</option>
+            <option value="royal">Royal Indigo</option>
+        </select>
+    </div>
+    <div class="control-group">
+        <label>Animation</label>
+        <select class="input-field" id="inAnim">
+            <option value="fade">Klassisch Fade</option>
+            <option value="zoom-in">Zoom In</option>
+            <option value="zoom-out">Zoom Out</option>
+            <option value="slide-left">Slide Links</option>
+            <option value="slide-right">Slide Rechts</option>
+            <option value="blur-in">Blur Effekt</option>
+            <option value="rotate">Rotation</option>
+            <option value="flip">3D Flip</option>
+            <option value="ken-burns">Ken Burns</option>
+            <option value="bounce">Bounce</option>
+        </select>
+    </div>
+    <div class="control-group">
+        <label>Cloud Bild/Video-URLs (pro Zeile)</label>
+        <textarea class="input-field" id="inMedia" rows="5" placeholder="Amazon Fotos/Direkt-Links..."></textarea>
+    </div>
+    <div class="control-group">
+        <label>Tablet Upload</label>
+        <input type="file" id="inLocal" class="input-field" multiple accept="image/*,video/*">
+    </div>
+    <div class="control-group">
+        <label>Wetter Stadt</label>
+        <input type="text" class="input-field" id="inCity">
+    </div>
+    <div class="control-group">
+        <label>Google Kalender (ICS URL)</label>
+        <input type="text" class="input-field" id="inCal" placeholder="https://...">
+    </div>
+    <button class="input-field" style="background:var(--accent); color:white; font-weight:700; border:none; cursor:pointer;" id="btnSave">SPEICHERN</button><br><br>
+    <button class="input-field" style="cursor:pointer;" id="btnCloseSet">Abbrechen</button>
 </div>
 
-<div id="modal">
-    <h2 id="m-title"></h2>
-    <p id="m-time"></p>
-    <p id="m-loc"></p>
-    <button onclick="closeModal()">Schließen</button>
+<div class="modal" id="eventModal">
+    <div class="modal-box">
+        <h2 id="mTitle" style="font-size:38px; margin-bottom:20px;">Termin</h2>
+        <div id="mInfo" style="font-size:22px; line-height:1.6; opacity:0.8;"></div>
+        <button class="input-field" style="margin-top:35px; background:var(--accent); color:white; border:none;" onclick="document.getElementById('eventModal').classList.remove('active')">Schließen</button>
+    </div>
 </div>
 
 <script>
-    /* --- KONFIGURATION (In LocalStorage änderbar) --- */
-    const config = {
-        weatherCity: 'Berlin',
-        weatherApi: 'YOUR_API_KEY_HERE', // OpenWeatherMap API Key
-        icsUrl: '', // Deine Google Kalender ICS URL
-        mediaUrls: [
-            'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1000&q=80',
-            'https://www.w3schools.com/html/mov_bbb.mp4' // Beispiel Video
-        ],
-        theme: localStorage.getItem('theme') || 'oled'
-    };
+/** CORE LOGIC[cite: 2] **/
+let state = {
+    theme: 'oled', anim: 'fade', city: 'Bonn', calUrl: '',
+    media: ['https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1500'],
+    localMedia: [], events: [], view: 'month'
+};
 
-    /* --- UHRZEIT --- */
-    function updateClock() {
-        const now = new Date();
-        document.getElementById('clock').textContent = now.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
-        document.getElementById('date').textContent = now.toLocaleDateString('de-DE', {weekday: 'long', day: '2-digit', month: 'long'});
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
+const weatherSvgs = {
+    Clear: '<svg viewBox="0 0 24 24" fill="#fb923c"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.2 4.2l1.4 1.4m12.8 12.8l1.4 1.4M1 12h2m18 0h2M4.2 19.8l1.4-1.4m12.8-12.8l1.4-1.4" stroke="#fb923c" stroke-width="2"/></svg>',
+    Clouds: '<svg viewBox="0 0 24 24" fill="#94a3b8"><path d="M17.5 19c2.5 0 4.5-2 4.5-4.5 0-2.3-1.7-4.2-4-4.5-.8-3.7-4-6.5-7.5-6.5C7.2 3.5 4.5 6 4.1 9.1 1.8 9.6 0 11.6 0 14c0 2.8 2.2 5 5 5h12.5z"/></svg>',
+    Rain: '<svg viewBox="0 0 24 24" fill="#38bdf8"><path d="M17.5 19c2.5 0 4.5-2 4.5-4.5 0-2.3-1.7-4.2-4-4.5-.8-3.7-4-6.5-7.5-6.5C7.2 3.5 4.5 6 4.1 9.1 1.8 9.6 0 11.6 0 14c0 2.8 2.2 5 5 5h12.5z"/><path d="M8 20l-1 2M12 21l-1 2M16 20l-1 2" stroke="#38bdf8" stroke-width="2"/></svg>',
+    Snow: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 14"/></svg>'
+};
 
-    /* --- WETTER STATION --- */
-    async function fetchWeather() {
-        if(config.weatherApi === 'YOUR_API_KEY_HERE') return;
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${config.weatherCity}&units=metric&appid=${config.weatherApi}&lang=de`);
+/** WETTER[cite: 1, 2] **/
+async function updateWeather() {
+    try {
+        const apiKey = '769c5861cd255a3982bafb1680abf194';
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${state.city}&appid=${apiKey}&units=metric&lang=de`);
         const data = await res.json();
         
-        // Aktuelles Wetter
-        document.getElementById('temp').textContent = Math.round(data.list[0].main.temp) + "°C";
-        // SVG Icon Logik hier... (vereinfacht)
-        document.getElementById('weather-svg').innerHTML = `☀️`; 
-    }
+        document.getElementById('mainTemp').textContent = Math.round(data.list[0].main.temp) + '°';
+        document.getElementById('wCity').textContent = data.city.name;
+        document.getElementById('wIcon').innerHTML = weatherSvgs[data.list[0].weather[0].main] || weatherSvgs.Clouds;
 
-    /* --- ICS KALENDER PARSER --- */
-    async function loadCalendar() {
-        if(!config.icsUrl) return;
-        const proxy = "https://corsproxy.io/?" + encodeURIComponent(config.icsUrl);
-        try {
-            const res = await fetch(proxy);
-            const text = await res.text();
-            parseICS(text);
-        } catch (e) { console.error("Kalender Fehler", e); }
-    }
-
-    function parseICS(data) {
-        const events = [];
-        const vevents = data.split("BEGIN:VEVENT");
-        vevents.shift(); // Header entfernen
-
-        vevents.forEach(ev => {
-            const title = ev.match(/SUMMARY:(.*)/)?.[1] || "Unbenannt";
-            const start = ev.match(/DTSTART[:;](.*)/)?.[1] || "";
-            const loc = ev.match(/LOCATION:(.*)/)?.[1] || "";
-            
-            let cat = 'termin';
-            if(title.toLowerCase().includes('müll')) cat = 'muell';
-            if(title.toLowerCase().includes('arbeit')) cat = 'arbeit';
-            if(title.toLowerCase().includes('geburtstag')) cat = 'geburtstag';
-
-            events.push({title, start, loc, cat});
+        const strip = document.getElementById('forecastStrip');
+        strip.innerHTML = '';
+        data.list.filter(i => i.dt_txt.includes("12:00:00")).slice(0,5).forEach(d => {
+            const date = new Date(d.dt * 1000);
+            strip.innerHTML += `<div class="fc-day"><div>${date.toLocaleDateString('de-DE',{weekday:'short'})}</div>${weatherSvgs[d.weather[0].main] || weatherSvgs.Clouds}<div>${Math.round(d.main.temp)}°</div></div>`;
         });
-        renderEvents(events.slice(0, 8)); // Top 8 Termine
-    }
+    } catch(e) { console.error("Weather Error"); }
+}
 
-    function renderEvents(events) {
-        const container = document.getElementById('event-list');
-        container.innerHTML = events.map(e => `
-            <div class="event-bar cat-${e.cat}" onclick="showModal('${e.title}', '${e.loc}')">
-                ${e.title}
-            </div>
-        `).join('');
-    }
+/** KALENDER ICS[cite: 2] **/
+async function loadCalendar() {
+    if(!state.calUrl) return;
+    try {
+        const proxy = "https://corsproxy.io/?" + encodeURIComponent(state.calUrl);
+        const res = await fetch(proxy);
+        const text = await res.text();
+        const evs = [];
+        const lines = text.split('\n');
+        let cur = null;
+        lines.forEach(l => {
+            if(l.startsWith('BEGIN:VEVENT')) cur = {};
+            if(l.startsWith('SUMMARY:')) cur.title = l.slice(8).trim();
+            if(l.startsWith('LOCATION:')) cur.loc = l.slice(9).trim();
+            if(l.startsWith('DESCRIPTION:')) cur.desc = l.slice(12).trim().replace(/\\n/g, '<br>');
+            if(l.startsWith('DTSTART')) {
+                const m = l.match(/\d{8}/);
+                if(m) cur.date = `${m[0].slice(0,4)}-${m[0].slice(4,6)}-${m[0].slice(6,8)}`;
+            }
+            if(l.startsWith('END:VEVENT') && cur.date) { evs.push(cur); cur = null; }
+        });
+        state.events = evs;
+        renderCal();
+    } catch(e) { console.error("ICS Error"); }
+}
 
-    /* --- HYBRIDE MEDIA ENGINE --- */
-    let mediaIndex = 0;
-    function rotateMedia() {
-        const viewport = document.getElementById('media-viewport');
-        const url = config.mediaUrls[mediaIndex];
-        const isVideo = url.endsWith('.mp4') || url.endsWith('.mov');
+function getEvColor(t) {
+    const s = t.toLowerCase();
+    if(s.includes('müll') || s.includes('abfall')) return '#4ade80';
+    if(s.includes('arbeit')) return '#3b82f6';
+    if(s.includes('geburtstag')) return '#f472b6';
+    if(s.includes('arzt') || s.includes('termin')) return '#fb923c';
+    return 'var(--accent)';
+}
 
-        viewport.innerHTML = '';
-        const el = document.createElement(isVideo ? 'video' : 'img');
-        el.src = url;
-        el.className = 'media-obj media-active anim-zoom-in';
+function renderCal() {
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+    const now = new Date();
+    document.getElementById('monthTitle').textContent = now.toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+    
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    
+    for(let i=0; i<firstDay; i++) grid.appendChild(Object.assign(document.createElement('div'), {className:'day-cell', style:'opacity:0'}));
+    
+    for(let d=1; d<=daysInMonth; d++) {
+        const cell = document.createElement('div');
+        cell.className = 'day-cell';
+        const dStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        if(new Date().toISOString().split('T')[0] === dStr) cell.classList.add('today');
         
-        if(isVideo) {
-            el.muted = true; el.autoplay = true;
-            el.onended = () => { mediaIndex = (mediaIndex + 1) % config.mediaUrls.length; rotateMedia(); };
-        } else {
-            setTimeout(() => {
-                mediaIndex = (mediaIndex + 1) % config.mediaUrls.length;
-                rotateMedia();
-            }, 8000); // 8 Sek pro Bild
-        }
-        viewport.appendChild(el);
+        cell.innerHTML = `<div class="day-num">${d}</div>`;
+        state.events.filter(e => e.date === dStr).forEach(e => {
+            const bar = document.createElement('div');
+            bar.className = 'ev-bar';
+            bar.style.backgroundColor = getEvColor(e.title);
+            bar.textContent = e.title;
+            bar.onclick = (event) => {
+                event.stopPropagation();
+                document.getElementById('mTitle').textContent = e.title;
+                document.getElementById('mInfo').innerHTML = `<b>Ort:</b> ${e.loc || '-'}<br><b>Details:</b> ${e.desc || '-'}`;
+                document.getElementById('eventModal').classList.add('active');
+            };
+            cell.appendChild(bar);
+        });
+        grid.appendChild(cell);
+    }
+}
+
+/** MEDIA ENGINE[cite: 2] **/
+let mIdx = 0;
+function playMedia() {
+    const hub = document.getElementById('mediaHub');
+    const pool = [...state.media, ...state.localMedia];
+    if(!pool.length) return;
+
+    const url = pool[mIdx];
+    const isVid = url.match(/\.(mp4|webm|mov|ogg)/i) || url.startsWith('data:video');
+    const wrap = document.createElement('div');
+    wrap.className = `media-item anim-${state.anim}`;
+
+    if(isVid) {
+        const vid = document.createElement('video');
+        vid.src = url; vid.className = 'media-content'; vid.muted = true; vid.autoplay = true;
+        vid.onended = () => { mIdx = (mIdx+1)%pool.length; playMedia(); };
+        wrap.appendChild(vid);
+    } else {
+        const img = document.createElement('img');
+        img.src = url; img.className = 'media-content';
+        wrap.appendChild(img);
+        setTimeout(() => { mIdx = (mIdx+1)%pool.length; playMedia(); }, 15000);
     }
 
-    /* --- MODAL --- */
-    function showModal(title, loc) {
-        document.getElementById('m-title').textContent = title;
-        document.getElementById('m-loc').textContent = loc;
-        document.getElementById('modal').style.display = 'block';
-    }
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+    hub.appendChild(wrap);
+    setTimeout(() => { 
+        wrap.classList.add('active');
+        if(hub.children.length > 2) hub.removeChild(hub.children[0]);
+    }, 100);
+}
 
-    /* --- INIT --- */
-    document.documentElement.setAttribute('data-theme', config.theme);
-    rotateMedia();
-    fetchWeather();
+/** SYSTEM[cite: 2] **/
+function init() {
+    const saved = localStorage.getItem('hub_final_v1');
+    if(saved) state = {...state, ...JSON.parse(saved)};
+
+    document.getElementById('btnOpenSet').onclick = () => {
+        document.getElementById('inTheme').value = state.theme;
+        document.getElementById('inAnim').value = state.anim;
+        document.getElementById('inMedia').value = state.media.join('\n');
+        document.getElementById('inCity').value = state.city;
+        document.getElementById('inCal').value = state.calUrl;
+        document.getElementById('sidebar').classList.add('active');
+    };
+
+    document.getElementById('btnCloseSet').onclick = () => document.getElementById('sidebar').classList.remove('active');
+    
+    document.getElementById('inLocal').onchange = (e) => {
+        state.localMedia = Array.from(e.target.files).map(f => URL.createObjectURL(f));
+    };
+
+    document.getElementById('btnSave').onclick = () => {
+        state.theme = document.getElementById('inTheme').value;
+        state.anim = document.getElementById('inAnim').value;
+        state.media = document.getElementById('inMedia').value.split('\n').filter(u => u.trim());
+        state.city = document.getElementById('inCity').value || 'Bonn';
+        state.calUrl = document.getElementById('inCal').value;
+        
+        localStorage.setItem('hub_final_v1', JSON.stringify(state));
+        document.body.dataset.theme = state.theme;
+        updateWeather();
+        loadCalendar();
+        document.getElementById('sidebar').classList.remove('active');
+    };
+
+    document.body.dataset.theme = state.theme;
+    updateWeather();
     loadCalendar();
+    renderCal();
+    playMedia();
+    setInterval(() => {
+        const n = new Date();
+        document.getElementById('clock').textContent = n.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+        document.getElementById('date').textContent = n.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+    }, 1000);
+}
 
+init();
 </script>
 </body>
 </html>
