@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SmartHub Ultimate Pro - Video & Photo Engine</title>
+    <title>SmartHub Ultimate Pro - Full Image Responsive</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
         /* 1. THEMEN-SYSTEM (16 THEMES) */
@@ -30,7 +30,8 @@
         .slideshow { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
         .media-item { position: absolute; inset: 0; opacity: 0; transition: all var(--anim-speed) cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; }
         .media-item.active { opacity: 1; }
-        .media-content { width: 100%; height: 100%; object-fit: cover; }
+        /* ÄNDERUNG HIER: object-fit: contain statt cover, damit das Bild komplett sichtbar bleibt */
+        .media-content { width: 100%; height: 100%; object-fit: contain; }
 
         /* Animation Styles */
         .anim-fade.active { opacity: 1; }
@@ -259,7 +260,7 @@ let mIdx = 0;
 let slideTimer;
 
 function playMedia() {
-    clearTimeout(slideTimer); // Beendet den alten Timer, falls vorhanden
+    clearTimeout(slideTimer); 
     
     const hub = document.getElementById('mediaHub');
     const pool = [...state.media, ...state.localMedia];
@@ -270,8 +271,6 @@ function playMedia() {
     }
     
     const src = pool[mIdx % pool.length];
-    
-    // Prüfen, ob es ein Video ist (durch Dateiendung oder den neuen internen Marker)
     const isVideo = src.includes('#video') || src.match(/\.(mp4|webm|ogg|mov)$/i);
     
     const wrap = document.createElement('div');
@@ -280,18 +279,15 @@ function playMedia() {
     let mediaEl;
     if (isVideo) {
         mediaEl = document.createElement('video');
-        mediaEl.src = src.replace('#video', ''); // Marker entfernen für die echte Quelle
+        mediaEl.src = src.replace('#video', ''); 
         mediaEl.autoplay = true;
-        mediaEl.muted = true; // Für Autoplay im Browser zwingend notwendig
+        mediaEl.muted = true; 
         mediaEl.playsInline = true;
-        // Wenn das Video zu Ende ist, springe zum nächsten Bild/Video
         mediaEl.onended = () => { playMedia(); };
-        // Fallback, falls das Video nicht geladen werden kann
         mediaEl.onerror = () => { slideTimer = setTimeout(playMedia, 5000); };
     } else {
         mediaEl = document.createElement('img');
         mediaEl.src = src;
-        // Bei normalen Bildern nach 15 Sekunden weitergehen
         slideTimer = setTimeout(playMedia, 15000);
     }
     
@@ -309,7 +305,7 @@ function playMedia() {
 
 /** 4. INIT & PERSISTENCE FIX **/
 function init() {
-    const saved = localStorage.getItem('hub_master_v14_video');
+    const saved = localStorage.getItem('hub_master_v15_contain');
     if(saved) {
         const p = JSON.parse(saved);
         state = {...state, ...p, date: new Date()};
@@ -334,7 +330,7 @@ function init() {
         state.anim = document.getElementById('inAnim').value;
         state.media = document.getElementById('inMedia').value.split('\n').filter(u=>u.trim());
         
-        localStorage.setItem('hub_master_v14_video', JSON.stringify({
+        localStorage.setItem('hub_master_v15_contain', JSON.stringify({
             split: state.split, city: state.city, calUrl: state.calUrl, 
             theme: state.theme, anim: state.anim, media: state.media
         }));
@@ -346,23 +342,20 @@ function init() {
         document.getElementById('sidebar').classList.remove('active');
     };
 
-    // Anpassung für Datei-Upload: Bilder ODER Videos erlauben
     document.getElementById('inLocal').onchange = (e) => {
         state.localMedia = Array.from(e.target.files)
             .filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'))
             .map(f => {
-                // Hänge einen internen "#video" Marker an den Blob, wenn es ein Video ist
                 const isVid = f.type.startsWith('video/');
                 return URL.createObjectURL(f) + (isVid ? '#video' : '');
             });
         mIdx = 0; 
-        playMedia(); // Startet die Slideshow sofort neu mit den frischen Dateien
+        playMedia(); 
     };
 
     document.body.dataset.theme = state.theme;
     renderCal(); loadCal(); updateWeather();
     
-    // Starte den Medien-Loop (statt setInterval nutzen wir nun die smarte setTimeout-Kette im playMedia())
     playMedia();
     
     setInterval(() => {
