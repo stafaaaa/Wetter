@@ -1203,17 +1203,53 @@ function resizeImage(file) {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      let { width:w, height:h } = img;
-      if (w > MAX_IMG_W) { h = Math.round(h * (MAX_IMG_W/w)); w = MAX_IMG_W; }
-      const cv = document.createElement('canvas');
-      cv.width = w; cv.height = h;
-      cv.getContext('2d').drawImage(img, 0, 0, w, h);
-      URL.revokeObjectURL(url);
-      cv.toBlob(b => b ? res(b) : rej(new Error('Resize fehlgeschlagen')), 'image/jpeg', JPEG_Q);
+      try {
+        let { width:w, height:h } = img;
+        if (!w || !h) { URL.revokeObjectURL(url); rej(new Error('Bild hat keine Größe')); return; }
+        if (w > MAX_IMG_W) { h = Math.round(h * (MAX_IMG_W/w)); w = MAX_IMG_W; }
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        const ctx = cv.getContext('2d');
+        if (!ctx) { URL.revokeObjectURL(url); rej(new Error('Canvas nicht verfügbar')); return; }
+        ctx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+
+        // Try toBlob first (modern), fall back to toDataURL
+        if (cv.toBlob) {
+          cv.toBlob(b => {
+            if (b) { res(b); }
+            else { dataUrlFallback(cv, res, rej); }
+          }, 'image/jpeg', JPEG_Q);
+        } else {
+          dataUrlFallback(cv, res, rej);
+        }
+      } catch(err) {
+        URL.revokeObjectURL(url);
+        rej(err);
+      }
     };
-    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('Bild ungültig')); };
+    img.onerror = (err) => {
+      URL.revokeObjectURL(url);
+      rej(new Error('Bild ungültig oder Format nicht unterstützt'));
+    };
     img.src = url;
   });
+}
+
+function dataUrlFallback(canvas, res, rej) {
+  try {
+    const dataUrl = canvas.toDataURL('image/jpeg', JPEG_Q);
+    if (!dataUrl || dataUrl === 'data:,') { rej(new Error('toDataURL leer')); return; }
+    // Convert dataURL to Blob
+    const parts = dataUrl.split(',');
+    const mime = parts[0].match(/:(.*?);/)[1];
+    const bin = atob(parts[1]);
+    const buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    res(new Blob([buf], { type: mime }));
+  } catch(err) {
+    rej(new Error('Fallback fehlgeschlagen: ' + err.message));
+  }
 }
 
 let _imgCache = [];
@@ -1809,15 +1845,35 @@ $('upload').addEventListener('change', async (e) => {
   const files = Array.from(e.target.files || []);
   if (!files.length) return;
   let ok = 0, fail = 0;
+  let lastError = '';
   toast('Lade ' + files.length + ' Bild(er)...', 5000);
+  console.log('[Upload] Start:', files.length, 'files');
   for (const f of files) {
-    if (!f.type.startsWith('image/')) { fail++; continue; }
-    try { const blob = await resizeImage(f); await dbAdd(blob); ok++; }
-    catch(err) { console.warn('Upload fail:', f.name, err); fail++; }
+    console.log('[Upload] Processing:', f.name, f.type, f.size, 'bytes');
+    if (!f.type.startsWith('image/')) {
+      console.warn('[Upload] Not an image:', f.type);
+      lastError = 'Kein Bild: ' + f.type;
+      fail++; continue;
+    }
+    try {
+      const blob = await resizeImage(f);
+      console.log('[Upload] Resized to', blob.size, 'bytes');
+      const id = await dbAdd(blob);
+      console.log('[Upload] Saved with id', id);
+      ok++;
+    } catch(err) {
+      console.error('[Upload] FAILED for', f.name, err);
+      lastError = err.message || String(err);
+      fail++;
+    }
   }
   await loadImgsURLs();
   renderImgs(); buildSlides(); renderSlides();
-  toast(ok + ' gespeichert' + (fail ? ', ' + fail + ' fehlgeschlagen' : ''));
+  if (ok > 0) {
+    toast(ok + ' gespeichert' + (fail ? ', ' + fail + ' fehlgeschlagen' : ''));
+  } else {
+    toast('Fehler: ' + lastError, 6000);
+  }
   e.target.value = '';
 });
 
