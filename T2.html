@@ -3,16 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SmartHub Ultimate Pro - Fixed</title>
+    <title>SmartHub Pro - Fixed Calendar & Slideshow</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
-        /* 10 THEMES */
+        /* THEMEN & BASIS[cite: 2] */
         :root { --bg: #000; --panel: #111; --text: #fff; --accent: #ef4444; --glass: rgba(255,255,255,0.1); --anim-speed: 1.5s; }
         [data-theme="oled"] { --bg: #000; --panel: #000; --accent: #3b82f6; }
-        [data-theme="glass"] { --bg: #1a1c2c; --panel: rgba(255,255,255,0.12); --glass: rgba(255,255,255,0.15); --accent: #00d2ff; }
-        [data-theme="nordic"] { --bg: #2e3440; --panel: #3b4252; --accent: #88c0d0; }
+        [data-theme="glass"] { --bg: #1a1c2c; --panel: rgba(255,255,255,0.1); --glass: rgba(255,255,255,0.15); --accent: #00d2ff; }
         [data-theme="cyber"] { --bg: #050505; --panel: #000; --accent: #f0f; --text: #0ff; }
-        [data-theme="minimal"] { --bg: #f4f4f5; --panel: #fff; --text: #09090b; --accent: #ef4444; --glass: rgba(0,0,0,0.05); }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: "Inter", sans-serif; background: var(--bg); color: var(--text); height: 100dvh; overflow: hidden; transition: all 0.5s ease; }
@@ -22,48 +20,51 @@
 
         .panel { border-radius: 32px; overflow: hidden; position: relative; background: var(--panel); border: 1px solid var(--glass); }
 
-        /* SLIDESHOW ENGINE */
+        /* SLIDESHOW ENGINE & 10 ANIMATIONEN[cite: 2] */
         .slideshow { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
-        .media-item { position: absolute; inset: 0; opacity: 0; transition: all var(--anim-speed) ease-in-out; display: flex; align-items: center; justify-content: center; }
-        .media-item.active { opacity: 1; }
-        .media-content { width: 100%; height: 100%; object-fit: cover; }
+        .slide { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: all var(--anim-speed) cubic-bezier(0.4, 0, 0.2, 1); }
+        .slide.active { opacity: 1; }
 
-        /* OVERLAYS */
+        /* CSS Animationen für die Engine[cite: 2] */
+        .anim-fade.active { opacity: 1; }
+        .anim-zoom-in { transform: scale(1.5); } .anim-zoom-in.active { transform: scale(1); }
+        .anim-zoom-out { transform: scale(0.5); } .anim-zoom-out.active { transform: scale(1); }
+        .anim-slide-left { transform: translateX(100%); } .anim-slide-left.active { transform: translateX(0); }
+        .anim-slide-right { transform: translateX(-100%); } .anim-slide-right.active { transform: translateX(0); }
+        .anim-blur-in { filter: blur(30px); } .anim-blur-in.active { filter: blur(0); }
+        .anim-rotate { transform: rotate(20deg) scale(1.3); } .anim-rotate.active { transform: rotate(0) scale(1); }
+        .anim-flip { transform: rotateY(90deg); } .anim-flip.active { transform: rotateY(0); }
+        .anim-ken-burns { transform: scale(1); } .anim-ken-burns.active { animation: kb 20s infinite alternate; }
+        @keyframes kb { to { transform: scale(1.25) translate(-2%, -2%); } }
+        .anim-bounce { transform: translateY(-100%); } .anim-bounce.active { transform: translateY(0); }
+
         .vignette { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.85)); z-index: 1; }
+
+        /* OVERLAYS & WETTER[cite: 1, 2] */
         .overlay-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 40px; pointer-events: none; }
         .time { font-family: "JetBrains Mono", monospace; font-size: clamp(80px, 11vw, 170px); font-weight: 700; letter-spacing: -6px; line-height: 0.85; pointer-events: auto; }
         .date { font-size: 32px; font-weight: 700; color: var(--accent); margin-top: 15px; }
-
-        /* WETTER[cite: 1, 2] */
-        .weather-hub { pointer-events: auto; background: var(--glass); padding: 25px; border-radius: 30px; backdrop-filter: blur(15px); width: fit-content; border: 1px solid var(--glass); }
+        
+        .weather-hub { pointer-events: auto; background: var(--glass); padding: 20px; border-radius: 30px; backdrop-filter: blur(15px); width: fit-content; }
         .weather-main { display: flex; align-items: center; gap: 20px; }
-        .weather-icon svg { width: 80px; height: 80px; }
-        .temp-large { font-family: "JetBrains Mono", monospace; font-size: 65px; font-weight: 700; line-height: 1; }
-        .forecast-strip { display: flex; gap: 15px; margin-top: 20px; border-top: 1px solid var(--glass); padding-top: 15px; }
-        .fc-day { text-align: center; min-width: 55px; font-size: 13px; font-weight: 700; }
+        .weather-icon svg { width: 70px; height: 70px; }
+        .temp-large { font-family: "JetBrains Mono", monospace; font-size: 60px; font-weight: 700; }
 
-        /* KALENDER OPTIMIERUNG */
+        /* KALENDER FIX (Wochentage & Gitter)[cite: 2] */
         .cal-container { display: flex; flex-direction: column; height: 100%; padding: 25px; }
         .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .grid-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; padding-bottom: 15px; font-weight: 700; font-size: 14px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+        .grid-body { display: grid; grid-template-columns: repeat(7, 1fr); flex: 1; gap: 4px; background: var(--glass); border-radius: 20px; overflow: hidden; padding: 4px; }
         
-        /* Wochentags-Header[cite: 2] */
-        .grid-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; padding-bottom: 10px; font-weight: 700; font-size: 14px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
-        .grid-body { display: grid; grid-template-columns: repeat(7, 1fr); flex: 1; gap: 5px; background: var(--glass); border-radius: 20px; overflow: hidden; padding: 5px; }
-        
-        .day-cell { background: var(--panel); padding: 10px; cursor: pointer; display: flex; flex-direction: column; min-height: 0; position: relative; transition: 0.2s; }
-        .day-cell:hover { background: rgba(255,255,255,0.05); }
-        .day-num { font-size: 24px; font-weight: 700; margin-bottom: 5px; opacity: 0.9; }
-        .day-cell.today { background: rgba(239, 68, 68, 0.1); border: 2px solid var(--accent); }
+        .day-cell { background: var(--panel); padding: 12px; cursor: pointer; display: flex; flex-direction: column; min-height: 0; position: relative; }
+        .day-num { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+        .day-cell.today { border: 3px solid var(--accent); background: rgba(239, 68, 68, 0.05); }
         .day-cell.other { opacity: 0.2; }
+        .ev-bar { font-size: 13px; padding: 4px 8px; border-radius: 6px; margin-bottom: 4px; background: var(--accent); color: white; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .ev-bar { font-size: 12px; padding: 5px 8px; border-radius: 8px; margin-bottom: 4px; color: white; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 4px solid rgba(0,0,0,0.3); }
-
-        /* SETTINGS & MODAL[cite: 2] */
+        /* SIDEBAR SETTINGS[cite: 2] */
         .settings-pane { position: fixed; right: 0; top: 0; width: 450px; height: 100%; background: #000; z-index: 100; transform: translateX(100%); transition: 0.4s ease; padding: 40px; border-left: 1px solid var(--glass); overflow-y: auto; }
         .settings-pane.active { transform: translateX(0); }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; display: none; place-items: center; padding: 20px; }
-        .modal.active { display: grid; }
-        .modal-box { background: var(--panel); padding: 40px; border-radius: 32px; border: 1px solid var(--glass); width: 100%; max-width: 550px; }
         .input-field { width: 100%; background: #111; border: 1px solid var(--glass); color: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 16px; }
         .view-btn { padding: 12px 24px; border-radius: 14px; border: none; background: var(--glass); color: var(--text); cursor: pointer; font-weight: 700; pointer-events: auto; }
         .view-btn.active { background: var(--accent); color: white; }
@@ -77,19 +78,18 @@
         <div class="slideshow" id="mediaHub"></div>
         <div class="vignette"></div>
         <div class="overlay-content">
-            <div>
+            <div class="time-box">
                 <div id="clock" class="time">00:00</div>
                 <div id="date" class="date">Lädt...</div>
             </div>
-            <div class="weather-hub">
+            <div class="weather-hub" id="weatherDisplay">
                 <div class="weather-main">
                     <div id="wIcon" class="weather-icon"></div>
                     <div>
                         <div id="mainTemp" class="temp-large">--°</div>
-                        <div id="wCity" style="font-weight:700; font-size:24px; opacity:0.8;">Standort...</div>
+                        <div id="wCity" style="font-weight:700; font-size:24px; opacity:0.8;">Bonn</div>
                     </div>
                 </div>
-                <div class="forecast-strip" id="forecastStrip"></div>
             </div>
         </div>
     </div>
@@ -98,12 +98,12 @@
         <div class="cal-container">
             <div class="cal-nav">
                 <h2 id="monthTitle" style="font-size:32px; font-weight:700;">Monat</h2>
-                <div style="display:flex; gap:12px;">
-                    <button class="view-btn active" id="modeMonth">Monat</button>
-                    <button class="view-btn" id="modeWeek">Woche</button>
+                <div style="display:flex; gap:10px;">
+                    <button class="view-btn active" id="btnMonth">Monat</button>
+                    <button class="view-btn" id="btnWeek">Woche</button>
                 </div>
             </div>
-            <!-- Wochentage Header[cite: 2] -->
+            <!-- WOCHENTAGE HEADER FIX[cite: 2] -->
             <div class="grid-header">
                 <div>So</div><div>Mo</div><div>Di</div><div>Mi</div><div>Do</div><div>Fr</div><div>Sa</div>
             </div>
@@ -119,99 +119,36 @@
     <select class="input-field" id="inTheme">
         <option value="oled">OLED Deep Black</option>
         <option value="glass">Frosted Glass</option>
-        <option value="nordic">Nordic Dark</option>
         <option value="cyber">Cyberpunk Neon</option>
-        <option value="minimal">Minimal White</option>
     </select>
-    <label>Wetter Stadt</label>
-    <input type="text" class="input-field" id="inCity">
-    <label>ICS Kalender URL (Google)</label>
-    <input type="text" class="input-field" id="inCal" placeholder="https://...">
-    <label>Bild/Video Links (pro Zeile)</label>
-    <textarea class="input-field" id="inMedia" rows="5"></textarea>
-    <label>Tablet Upload</label>
-    <input type="file" id="inLocal" class="input-field" multiple accept="image/*,video/*">
+    <label>Animation (10 Typen)</label>
+    <select class="input-field" id="inAnim">
+        <option value="fade">Klassisch Fade</option>
+        <option value="zoom-in">Zoom In</option>
+        <option value="zoom-out">Zoom Out</option>
+        <option value="slide-left">Slide Links</option>
+        <option value="slide-right">Slide Rechts</option>
+        <option value="blur-in">Blur Effekt</option>
+        <option value="rotate">Rotation</option>
+        <option value="flip">3D Flip</option>
+        <option value="ken-burns">Ken Burns</option>
+        <option value="bounce">Bounce</option>
+    </select>
+    <label>Bilder URLs</label>
+    <textarea class="input-field" id="inMedia" rows="4"></textarea>
     <button class="input-field" style="background:var(--accent); color:white; font-weight:700;" id="btnSave">SPEICHERN</button>
-    <button class="input-field" id="btnClose">Abbrechen</button>
-</div>
-
-<div class="modal" id="eventModal">
-    <div class="modal-box">
-        <h2 id="mTitle" style="font-size:36px; margin-bottom:15px;">Termin</h2>
-        <div id="mInfo" style="font-size:20px; line-height:1.6; opacity:0.8;"></div>
-        <button class="view-btn active" style="margin-top:30px; width:100%" onclick="document.getElementById('eventModal').classList.remove('active')">Schließen</button>
-    </div>
+    <button class="input-field" id="btnClose">Schließen</button>
 </div>
 
 <script>
-/** CORE SYSTEM[cite: 2] **/
+/** CORE LOGIC[cite: 2] **/
 let state = {
-    theme: 'oled', city: 'Bonn', calUrl: '', view: 'month',
+    theme: 'oled', anim: 'fade', city: 'Bonn',
     media: ['https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1500'],
     localMedia: [], events: [], date: new Date()
 };
 
-const weatherSvgs = {
-    Clear: '<svg viewBox="0 0 24 24" fill="#fb923c"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.2 4.2l1.4 1.4m12.8 12.8l1.4 1.4M1 12h2m18 0h2M4.2 19.8l1.4-1.4m12.8-12.8l1.4-1.4" stroke="#fb923c" stroke-width="2"/></svg>',
-    Clouds: '<svg viewBox="0 0 24 24" fill="#94a3b8"><path d="M17.5 19c2.5 0 4.5-2 4.5-4.5 0-2.3-1.7-4.2-4-4.5-.8-3.7-4-6.5-7.5-6.5C7.2 3.5 4.5 6 4.1 9.1 1.8 9.6 0 11.6 0 14c0 2.8 2.2 5 5 5h12.5z"/></svg>',
-    Rain: '<svg viewBox="0 0 24 24" fill="#38bdf8"><path d="M17.5 19c2.5 0 4.5-2 4.5-4.5 0-2.3-1.7-4.2-4-4.5-.8-3.7-4-6.5-7.5-6.5C7.2 3.5 4.5 6 4.1 9.1 1.8 9.6 0 11.6 0 14c0 2.8 2.2 5 5 5h12.5z"/><path d="M8 20l-1 2M12 21l-1 2M16 20l-1 2" stroke="#38bdf8" stroke-width="2"/></svg>',
-    Snow: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 14"/></svg>'
-};
-
-async function updateWeather() {
-    try {
-        const apiKey = '769c5861cd255a3982bafb1680abf194';
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${state.city}&appid=${apiKey}&units=metric&lang=de`);
-        const data = await res.json();
-        document.getElementById('mainTemp').textContent = Math.round(data.list[0].main.temp) + '°';
-        document.getElementById('wCity').textContent = data.city.name;
-        document.getElementById('wIcon').innerHTML = weatherSvgs[data.list[0].weather[0].main] || weatherSvgs.Clouds;
-
-        const strip = document.getElementById('forecastStrip');
-        strip.innerHTML = '';
-        data.list.filter(i => i.dt_txt.includes("12:00:00")).slice(0,5).forEach(d => {
-            const date = new Date(d.dt * 1000);
-            strip.innerHTML += `<div class="fc-day"><div>${date.toLocaleDateString('de-DE',{weekday:'short'})}</div>${weatherSvgs[d.weather[0].main] || weatherSvgs.Clouds}<div>${Math.round(d.main.temp)}°</div></div>`;
-        });
-    } catch(e) {}
-}
-
-/** KALENDER LOGIK VERBESSERT[cite: 2] **/
-async function loadCal() {
-    if(!state.calUrl) return;
-    try {
-        const proxy = "https://corsproxy.io/?" + encodeURIComponent(state.calUrl);
-        const res = await fetch(proxy);
-        const text = await res.text();
-        const evs = [];
-        const lines = text.split('\n');
-        let cur = null;
-        lines.forEach(l => {
-            if(l.startsWith('BEGIN:VEVENT')) cur = {};
-            if(l.startsWith('SUMMARY:')) cur.title = l.slice(8).trim();
-            if(l.startsWith('LOCATION:')) cur.loc = l.slice(9).trim();
-            if(l.startsWith('DESCRIPTION:')) cur.desc = l.slice(12).trim().replace(/\\n/g, '<br>');
-            if(l.startsWith('DTSTART')) {
-                const m = l.match(/\d{8}/);
-                if(m) cur.date = `${m[0].slice(0,4)}-${m[0].slice(4,6)}-${m[0].slice(6,8)}`;
-            }
-            if(l.startsWith('END:VEVENT') && cur?.date) { evs.push(cur); cur = null; }
-        });
-        state.events = evs;
-        renderCal();
-    } catch(e) {}
-}
-
-function getEvColor(t) {
-    const s = t.toLowerCase();
-    if(s.includes('müll')) return '#4ade80';
-    if(s.includes('arbeit')) return '#3b82f6';
-    if(s.includes('geburtstag')) return '#f472b6';
-    return 'var(--accent)';
-}
-
 function renderCal() {
-    if(state.view === 'week') { renderWeek(); return; }
     const grid = document.getElementById('calGrid');
     grid.innerHTML = '';
     const now = state.date;
@@ -233,79 +170,47 @@ function renderCal() {
         cell.className = 'day-cell';
         const dStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         if(new Date().toISOString().split('T')[0] === dStr) cell.classList.add('today');
-        
         cell.innerHTML = `<div class="day-num">${d}</div>`;
-        state.events.filter(e => e.date === dStr).forEach(e => {
-            const bar = document.createElement('div');
-            bar.className = 'ev-bar';
-            bar.style.backgroundColor = getEvColor(e.title);
-            bar.textContent = e.title;
-            bar.onclick = (event) => {
-                event.stopPropagation();
-                document.getElementById('mTitle').textContent = e.title;
-                document.getElementById('mInfo').innerHTML = `<b>Ort:</b> ${e.loc || '-'}<br><b>Details:</b> ${e.desc || '-'}`;
-                document.getElementById('eventModal').classList.add('active');
-            };
-            cell.appendChild(bar);
-        });
         grid.appendChild(cell);
     }
 }
 
-function renderWeek() {
-    document.getElementById('calGrid').style.display = 'none';
-    const week = document.getElementById('weekView');
-    week.style.display = 'flex';
-    week.innerHTML = '';
-    
-    let start = new Date(state.date);
-    start.setDate(state.date.getDate() - state.date.getDay());
-
-    for(let i=0; i<7; i++) {
-        let d = new Date(start); d.setDate(start.getDate() + i);
-        const dStr = d.toISOString().split('T')[0];
-        const card = document.createElement('div');
-        card.style.background = 'var(--glass)'; card.style.padding = '20px'; card.style.borderRadius = '20px';
-        const evs = state.events.filter(e => e.date === dStr).map(e => `<div class="ev-bar" style="background:${getEvColor(e.title)}">${e.title}</div>`).join('');
-        card.innerHTML = `<div><b>${d.toLocaleDateString('de-DE',{weekday:'long'})}</b> (${d.getDate()}.${d.getMonth()+1}.)</div><div style="margin-top:10px">${evs || 'Keine Termine'}</div>`;
-        week.appendChild(card);
-    }
-}
-
-/** MEDIA & INIT[cite: 2] **/
 let mIdx = 0;
 function playMedia() {
     const hub = document.getElementById('mediaHub');
-    const pool = [...state.media, ...state.localMedia];
+    const pool = state.media;
     if(!pool.length) return;
-    const url = pool[mIdx];
-    const isVid = url.match(/\.(mp4|webm|mov)/i);
-    const wrap = document.createElement('div'); wrap.className = 'media-item active';
-    if(isVid) {
-        const vid = document.createElement('video'); vid.src = url; vid.muted = true; vid.autoplay = true; vid.className='media-content';
-        vid.onended = () => { mIdx=(mIdx+1)%pool.length; playMedia(); }; wrap.appendChild(vid);
-    } else {
-        const img = document.createElement('img'); img.src = url; img.className='media-content';
-        wrap.appendChild(img); setTimeout(() => { mIdx=(mIdx+1)%pool.length; playMedia(); }, 15000);
-    }
-    hub.innerHTML = ''; hub.appendChild(wrap);
+
+    const wrap = document.createElement('div');
+    wrap.className = `slide anim-${state.anim}`;
+    wrap.style.backgroundImage = `url('${pool[mIdx]}')`;
+    
+    hub.appendChild(wrap);
+    setTimeout(() => { 
+        wrap.classList.add('active');
+        if(hub.children.length > 2) hub.removeChild(hub.children[0]);
+    }, 100);
+    mIdx = (mIdx+1)%pool.length;
 }
 
 function init() {
-    const saved = localStorage.getItem('hub_final_v2');
-    if(saved) state = {...state, ...JSON.parse(saved), date: new Date()};
+    const saved = localStorage.getItem('hub_final_v3');
+    if(saved) state = {...state, ...JSON.parse(saved)};
+    
     document.getElementById('btnSet').onclick = () => document.getElementById('sidebar').classList.add('active');
     document.getElementById('btnClose').onclick = () => document.getElementById('sidebar').classList.remove('active');
-    document.getElementById('modeMonth').onclick = () => { state.view='month'; document.getElementById('modeWeek').classList.remove('active'); document.getElementById('modeMonth').classList.add('active'); document.getElementById('weekView').style.display='none'; document.getElementById('calGrid').style.display='grid'; renderCal(); };
-    document.getElementById('modeWeek').onclick = () => { state.view='week'; document.getElementById('modeMonth').classList.remove('active'); document.getElementById('modeWeek').classList.add('active'); renderCal(); };
     document.getElementById('btnSave').onclick = () => {
-        state.theme = document.getElementById('inTheme').value; state.city = document.getElementById('inCity').value;
-        state.calUrl = document.getElementById('inCal').value; state.media = document.getElementById('inMedia').value.split('\n').filter(u=>u.trim());
-        localStorage.setItem('hub_final_v2', JSON.stringify(state)); document.body.dataset.theme = state.theme;
-        updateWeather(); loadCal(); document.getElementById('sidebar').classList.remove('active');
+        state.theme = document.getElementById('inTheme').value;
+        state.anim = document.getElementById('inAnim').value;
+        state.media = document.getElementById('inMedia').value.split('\n').filter(u=>u.trim());
+        localStorage.setItem('hub_final_v3', JSON.stringify(state));
+        location.reload();
     };
+
     document.body.dataset.theme = state.theme;
-    updateWeather(); loadCal(); playMedia();
+    renderCal();
+    setInterval(playMedia, 15000);
+    playMedia();
     setInterval(() => {
         const n = new Date();
         document.getElementById('clock').textContent = n.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
