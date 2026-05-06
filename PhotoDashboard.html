@@ -889,7 +889,8 @@ function buildSlides() {
             video.style.width = '100%';
             video.style.height = '100%';
             video.style.objectFit = 'cover';
-            video.muted = true;
+            video.muted = false;
+            video.volume = 1.0;
             video.playsInline = true;
             video.autoplay = false;
             video.loop = false;
@@ -902,7 +903,7 @@ function buildSlides() {
         if (i === 0) {
             slide.classList.add('active');
             const v = slide.querySelector('video');
-            if (v) v.play().catch(() => {});
+            if (v) playVideoWithSound(v);
         }
         container.appendChild(slide);
         slides.push(slide);
@@ -929,10 +930,33 @@ function showSlide(index) {
     const activeSlide = slides[currentSlide];
     activeSlide.classList.add('active');
     
-    // Play video if it is one
+    // Play video with sound (mit Auto-Play-Trick)
     const video = activeSlide.querySelector('video');
     if (video) {
-        video.play().catch(() => {});
+        playVideoWithSound(video);
+    }
+}
+
+// Trick um Video MIT TON ohne User-Klick zu starten
+function playVideoWithSound(video) {
+    video.muted = false;
+    video.volume = 1.0;
+    
+    const playPromise = video.play();
+    
+    if (playPromise !== undefined) {
+        playPromise.catch(error => {
+            // Auto-Play mit Ton blockiert -> Trick: Erst muted starten, dann unmuten
+            console.log('Auto-Play mit Ton blockiert, versuche Trick...');
+            video.muted = true;
+            video.play().then(() => {
+                // Nach kurzer Zeit Ton einschalten
+                setTimeout(() => {
+                    video.muted = false;
+                    video.volume = 1.0;
+                }, 100);
+            }).catch(e => console.error('Video play failed:', e));
+        });
     }
 }
 
