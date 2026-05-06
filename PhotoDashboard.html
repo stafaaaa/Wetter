@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photo Dashboard</title>
+<style>
+/* ============================================
+   1. BASIS & RESET
+   ============================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ============================================
+   2. THEMES SYSTEM (25 MODERNE THEMES)
+   ============================================ */
+:root {
+    --accent: #4a9eff;
+    --text: #ffffff;
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.18);
+    --glass-blur: 20px;
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --anim-speed: 1.5s;
+}
+
+[data-theme="oled"] { --accent: #3b82f6; --glass-bg: rgba(255,255,255,0.06); --glass-border: rgba(255,255,255,0.15); }
+[data-theme="glass"] { --accent: #00d2ff; --glass-bg: rgba(255,255,255,0.12); --glass-border: rgba(255,255,255,0.25); }
+[data-theme="cyber"] { --accent: #ff00ff; --text: #00ffff; --glass-bg: rgba(255,0,255,0.1); --glass-border: rgba(0,255,255,0.3); }
+[data-theme="neon"] { --accent: #39ff14; --glass-bg: rgba(57,255,20,0.08); --glass-border: rgba(57,255,20,0.25); }
+[data-theme="candy"] { --accent: #ff4081; --glass-bg: rgba(255,64,129,0.1); --glass-border: rgba(255,64,129,0.3); }
+[data-theme="tropical"] { --accent: #ffeb3b; --glass-bg: rgba(0,150,136,0.15); --glass-border: rgba(255,235,59,0.3); }
+[data-theme="golden"] { --accent: #ffc107; --glass-bg: rgba(255,193,7,0.1); --glass-border: rgba(255,193,7,0.3); }
+[data-theme="violet"] { --accent: #e040fb; --glass-bg: rgba(224,64,251,0.1); --glass-border: rgba(224,64,251,0.3); }
+[data-theme="cherry"] { --accent: #ff5252; --glass-bg: rgba(255,82,82,0.1); --glass-border: rgba(255,82,82,0.3); }
+[data-theme="sunset"] { --accent: #ff6b35; --glass-bg: rgba(255,107,53,0.1); --glass-border: rgba(255,159,28,0.3); }
+[data-theme="ocean"] { --accent: #00b8d4; --glass-bg: rgba(0,184,212,0.1); --glass-border: rgba(0,184,212,0.3); }
+[data-theme="forest"] { --accent: #66bb6a; --glass-bg: rgba(102,187,106,0.1); --glass-border: rgba(102,187,106,0.3); }
+[data-theme="aurora"] { --accent: #80ffea; --glass-bg: rgba(128,255,234,0.08); --glass-border: rgba(255,128,234,0.3); }
+[data-theme="minimal"] { --accent: #ffffff; --glass-bg: rgba(255,255,255,0.05); --glass-border: rgba(255,255,255,0.1); }
+[data-theme="rose"] { --accent: #f06292; --glass-bg: rgba(240,98,146,0.1); --glass-border: rgba(240,98,146,0.3); }
+[data-theme="mint"] { --accent: #4fd1c5; --glass-bg: rgba(79,209,197,0.1); --glass-border: rgba(79,209,197,0.3); }
+[data-theme="lavender"] { --accent: #b39ddb; --glass-bg: rgba(179,157,219,0.1); --glass-border: rgba(179,157,219,0.3); }
+[data-theme="coral"] { --accent: #ff7043; --glass-bg: rgba(255,112,67,0.1); --glass-border: rgba(255,112,67,0.3); }
+[data-theme="midnight"] { --accent: #5c6bc0; --glass-bg: rgba(92,107,192,0.1); --glass-border: rgba(92,107,192,0.3); }
+[data-theme="electric"] { --accent: #00e5ff; --text: #ffffff; --glass-bg: rgba(0,229,255,0.1); --glass-border: rgba(0,229,255,0.3); }
+[data-theme="ruby"] { --accent: #e91e63; --glass-bg: rgba(233,30,99,0.1); --glass-border: rgba(233,30,99,0.3); }
+[data-theme="emerald"] { --accent: #00c853; --glass-bg: rgba(0,200,83,0.1); --glass-border: rgba(0,200,83,0.3); }
+[data-theme="sapphire"] { --accent: #2196f3; --glass-bg: rgba(33,150,243,0.1); --glass-border: rgba(33,150,243,0.3); }
+[data-theme="amber"] { --accent: #ffb300; --glass-bg: rgba(255,179,0,0.1); --glass-border: rgba(255,179,0,0.3); }
+[data-theme="ice"] { --accent: #b3e5fc; --glass-bg: rgba(179,229,252,0.1); --glass-border: rgba(179,229,252,0.4); }
+
+/* ============================================
+   3. SLIDESHOW
+   ============================================ */
+.slideshow {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    background: #000;
+}
+
+.slide {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    will-change: opacity, transform, filter;
+}
+
+/* SLIDESHOW ANIMATIONEN (10) */
+.slide.active { opacity: 1; }
+
+.anim-fade .slide { transition: opacity var(--anim-speed) ease-in-out; }
+
+.anim-zoom-in .slide { transition: opacity var(--anim-speed) ease-in-out, transform var(--anim-speed) ease-in-out; transform: scale(1.4); }
+.anim-zoom-in .slide.active { transform: scale(1); }
+
+.anim-zoom-out .slide { transition: opacity var(--anim-speed) ease-in-out, transform var(--anim-speed) ease-in-out; transform: scale(0.7); }
+.anim-zoom-out .slide.active { transform: scale(1); }
+
+.anim-slide-left .slide { transition: opacity var(--anim-speed) ease-in-out, transform var(--anim-speed) ease-in-out; transform: translateX(100%); }
+.anim-slide-left .slide.active { transform: translateX(0); }
+
+.anim-slide-right .slide { transition: opacity var(--anim-speed) ease-in-out, transform var(--anim-speed) ease-in-out; transform: translateX(-100%); }
+.anim-slide-right .slide.active { transform: translateX(0); }
+
+.anim-blur .slide { transition: opacity var(--anim-speed) ease-in-out, filter var(--anim-speed) ease-in-out; filter: blur(30px); }
+.anim-blur .slide.active { filter: blur(0); }
+
+.anim-rotate .slide { transition: opacity var(--anim-speed) ease-in-out, transform var(--anim-speed) ease-in-out; transform: rotate(15deg) scale(1.3); }
+.anim-rotate .slide.active { transform: rotate(0) scale(1); }
+
+.anim-flip .slide { transition: opacity var(--anim-speed) ease-in-out, transform var(--anim-speed) ease-in-out; transform: rotateY(90deg); }
+.anim-flip .slide.active { transform: rotateY(0); }
+
+.anim-bounce .slide { transition: opacity var(--anim-speed) ease-in-out, transform var(--anim-speed) cubic-bezier(0.68,-0.55,0.265,1.55); transform: translateY(-100%); }
+.anim-bounce .slide.active { transform: translateY(0); }
+
+.anim-ken-burns .slide { transition: opacity 2s ease-in-out; }
+.anim-ken-burns .slide.active { animation: kenBurns 20s ease-out infinite; }
+@keyframes kenBurns {
+    0% { transform: scale(1) translate(0, 0); }
+    100% { transform: scale(1.2) translate(-2%, -2%); }
+}
+
+/* DUNKLER GRADIENT FÜR LESBARKEIT */
+.gradient-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    background: 
+        linear-gradient(135deg, rgba(0,0,0,0.5) 0%, transparent 35%),
+        linear-gradient(315deg, rgba(0,0,0,0.5) 0%, transparent 35%);
+    pointer-events: none;
+}
+
+/* ============================================
+   4. GLAS-EFFEKT (mittel durchsichtig)
+   ============================================ */
+.glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+}
+
+/* ============================================
+   5. UHRZEIT + DATUM (OBEN LINKS)
+   ============================================ */
+.time-widget {
+    position: fixed;
+    top: 4vh;
+    left: 4vh;
+    z-index: 10;
+    padding: 2.5vh 3.5vh;
+    pointer-events: none;
+}
+
+.time {
+    font-size: clamp(48px, 7vw, 110px);
+    font-weight: 700;
+    line-height: 1;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.7);
+    letter-spacing: -0.02em;
+    color: var(--text);
+}
+
+.date {
+    font-size: clamp(16px, 1.8vw, 26px);
+    margin-top: 1vh;
+    opacity: 0.95;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* ============================================
+   6. WETTER (UNTEN RECHTS) - 5 TAGE
+   ============================================ */
+.weather-widget {
+    position: fixed;
+    bottom: 4vh;
+    right: 4vh;
+    z-index: 10;
+    padding: 2.5vh 3vh;
+    display: flex;
+    gap: 2.5vh;
+    align-items: center;
+    pointer-events: none;
+}
+
+.weather-today {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-right: 2.5vh;
+    border-right: 1px solid var(--glass-border);
+}
+
+.weather-today .icon {
+    font-size: clamp(50px, 6vw, 80px);
+    line-height: 1;
+}
+
+.weather-today .temp {
+    font-size: clamp(32px, 4vw, 56px);
+    font-weight: 700;
+    margin-top: 0.5vh;
+    color: var(--text);
+}
+
+.weather-today .desc {
+    font-size: clamp(12px, 1.2vw, 16px);
+    opacity: 0.9;
+    margin-top: 0.3vh;
+}
+
+.weather-forecast {
+    display: flex;
+    gap: 2vh;
+}
+
+.weather-day {
+    text-align: center;
+    min-width: clamp(55px, 6vw, 85px);
+}
+
+.weather-day .day-name {
+    font-size: clamp(13px, 1.2vw, 18px);
+    font-weight: 600;
+    margin-bottom: 0.5vh;
+    color: var(--accent);
+}
+
+.weather-day .icon {
+    font-size: clamp(28px, 3vw, 42px);
+    margin: 0.3vh 0;
+}
+
+.weather-day .temp {
+    font-size: clamp(15px, 1.5vw, 22px);
+    font-weight: 700;
+}
+
+/* ============================================
+   7. PAUSE INDICATOR
+   ============================================ */
+.pause-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    font-size: clamp(60px, 10vw, 140px);
+    opacity: 0;
+    transition: opacity 0.3s;
+    text-shadow: 0 4px 30px rgba(0,0,0,0.8);
+    pointer-events: none;
+    color: var(--accent);
+}
+
+.pause-indicator.show { opacity: 0.85; }
+
+/* ============================================
+   8. KALENDER OVERLAY (Tap to Open)
+   ============================================ */
+.calendar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    display: none;
+    flex-direction: column;
+    padding: 4vh;
+    cursor: default;
+}
+
+.calendar-overlay.active {
+    display: flex;
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.cal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3vh;
+    gap: 2vh;
+}
+
+.cal-nav-btn {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text);
+    width: clamp(50px, 5vw, 70px);
+    height: clamp(50px, 5vw, 70px);
+    border-radius: 50%;
+    font-size: clamp(20px, 2vw, 28px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+.cal-nav-btn:hover, .cal-nav-btn.focused {
+    background: var(--accent);
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(74, 158, 255, 0.4);
+}
+
+.cal-month {
+    font-size: clamp(28px, 3.5vw, 48px);
+    font-weight: 700;
+    text-align: center;
+    flex: 1;
+    color: var(--text);
+}
+
+.cal-close {
+    background: rgba(255, 80, 80, 0.5);
+    border: 1px solid rgba(255, 80, 80, 0.7);
+    color: white;
+    width: clamp(50px, 5vw, 70px);
+    height: clamp(50px, 5vw, 70px);
+    border-radius: 50%;
+    font-size: clamp(22px, 2vw, 32px);
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+.cal-close:hover {
+    background: rgba(255, 80, 80, 0.9);
+    transform: scale(1.1);
+}
+
+.cal-days-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1vh;
+    margin-bottom: 1vh;
+}
+
+.cal-day-name {
+    text-align: center;
+    font-size: clamp(14px, 1.4vw, 20px);
+    font-weight: 700;
+    color: var(--accent);
+    padding: 1vh;
+    text-transform: uppercase;
+}
+
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1vh;
+    flex: 1;
+}
+
+.cal-cell {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1vh;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cal-cell:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.02);
+}
+
+.cal-cell.today {
+    background: rgba(74, 158, 255, 0.25);
+    border: 2px solid var(--accent);
+}
+
+.cal-cell.other-month {
+    opacity: 0.3;
+}
+
+.cal-day-num {
+    font-size: clamp(16px, 1.6vw, 24px);
+    font-weight: 700;
+    margin-bottom: 0.5vh;
+    color: var(--text);
+}
+
+.cal-event {
+    font-size: clamp(10px, 0.9vw, 13px);
+    background: var(--accent);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 6px;
+    margin-bottom: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+/* ============================================
+   9. EVENT DETAIL MODAL
+   ============================================ */
+.event-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 4vh;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.event-modal.active { display: flex; }
+
+.event-modal-box {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: clamp(20px, 3vw, 40px);
+    max-width: 500px;
+    width: 100%;
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+}
+
+.event-modal h3 {
+    font-size: clamp(22px, 2.5vw, 32px);
+    margin-bottom: 1.5vh;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 1vh;
+}
+
+.event-modal .ev-date {
+    color: var(--accent);
+    font-size: clamp(16px, 1.6vw, 22px);
+    font-weight: 600;
+    margin-bottom: 2vh;
+}
+
+.event-modal .ev-desc {
+    font-size: clamp(14px, 1.4vw, 18px);
+    line-height: 1.6;
+    opacity: 0.9;
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+.event-modal button {
+    margin-top: 3vh;
+    width: 100%;
+    padding: 1.5vh;
+    background: var(--accent);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: clamp(15px, 1.5vw, 18px);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* ============================================
+   10. SETTINGS PANEL
+   ============================================ */
+.settings {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 4vh;
+}
+
+.settings.active { display: flex; }
+
+.settings-panel {
+    background: rgba(20, 20, 25, 0.95);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: clamp(20px, 3vw, 40px);
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.settings h2 {
+    font-size: clamp(22px, 2.5vw, 32px);
+    margin-bottom: 2.5vh;
+    color: var(--accent);
+}
+
+.settings label {
+    display: block;
+    font-size: clamp(13px, 1.3vw, 16px);
+    margin-bottom: 0.8vh;
+    margin-top: 1.8vh;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+.settings input,
+.settings textarea,
+.settings select {
+    width: 100%;
+    padding: 1.3vh 1.8vh;
+    background: rgba(255, 255, 255, 0.06);
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    color: #fff;
+    font-size: clamp(13px, 1.3vw, 16px);
+    font-family: inherit;
+    outline: none;
+}
+
+.settings input:focus,
+.settings textarea:focus,
+.settings select:focus,
+.settings button:focus,
+.settings .focused {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.3) !important;
+}
+
+.settings textarea {
+    min-height: 10vh;
+    resize: vertical;
+}
+
+.btn-row {
+    display: flex;
+    gap: 1.5vh;
+    margin-top: 3vh;
+}
+
+.settings button {
+    flex: 1;
+    padding: 1.5vh;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    font-size: clamp(14px, 1.4vw, 18px);
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.btn-save { background: var(--accent); color: white; }
+.btn-save:hover { filter: brightness(1.1); }
+
+.btn-cancel { background: rgba(255,255,255,0.1); color: white; }
+.btn-cancel:hover { background: rgba(255,255,255,0.2); }
+
+/* ============================================
+   11. HELP HINT (BEIM START)
+   ============================================ */
+.tap-hint {
+    position: fixed;
+    bottom: 4vh;
+    left: 4vh;
+    z-index: 10;
+    padding: 1.2vh 2vh;
+    font-size: clamp(12px, 1.1vw, 15px);
+    opacity: 0;
+    transition: opacity 1s;
+    pointer-events: none;
+}
+
+.tap-hint.show { opacity: 0.6; }
+
+/* ============================================
+   12. RESPONSIVE
+   ============================================ */
+/* Portrait Tablet */
+@media (orientation: portrait) {
+    .weather-widget {
+        bottom: 4vh;
+        left: 4vh;
+        right: 4vh;
+        flex-direction: column;
+        padding: 2vh 2.5vh;
+    }
+    .weather-today {
+        padding-right: 0;
+        padding-bottom: 1.5vh;
+        border-right: none;
+        border-bottom: 1px solid var(--glass-border);
+        width: 100%;
+    }
+    .weather-forecast {
+        margin-top: 1.5vh;
+        justify-content: space-around;
+        width: 100%;
+    }
+}
+
+/* Kleine Displays */
+@media (max-width: 800px) {
+    .time-widget { padding: 2vh 2.5vh; }
+    .weather-widget { padding: 2vh 2.5vh; gap: 1.5vh; }
+    .calendar-overlay { padding: 2.5vh; }
+}
+
+/* 4K Optimierung */
+@media (min-width: 3000px) {
+    .time-widget, .weather-widget { padding: 4vh 5vh; }
+}
+</style>
+</head>
+<body data-theme="oled">
+
+<!-- SLIDESHOW -->
+<div class="slideshow anim-fade" id="slideshow"></div>
+<div class="gradient-overlay"></div>
+
+<!-- UHRZEIT + DATUM -->
+<div class="time-widget glass">
+    <div class="time" id="time">00:00</div>
+    <div class="date" id="date">Datum</div>
+</div>
+
+<!-- WETTER (HEUTE + 4 TAGE = 5 TAGE) -->
+<div class="weather-widget glass" id="weather">
+    <div class="weather-today">
+        <div class="icon">☁️</div>
+        <div class="temp">--°</div>
+        <div class="desc">Lädt...</div>
+    </div>
+    <div class="weather-forecast" id="forecast"></div>
+</div>
+
+<!-- PAUSE INDIKATOR -->
+<div class="pause-indicator" id="pauseIndicator">⏸</div>
+
+<!-- HINT -->
+<div class="tap-hint glass" id="hint">
+    👆 Tippen für Kalender
+</div>
+
+<!-- KALENDER OVERLAY -->
+<div class="calendar-overlay" id="calOverlay">
+    <div class="cal-header">
+        <button class="cal-nav-btn" id="calPrev">❮</button>
+        <h2 class="cal-month" id="calMonth">Mai 2026</h2>
+        <button class="cal-nav-btn" id="calNext">❯</button>
+        <button class="cal-close" id="calClose">✕</button>
+    </div>
+    <div class="cal-days-header">
+        <div class="cal-day-name">So</div>
+        <div class="cal-day-name">Mo</div>
+        <div class="cal-day-name">Di</div>
+        <div class="cal-day-name">Mi</div>
+        <div class="cal-day-name">Do</div>
+        <div class="cal-day-name">Fr</div>
+        <div class="cal-day-name">Sa</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+</div>
+
+<!-- EVENT DETAIL -->
+<div class="event-modal" id="eventModal">
+    <div class="event-modal-box">
+        <h3 id="evTitle">Termin</h3>
+        <div class="ev-date" id="evDate"></div>
+        <div class="ev-desc" id="evDesc"></div>
+        <button id="evClose">Schließen</button>
+    </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="settings" id="settings">
+    <div class="settings-panel">
+        <h2>⚙️ Einstellungen</h2>
+        
+        <label>Theme</label>
+        <select id="setTheme">
+            <option value="oled">OLED Black</option>
+            <option value="glass">Glass</option>
+            <option value="cyber">Cyber</option>
+            <option value="neon">Neon</option>
+            <option value="candy">Candy</option>
+            <option value="tropical">Tropical</option>
+            <option value="golden">Golden</option>
+            <option value="violet">Violet</option>
+            <option value="cherry">Cherry</option>
+            <option value="sunset">Sunset</option>
+            <option value="ocean">Ocean</option>
+            <option value="forest">Forest</option>
+            <option value="aurora">Aurora</option>
+            <option value="minimal">Minimal</option>
+            <option value="rose">Rose</option>
+            <option value="mint">Mint</option>
+            <option value="lavender">Lavender</option>
+            <option value="coral">Coral</option>
+            <option value="midnight">Midnight</option>
+            <option value="electric">Electric</option>
+            <option value="ruby">Ruby</option>
+            <option value="emerald">Emerald</option>
+            <option value="sapphire">Sapphire</option>
+            <option value="amber">Amber</option>
+            <option value="ice">Ice</option>
+        </select>
+
+        <label>Animation (10 Effekte)</label>
+        <select id="setAnim">
+            <option value="fade">Klassisch Fade</option>
+            <option value="zoom-in">Zoom In</option>
+            <option value="zoom-out">Zoom Out</option>
+            <option value="slide-left">Slide Links</option>
+            <option value="slide-right">Slide Rechts</option>
+            <option value="blur">Blur Effekt</option>
+            <option value="rotate">Rotation</option>
+            <option value="flip">3D Flip</option>
+            <option value="bounce">Bounce</option>
+            <option value="ken-burns">Ken Burns</option>
+        </select>
+
+        <label>Stadt für Wetter</label>
+        <input type="text" id="setCity" placeholder="z.B. Düsseldorf">
+
+        <label>photos.json URL (vom Mini-PC Server)</label>
+        <input type="text" id="setJsonUrl" placeholder="http://192.168.1.100/photos.json">
+
+        <label>Bild-URLs (eine pro Zeile, manuell)</label>
+        <textarea id="setImages" placeholder="https://example.com/foto1.jpg&#10;https://example.com/foto2.jpg"></textarea>
+
+        <label>Lokale Bilder/Videos auswählen</label>
+        <input type="file" id="setLocal" accept="image/*,video/*" multiple>
+
+        <label>Slideshow-Intervall (Sekunden)</label>
+        <input type="number" id="setInterval" min="3" max="300" value="10">
+
+        <div class="btn-row">
+            <button class="btn-cancel" id="btnCancel">Abbrechen</button>
+            <button class="btn-save" id="btnSave">Speichern</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================
+// KONFIGURATION
+// ============================================
+const CONFIG = {
+    theme: 'oled',
+    anim: 'fade',
+    city: 'Düsseldorf',
+    interval: 10000,
+    jsonUrl: '',
+    iCalUrl: 'https://calendar.google.com/calendar/ical/mosgab69%40gmail.com/private-6764b611852313b8771e92c125eddb88/basic.ics',
+    images: [
+        'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=2000',
+        'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=2000',
+        'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=2000',
+        'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=2000',
+        'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=2000'
+    ],
+    localImages: []
+};
+
+// STATE
+let currentSlide = 0;
+let isPaused = false;
+let slideTimer = null;
+let slides = [];
+let allImages = [];
+let calDate = new Date();
+let events = [];
+let activeBlobUrls = new Set();
+let focusIndex = 0;
+let focusableElements = [];
+
+// ============================================
+// STORAGE
+// ============================================
+function loadConfig() {
+    try {
+        const saved = localStorage.getItem('photo_dashboard_v1');
+        if (saved) {
+            const cfg = JSON.parse(saved);
+            Object.assign(CONFIG, cfg);
+        }
+    } catch (e) { console.error('Load config:', e); }
+}
+
+function saveConfig() {
+    try {
+        const data = {
+            theme: CONFIG.theme,
+            anim: CONFIG.anim,
+            city: CONFIG.city,
+            interval: CONFIG.interval,
+            jsonUrl: CONFIG.jsonUrl,
+            images: CONFIG.images
+        };
+        localStorage.setItem('photo_dashboard_v1', JSON.stringify(data));
+    } catch (e) { console.error('Save config:', e); }
+}
+
+// ============================================
+// SLIDESHOW
+// ============================================
+async function loadJsonImages() {
+    if (!CONFIG.jsonUrl) return [];
+    try {
+        const res = await fetch(CONFIG.jsonUrl);
+        const data = await res.json();
+        if (Array.isArray(data)) return data;
+        if (data.images && Array.isArray(data.images)) return data.images;
+        return [];
+    } catch (e) {
+        console.error('JSON load failed:', e);
+        return [];
+    }
+}
+
+async function buildImagePool() {
+    const jsonImages = await loadJsonImages();
+    allImages = [...CONFIG.images, ...jsonImages, ...CONFIG.localImages];
+    if (allImages.length === 0) {
+        allImages = ['https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=2000'];
+    }
+}
+
+function buildSlides() {
+    const container = document.getElementById('slideshow');
+    container.className = 'slideshow anim-' + CONFIG.anim;
+    container.innerHTML = '';
+    slides = [];
+
+    allImages.forEach((url, i) => {
+        const slide = document.createElement('div');
+        slide.className = 'slide';
+        slide.style.backgroundImage = `url('${url}')`;
+        if (i === 0) slide.classList.add('active');
+        container.appendChild(slide);
+        slides.push(slide);
+    });
+    currentSlide = 0;
+}
+
+function showSlide(index) {
+    if (!slides.length) return;
+    slides.forEach(s => s.classList.remove('active'));
+    currentSlide = (index + slides.length) % slides.length;
+    slides[currentSlide].classList.add('active');
+}
+
+function nextSlide() { showSlide(currentSlide + 1); }
+function prevSlide() { showSlide(currentSlide - 1); }
+
+function startSlideshow() {
+    stopSlideshow();
+    if (isPaused || slides.length <= 1) return;
+    slideTimer = setInterval(nextSlide, CONFIG.interval);
+}
+
+function stopSlideshow() {
+    if (slideTimer) {
+        clearInterval(slideTimer);
+        slideTimer = null;
+    }
+}
+
+function togglePause() {
+    isPaused = !isPaused;
+    const ind = document.getElementById('pauseIndicator');
+    ind.textContent = isPaused ? '⏸' : '▶';
+    ind.classList.add('show');
+    setTimeout(() => ind.classList.remove('show'), 1200);
+    if (isPaused) stopSlideshow();
+    else startSlideshow();
+}
+
+// ============================================
+// UHRZEIT
+// ============================================
+function updateClock() {
+    const now = new Date();
+    document.getElementById('time').textContent = 
+        now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('date').textContent = 
+        now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+// ============================================
+// WETTER
+// ============================================
+const weatherIcons = {
+    Clear: '☀️', Clouds: '☁️', Rain: '🌧️', Drizzle: '🌦️',
+    Thunderstorm: '⛈️', Snow: '❄️', Mist: '🌫️', Fog: '🌫️', Haze: '🌫️'
+};
+
+async function loadWeather() {
+    try {
+        const apiKey = '769c5861cd255a3982bafb1680abf194';
+        const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(CONFIG.city)}&appid=${apiKey}&units=metric&lang=de`;
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        if (data.cod !== "200") return;
+
+        // HEUTE (erstes Item)
+        const today = data.list[0];
+        const todayWidget = document.querySelector('.weather-today');
+        todayWidget.innerHTML = `
+            <div class="icon">${weatherIcons[today.weather[0].main] || '☁️'}</div>
+            <div class="temp">${Math.round(today.main.temp)}°</div>
+            <div class="desc">${today.weather[0].description}</div>
+        `;
+
+        // 4 KOMMENDE TAGE (12:00 Uhr)
+        const days = data.list
+            .filter(item => item.dt_txt.includes('12:00:00'))
+            .slice(0, 4);
+
+        document.getElementById('forecast').innerHTML = days.map(day => {
+            const date = new Date(day.dt * 1000);
+            return `
+                <div class="weather-day">
+                    <div class="day-name">${date.toLocaleDateString('de-DE', { weekday: 'short' })}</div>
+                    <div class="icon">${weatherIcons[day.weather[0].main] || '☁️'}</div>
+                    <div class="temp">${Math.round(day.main.temp)}°</div>
+                </div>
+            `;
+        }).join('');
+    } catch (e) {
+        console.error('Weather:', e);
+    }
+}
+
+// ============================================
+// KALENDER
+// ============================================
+async function loadCalendar() {
+    if (!CONFIG.iCalUrl) return;
+    try {
+        const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(CONFIG.iCalUrl);
+        const res = await fetch(proxyUrl);
+        const text = await res.text();
+        
+        const evs = [];
+        const lines = text.split('\n');
+        let cur = null;
+        
+        const now = new Date();
+        const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+        const sixMonthsAhead = new Date(now.getFullYear(), now.getMonth() + 6, 31);
+
+        lines.forEach(l => {
+            l = l.trim();
+            if (l.startsWith('BEGIN:VEVENT')) cur = {};
+            if (l.startsWith('SUMMARY:') && cur) cur.title = l.slice(8);
+            if (l.startsWith('DESCRIPTION:') && cur) cur.desc = l.slice(12).replace(/\\n/g, '<br>').slice(0, 500);
+            if (l.startsWith('DTSTART') && cur) {
+                const m = l.match(/\d{8}/);
+                if (m) {
+                    cur.date = `${m[0].slice(0,4)}-${m[0].slice(4,6)}-${m[0].slice(6,8)}`;
+                    cur.dateObj = new Date(cur.date);
+                }
+            }
+            if (l.startsWith('END:VEVENT') && cur && cur.date) {
+                if (cur.dateObj >= sixMonthsAgo && cur.dateObj <= sixMonthsAhead) {
+                    evs.push(cur);
+                }
+                cur = null;
+            }
+        });
+        events = evs.slice(0, 1000);
+        renderCalendar();
+    } catch (e) {
+        console.error('Calendar:', e);
+    }
+}
+
+function renderCalendar() {
+    document.getElementById('calMonth').textContent = 
+        calDate.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+    
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+    
+    const year = calDate.getFullYear();
+    const month = calDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Vorheriger Monat
+    for (let i = 0; i < firstDay; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-cell other-month';
+        grid.appendChild(cell);
+    }
+    
+    // Aktueller Monat
+    for (let d = 1; d <= daysInMonth; d++) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-cell';
+        const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        if (today === dStr) cell.classList.add('today');
+        
+        cell.innerHTML = `<div class="cal-day-num">${d}</div>`;
+        
+        // Events
+        const dayEvents = events.filter(e => e.date === dStr).slice(0, 3);
+        dayEvents.forEach(e => {
+            const ev = document.createElement('div');
+            ev.className = 'cal-event';
+            ev.textContent = e.title;
+            ev.title = e.title;
+            ev.onclick = (event) => {
+                event.stopPropagation();
+                showEvent(e);
+            };
+            cell.appendChild(ev);
+        });
+        
+        grid.appendChild(cell);
+    }
+}
+
+function showEvent(e) {
+    document.getElementById('evTitle').textContent = e.title;
+    document.getElementById('evDate').textContent = 
+        new Date(e.date).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById('evDesc').innerHTML = e.desc || 'Keine Beschreibung';
+    document.getElementById('eventModal').classList.add('active');
+}
+
+function openCalendar() {
+    document.getElementById('calOverlay').classList.add('active');
+    stopSlideshow();
+    renderCalendar();
+}
+
+function closeCalendar() {
+    document.getElementById('calOverlay').classList.remove('active');
+    if (!isPaused) startSlideshow();
+}
+
+// ============================================
+// SETTINGS
+// ============================================
+function openSettings() {
+    document.getElementById('setTheme').value = CONFIG.theme;
+    document.getElementById('setAnim').value = CONFIG.anim;
+    document.getElementById('setCity').value = CONFIG.city;
+    document.getElementById('setJsonUrl').value = CONFIG.jsonUrl;
+    document.getElementById('setImages').value = CONFIG.images.join('\n');
+    document.getElementById('setInterval').value = CONFIG.interval / 1000;
+    
+    document.getElementById('settings').classList.add('active');
+    stopSlideshow();
+    
+    focusableElements = Array.from(
+        document.querySelectorAll('.settings input, .settings textarea, .settings select, .settings button')
+    );
+    focusIndex = 0;
+    updateFocus();
+}
+
+function closeSettings() {
+    document.getElementById('settings').classList.remove('active');
+    if (!isPaused) startSlideshow();
+}
+
+async function saveSettings() {
+    CONFIG.theme = document.getElementById('setTheme').value;
+    CONFIG.anim = document.getElementById('setAnim').value;
+    CONFIG.city = document.getElementById('setCity').value || 'Düsseldorf';
+    CONFIG.jsonUrl = document.getElementById('setJsonUrl').value.trim();
+    CONFIG.interval = (parseInt(document.getElementById('setInterval').value) || 10) * 1000;
+    
+    const imgText = document.getElementById('setImages').value.trim();
+    CONFIG.images = imgText ? imgText.split('\n').map(s => s.trim()).filter(s => s) : [];
+    
+    saveConfig();
+    document.body.dataset.theme = CONFIG.theme;
+    
+    await buildImagePool();
+    buildSlides();
+    loadWeather();
+    closeSettings();
+    startSlideshow();
+}
+
+function updateFocus() {
+    focusableElements.forEach((el, i) => {
+        if (i === focusIndex) {
+            el.classList.add('focused');
+            try { el.focus(); } catch(e) {}
+        } else {
+            el.classList.remove('focused');
+        }
+    });
+}
+
+// ============================================
+// EVENT HANDLERS
+// ============================================
+function handleKey(e) {
+    const calOpen = document.getElementById('calOverlay').classList.contains('active');
+    const settingsOpen = document.getElementById('settings').classList.contains('active');
+    const eventOpen = document.getElementById('eventModal').classList.contains('active');
+    
+    // EVENT MODAL
+    if (eventOpen) {
+        if (e.keyCode === 27 || e.keyCode === 13 || e.keyCode === 8) {
+            e.preventDefault();
+            document.getElementById('eventModal').classList.remove('active');
+        }
+        return;
+    }
+    
+    // SETTINGS
+    if (settingsOpen) {
+        switch (e.keyCode) {
+            case 38: e.preventDefault(); focusIndex = Math.max(0, focusIndex - 1); updateFocus(); break;
+            case 40: e.preventDefault(); focusIndex = Math.min(focusableElements.length - 1, focusIndex + 1); updateFocus(); break;
+            case 13: e.preventDefault(); 
+                const el = focusableElements[focusIndex];
+                if (el && el.tagName === 'BUTTON') el.click();
+                break;
+            case 27: case 8: case 461:
+                e.preventDefault(); closeSettings(); break;
+        }
+        return;
+    }
+    
+    // KALENDER
+    if (calOpen) {
+        switch (e.keyCode) {
+            case 27: case 8: case 461:
+                e.preventDefault(); closeCalendar(); break;
+            case 37: e.preventDefault(); calDate.setMonth(calDate.getMonth() - 1); renderCalendar(); break;
+            case 39: e.preventDefault(); calDate.setMonth(calDate.getMonth() + 1); renderCalendar(); break;
+        }
+        return;
+    }
+    
+    // SLIDESHOW
+    switch (e.keyCode) {
+        case 13: case 32: e.preventDefault(); togglePause(); break;
+        case 39: e.preventDefault(); nextSlide(); if (!isPaused) startSlideshow(); break;
+        case 37: e.preventDefault(); prevSlide(); if (!isPaused) startSlideshow(); break;
+        case 82: case 77: case 27: case 82143:
+            e.preventDefault(); openSettings(); break;
+    }
+}
+
+// CLICK / TOUCH HANDLER (öffnet Kalender)
+function handleTap(e) {
+    const calOpen = document.getElementById('calOverlay').classList.contains('active');
+    const settingsOpen = document.getElementById('settings').classList.contains('active');
+    const eventOpen = document.getElementById('eventModal').classList.contains('active');
+    
+    if (calOpen || settingsOpen || eventOpen) return;
+    
+    // Wenn auf Widgets geklickt, ignorieren
+    if (e.target.closest('.time-widget') || e.target.closest('.weather-widget')) return;
+    
+    openCalendar();
+}
+
+// ============================================
+// INIT
+// ============================================
+async function init() {
+    loadConfig();
+    document.body.dataset.theme = CONFIG.theme;
+    
+    // Initial load
+    await buildImagePool();
+    buildSlides();
+    updateClock();
+    loadWeather();
+    loadCalendar();
+    
+    // Hint kurz zeigen
+    const hint = document.getElementById('hint');
+    setTimeout(() => hint.classList.add('show'), 1000);
+    setTimeout(() => hint.classList.remove('show'), 6000);
+    
+    // Slideshow start
+    setTimeout(startSlideshow, 500);
+    
+    // Intervals
+    setInterval(updateClock, 1000);
+    setInterval(loadWeather, 30 * 60 * 1000);
+    setInterval(loadCalendar, 60 * 60 * 1000);
+    
+    // Tap to open Calendar
+    document.body.addEventListener('click', handleTap);
+    
+    // Long press / double click for Settings
+    let pressTimer = null;
+    document.body.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.calendar-overlay') || e.target.closest('.settings') || e.target.closest('.event-modal')) return;
+        pressTimer = setTimeout(openSettings, 1500);
+    });
+    document.body.addEventListener('mouseup', () => {
+        if (pressTimer) clearTimeout(pressTimer);
+    });
+    document.body.addEventListener('touchstart', (e) => {
+        if (e.target.closest('.calendar-overlay') || e.target.closest('.settings') || e.target.closest('.event-modal')) return;
+        pressTimer = setTimeout(openSettings, 1500);
+    });
+    document.body.addEventListener('touchend', () => {
+        if (pressTimer) clearTimeout(pressTimer);
+    });
+    
+    // Keyboard / D-Pad
+    document.addEventListener('keydown', handleKey);
+    
+    // Calendar buttons
+    document.getElementById('calClose').onclick = (e) => { e.stopPropagation(); closeCalendar(); };
+    document.getElementById('calPrev').onclick = (e) => { e.stopPropagation(); calDate.setMonth(calDate.getMonth() - 1); renderCalendar(); };
+    document.getElementById('calNext').onclick = (e) => { e.stopPropagation(); calDate.setMonth(calDate.getMonth() + 1); renderCalendar(); };
+    
+    // Event modal
+    document.getElementById('evClose').onclick = () => document.getElementById('eventModal').classList.remove('active');
+    
+    // Settings
+    document.getElementById('btnSave').onclick = saveSettings;
+    document.getElementById('btnCancel').onclick = closeSettings;
+    
+    // Local files
+    document.getElementById('setLocal').onchange = (e) => {
+        // Cleanup old blob urls
+        CONFIG.localImages.forEach(url => {
+            if (url.startsWith('blob:')) URL.revokeObjectURL(url);
+        });
+        
+        const newFiles = Array.from(e.target.files)
+            .filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'))
+            .slice(0, 100)
+            .map(f => {
+                const blob = URL.createObjectURL(f);
+                activeBlobUrls.add(blob);
+                return blob;
+            });
+        
+        CONFIG.localImages = newFiles;
+        if (e.target.files.length > 100) {
+            alert('⚠️ Nur die ersten 100 Dateien wurden geladen');
+        }
+    };
+    
+    // Cleanup blob URLs on unload
+    window.addEventListener('beforeunload', () => {
+        activeBlobUrls.forEach(url => URL.revokeObjectURL(url));
+    });
+}
+
+init();
+</script>
+
+</body>
+</html>
