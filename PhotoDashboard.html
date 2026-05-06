@@ -851,19 +851,62 @@ function buildSlides() {
     allImages.forEach((url, i) => {
         const slide = document.createElement('div');
         slide.className = 'slide';
-        slide.style.backgroundImage = `url('${url}')`;
-        if (i === 0) slide.classList.add('active');
+        
+        // Check if Video
+        const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('#video');
+        const cleanUrl = url.replace('#video', '');
+        
+        if (isVideo) {
+            const video = document.createElement('video');
+            video.src = cleanUrl;
+            video.style.width = '100%';
+            video.style.height = '100%';
+            video.style.objectFit = 'cover';
+            video.muted = true;
+            video.playsInline = true;
+            video.autoplay = false;
+            video.loop = false;
+            slide.appendChild(video);
+            slide.dataset.isVideo = 'true';
+        } else {
+            slide.style.backgroundImage = `url('${cleanUrl}')`;
+        }
+        
+        if (i === 0) {
+            slide.classList.add('active');
+            const v = slide.querySelector('video');
+            if (v) v.play().catch(() => {});
+        }
         container.appendChild(slide);
         slides.push(slide);
     });
     currentSlide = 0;
 }
 
+function checkBlobIsVideo(blobUrl) {
+    // Check if this blob URL was created from a video file
+    return blobUrl.includes('#video');
+}
+
 function showSlide(index) {
     if (!slides.length) return;
-    slides.forEach(s => s.classList.remove('active'));
+    
+    // Pause all videos first
+    slides.forEach(s => {
+        const v = s.querySelector('video');
+        if (v) { v.pause(); v.currentTime = 0; }
+        s.classList.remove('active');
+    });
+    
     currentSlide = (index + slides.length) % slides.length;
-    slides[currentSlide].classList.add('active');
+    const activeSlide = slides[currentSlide];
+    activeSlide.classList.add('active');
+    
+    // Play video if it is one
+    const video = activeSlide.querySelector('video');
+    if (video) {
+        video.play().catch(() => {});
+    }
 }
 
 function nextSlide() { showSlide(currentSlide + 1); }
@@ -1245,8 +1288,8 @@ async function init() {
     document.getElementById('btnSave').onclick = saveSettings;
     document.getElementById('btnCancel').onclick = closeSettings;
     
-    // Local files
-    document.getElementById('setLocal').onchange = (e) => {
+    // Local files - SOFORT in Slideshow laden
+    document.getElementById('setLocal').onchange = async (e) => {
         // Cleanup old blob urls
         CONFIG.localImages.forEach(url => {
             if (url.startsWith('blob:')) URL.revokeObjectURL(url);
@@ -1258,13 +1301,23 @@ async function init() {
             .map(f => {
                 const blob = URL.createObjectURL(f);
                 activeBlobUrls.add(blob);
-                return blob;
+                // Video-Marker anhängen damit buildSlides es erkennt
+                const isVideo = f.type.startsWith('video/');
+                return isVideo ? blob + '#video' : blob;
             });
         
         CONFIG.localImages = newFiles;
+        
         if (e.target.files.length > 100) {
             alert('⚠️ Nur die ersten 100 Dateien wurden geladen');
         }
+        
+        // SOFORT in Slideshow integrieren
+        await buildImagePool();
+        buildSlides();
+        
+        // Bestätigung anzeigen
+        alert(`✅ ${newFiles.length} Datei(en) zur Slideshow hinzugefügt!`);
     };
     
     // Cleanup blob URLs on unload
