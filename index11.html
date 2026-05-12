@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Family Dashboard</title>
+    <!-- Animation Library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body, html { height: 100%; width: 100%; overflow: hidden; background: #000; color: white; }
+
+        /* Media Player */
+        #display-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        .media-item { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            object-fit: cover; background-size: cover; background-position: center;
+        }
+
+        /* UI Overlays */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); z-index: 2; pointer-events: none; }
+        .ui { position: relative; z-index: 10; padding: 40px; display: flex; justify-content: space-between; pointer-events: none; }
+        .clock { font-size: clamp(3rem, 8vw, 6rem); font-weight: 200; text-shadow: 2px 2px 10px #000; pointer-events: auto; }
+        
+        /* Wetter 5 Tage */
+        .weather-panel { text-align: right; pointer-events: auto; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 15px; }
+        .forecast-grid { display: flex; gap: 15px; margin-top: 15px; font-size: 0.9rem; }
+        .forecast-day { text-align: center; }
+
+        /* Settings */
+        #settings-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; cursor: pointer; font-size: 30px; opacity: 0.2; pointer-events: auto; }
+        #settings-panel { 
+            position: fixed; top: 0; right: -450px; width: 400px; height: 100%; 
+            background: rgba(10,10,10,0.98); z-index: 101; padding: 30px; transition: 0.5s; pointer-events: auto; overflow-y: auto;
+        }
+        #settings-panel.open { right: 0; }
+        .group { margin-bottom: 15px; }
+        label { display: block; font-size: 12px; color: #888; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; }
+        .btn { background: #007bff; color: white; border: none; padding: 12px; width: 100%; cursor: pointer; border-radius: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="display-container"></div>
+    <div class="overlay"></div>
+
+    <div class="ui">
+        <div>
+            <div class="clock" id="time">00:00</div>
+            <div id="date" style="font-size: 1.5rem; opacity: 0.9;">Dienstag, 12. Mai</div>
+        </div>
+        
+        <div class="weather-panel">
+            <div id="city-name" style="font-size: 1.2rem; font-weight: bold;">Düsseldorf</div>
+            <div id="current-temp" style="font-size: 3rem;">12°C ☀️</div>
+            <div class="forecast-grid" id="forecast-display">
+                <!-- 5 Tage Vorschau -->
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-btn">⚙️</div>
+    <div id="settings-panel">
+        <h3>Dashboard Master-Settings</h3>
+        
+        <div class="group">
+            <label>1. Bilderquelle: Lokaler Ordner</label>
+            <input type="file" id="folder-input" webkitdirectory directory multiple>
+        </div>
+
+        <div class="group">
+            <label>2. Bilderquelle: Google Drive / Cloud URLs (eine pro Zeile)</label>
+            <textarea id="cloud-urls" rows="4" placeholder="Füge Direkt-Links zu deinen Drive-Bildern ein..."></textarea>
+        </div>
+
+        <div class="group">
+            <label>3. Stadt für Wetter</label>
+            <input type="text" id="city-input" value="Düsseldorf">
+        </div>
+
+        <div class="group">
+            <label>4. Animation (20+ Varianten)</label>
+            <select id="anim-select">
+                <option value="animate__fadeIn">Fade In</option>
+                <option value="animate__backInDown">Back In Down</option>
+                <option value="animate__bounceIn">Bounce In</option>
+                <option value="animate__flipInX">Flip X</option>
+                <option value="animate__rotateIn">Rotate In</option>
+                <option value="animate__zoomIn">Zoom In</option>
+                <option value="animate__slideInLeft">Slide In Left</option>
+                <option value="animate__rollIn">Roll In</option>
+                <option value="animate__jackInTheBox">Jack In The Box</option>
+                <option value="animate__heartBeat">Heart Beat</option>
+            </select>
+        </div>
+
+        <button class="btn" onclick="saveAndStart()">Speichern & Start</button>
+    </div>
+
+    <script>
+        let playlist = [];
+        let currentIndex = 0;
+
+        // --- Wetter Logik ---
+        async function updateWeather() {
+            const city = document.getElementById('city-input').value;
+            document.getElementById('city-name').innerText = city;
+            // Hinweis: Für echte Live-Daten füge hier deinen OpenWeather API Key ein.
+            // Dies ist eine visuelle Simulation der 5-Tage-Vorhersage.
+            const days = ['Mi', 'Do', 'Fr', 'Sa', 'So'];
+            let html = '';
+            days.forEach(d => {
+                html += `<div class="forecast-day"><div>${d}</div><div style="font-size:1.2rem">☀️</div><div>22°</div></div>`;
+            });
+            document.getElementById('forecast-display').innerHTML = html;
+        }
+
+        // --- Media Logik ---
+        document.getElementById('folder-input').onchange = function(e) {
+            const files = e.target.files;
+            for(let f of files) {
+                if(f.type.startsWith('image/') || f.type.startsWith('video/')) {
+                    playlist.push({ url: URL.createObjectURL(f), type: f.type });
+                }
+            }
+        };
+
+        function showNext() {
+            if(playlist.length === 0) return;
+            const container = document.getElementById('display-container');
+            const item = playlist[currentIndex];
+            const anim = document.getElementById('anim-select').value;
+            
+            container.innerHTML = '';
+            let element;
+
+            if(item.type.startsWith('video/')) {
+                element = document.createElement('video');
+                element.src = item.url;
+                element.autoplay = true;
+                element.muted = false;
+                element.onended = () => { currentIndex = (currentIndex + 1) % playlist.length; showNext(); };
+            } else {
+                element = document.createElement('div');
+                element.style.backgroundImage = `url('${item.url}')`;
+                setTimeout(() => { currentIndex = (currentIndex + 1) % playlist.length; showNext(); }, 8000);
+            }
+
+            element.className = `media-item animate__animated ${anim}`;
+            container.appendChild(element);
+        }
+
+        function saveAndStart() {
+            // Cloud URLs hinzufügen
+            const cloudText = document.getElementById('cloud-urls').value;
+            if(cloudText) {
+                cloudText.split('\n').forEach(url => {
+                    if(url.trim()) playlist.push({ url: url.trim(), type: 'image/jpeg' });
+                });
+            }
+            updateWeather();
+            document.getElementById('settings-panel').classList.remove('open');
+            showNext();
+        }
+
+        // Zeit-Update
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('time').innerText = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+        }, 1000);
+
+        document.getElementById('settings-btn').onclick = () => document.getElementById('settings-panel').classList.toggle('open');
+    </script>
+</body>
+</html>
