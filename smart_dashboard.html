@@ -1,0 +1,174 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Dashboard</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Hintergrund-Slideshow */
+        #bg-slideshow {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: opacity 1.5s ease-in-out;
+            z-index: 1;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.5) 100%);
+            z-index: 2;
+        }
+
+        /* Content Layout */
+        .dashboard {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: block;
+            padding: 40px;
+            z-index: 3;
+        }
+
+        .top-row {
+            display: table;
+            width: 100%;
+        }
+
+        .time-box {
+            display: table-cell;
+            vertical-align: top;
+            text-align: left;
+        }
+
+        .weather-box {
+            display: table-cell;
+            vertical-align: top;
+            text-align: right;
+        }
+
+        h1#clock {
+            font-size: 80pt;
+            font-weight: 200;
+            margin: 0;
+            line-height: 1;
+        }
+
+        h2#date {
+            font-size: 20pt;
+            font-weight: 300;
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+
+        .current-weather {
+            font-size: 40pt;
+            margin-bottom: 10px;
+        }
+
+        .forecast {
+            display: inline-block;
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .forecast-item {
+            font-size: 14pt;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+
+        .config-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10pt;
+            color: rgba(255,255,255,0.4);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="bg-slideshow"></div>
+    <div class="overlay"></div>
+
+    <div class="dashboard">
+        <div class="top-row">
+            <div class="time-box">
+                <h1 id="clock">12:00</h1>
+                <h2 id="date">Dienstag, 12. Mai</h2>
+            </div>
+            <div class="weather-box">
+                <div id="weather-current" class="current-weather">--°C ☀️</div>
+                <div id="weather-forecast" class="forecast">
+                    <!-- Forecast items will appear here -->
+                    <div class="forecast-item">Morgen: 22°C ⛅</div>
+                    <div class="forecast-item">Übermorgen: 20°C 🌧️</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-hint">
+            Hinweis: Um lokale Bilder zu sehen, muss die Datei im Bilder-Ordner liegen und die Namen in der Datei angepasst werden.
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        // Liste deine Bilder hier auf (z.B. 'urlaub.jpg', 'familie.png')
+        const imageList = [
+            'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80',
+            'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1920&q=80',
+            'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1920&q=80'
+        ];
+        
+        let currentIdx = 0;
+
+        function updateSlideshow() {
+            const bg = document.getElementById('bg-slideshow');
+            bg.style.backgroundImage = `url('${imageList[currentIdx]}')`;
+            currentIdx = (currentIdx + 1) % imageList.length;
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+            
+            document.getElementById('clock').textContent = timeStr;
+            document.getElementById('date').textContent = dateStr;
+        }
+
+        // Dummy Weather Update (API Key Integration vorbereitet)
+        function updateWeather() {
+            // Hier könnte eine API-Abfrage stehen
+            console.log("Weather updated...");
+        }
+
+        setInterval(updateClock, 1000);
+        setInterval(updateSlideshow, 10000);
+        
+        updateClock();
+        updateSlideshow();
+        updateWeather();
+    </script>
+</body>
+</html>
