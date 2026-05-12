@@ -127,6 +127,65 @@
         }
         setInterval(updateClock, 1000); updateClock();
 
+        // Wetter-Integration
+        const WEATHER_KEY = '38343f2cf261a2544f16f596f7830f60';
+
+        async function fetchWeather(city) {
+            try {
+                // Aktuelles Wetter
+                const current = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&lang=de&appid=${WEATHER_KEY}`);
+                const currentData = await current.json();
+                
+                // 5-Tage Forecast
+                const forecast = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&lang=de&appid=${WEATHER_KEY}`);
+                const forecastData = await forecast.json();
+
+                // Aktuelles Wetter anzeigen
+                const icon = getWeatherIcon(currentData.weather[0].main);
+                document.getElementById('current-temp').innerText = `${Math.round(currentData.main.temp)}°C ${icon}`;
+                
+                // 5-Tage Vorschau (1 Eintrag pro Tag, Mittags-Daten)
+                const dailyForecasts = [];
+                const processedDays = new Set();
+                
+                forecastData.list.forEach(item => {
+                    const date = new Date(item.dt * 1000);
+                    const dayKey = date.toLocaleDateString('de-DE');
+                    
+                    if (!processedDays.has(dayKey) && date.getHours() === 12) {
+                        processedDays.add(dayKey);
+                        dailyForecasts.push({
+                            day: date.toLocaleDateString('de-DE', {weekday: 'short'}),
+                            temp: Math.round(item.main.temp),
+                            icon: getWeatherIcon(item.weather[0].main)
+                        });
+                    }
+                });
+
+                document.getElementById('forecast').innerHTML = dailyForecasts.slice(0, 5).map(d => 
+                    `<div class="f-day"><div style="color:#888">${d.day}</div><div style="font-size:1.5rem">${d.icon}</div><div>${d.temp}°</div></div>`
+                ).join('');
+
+            } catch (error) {
+                console.error('Wetter-Fehler:', error);
+                document.getElementById('current-temp').innerText = '-- °C ❓';
+            }
+        }
+
+        function getWeatherIcon(condition) {
+            const icons = {
+                'Clear': '☀️',
+                'Clouds': '☁️',
+                'Rain': '🌧️',
+                'Drizzle': '🌦️',
+                'Thunderstorm': '⛈️',
+                'Snow': '❄️',
+                'Mist': '🌫️',
+                'Fog': '🌫️'
+            };
+            return icons[condition] || '🌤️';
+        }
+
         // Medien-Einlesen
         document.getElementById('folder-input').onchange = (e) => {
             playlist = [];
@@ -194,17 +253,16 @@
             const city = document.getElementById('city-input').value;
             document.getElementById('city-display').innerText = city;
             
-            // Wetter Simulation für 5 Tage
-            const days = ['Mi', 'Do', 'Fr', 'Sa', 'So'];
-            document.getElementById('forecast').innerHTML = days.map(d => 
-                `<div class="f-day"><div style="color:#888">${d}</div><div style="font-size:1.5rem">☀️</div><div>21°</div></div>`
-            ).join('');
+            fetchWeather(city);
 
             document.getElementById('panel').classList.remove('open');
             play();
         }
 
         document.getElementById('settings-btn').onclick = () => document.getElementById('panel').classList.toggle('open');
+
+        // Wetter beim Start laden
+        fetchWeather('Düsseldorf');
     </script>
 </body>
 </html>
