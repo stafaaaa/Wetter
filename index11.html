@@ -12,30 +12,34 @@
         /* Fullscreen Media Container */
         #display-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         
+        /* Slide-Layer für sanften Crossfade */
+        .slide-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            transition: opacity 2.5s ease-in-out;
+        }
+        .slide-layer.active { opacity: 1; }
+
         .media-item { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            object-fit: contain; /* Zeigt das ganze Bild ohne Abschneiden */
-            background-size: cover; background-position: center;
-            opacity: 0;
-            transition: opacity 2s ease-in-out;
-            z-index: 1;
+            background-size: contain; background-position: center; background-repeat: no-repeat;
+            z-index: 2;
         }
 
-        /* Blurry Background Effekt für Hochformat-Bilder */
+        /* Blurry Background für Hochformat-Bilder */
         .blur-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover; background-position: center;
             filter: blur(50px) brightness(0.5);
             transform: scale(1.1);
-            z-index: 0;
-            opacity: 0;
-            transition: opacity 2s ease-in-out;
+            z-index: 1;
         }
 
-        .active { opacity: 1 !important; }
+        /* Animate.css duration override für sanftere Effekte */
+        .animate__animated { --animate-duration: 2s; }
 
         /* UI Overlays */
-        .overlay-vignette { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.4) 100%); z-index: 2; pointer-events: none; }
+        .overlay-vignette { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.4) 100%); z-index: 5; pointer-events: none; }
         .ui { position: relative; z-index: 10; padding: 40px; display: flex; justify-content: space-between; pointer-events: none; }
         
         .clock-box { text-align: left; pointer-events: auto; }
@@ -59,6 +63,8 @@
         label { display: block; font-size: 12px; color: #888; margin-bottom: 5px; }
         input, select, textarea { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; }
         .btn-main { background: #007bff; color: white; border: none; padding: 15px; width: 100%; cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 1rem; }
+        .btn-reset { background: #444; color: white; border: none; padding: 10px; width: 100%; cursor: pointer; border-radius: 8px; margin-top: 8px; font-size: 0.85rem; }
+        .media-counter { background: #1a3a5c; color: #4dabf7; padding: 8px 12px; border-radius: 6px; margin-top: 8px; font-size: 0.9rem; text-align: center; }
     </style>
 </head>
 <body>
@@ -75,7 +81,7 @@
         
         <div class="weather-panel">
             <div id="city-display" style="font-size: 1.2rem; margin-bottom: 5px;">Düsseldorf</div>
-            <div class="temp-main" id="current-temp">12°C ☀️</div>
+            <div class="temp-main" id="current-temp">-- °C</div>
             <div class="forecast-row" id="forecast">
                 <!-- 5 Tage Vorschau -->
             </div>
@@ -86,8 +92,10 @@
     <div id="panel">
         <h3>Dashboard Master Control</h3>
         <div class="group">
-            <label>1. Lokale Fotos & Videos wählen</label>
+            <label>1. Ordner hinzufügen (mehrfach möglich!)</label>
             <input type="file" id="folder-input" webkitdirectory directory multiple>
+            <div class="media-counter" id="media-count">0 Medien geladen</div>
+            <button class="btn-reset" onclick="resetPlaylist()">🗑️ Playlist zurücksetzen</button>
         </div>
         <div class="group">
             <label>2. Cloud-Links (Google Drive/Fotos)</label>
@@ -102,13 +110,29 @@
             <input type="number" id="duration-input" value="10">
         </div>
         <div class="group">
-            <label>5. Animation</label>
+            <label>5. Animation (20 moderne Effekte)</label>
             <select id="anim-input">
-                <option value="animate__fadeIn">Weiches Überblenden</option>
-                <option value="animate__zoomIn">Sanfter Zoom</option>
-                <option value="animate__slideInLeft">Seitlich Schieben</option>
-                <option value="animate__flipInX">Flip-Effekt</option>
-                <option value="animate__jackInTheBox">Überraschung</option>
+                <option value="random">🎲 Zufällig (Mix aller Effekte)</option>
+                <option value="animate__fadeIn">1. Sanftes Einblenden</option>
+                <option value="animate__fadeInUp">2. Sanft von unten</option>
+                <option value="animate__fadeInDown">3. Sanft von oben</option>
+                <option value="animate__fadeInLeft">4. Sanft von links</option>
+                <option value="animate__fadeInRight">5. Sanft von rechts</option>
+                <option value="animate__zoomIn">6. Zoom Hinein</option>
+                <option value="animate__zoomInUp">7. Zoom von unten</option>
+                <option value="animate__zoomInDown">8. Zoom von oben</option>
+                <option value="animate__slideInLeft">9. Slide von links</option>
+                <option value="animate__slideInRight">10. Slide von rechts</option>
+                <option value="animate__slideInUp">11. Slide von unten</option>
+                <option value="animate__slideInDown">12. Slide von oben</option>
+                <option value="animate__rotateIn">13. Rotation</option>
+                <option value="animate__flipInX">14. Flip horizontal</option>
+                <option value="animate__flipInY">15. Flip vertikal</option>
+                <option value="animate__lightSpeedInRight">16. Lichtgeschwindigkeit</option>
+                <option value="animate__bounceIn">17. Bounce</option>
+                <option value="animate__backInLeft">18. Zurück von links</option>
+                <option value="animate__backInRight">19. Zurück von rechts</option>
+                <option value="animate__jackInTheBox">20. Überraschung</option>
             </select>
         </div>
         <button class="btn-main" onclick="applySettings()">Dashboard Starten</button>
@@ -118,6 +142,18 @@
         let playlist = [];
         let currentIndex = 0;
         let slideTimer;
+        let activeLayer = 'a';
+
+        // Liste aller Animationen für Random-Modus
+        const allAnimations = [
+            'animate__fadeIn', 'animate__fadeInUp', 'animate__fadeInDown',
+            'animate__fadeInLeft', 'animate__fadeInRight', 'animate__zoomIn',
+            'animate__zoomInUp', 'animate__zoomInDown', 'animate__slideInLeft',
+            'animate__slideInRight', 'animate__slideInUp', 'animate__slideInDown',
+            'animate__rotateIn', 'animate__flipInX', 'animate__flipInY',
+            'animate__lightSpeedInRight', 'animate__bounceIn', 'animate__backInLeft',
+            'animate__backInRight', 'animate__jackInTheBox'
+        ];
 
         // Uhrzeit & Datum
         function updateClock() {
@@ -127,43 +163,56 @@
         }
         setInterval(updateClock, 1000); updateClock();
 
-        // Wetter-Integration
+        // ============ WETTER ============
         const WEATHER_KEY = '38343f2cf261a2544f16f596f7830f60';
 
         async function fetchWeather(city) {
             try {
-                // Aktuelles Wetter
                 const current = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&lang=de&appid=${WEATHER_KEY}`);
                 const currentData = await current.json();
                 
-                // 5-Tage Forecast
                 const forecast = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&lang=de&appid=${WEATHER_KEY}`);
                 const forecastData = await forecast.json();
 
-                // Aktuelles Wetter anzeigen
+                // Aktuelles Wetter
                 const icon = getWeatherIcon(currentData.weather[0].main);
                 document.getElementById('current-temp').innerText = `${Math.round(currentData.main.temp)}°C ${icon}`;
                 
-                // 5-Tage Vorschau (1 Eintrag pro Tag, Mittags-Daten)
-                const dailyForecasts = [];
-                const processedDays = new Set();
-                
+                // ============ 5-TAGE FORECAST (FIXED) ============
+                // Gruppiere alle 3h-Einträge nach Datum
+                const byDay = {};
                 forecastData.list.forEach(item => {
                     const date = new Date(item.dt * 1000);
-                    const dayKey = date.toLocaleDateString('de-DE');
-                    
-                    if (!processedDays.has(dayKey) && date.getHours() === 12) {
-                        processedDays.add(dayKey);
-                        dailyForecasts.push({
-                            day: date.toLocaleDateString('de-DE', {weekday: 'short'}),
-                            temp: Math.round(item.main.temp),
-                            icon: getWeatherIcon(item.weather[0].main)
-                        });
-                    }
+                    const dayKey = date.toISOString().split('T')[0];
+                    if (!byDay[dayKey]) byDay[dayKey] = [];
+                    byDay[dayKey].push(item);
                 });
 
-                document.getElementById('forecast').innerHTML = dailyForecasts.slice(0, 5).map(d => 
-                    `<div class="f-day"><div style="color:#888">${d.day}</div><div style="font-size:1.5rem">${d.icon}</div><div>${d.temp}°</div></div>`
+                // Pro Tag: Eintrag am nächsten zu 12:00 Uhr finden
+                const dailyForecasts = Object.keys(byDay).slice(0, 5).map(dayKey => {
+                    const items = byDay[dayKey];
+                    let closest = items[0];
+                    let minDiff = Math.abs(new Date(items[0].dt * 1000).getHours() - 12);
+                    
+                    items.forEach(item => {
+                        const hour = new Date(item.dt * 1000).getHours();
+                        const diff = Math.abs(hour - 12);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            closest = item;
+                        }
+                    });
+                    
+                    const date = new Date(closest.dt * 1000);
+                    return {
+                        day: date.toLocaleDateString('de-DE', {weekday: 'short'}),
+                        temp: Math.round(closest.main.temp),
+                        icon: getWeatherIcon(closest.weather[0].main)
+                    };
+                });
+
+                document.getElementById('forecast').innerHTML = dailyForecasts.map(d => 
+                    `<div class="f-day"><div style="color:#bbb;font-size:0.9rem">${d.day}</div><div style="font-size:1.8rem;margin:5px 0">${d.icon}</div><div style="font-weight:bold">${d.temp}°</div></div>`
                 ).join('');
 
             } catch (error) {
@@ -174,59 +223,90 @@
 
         function getWeatherIcon(condition) {
             const icons = {
-                'Clear': '☀️',
-                'Clouds': '☁️',
-                'Rain': '🌧️',
-                'Drizzle': '🌦️',
-                'Thunderstorm': '⛈️',
-                'Snow': '❄️',
-                'Mist': '🌫️',
-                'Fog': '🌫️'
+                'Clear': '☀️', 'Clouds': '☁️', 'Rain': '🌧️',
+                'Drizzle': '🌦️', 'Thunderstorm': '⛈️', 'Snow': '❄️',
+                'Mist': '🌫️', 'Fog': '🌫️', 'Haze': '🌫️'
             };
             return icons[condition] || '🌤️';
         }
 
-        // Medien-Einlesen
+        // ============ MEDIEN-VERWALTUNG (ADDITIV!) ============
         document.getElementById('folder-input').onchange = (e) => {
-            playlist = [];
+            // NICHT zurücksetzen - additiv hinzufügen!
+            let added = 0;
             Array.from(e.target.files).forEach(f => {
                 if(f.type.startsWith('image/') || f.type.startsWith('video/')) {
                     playlist.push({ url: URL.createObjectURL(f), type: f.type });
+                    added++;
                 }
             });
+            updateMediaCount();
+            console.log(`${added} neue Medien hinzugefügt. Gesamt: ${playlist.length}`);
+            // Input-Feld zurücksetzen, damit derselbe Ordner erneut gewählt werden kann
+            e.target.value = '';
         };
 
+        function updateMediaCount() {
+            document.getElementById('media-count').innerText = `${playlist.length} Medien geladen`;
+        }
+
+        function resetPlaylist() {
+            if(confirm('Wirklich alle Medien aus der Playlist entfernen?')) {
+                playlist = [];
+                currentIndex = 0;
+                clearTimeout(slideTimer);
+                document.getElementById('display-container').innerHTML = '';
+                updateMediaCount();
+            }
+        }
+
+        // ============ SANFTER CROSSFADE PLAYER ============
         function play() {
             if(playlist.length === 0) return;
             const container = document.getElementById('display-container');
             const item = playlist[currentIndex];
-            const anim = document.getElementById('anim-input').value;
+            let anim = document.getElementById('anim-input').value;
             const duration = document.getElementById('duration-input').value * 1000;
 
-            container.innerHTML = '';
+            // Random-Modus: bei jedem Bild zufällige Animation
+            if(anim === 'random') {
+                anim = allAnimations[Math.floor(Math.random() * allAnimations.length)];
+            }
+
+            // Alle alten Layer ausblenden (fadeOut über CSS-transition)
+            const oldLayers = container.querySelectorAll('.slide-layer');
+            oldLayers.forEach(layer => {
+                layer.classList.remove('active');
+                // Nach Crossfade entfernen
+                setTimeout(() => layer.remove(), 2500);
+            });
+
+            // Neuen Layer erstellen
+            const layer = document.createElement('div');
+            layer.className = 'slide-layer';
             
-            // Hintergrund (Blurry)
+            // Blurry Hintergrund
             const blur = document.createElement('div');
             blur.className = 'blur-bg';
             blur.style.backgroundImage = `url('${item.url}')`;
-            container.appendChild(blur);
+            layer.appendChild(blur);
 
+            // Medien-Element
             let media;
             if(item.type.startsWith('video/')) {
                 media = document.createElement('video');
                 media.src = item.url;
                 media.autoplay = true;
                 media.muted = false;
-                media.className = 'media-item active';
+                media.className = `media-item animate__animated ${anim}`;
+                media.style.objectFit = 'contain';
                 media.onended = () => { currentIndex = (currentIndex + 1) % playlist.length; play(); };
             } else {
                 media = document.createElement('div');
                 media.className = `media-item animate__animated ${anim}`;
                 media.style.backgroundImage = `url('${item.url}')`;
-                media.style.backgroundRepeat = 'no-repeat';
-                media.style.backgroundSize = 'contain';
-                
-                // Progress Bar Reset & Start
+
+                // Progress Bar
                 const bar = document.getElementById('progress-bar');
                 bar.style.transition = 'none';
                 bar.style.width = '0%';
@@ -242,13 +322,23 @@
                 }, duration);
             }
             
-            container.appendChild(media);
-            setTimeout(() => { blur.classList.add('active'); media.classList.add('active'); }, 100);
+            layer.appendChild(media);
+            container.appendChild(layer);
+            
+            // Sanft einblenden
+            setTimeout(() => { layer.classList.add('active'); }, 50);
         }
 
         function applySettings() {
+            // Cloud-Links additiv hinzufügen
             const cloud = document.getElementById('cloud-input').value;
-            if(cloud) cloud.split('\n').forEach(u => u.trim() && playlist.push({url: u.trim(), type: 'image/jpeg'}));
+            if(cloud) {
+                cloud.split('\n').forEach(u => {
+                    if(u.trim()) playlist.push({url: u.trim(), type: 'image/jpeg'});
+                });
+                document.getElementById('cloud-input').value = '';
+                updateMediaCount();
+            }
             
             const city = document.getElementById('city-input').value;
             document.getElementById('city-display').innerText = city;
@@ -256,13 +346,18 @@
             fetchWeather(city);
 
             document.getElementById('panel').classList.remove('open');
-            play();
+            
+            if(playlist.length > 0) {
+                currentIndex = 0;
+                play();
+            }
         }
 
         document.getElementById('settings-btn').onclick = () => document.getElementById('panel').classList.toggle('open');
 
-        // Wetter beim Start laden
+        // Beim Start: Wetter laden + alle 30 Min aktualisieren
         fetchWeather('Düsseldorf');
+        setInterval(() => fetchWeather(document.getElementById('city-input').value || 'Düsseldorf'), 30 * 60 * 1000);
     </script>
 </body>
 </html>
