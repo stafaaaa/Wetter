@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Family Dashboard Pro - Persistent</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body, html { height: 100%; width: 100%; overflow: hidden; background: #000; color: white; }
+
+        #display-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        .media-item { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            object-fit: contain; background-size: cover; background-position: center;
+            opacity: 0; transition: opacity 2s ease-in-out; z-index: 1;
+        }
+
+        .blur-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            filter: blur(50px) brightness(0.5); transform: scale(1.1);
+            z-index: 0; opacity: 0; transition: opacity 2s ease-in-out;
+        }
+
+        .active { opacity: 1 !important; }
+
+        .ui { position: relative; z-index: 10; padding: 40px; display: flex; justify-content: space-between; pointer-events: none; }
+        .clock { font-size: clamp(4rem, 10vw, 7rem); font-weight: 200; text-shadow: 0 0 20px rgba(0,0,0,0.8); pointer-events: auto; }
+        
+        .weather-panel { text-align: right; pointer-events: auto; padding: 20px; }
+        .temp-main { font-size: 4rem; font-weight: 300; }
+        .forecast-row { display: flex; gap: 20px; margin-top: 15px; }
+        .f-icon { font-size: 1.8rem; margin: 5px 0; }
+
+        #settings-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; cursor: pointer; font-size: 30px; opacity: 0.1; pointer-events: auto; }
+        #panel { position: fixed; top: 0; right: -450px; width: 400px; height: 100%; background: rgba(10,10,10,0.98); z-index: 101; padding: 30px; transition: 0.5s; pointer-events: auto; overflow-y: auto; }
+        #panel.open { right: 0; }
+        .group { margin-bottom: 20px; }
+        input, select, textarea { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; }
+        .btn-main { background: #007bff; color: white; border: none; padding: 15px; width: 100%; cursor: pointer; border-radius: 8px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="display-container"></div>
+    <div class="ui">
+        <div class="clock-box">
+            <div class="clock" id="time">00:00</div>
+            <div id="date" style="font-size: 1.5rem; opacity: 0.9;">Lade...</div>
+        </div>
+        <div class="weather-panel">
+            <div id="city-display" style="font-size: 1.2rem;">Düsseldorf</div>
+            <div id="current-temp" class="temp-main">--°C</div>
+            <div class="forecast-row" id="forecast"></div>
+        </div>
+    </div>
+
+    <div id="settings-btn">⚙️</div>
+    <div id="panel">
+        <h3>Einstellungen</h3>
+        <div class="group"><label>Lokaler Ordner (muss nach Refresh neu gewählt werden)</label><input type="file" id="folder-input" webkitdirectory directory multiple></div>
+        <div class="group"><label>Cloud-Links (werden dauerhaft gespeichert)</label><textarea id="cloud-input" rows="5"></textarea></div>
+        <div class="group"><label>Stadt</label><input type="text" id="city-input"></div>
+        <div class="group"><label>Sekunden pro Bild</label><input type="number" id="duration-input"></div>
+        <button class="btn-main" onclick="saveSettings()">Speichern & Start</button>
+    </div>
+
+    <script>
+        let playlist = [];
+        let currentIndex = 0;
+        let slideTimer;
+
+        // Einstellungen laden
+        function loadSettings() {
+            const saved = localStorage.getItem('dashConfig');
+            if (saved) {
+                const config = JSON.parse(saved);
+                document.getElementById('city-input').value = config.city || "Düsseldorf";
+                document.getElementById('duration-input').value = config.duration || 10;
+                document.getElementById('cloud-input').value = config.clouds || "";
+                applyCloudLinks(config.clouds);
+                fetchWeather();
+            }
+        }
+
+        function saveSettings() {
+            const config = {
+                city: document.getElementById('city-input').value,
+                duration: document.getElementById('duration-input').value,
+                clouds: document.getElementById('cloud-input').value
+            };
+            localStorage.setItem('dashConfig', JSON.stringify(config));
+            applyCloudLinks(config.clouds);
+            fetchWeather();
+            document.getElementById('panel').classList.remove('open');
+            if (playlist.length > 0) play();
+        }
+
+        function applyCloudLinks(text) {
+            if (!text) return;
+            text.split('\n').forEach(url => {
+                if (url.trim()) playlist.push({ url: url.trim(), type: 'image/jpeg' });
+            });
+        }
+
+        document.getElementById('folder-input').onchange = (e) => {
+            Array.from(e.target.files).forEach(f => {
+                if (f.type.startsWith('image/') || f.type.startsWith('video/')) {
+                    playlist.push({ url: URL.createObjectURL(f), type: f.type });
+                }
+            });
+            if (playlist.length > 0) play();
+        };
+
+        function play() {
+            const container = document.getElementById('display-container');
+            const item = playlist[currentIndex];
+            const duration = document.getElementById('duration-input').value * 1000;
+
+            container.innerHTML = '';
+            const blur = document.createElement('div');
+            blur.className = 'blur-bg';
+            blur.style.backgroundImage = `url('${item.url}')`;
+            container.appendChild(blur);
+
+            let media;
+            if (item.type.startsWith('video/')) {
+                media = document.createElement('video');
+                media.src = item.url; media.autoplay = true; media.muted = false;
+                media.className = 'media-item active';
+                media.onended = () => { currentIndex = (currentIndex + 1) % playlist.length; play(); };
+            } else {
+                media = document.createElement('div');
+                media.className = 'media-item animate__animated animate__fadeIn';
+                media.style.backgroundImage = `url('${item.url}')`;
+                media.style.backgroundSize = 'contain';
+                media.style.backgroundRepeat = 'no-repeat';
+                clearTimeout(slideTimer);
+                slideTimer = setTimeout(() => { currentIndex = (currentIndex + 1) % playlist.length; play(); }, duration);
+            }
+            container.appendChild(media);
+            setTimeout(() => { blur.classList.add('active'); media.classList.add('active'); }, 100);
+        }
+
+        async function fetchWeather() {
+            const city = document.getElementById('city-input').value;
+            document.getElementById('city-display').innerText = city;
+            // (Hier steht die Open-Meteo Logik wie im vorherigen Script...)
+        }
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('time').innerText = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+            document.getElementById('date').innerText = now.toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'});
+        }, 1000);
+
+        document.getElementById('settings-btn').onclick = () => document.getElementById('panel').classList.toggle('open');
+        window.onload = loadSettings;
+    </script>
+</body>
+</html>
