@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Family Dashboard Pro - Fixed</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body, html { height: 100%; width: 100%; overflow: hidden; background: #000; color: white; }
+
+        #display-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        .media-item { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            object-fit: contain; background-size: cover; background-position: center;
+            opacity: 0; transition: opacity 2s ease-in-out; z-index: 1;
+        }
+        .blur-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            filter: blur(50px) brightness(0.4); transform: scale(1.1);
+            z-index: 0; opacity: 0; transition: opacity 2s ease-in-out;
+        }
+        .active { opacity: 1 !important; }
+
+        .ui { position: relative; z-index: 10; padding: 40px; display: flex; justify-content: space-between; pointer-events: none; }
+        .clock { font-size: clamp(4rem, 10vw, 7rem); font-weight: 200; text-shadow: 0 0 20px rgba(0,0,0,0.8); pointer-events: auto; }
+        
+        /* Wetter - Freistehend ohne Kachel */
+        .weather-panel { text-align: right; pointer-events: auto; padding: 10px; }
+        .temp-main { font-size: 3.5rem; font-weight: 300; }
+        .forecast-row { display: flex; gap: 15px; margin-top: 10px; justify-content: flex-end; }
+        .f-day { text-align: center; font-size: 0.85rem; opacity: 0.8; }
+        .f-icon { font-size: 1.3rem; margin: 3px 0; display: block; }
+
+        #progress-bar { position: fixed; bottom: 0; left: 0; height: 3px; background: #007bff; width: 0%; z-index: 20; transition: linear; }
+
+        #settings-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; cursor: pointer; font-size: 28px; opacity: 0.1; pointer-events: auto; }
+        #panel { position: fixed; top: 0; right: -450px; width: 400px; height: 100%; background: rgba(10,10,10,0.98); z-index: 101; padding: 30px; transition: 0.5s; pointer-events: auto; overflow-y: auto; }
+        #panel.open { right: 0; }
+        .group { margin-bottom: 15px; }
+        label { display: block; font-size: 11px; color: #888; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; }
+        .btn-main { background: #007bff; color: white; border: none; padding: 12px; width: 100%; cursor: pointer; border-radius: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="progress-bar"></div>
+    <div id="display-container"></div>
+
+    <div class="ui">
+        <div class="clock-box">
+            <div class="clock" id="time">00:00</div>
+            <div id="date" style="font-size: 1.5rem; opacity: 0.9;">Wird geladen...</div>
+        </div>
+        <div class="weather-panel">
+            <div id="city-display" style="font-size: 1.1rem; opacity: 0.7;">Düsseldorf</div>
+            <div id="current-temp" class="temp-main">--°C</div>
+            <div class="forecast-row" id="forecast"></div>
+        </div>
+    </div>
+
+    <div id="settings-btn">⚙️</div>
+    <div id="panel">
+        <h3>Dashboard Master Control</h3>
+        <div class="group"><label>1. Lokale Fotos & Videos (muss nach Refresh neu gewählt werden)</label><input type="file" id="folder-input" webkitdirectory directory multiple></div>
+        <div class="group"><label>2. Cloud-Links / Google Drive (Dauerhaft)</label><textarea id="cloud-input" rows="5" placeholder="Direktlinks hier..."></textarea></div>
+        <div class="group"><label>3. Stadt</label><input type="text" id="city-input"></div>
+        <div class="group"><label>4. Sekunden pro Bild</label><input type="number" id="duration-input"></div>
+        <div class="group">
+            <label>5. Animation (20+ Optionen)</label>
+            <select id="anim-input">
+                <option value="animate__fadeIn">Fade In</option>
+                <option value="animate__zoomIn">Zoom In</option>
+                <option value="animate__bounceIn">Bounce In</option>
+                <option value="animate__flipInX">Flip In X</option>
+                <option value="animate__flipInY">Flip In Y</option>
+                <option value="animate__rotateIn">Rotate In</option>
+                <option value="animate__slideInLeft">Slide In Left</option>
+                <option value="animate__slideInRight">Slide In Right</option>
+                <option value="animate__slideInUp">Slide In Up</option>
+                <option value="animate__slideInDown">Slide In Down</option>
+                <option value="animate__backInDown">Back In Down</option>
+                <option value="animate__backInUp">Back In Up</option>
+                <option value="animate__rollIn">Roll In</option>
+                <option value="animate__jackInTheBox">Jack In The Box</option>
+                <option value="animate__lightSpeedInRight">LightSpeed Right</option>
+                <option value="animate__rubberBand">Rubber Band (Intro)</option>
+                <option value="animate__heartBeat">Heart Beat (Intro)</option>
+                <option value="animate__wobble">Wobble (Intro)</option>
+                <option value="animate__swing">Swing (Intro)</option>
+                <option value="animate__tada">Tada (Intro)</option>
+            </select>
+        </div>
+        <button class="btn-main" onclick="saveSettings()">Speichern & Starten</button>
+    </div>
+
+    <script>
+        let playlist = [];
+        let currentIndex = 0;
+        let slideTimer;
+
+        const weatherIcons = { 0: "☀️", 1: "🌤️", 2: "⛅", 3: "☁️", 45: "🌫️", 51: "🌧️", 61: "🌧️", 71: "❄️", 80: "🌦️", 95: "⛈️" };
+
+        function loadSettings() {
+            const saved = localStorage.getItem('dashConfig');
+            if (saved) {
+                const config = JSON.parse(saved);
+                document.getElementById('city-input').value = config.city || "Düsseldorf";
+                document.getElementById('duration-input').value = config.duration || 10;
+                document.getElementById('cloud-input').value = config.clouds || "";
+                document.getElementById('anim-input').value = config.anim || "animate__fadeIn";
+                applyCloudLinks(config.clouds);
+                fetchWeather();
+                if (playlist.length > 0) play();
+            }
+        }
+
+        function saveSettings() {
+            const config = {
+                city: document.getElementById('city-input').value,
+                duration: document.getElementById('duration-input').value,
+                clouds: document.getElementById('cloud-input').value,
+                anim: document.getElementById('anim-input').value
+            };
+            localStorage.setItem('dashConfig', JSON.stringify(config));
+            location.reload(); // Seite neu laden um Playlist sauber aufzubauen
+        }
+
+        function applyCloudLinks(text) {
+            if (!text) return;
+            text.split('\n').forEach(url => { if (url.trim()) playlist.push({ url: url.trim(), type: 'image/jpeg' }); });
+        }
+
+        document.getElementById('folder-input').onchange = (e) => {
+            Array.from(e.target.files).forEach(f => {
+                if (f.type.startsWith('image/') || f.type.startsWith('video/')) {
+                    playlist.push({ url: URL.createObjectURL(f), type: f.type });
+                }
+            });
+            if (playlist.length > 0) play();
+        };
+
+        async function fetchWeather() {
+            const city = document.getElementById('city-input').value;
+            document.getElementById('city-display').innerText = city;
+            try {
+                const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=de&format=json`);
+                const geoData = await geoRes.json();
+                if (!geoData.results) return;
+                const { latitude, longitude } = geoData.results[0];
+                const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max&timezone=auto`);
+                const wData = await wRes.json();
+                document.getElementById('current-temp').innerText = `${Math.round(wData.current_weather.temperature)}°C ${weatherIcons[wData.current_weather.weathercode] || "☀️"}`;
+                let forecastHtml = "";
+                for (let i = 1; i <= 5; i++) {
+                    const day = new Date(wData.daily.time[i]).toLocaleDateString('de-DE', {weekday: 'short'});
+                    forecastHtml += `<div class="f-day"><div>${day}</div><span class="f-icon">${weatherIcons[wData.daily.weathercode[i]] || "☀️"}</span><div>${Math.round(wData.daily.temperature_2m_max[i])}°</div></div>`;
+                }
+                document.getElementById('forecast').innerHTML = forecastHtml;
+            } catch (e) { console.error(e); }
+        }
+
+        function play() {
+            const container = document.getElementById('display-container');
+            const item = playlist[currentIndex];
+            const duration = document.getElementById('duration-input').value * 1000;
+            const anim = document.getElementById('anim-input').value;
+
+            container.innerHTML = '';
+            const blur = document.createElement('div');
+            blur.className = 'blur-bg';
+            blur.style.backgroundImage = `url('${item.url}')`;
+            container.appendChild(blur);
+
+            let media;
+            if (item.type.startsWith('video/')) {
+                media = document.createElement('video');
+                media.src = item.url; media.autoplay = true; media.muted = false;
+                media.className = 'media-item active';
+                media.onended = () => { currentIndex = (currentIndex + 1) % playlist.length; play(); };
+            } else {
+                media = document.createElement('div');
+                media.className = `media-item animate__animated ${anim}`;
+                media.style.backgroundImage = `url('${item.url}')`;
+                media.style.backgroundSize = 'contain'; media.style.backgroundRepeat = 'no-repeat';
+                const bar = document.getElementById('progress-bar');
+                bar.style.transition = 'none'; bar.style.width = '0%';
+                setTimeout(() => { bar.style.transition = `width ${duration}ms linear`; bar.style.width = '100%'; }, 50);
+                clearTimeout(slideTimer);
+                slideTimer = setTimeout(() => { currentIndex = (currentIndex + 1) % playlist.length; play(); }, duration);
+            }
+            container.appendChild(media);
+            setTimeout(() => { blur.classList.add('active'); media.classList.add('active'); }, 100);
+        }
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('time').innerText = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+            document.getElementById('date').innerText = now.toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'});
+        }, 1000);
+
+        document.getElementById('settings-btn').onclick = () => document.getElementById('panel').classList.toggle('open');
+        window.onload = loadSettings;
+    </script>
+</body>
+</html>
