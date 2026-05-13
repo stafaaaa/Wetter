@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Family Dashboard Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body, html { height: 100%; width: 100%; overflow: hidden; background: #000; color: white; }
+
+        /* Fullscreen Media Container */
+        #display-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        .media-item { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            object-fit: contain; /* Zeigt das ganze Bild ohne Abschneiden */
+            background-size: cover; background-position: center;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+            z-index: 1;
+        }
+
+        /* Blurry Background Effekt für Hochformat-Bilder */
+        .blur-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            filter: blur(50px) brightness(0.5);
+            transform: scale(1.1);
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+        }
+
+        .active { opacity: 1 !important; }
+
+        /* UI Overlays */
+        .overlay-vignette { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.4) 100%); z-index: 2; pointer-events: none; }
+        .ui { position: relative; z-index: 10; padding: 40px; display: flex; justify-content: space-between; pointer-events: none; }
+        
+        .clock-box { text-align: left; pointer-events: auto; }
+        .clock { font-size: clamp(4rem, 10vw, 7rem); font-weight: 200; text-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        .date { font-size: 1.5rem; opacity: 0.9; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+
+        .weather-panel { text-align: right; pointer-events: auto; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 20px; backdrop-filter: blur(10px); }
+        .temp-main { font-size: 4rem; font-weight: 300; }
+        .forecast-row { display: flex; gap: 20px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px; }
+        .f-day { text-align: center; min-width: 50px; }
+
+        /* Fortschrittsbalken */
+        #progress-bar { position: fixed; bottom: 0; left: 0; height: 4px; background: #007bff; width: 0%; z-index: 20; transition: linear; }
+
+        /* Menü */
+        #settings-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; cursor: pointer; font-size: 30px; opacity: 0.1; transition: 0.3s; pointer-events: auto; }
+        #settings-btn:hover { opacity: 1; }
+        #panel { position: fixed; top: 0; right: -450px; width: 400px; height: 100%; background: rgba(10,10,10,0.98); z-index: 101; padding: 30px; transition: 0.5s; pointer-events: auto; overflow-y: auto; }
+        #panel.open { right: 0; }
+        .group { margin-bottom: 20px; }
+        label { display: block; font-size: 12px; color: #888; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; }
+        .btn-main { background: #007bff; color: white; border: none; padding: 15px; width: 100%; cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+    <div id="progress-bar"></div>
+    <div id="display-container"></div>
+    <div class="overlay-vignette"></div>
+
+    <div class="ui">
+        <div class="clock-box">
+            <div class="clock" id="time">00:00</div>
+            <div class="date" id="date">Wird geladen...</div>
+        </div>
+        
+        <div class="weather-panel">
+            <div id="city-display" style="font-size: 1.2rem; margin-bottom: 5px;">Düsseldorf</div>
+            <div class="temp-main" id="current-temp">12°C ☀️</div>
+            <div class="forecast-row" id="forecast">
+                <!-- 5 Tage Vorschau -->
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-btn">⚙️</div>
+    <div id="panel">
+        <h3>Dashboard Master Control</h3>
+        <div class="group">
+            <label>1. Lokale Fotos & Videos wählen</label>
+            <input type="file" id="folder-input" webkitdirectory directory multiple>
+        </div>
+        <div class="group">
+            <label>2. Cloud-Links (Google Drive/Fotos)</label>
+            <textarea id="cloud-input" rows="3" placeholder="URLs hier einfügen..."></textarea>
+        </div>
+        <div class="group">
+            <label>3. Stadt & Wetter</label>
+            <input type="text" id="city-input" value="Düsseldorf">
+        </div>
+        <div class="group">
+            <label>4. Zeit pro Bild (Sekunden)</label>
+            <input type="number" id="duration-input" value="10">
+        </div>
+        <div class="group">
+            <label>5. Animation</label>
+            <select id="anim-input">
+                <option value="animate__fadeIn">Weiches Überblenden</option>
+                <option value="animate__zoomIn">Sanfter Zoom</option>
+                <option value="animate__slideInLeft">Seitlich Schieben</option>
+                <option value="animate__flipInX">Flip-Effekt</option>
+                <option value="animate__jackInTheBox">Überraschung</option>
+            </select>
+        </div>
+        <button class="btn-main" onclick="applySettings()">Dashboard Starten</button>
+    </div>
+
+    <script>
+        let playlist = [];
+        let currentIndex = 0;
+        let slideTimer;
+
+        // Uhrzeit & Datum
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('time').innerText = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+            document.getElementById('date').innerText = now.toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'});
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        // Medien-Einlesen
+        document.getElementById('folder-input').onchange = (e) => {
+            playlist = [];
+            Array.from(e.target.files).forEach(f => {
+                if(f.type.startsWith('image/') || f.type.startsWith('video/')) {
+                    playlist.push({ url: URL.createObjectURL(f), type: f.type });
+                }
+            });
+        };
+
+        function play() {
+            if(playlist.length === 0) return;
+            const container = document.getElementById('display-container');
+            const item = playlist[currentIndex];
+            const anim = document.getElementById('anim-input').value;
+            const duration = document.getElementById('duration-input').value * 1000;
+
+            container.innerHTML = '';
+            
+            // Hintergrund (Blurry)
+            const blur = document.createElement('div');
+            blur.className = 'blur-bg';
+            blur.style.backgroundImage = `url('${item.url}')`;
+            container.appendChild(blur);
+
+            let media;
+            if(item.type.startsWith('video/')) {
+                media = document.createElement('video');
+                media.src = item.url;
+                media.autoplay = true;
+                media.muted = false;
+                media.className = 'media-item active';
+                media.onended = () => { currentIndex = (currentIndex + 1) % playlist.length; play(); };
+            } else {
+                media = document.createElement('div');
+                media.className = `media-item animate__animated ${anim}`;
+                media.style.backgroundImage = `url('${item.url}')`;
+                media.style.backgroundRepeat = 'no-repeat';
+                media.style.backgroundSize = 'contain';
+                
+                // Progress Bar Reset & Start
+                const bar = document.getElementById('progress-bar');
+                bar.style.transition = 'none';
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.transition = `width ${duration}ms linear`;
+                    bar.style.width = '100%';
+                }, 50);
+
+                clearTimeout(slideTimer);
+                slideTimer = setTimeout(() => {
+                    currentIndex = (currentIndex + 1) % playlist.length;
+                    play();
+                }, duration);
+            }
+            
+            container.appendChild(media);
+            setTimeout(() => { blur.classList.add('active'); media.classList.add('active'); }, 100);
+        }
+
+        function applySettings() {
+            const cloud = document.getElementById('cloud-input').value;
+            if(cloud) cloud.split('\n').forEach(u => u.trim() && playlist.push({url: u.trim(), type: 'image/jpeg'}));
+            
+            const city = document.getElementById('city-input').value;
+            document.getElementById('city-display').innerText = city;
+            
+            // Wetter Simulation für 5 Tage
+            const days = ['Mi', 'Do', 'Fr', 'Sa', 'So'];
+            document.getElementById('forecast').innerHTML = days.map(d => 
+                `<div class="f-day"><div style="color:#888">${d}</div><div style="font-size:1.5rem">☀️</div><div>21°</div></div>`
+            ).join('');
+
+            document.getElementById('panel').classList.remove('open');
+            play();
+        }
+
+        document.getElementById('settings-btn').onclick = () => document.getElementById('panel').classList.toggle('open');
+    </script>
+</body>
+</html>
