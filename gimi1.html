@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Family Dashboard Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body, html { height: 100%; width: 100%; overflow: hidden; background: #000; color: white; }
+
+        /* Media Player & Blurry Background */
+        #display-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        .media-item { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            object-fit: contain; background-size: cover; background-position: center;
+            opacity: 0; transition: opacity 2s ease-in-out; z-index: 1;
+        }
+        .blur-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            filter: blur(50px) brightness(0.4); transform: scale(1.1);
+            z-index: 0; opacity: 0; transition: opacity 2s ease-in-out;
+        }
+        .active { opacity: 1 !important; }
+
+        /* UI Overlays */
+        .ui { position: relative; z-index: 10; padding: 40px; display: flex; justify-content: space-between; pointer-events: none; }
+        .clock-box { text-align: left; pointer-events: auto; }
+        .clock { font-size: clamp(4rem, 10vw, 7rem); font-weight: 200; text-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        .date { font-size: 1.5rem; opacity: 0.9; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+
+        /* Minimal Wetter - Kleine freistehende Icons */
+        .weather-panel { text-align: right; pointer-events: auto; padding: 10px; }
+        .temp-main { font-size: 3.5rem; font-weight: 300; margin-bottom: -5px; }
+        .forecast-row { display: flex; gap: 15px; margin-top: 10px; justify-content: flex-end; }
+        .f-day { text-align: center; font-size: 0.85rem; opacity: 0.8; }
+        .f-icon { font-size: 1.2rem; margin: 3px 0; display: block; } /* Kleinere Icons ohne Kachel */
+
+        /* Fortschrittsbalken */
+        #progress-bar { position: fixed; bottom: 0; left: 0; height: 3px; background: rgba(255,255,255,0.5); width: 0%; z-index: 20; transition: linear; }
+
+        /* Menü */
+        #settings-btn { position: fixed; bottom: 20px; right: 20px; z-index: 100; cursor: pointer; font-size: 24px; opacity: 0.1; pointer-events: auto; }
+        #panel { position: fixed; top: 0; right: -400px; width: 350px; height: 100%; background: rgba(10,10,10,0.98); z-index: 101; padding: 30px; transition: 0.5s; pointer-events: auto; overflow-y: auto; }
+        #panel.open { right: 0; }
+        .group { margin-bottom: 15px; }
+        label { display: block; font-size: 11px; color: #888; margin-bottom: 3px; }
+        input, select, textarea { width: 100%; padding: 10px; background: #222; border: 1px solid #333; color: white; border-radius: 5px; }
+        .btn-main { background: #444; color: white; border: none; padding: 12px; width: 100%; cursor: pointer; border-radius: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="progress-bar"></div>
+    <div id="display-container"></div>
+
+    <div class="ui">
+        <div class="clock-box">
+            <div class="clock" id="time">00:00</div>
+            <div class="date" id="date">Wird geladen...</div>
+        </div>
+        
+        <div class="weather-panel">
+            <div id="city-display" style="font-size: 1rem; opacity: 0.7; margin-bottom: 2px;">Düsseldorf</div>
+            <div class="temp-main" id="current-temp">12° <span style="font-size: 2rem;">☀️</span></div>
+            <div class="forecast-row" id="forecast">
+                <!-- Wetter Icons landen hier -->
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-btn">⚙️</div>
+    <div id="panel">
+        <h3>Einstellungen</h3>
+        <div class="group"><label>Ordner wählen</label><input type="file" id="folder-input" webkitdirectory directory multiple></div>
+        <div class="group"><label>Cloud URLs</label><textarea id="cloud-input" rows="2"></textarea></div>
+        <div class="group"><label>Stadt</label><input type="text" id="city-input" value="Düsseldorf"></div>
+        <div class="group"><label>Sekunden pro Bild</label><input type="number" id="duration-input" value="10"></div>
+        <div class="group">
+            <label>Animation</label>
+            <select id="anim-input">
+                <option value="animate__fadeIn">Fade</option>
+                <option value="animate__zoomIn">Zoom</option>
+                <option value="animate__slideInRight">Slide</option>
+            </select>
+        </div>
+        <button class="btn-main" onclick="applySettings()">Start</button>
+    </div>
+
+    <script>
+        let playlist = [];
+        let currentIndex = 0;
+        let slideTimer;
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('time').innerText = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+            document.getElementById('date').innerText = now.toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'});
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        document.getElementById('folder-input').onchange = (e) => {
+            playlist = [];
+            Array.from(e.target.files).forEach(f => {
+                if(f.type.startsWith('image/') || f.type.startsWith('video/')) {
+                    playlist.push({ url: URL.createObjectURL(f), type: f.type });
+                }
+            });
+        };
+
+        function play() {
+            if(playlist.length === 0) return;
+            const container = document.getElementById('display-container');
+            const item = playlist[currentIndex];
+            const anim = document.getElementById('anim-input').value;
+            const duration = document.getElementById('duration-input').value * 1000;
+
+            container.innerHTML = '';
+            const blur = document.createElement('div');
+            blur.className = 'blur-bg';
+            blur.style.backgroundImage = `url('${item.url}')`;
+            container.appendChild(blur);
+
+            let media;
+            if(item.type.startsWith('video/')) {
+                media = document.createElement('video');
+                media.src = item.url;
+                media.autoplay = true;
+                media.muted = false;
+                media.className = 'media-item active';
+                media.onended = () => { currentIndex = (currentIndex + 1) % playlist.length; play(); };
+            } else {
+                media = document.createElement('div');
+                media.className = `media-item animate__animated ${anim}`;
+                media.style.backgroundImage = `url('${item.url}')`;
+                media.style.backgroundSize = 'contain';
+                media.style.backgroundRepeat = 'no-repeat';
+                
+                const bar = document.getElementById('progress-bar');
+                bar.style.transition = 'none'; bar.style.width = '0%';
+                setTimeout(() => { bar.style.transition = `width ${duration}ms linear`; bar.style.width = '100%'; }, 50);
+
+                clearTimeout(slideTimer);
+                slideTimer = setTimeout(() => { currentIndex = (currentIndex + 1) % playlist.length; play(); }, duration);
+            }
+            container.appendChild(media);
+            setTimeout(() => { blur.classList.add('active'); media.classList.add('active'); }, 100);
+        }
+
+        function applySettings() {
+            const city = document.getElementById('city-input').value;
+            document.getElementById('city-display').innerText = city;
+            const days = ['Mi', 'Do', 'Fr', 'Sa', 'So'];
+            document.getElementById('forecast').innerHTML = days.map(d => 
+                `<div class="f-day"><div>${d}</div><span class="f-icon">☀️</span><div>21°</div></div>`
+            ).join('');
+            document.getElementById('panel').classList.remove('open');
+            play();
+        }
+
+        document.getElementById('settings-btn').onclick = () => document.getElementById('panel').classList.toggle('open');
+    </script>
+</body>
+</html>
