@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart TV Dashboard</title>
+    <style>
+        /* === Basis-Styling & Layout === */
+        :root {
+            --glass-bg: rgba(20, 20, 25, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-color: #ffffff;
+            --text-muted: #a0a0a0;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0f2027; /* Fallback */
+            background: linear-gradient(to right, #203a43, #0f2027); /* Dunkler TV-Hintergrund */
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        /* Hintergrundbild (optional, lässt das Milchglas besser wirken) */
+        .bg-image {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            opacity: 0.4;
+            background-image: url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1920&auto=format&fit=crop');
+        }
+
+        /* Grid-Layout für Landscape/TV */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            grid-template-rows: 1fr 60px;
+            gap: 20px;
+            padding: 30px;
+            height: calc(100vh - 60px);
+            box-sizing: border-box;
+        }
+
+        /* === Frosted Glass Effekt === */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* === Wetter Widget === */
+        .weather-panel { grid-column: 1 / 2; grid-row: 1 / 2; }
+        .current-weather { text-align: center; margin-bottom: 30px; }
+        .current-temp { font-size: 4rem; font-weight: bold; margin: 10px 0; }
+        .weather-desc { font-size: 1.2rem; color: var(--text-muted); text-transform: capitalize; }
+        .forecast { display: flex; flex-direction: column; gap: 15px; }
+        .forecast-day { display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; border-top: 1px solid var(--glass-border); padding-top: 10px; }
+
+        /* === Nachrichten Feed === */
+        .news-panel { grid-column: 2 / 3; grid-row: 1 / 2; overflow-y: hidden; }
+        .news-panel h2 { margin-top: 0; margin-bottom: 20px; font-size: 1.8rem; border-bottom: 2px solid var(--glass-border); padding-bottom: 10px; }
+        .news-list { display: flex; flex-direction: column; gap: 20px; }
+        .news-item { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; border-left: 4px solid #4facfe; }
+        .news-item h3 { margin: 0 0 10px 0; font-size: 1.2rem; line-height: 1.4; }
+        .news-item p { margin: 0; color: var(--text-muted); font-size: 0.95rem; }
+
+        /* === Uhrzeit & Datum === */
+        .time-panel { grid-column: 3 / 4; grid-row: 1 / 2; text-align: right; justify-content: flex-start; }
+        #time { font-size: 4.5rem; font-weight: bold; letter-spacing: 2px; line-height: 1; margin-bottom: 10px; }
+        #date { font-size: 1.5rem; color: var(--text-muted); }
+
+        /* === Sport Ticker === */
+        .ticker-panel {
+            grid-column: 1 / 4;
+            grid-row: 2 / 3;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--glass-border);
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 60px;
+            display: flex; align-items: center;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .ticker-label {
+            background: #e63946;
+            color: white;
+            font-weight: bold;
+            padding: 0 20px;
+            height: 100%;
+            display: flex; align-items: center;
+            z-index: 10;
+            position: relative;
+        }
+        .ticker-content {
+            display: inline-block;
+            padding-left: 100%; /* Start off-screen right */
+            animation: ticker-anim 25s linear infinite;
+            font-size: 1.2rem;
+        }
+        .ticker-item { margin-right: 50px; font-weight: 500; }
+        .ticker-score { color: #4facfe; font-weight: bold; margin-left: 10px; }
+
+        @keyframes ticker-anim {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-image"></div>
+
+    <div class="dashboard-container">
+        
+        <div class="glass-panel weather-panel">
+            <div class="current-weather">
+                <h2 id="city-name" style="margin:0; font-size:1.5rem;">Düsseldorf</h2>
+                <div id="current-icon" style="font-size: 4rem; margin-top:10px;">⛅</div>
+                <div class="current-temp" id="current-temp">--°C</div>
+                <div class="weather-desc" id="current-desc">Wird geladen...</div>
+            </div>
+            <div class="forecast" id="forecast-container">
+                </div>
+        </div>
+
+        <div class="glass-panel news-panel">
+            <h2>Top Nachrichten</h2>
+            <div class="news-list" id="news-container">
+                <div style="color: #a0a0a0;">Lade Nachrichten...</div>
+            </div>
+        </div>
+
+        <div class="glass-panel time-panel">
+            <div id="time">00:00:00</div>
+            <div id="date">Lädt...</div>
+        </div>
+    </div>
+
+    <div class="ticker-panel">
+        <div class="ticker-label">SPORT AKTUELL</div>
+        <div class="ticker-content" id="sports-ticker">
+            </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. UHRZEIT & DATUM LOGIK
+        // ==========================================
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('time').textContent = now.toLocaleTimeString('de-DE');
+            document.getElementById('date').textContent = now.toLocaleDateString('de-DE', { 
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+            });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // ==========================================
+        // 2. WETTER LOGIK (OpenWeatherMap)
+        // ==========================================
+        const OWM_API_KEY = '38343f2cf261a2544f16f596f7830f60'; // Dein Key
+        const CITY = 'Düsseldorf,DE';
+
+        function getWeatherIcon(iconCode) {
+            const icons = {
+                '01d': '☀️', '01n': '🌙', '02d': '⛅', '02n': '☁️',
+                '03d': '☁️', '03n': '☁️', '04d': '☁️', '04n': '☁️',
+                '09d': '🌧️', '09n': '🌧️', '10d': '🌦️', '10n': '🌧️',
+                '11d': '⛈️', '11n': '⛈️', '13d': '❄️', '13n': '❄️',
+                '50d': '🌫️', '50n': '🌫️'
+            };
+            return icons[iconCode] || '🌤️';
+        }
+
+        async function fetchWeather() {
+            try {
+                // Aktuelles Wetter
+                const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${CITY}&units=metric&lang=de&appid=${OWM_API_KEY}`);
+                const currentData = await currentRes.json();
+                
+                document.getElementById('current-temp').textContent = `${Math.round(currentData.main.temp)}°C`;
+                document.getElementById('current-desc').textContent = currentData.weather[0].description;
+                document.getElementById('current-icon').textContent = getWeatherIcon(currentData.weather[0].icon);
+
+                // Vorschau (5 Tage / 3 Stunden Intervalle) -> Wir filtern auf 1 Eintrag pro Tag (12 Uhr mittags)
+                const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${CITY}&units=metric&lang=de&appid=${OWM_API_KEY}`);
+                const forecastData = await forecastRes.json();
+                
+                const dailyForecast = forecastData.list.filter(item => item.dt_txt.includes('12:00:00')).slice(0, 3);
+                
+                let forecastHTML = '';
+                dailyForecast.forEach(day => {
+                    const dateObj = new Date(day.dt * 1000);
+                    const dayName = dateObj.toLocaleDateString('de-DE', { weekday: 'short' });
+                    const temp = Math.round(day.main.temp);
+                    const icon = getWeatherIcon(day.weather[0].icon);
+                    
+                    forecastHTML += `
+                        <div class="forecast-day">
+                            <span>${dayName}</span>
+                            <span>${icon}</span>
+                            <strong>${temp}°C</strong>
+                        </div>
+                    `;
+                });
+                document.getElementById('forecast-container').innerHTML = forecastHTML;
+
+            } catch (error) {
+                console.error("Wetter API Fehler:", error);
+                document.getElementById('current-desc').textContent = "Fehler beim Laden";
+            }
+        }
+        fetchWeather();
+        setInterval(fetchWeather, 30 * 60 * 1000); // Alle 30 Minuten aktualisieren
+
+        // ==========================================
+        // 3. NACHRICHTEN LOGIK
+        // ==========================================
+        // Trage hier deinen Key von newsapi.org ein, z.B. 'a1b2c3d4...'
+        const NEWS_API_KEY = 'PLATZHALTER_KEY_HIER_EINTRAGEN'; 
+        
+        async function fetchNews() {
+            const container = document.getElementById('news-container');
+            
+            // Dummy-Daten als Fallback, falls kein gültiger Key vorhanden ist
+            const dummyNews = [
+                { title: "Wirtschaftsboom: Tech-Aktien erreichen neues Allzeithoch", desc: "Die globalen Märkte reagieren positiv auf die neuesten Quartalszahlen der führenden Technologieunternehmen." },
+                { title: "Neue Mars-Mission erfolgreich gestartet", desc: "Eine weitere Sonde ist auf dem Weg zum Roten Planeten, um nach Spuren von vergangenem Leben zu suchen." },
+                { title: "Verkehrswende: Immer mehr Städte setzen auf autofreie Zonen", desc: "Der Ausbau von Fahrradwegen und dem öffentlichen Nahverkehr wird massiv gefördert." }
+            ];
+
+            try {
+                if (NEWS_API_KEY === 'PLATZHALTER_KEY_HIER_EINTRAGEN') throw new Error("Kein API Key");
+                
+                const res = await fetch(`https://newsapi.org/v2/top-headlines?country=de&pageSize=3&apiKey=${NEWS_API_KEY}`);
+                if (!res.ok) throw new Error("Netzwerkantwort war nicht ok");
+                
+                const data = await res.json();
+                renderNews(data.articles.slice(0, 3));
+            } catch (error) {
+                console.log("Nutze Dummy-Nachrichten (API Key fehlt oder Fehler)");
+                renderNews(dummyNews);
+            }
+
+            function renderNews(articles) {
+                container.innerHTML = articles.map(article => `
+                    <div class="news-item">
+                        <h3>${article.title}</h3>
+                        <p>${article.description || article.desc || ''}</p>
+                    </div>
+                `).join('');
+            }
+        }
+        fetchNews();
+        setInterval(fetchNews, 60 * 60 * 1000); // Alle 60 Minuten aktualisieren
+
+        // ==========================================
+        // 4. SPORT TICKER LOGIK
+        // ==========================================
+        // Eine Liste mit aktuellen/Dummy Sportergebnissen
+        const sportResults = [
+            "FC Bayern München <span class='ticker-score'>2 - 1</span> Borussia Dortmund",
+            "Bayer Leverkusen <span class='ticker-score'>3 - 0</span> RB Leipzig",
+            "Formel 1: Verstappen holt Pole Position in Monaco",
+            "Basketball: Alba Berlin gewinnt knapp im EuroLeague-Krimi",
+            "Tennis: Zverev erreicht Halbfinale in Paris",
+            "VfB Stuttgart <span class='ticker-score'>1 - 1</span> Eintracht Frankfurt"
+        ];
+
+        function initTicker() {
+            const tickerEl = document.getElementById('sports-ticker');
+            // Array in Ticker-Items umwandeln
+            let tickerHTML = sportResults.map(res => `<span class="ticker-item">${res}</span>`).join(' • ');
+            // HTML doppelt einfügen für nahtlosen Loop
+            tickerEl.innerHTML = tickerHTML + ' • ' + tickerHTML;
+        }
+        initTicker();
+
+    </script>
+</body>
+</html>
