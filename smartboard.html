@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100vw; height: 100vh;
+    background: #000; color: #fff;
+    font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+    overflow: hidden; cursor: none;
+  }
+  body.show-cursor { cursor: default; }
+
+  /* === SLIDESHOW LAYER === */
+  .stage {
+    position: absolute; inset: 0;
+    overflow: hidden;
+    background: #000;
+  }
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    will-change: transform, opacity, filter, clip-path;
+  }
+  .slide.active { opacity: 1; z-index: 1; }
+  .slide.outgoing { z-index: 0; }
+  .slide img, .slide video {
+    max-width: 100%; max-height: 100%;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Subtiler Dunkel-Overlay für Lesbarkeit */
+  .overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0) 65%, rgba(0,0,0,.55) 100%);
+    z-index: 2; pointer-events: none;
+  }
+
+  /* === HUD === */
+  .hud {
+    position: absolute; inset: 0;
+    padding: 40px 50px;
+    z-index: 3;
+    display: flex; flex-direction: column; justify-content: space-between;
+    pointer-events: none;
+  }
+  .top-row { display: flex; justify-content: space-between; align-items: flex-start; }
+  .bottom-row { display: flex; justify-content: space-between; align-items: flex-end; }
+
+  #clock {
+    font-size: clamp(60px, 9vw, 140px);
+    font-weight: 200; line-height: .9;
+    text-shadow: 0 4px 24px rgba(0,0,0,.6);
+    letter-spacing: -2px;
+  }
+  #date {
+    font-size: clamp(18px, 1.6vw, 26px);
+    font-weight: 300; opacity: .92;
+    margin-top: 6px; text-shadow: 0 2px 12px rgba(0,0,0,.7);
+  }
+
+  .weather { text-align: right; text-shadow: 0 2px 12px rgba(0,0,0,.7); }
+  .weather-current {
+    font-size: clamp(28px, 3.5vw, 52px);
+    font-weight: 300;
+    display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+  }
+  .weather-current .icon { font-size: 1.2em; }
+  .weather-desc { font-size: clamp(13px, 1.1vw, 17px); opacity: .85; margin-top: 4px; }
+  .forecast { margin-top: 18px; display: flex; gap: 22px; justify-content: flex-end; }
+  .fc-item {
+    display: flex; flex-direction: column; align-items: center;
+    font-size: clamp(12px, 1vw, 15px); opacity: .88;
+  }
+  .fc-item .fc-icon { font-size: 1.8em; margin: 2px 0; }
+  .fc-item .fc-day { font-weight: 500; }
+
+  .status {
+    font-size: 12px; opacity: .55;
+    text-shadow: 0 1px 6px rgba(0,0,0,.8);
+  }
+  .status span { margin-right: 14px; }
+
+  .hint {
+    font-size: 12px; opacity: .55; text-align: right;
+    text-shadow: 0 1px 6px rgba(0,0,0,.8);
+  }
+
+  /* === SETUP / SETTINGS PANEL === */
+  .panel {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,.85);
+    backdrop-filter: blur(12px);
+    z-index: 10;
+    display: none;
+    align-items: center; justify-content: center;
+    cursor: default;
+  }
+  .panel.visible { display: flex; }
+  .panel-inner {
+    background: #111; border: 1px solid #333; border-radius: 16px;
+    padding: 36px 44px; max-width: 560px; width: 92%;
+    box-shadow: 0 30px 80px rgba(0,0,0,.7);
+  }
+  .panel h2 { font-size: 22px; font-weight: 500; margin-bottom: 20px; }
+  .panel .row { margin: 14px 0; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+  .panel label { font-size: 14px; opacity: .85; }
+  .panel select, .panel input[type=number] {
+    background: #1c1c1c; color: #fff; border: 1px solid #333;
+    border-radius: 8px; padding: 8px 12px; font-size: 14px; min-width: 160px;
+    font-family: inherit;
+  }
+  .panel input[type=checkbox] { width: 18px; height: 18px; accent-color: #4a9eff; }
+  .btn {
+    background: #2a72e6; color: #fff; border: none;
+    padding: 12px 22px; border-radius: 10px; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: background .2s;
+    font-family: inherit;
+  }
+  .btn:hover { background: #1f5fcc; }
+  .btn.secondary { background: #2a2a2a; }
+  .btn.secondary:hover { background: #3a3a3a; }
+  .btn-row { display: flex; gap: 10px; margin-top: 22px; }
+  .info { font-size: 12px; opacity: .55; margin-top: 16px; line-height: 1.5; }
+  .file-count { font-size: 13px; opacity: .7; margin-top: 8px; }
+
+  /* === 30 ANIMATIONEN === */
+  /* Jede Animation hat IN (kommt rein) + ggf. OUT (geht raus) */
+
+  /* 1. Fade */
+  @keyframes anim01-in  { from { opacity:0 } to { opacity:1 } }
+  @keyframes anim01-out { from { opacity:1 } to { opacity:0 } }
+  .anim-01.active   { animation: anim01-in 1.2s ease forwards; }
+  .anim-01.outgoing { animation: anim01-out 1.2s ease forwards; }
+
+  /* 2. Ken Burns Zoom In */
+  @keyframes anim02-in { from { opacity:0; transform: scale(1) } 10% { opacity:1 } to { opacity:1; transform: scale(1.18) } }
+  .anim-02.active   { animation: anim02-in 8s ease-out forwards; }
+  .anim-02.outgoing { animation: anim01-out 1.2s ease forwards; }
+
+  /* 3. Ken Burns Zoom Out */
+  @keyframes anim03-in { from { opacity:0; transform: scale(1.18) } 10% { opacity:1 } to { opacity:1; transform: scale(1) } }
+  .anim-03.active   { animation: anim03-in 8s ease-out forwards; }
+  .anim-03.outgoing { animation: anim01-out 1.2s ease forwards; }
+
+  /* 4. Slide Left */
+  @keyframes anim04-in  { from { transform: translateX(100%); opacity:1 } to { transform: translateX(0); opacity:1 } }
+  @keyframes anim04-out { from { transform: translateX(0); opacity:1 } to { transform: translateX(-100%); opacity:1 } }
+  .anim-04.active   { animation: anim04-in 1.1s cubic-bezier(.7,0,.3,1) forwards; }
+  .anim-04.outgoing { animation: anim04-out 1.1s cubic-bezier(.7,0,.3,1) forwards; }
+
+  /* 5. Slide Right */
+  @keyframes anim05-in  { from { transform: translateX(-100%); opacity:1 } to { transform: translateX(0); opacity:1 } }
+  @keyframes anim05-out { from { transform: translateX(0); opacity:1 } to { transform: translateX(100%); opacity:1 } }
+  .anim-05.active   { animation: anim05-in 1.1s cubic-bezier(.7,0,.3,1) forwards; }
+  .anim-05.outgoing { animation: anim05-out 1.1s cubic-bezier(.7,0,.3,1) forwards; }
+
+  /* 6. Slide Up */
+  @keyframes anim06-in  { from { transform: translateY(100%) } to { transform: translateY(0) } }
+  @keyframes anim06-out { from { transform: translateY(0) } to { transform: translateY(-100%) } }
+  .anim-06.active   { animation: anim06-in 1.1s cubic-bezier(.7,0,.3,1) forwards; opacity:1 }
+  .anim-06.outgoing { animation: anim06-out 1.1s cubic-bezier(.7,0,.3,1) forwards; opacity:1 }
+
+  /* 7. Slide Down */
+  @keyframes anim07-in  { from { transform: translateY(-100%) } to { transform: translateY(0) } }
+  @keyframes anim07-out { from { transform: translateY(0) } to { transform: translateY(100%) } }
+  .anim-07.active   { animation: anim07-in 1.1s cubic-bezier(.7,0,.3,1) forwards; opacity:1 }
+  .anim-07.outgoing { animation: anim07-out 1.1s cubic-bezier(.7,0,.3,1) forwards; opacity:1 }
+
+  /* 8. Zoom In */
+  @keyframes anim08-in { from { opacity:0; transform: scale(.4) } to { opacity:1; transform: scale(1) } }
+  .anim-08.active   { animation: anim08-in 1s cubic-bezier(.3,.7,.4,1) forwards; }
+  .anim-08.outgoing { animation: anim01-out 1s ease forwards; }
+
+  /* 9. Zoom Out (incoming startet groß) */
+  @keyframes anim09-in { from { opacity:0; transform: scale(2.2) } to { opacity:1; transform: scale(1) } }
+  .anim-09.active   { animation: anim09-in 1.1s cubic-bezier(.3,.7,.4,1) forwards; }
+  .anim-09.outgoing { animation: anim01-out 1.1s ease forwards; }
+
+  /* 10. Rotate CW */
+  @keyframes anim10-in { from { opacity:0; transform: rotate(-180deg) scale(.5) } to { opacity:1; transform: rotate(0) scale(1) } }
+  .anim-10.active   { animation: anim10-in 1.3s cubic-bezier(.4,.2,.2,1) forwards; }
+  .anim-10.outgoing { animation: anim01-out 1.3s ease forwards; }
+
+  /* 11. Rotate CCW */
+  @keyframes anim11-in { from { opacity:0; transform: rotate(180deg) scale(.5) } to { opacity:1; transform: rotate(0) scale(1) } }
+  .anim-11.active   { animation: anim11-in 1.3s cubic-bezier(.4,.2,.2,1) forwards; }
+  .anim-11.outgoing { animation: anim01-out 1.3s ease forwards; }
+
+  /* 12. Flip X */
+  @keyframes anim12-in { from { opacity:0; transform: perspective(1200px) rotateX(90deg) } to { opacity:1; transform: perspective(1200px) rotateX(0) } }
+  .anim-12.active   { animation: anim12-in 1.2s cubic-bezier(.4,0,.2,1) forwards; }
+  .anim-12.outgoing { animation: anim01-out 1.2s ease forwards; }
+
+  /* 13. Flip Y */
+  @keyframes anim13-in { from { opacity:0; transform: perspective(1200px) rotateY(90deg) } to { opacity:1; transform: perspective(1200px) rotateY(0) } }
+  .anim-13.active   { animation: anim13-in 1.2s cubic-bezier(.4,0,.2,1) forwards; }
+  .anim-13.outgoing { animation: anim01-out 1.2s ease forwards; }
+
+  /* 14. Blur In */
+  @keyframes anim14-in { from { opacity:0; filter: blur(40px) } to { opacity:1; filter: blur(0) } }
+  .anim-14.active   { animation: anim14-in 1.4s ease forwards; }
+  .anim-14.outgoing { animation: anim01-out 1.4s ease forwards; }
+
+  /* 15. Blur Out (vorheriges Bild blurrt) */
+  @keyframes anim15-out { from { opacity:1; filter: blur(0) } to { opacity:0; filter: blur(40px) } }
+  .anim-15.active   { animation: anim01-in 1.4s ease forwards; }
+  .anim-15.outgoing { animation: anim15-out 1.4s ease forwards; }
+
+  /* 16. Wipe Left (Clip Path) */
+  @keyframes anim16-in { from { clip-path: inset(0 0 0 100%); opacity:1 } to { clip-path: inset(0 0 0 0); opacity:1 } }
+  .anim-16.active   { animation: anim16-in 1.2s cubic-bezier(.6,0,.4,1) forwards; }
+  .anim-16.outgoing { animation: anim01-out 1.2s ease forwards; }
+
+  /* 17. Wipe Right */
+  @keyframes anim17-in { from { clip-path: inset(0 100% 0 0); opacity:1 } to { clip-path: inset(0 0 0 0); opacity:1 } }
+  .anim-17.active   { animation: anim17-in 1.2s cubic-bezier(.6,0,.4,1) forwards; }
+  .anim-17.outgoing { animation: anim01-out 1.2s ease forwards; }
+
+  /* 18. Wipe Up */
+  @keyframes anim18-in { from { clip-path: inset(100% 0 0 0); opacity:1 } to { clip-path: inset(0 0 0 0); opacity:1 } }
+  .anim-18.active   { animation: anim18-in 1.2s cubic-bezier(.6,0,.4,1) forwards; }
+  .anim-18.outgoing { animation: anim01-out 1.2s ease forwards; }
+
+  /* 19. Wipe Down */
+  @keyframes anim19-in { from { clip-path: inset(0 0 100% 0); opacity:1 } to { clip-path: inset(0 0 0 0); opacity:1 } }
+  .anim-19.active   { animation: anim19-in 1.2s cubic-bezier(.6,0,.4,1) forwards; }
+  .anim-19.outgoing { animation: anim01-out 1.2s ease forwards; }
+
+  /* 20. Diagonal Wipe */
+  @keyframes anim20-in { from { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); opacity:1 } to { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); opacity:1 } }
+  .anim-20.active   { animation: anim20-in 1.3s cubic-bezier(.6,0,.4,1) forwards; }
+  .anim-20.outgoing { animation: anim01-out 1.3s ease forwards; }
+
+  /* 21. Circle Reveal */
+  @keyframes anim21-in { from { clip-path: circle(0% at 50% 50%); opacity:1 } to { clip-path: circle(75% at 50% 50%); opacity:1 } }
+  .anim-21.active   { animation: anim21-in 1.4s ease-out forwards; }
+  .anim-21.outgoing { animation: anim01-out 1.4s ease forwards; }
+
+  /* 22. Circle Close (alt) */
+  @keyframes anim22-out { from { clip-path: circle(75% at 50% 50%); opacity:1 } to { clip-path: circle(0% at 50% 50%); opacity:1 } }
+  .anim-22.active   { animation: anim01-in 1.2s ease forwards; }
+  .anim-22.outgoing { animation: anim22-out 1.2s ease forwards; }
+
+  /* 23. Shake In */
+  @keyframes anim23-in {
+    0% { opacity:0; transform: translateX(-30px) }
+    20% { opacity:1; transform: translateX(25px) }
+    40% { transform: translateX(-18px) }
+    60% { transform: translateX(12px) }
+    80% { transform: translateX(-6px) }
+    100% { transform: translateX(0) }
+  }
+  .anim-23.active   { animation: anim23-in 1s ease forwards; }
+  .anim-23.outgoing { animation: anim01-out 1s ease forwards; }
+
+  /* 24. Tilt In */
+  @keyframes anim24-in { from { opacity:0; transform: perspective(1000px) rotateY(-35deg) translateX(-200px) } to { opacity:1; transform: perspective(1000px) rotateY(0) translateX(0) } }
+  .anim-24.active   { animation: anim24-in 1.2s cubic-bezier(.3,.7,.4,1) forwards; }
+  .anim-24.outgoing { animation: anim01-out 1.2s ease forwards; }
+
+  /* 25. Bounce In */
+  @keyframes anim25-in {
+    0% { opacity:0; transform: scale(.3) }
+    50% { opacity:1; transform: scale(1.08) }
+    70% { transform: scale(.96) }
+    100% { transform: scale(1) }
+  }
+  .anim-25.active   { animation: anim25-in 1.2s ease forwards; }
+  .anim-25.outgoing { animation: anim01-out 1.2s ease forwards; }
+
+  /* 26. Perspective Flip */
+  @keyframes anim26-in { from { opacity:0; transform: perspective(800px) rotateX(-65deg) translateY(40%) } to { opacity:1; transform: perspective(800px) rotateX(0) translateY(0) } }
+  .anim-26.active   { animation: anim26-in 1.3s cubic-bezier(.3,.7,.4,1) forwards; }
+  .anim-26.outgoing { animation: anim01-out 1.3s ease forwards; }
+
+  /* 27. Saturation Flash */
+  @keyframes anim27-in { 0% { opacity:0; filter: saturate(0) brightness(2) } 50% { opacity:1; filter: saturate(3) brightness(1.4) } 100% { opacity:1; filter: saturate(1) brightness(1) } }
+  .anim-27.active   { animation: anim27-in 1.4s ease forwards; }
+  .anim-27.outgoing { animation: anim01-out 1.4s ease forwards; }
+
+  /* 28. Slide Diagonal */
+  @keyframes anim28-in { from { opacity:0; transform: translate(60%, 60%) scale(.7) } to { opacity:1; transform: translate(0,0) scale(1) } }
+  .anim-28.active   { animation: anim28-in 1.2s cubic-bezier(.3,.7,.4,1) forwards; }
+  .anim-28.outgoing { animation: anim01-out 1.2s ease forwards; }
+
+  /* 29. Vertical Bars / Blinds */
+  @keyframes anim29-in { from { clip-path: polygon(0 0,5% 0,5% 100%,0 100%, 0 0, 10% 0, 10% 100%, 5% 100%); opacity:1 } to { clip-path: polygon(0 0,100% 0,100% 100%,0 100%); opacity:1 } }
+  .anim-29.active   { animation: anim21-in 1.3s ease forwards; } /* visual fallback */
+  .anim-29.outgoing { animation: anim01-out 1.3s ease forwards; }
+
+  /* 30. Glitch In */
+  @keyframes anim30-in {
+    0% { opacity:0; transform: translate(0,0); filter: hue-rotate(0deg) }
+    20% { opacity:1; transform: translate(-15px, 6px); filter: hue-rotate(90deg) saturate(2) }
+    40% { transform: translate(12px, -8px); filter: hue-rotate(-60deg) saturate(1.5) }
+    60% { transform: translate(-6px, 4px); filter: hue-rotate(30deg) }
+    80% { transform: translate(3px, -2px); filter: hue-rotate(0deg) }
+    100% { opacity:1; transform: translate(0,0); filter: none }
+  }
+  .anim-30.active   { animation: anim30-in 1s steps(8) forwards; }
+  .anim-30.outgoing { animation: anim01-out 1s ease forwards; }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+  <div class="slide" id="slide-a"></div>
+  <div class="slide" id="slide-b"></div>
+</div>
+
+<div class="overlay"></div>
+
+<div class="hud">
+  <div class="top-row">
+    <div>
+      <div id="clock">--:--</div>
+      <div id="date">—</div>
+    </div>
+    <div class="weather">
+      <div id="weather-current" class="weather-current"><span class="icon">⏳</span><span id="weather-temp">--°</span></div>
+      <div id="weather-desc" class="weather-desc">lade Wetter…</div>
+      <div id="forecast" class="forecast"></div>
+    </div>
+  </div>
+
+  <div class="bottom-row">
+    <div id="status" class="status">
+      <span id="status-files">0 Dateien</span>
+      <span id="status-anim">Animation —</span>
+      <span id="status-mode">Random</span>
+    </div>
+    <div class="hint">
+      [S] Einstellungen · [Leertaste] Pause · [←/→] Wechsel · [F] Vollbild
+    </div>
+  </div>
+</div>
+
+<!-- SETUP / SETTINGS PANEL -->
+<div class="panel" id="panel">
+  <div class="panel-inner">
+    <h2 id="panel-title">Dashboard einrichten</h2>
+
+    <div class="row">
+      <label>Medien-Quelle</label>
+      <div>
+        <button class="btn" id="btn-pick-folder">📁 Ordner wählen</button>
+        <button class="btn secondary" id="btn-pick-files" style="margin-left:6px">Dateien wählen</button>
+      </div>
+    </div>
+    <div class="file-count" id="file-count">Noch kein Ordner ausgewählt</div>
+
+    <div class="row">
+      <label>Slide-Dauer (Sekunden)</label>
+      <input type="number" id="cfg-duration" min="3" max="120" value="10">
+    </div>
+    <div class="row">
+      <label>Animations-Modus</label>
+      <select id="cfg-anim-mode">
+        <option value="random">Zufällig (alle 30)</option>
+        <option value="sequence">Reihenfolge (1 → 30)</option>
+        <option value="fixed">Eine bestimmte…</option>
+      </select>
+    </div>
+    <div class="row" id="row-fixed-anim" style="display:none">
+      <label>Animation auswählen</label>
+      <select id="cfg-fixed-anim"></select>
+    </div>
+    <div class="row">
+      <label>Video-Ton aktivieren</label>
+      <input type="checkbox" id="cfg-sound">
+    </div>
+    <div class="row">
+      <label>Wetter anzeigen</label>
+      <input type="checkbox" id="cfg-weather" checked>
+    </div>
+    <div class="row">
+      <label>Uhr/Datum anzeigen</label>
+      <input type="checkbox" id="cfg-clock" checked>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" id="btn-start">Start</button>
+      <button class="btn secondary" id="btn-close">Schließen</button>
+    </div>
+
+    <div class="info">
+      Unterstützt: JPG, PNG, WEBP, GIF, MP4, WEBM, MOV. HEIC wird übersprungen — auf iPhone „Maximale Kompatibilität" einstellen.<br>
+      Ordner-Auswahl funktioniert in Chrome/Edge. In anderen Browsern „Dateien wählen" nutzen.
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   KONFIGURATION
+   ============================================================ */
+const CONFIG = {
+  weatherKey: '769c5861cd255a3982bafb1680abf194',
+  weatherCity: 'Duesseldorf,de',
+  weatherLang: 'de',
+  weatherRefreshMs: 15 * 60 * 1000
+};
+
+const IMG_EXT = ['jpg','jpeg','png','webp','gif','bmp','avif'];
+const VID_EXT = ['mp4','webm','mov','m4v','ogv'];
+const HEIC_EXT = ['heic','heif'];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  files: [],            // [{name, url, type:'image'|'video', kind:'blob'|'handle', handle?}]
+  current: 0,
+  activeSlide: 'a',
+  paused: false,
+  timer: null,
+  animIndex: 0,
+  settings: loadSettings(),
+  folderHandle: null
+};
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem('smartDash.settings');
+    if (raw) return { ...defaults(), ...JSON.parse(raw) };
+  } catch(e) {}
+  return defaults();
+}
+function defaults() {
+  return {
+    duration: 10,
+    animMode: 'random',  // random | sequence | fixed
+    fixedAnim: 1,
+    sound: false,
+    weather: true,
+    clock: true
+  };
+}
+function saveSettings() {
+  localStorage.setItem('smartDash.settings', JSON.stringify(state.settings));
+}
+
+/* ============================================================
+   INDEXEDDB für Folder-Handle Persistenz
+   ============================================================ */
+const DB_NAME = 'smartDash';
+const STORE = 'handles';
+
+function openDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(STORE);
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+async function saveHandle(handle) {
+  const db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put(handle, 'folder');
+    tx.oncomplete = () => res();
+    tx.onerror = () => rej(tx.error);
+  });
+}
+async function loadHandle() {
+  try {
+    const db = await openDB();
+    return await new Promise((res, rej) => {
+      const tx = db.transaction(STORE, 'readonly');
+      const req = tx.objectStore(STORE).get('folder');
+      req.onsuccess = () => res(req.result || null);
+      req.onerror = () => rej(req.error);
+    });
+  } catch(e) { return null; }
+}
+
+/* ============================================================
+   FILES LADEN
+   ============================================================ */
+function getKind(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  if (IMG_EXT.includes(ext)) return 'image';
+  if (VID_EXT.includes(ext)) return 'video';
+  if (HEIC_EXT.includes(ext)) return 'heic';
+  return null;
+}
+
+async function loadFromFolder(handle) {
+  const files = [];
+  let heicCount = 0;
+  for await (const entry of handle.values()) {
+    if (entry.kind !== 'file') continue;
+    const kind = getKind(entry.name);
+    if (!kind) continue;
+    if (kind === 'heic') { heicCount++; continue; }
+    files.push({ name: entry.name, type: kind, source: 'handle', handle: entry });
+  }
+  files.sort((a,b) => a.name.localeCompare(b.name, 'de'));
+  if (heicCount > 0) console.warn(`${heicCount} HEIC-Dateien übersprungen.`);
+  return files;
+}
+
+async function loadFromFileList(fileList) {
+  const files = [];
+  for (const f of fileList) {
+    const kind = getKind(f.name);
+    if (!kind || kind === 'heic') continue;
+    files.push({ name: f.name, type: kind, source: 'blob', blob: f });
+  }
+  files.sort((a,b) => a.name.localeCompare(b.name, 'de'));
+  return files;
+}
+
+async function getURL(fileEntry) {
+  if (fileEntry.source === 'blob') {
+    return URL.createObjectURL(fileEntry.blob);
+  }
+  const file = await fileEntry.handle.getFile();
+  return URL.createObjectURL(file);
+}
+
+/* ============================================================
+   PERMISSION HELPER
+   ============================================================ */
+async function verifyPermission(handle, write = false) {
+  const opts = { mode: write ? 'readwrite' : 'read' };
+  if ((await handle.queryPermission(opts)) === 'granted') return true;
+  if ((await handle.requestPermission(opts)) === 'granted') return true;
+  return false;
+}
+
+/* ============================================================
+   ORDNER WÄHLEN
+   ============================================================ */
+async function pickFolder() {
+  if (!window.showDirectoryPicker) {
+    alert('Ordner-Auswahl wird in diesem Browser nicht unterstützt. Nutze „Dateien wählen".');
+    return;
+  }
+  try {
+    const handle = await window.showDirectoryPicker({ mode: 'read' });
+    await saveHandle(handle);
+    state.folderHandle = handle;
+    const files = await loadFromFolder(handle);
+    state.files = files;
+    updateFileCount();
+  } catch(e) {
+    if (e.name !== 'AbortError') console.error(e);
+  }
+}
+
+async function pickFiles() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = true;
+  input.accept = IMG_EXT.concat(VID_EXT).map(e => '.'+e).join(',');
+  input.onchange = async () => {
+    const files = await loadFromFileList(input.files);
+    state.files = files;
+    state.folderHandle = null;
+    updateFileCount();
+  };
+  input.click();
+}
+
+function updateFileCount() {
+  const fc = document.getElementById('file-count');
+  const imgs = state.files.filter(f => f.type === 'image').length;
+  const vids = state.files.filter(f => f.type === 'video').length;
+  fc.textContent = `${state.files.length} Dateien geladen (${imgs} Bilder, ${vids} Videos)`;
+  document.getElementById('status-files').textContent = `${state.files.length} Dateien`;
+}
+
+/* ============================================================
+   SLIDESHOW
+   ============================================================ */
+function getNextAnimIndex() {
+  switch(state.settings.animMode) {
+    case 'sequence':
+      state.animIndex = (state.animIndex % 30) + 1;
+      return state.animIndex;
+    case 'fixed':
+      return state.settings.fixedAnim;
+    case 'random':
+    default:
+      return Math.floor(Math.random() * 30) + 1;
+  }
+}
+
+function clearAnimClasses(el) {
+  for (let i = 1; i <= 30; i++) {
+    el.classList.remove('anim-' + String(i).padStart(2,'0'));
+  }
+  el.classList.remove('active', 'outgoing');
+}
+
+async function showSlide(idx) {
+  if (state.files.length === 0) return;
+  if (idx < 0) idx = state.files.length - 1;
+  if (idx >= state.files.length) idx = 0;
+  state.current = idx;
+  const file = state.files[idx];
+
+  const currentEl = document.getElementById('slide-' + state.activeSlide);
+  const nextKey = state.activeSlide === 'a' ? 'b' : 'a';
+  const nextEl = document.getElementById('slide-' + nextKey);
+
+  // Animation wählen
+  const animNum = getNextAnimIndex();
+  const animClass = 'anim-' + String(animNum).padStart(2,'0');
+  document.getElementById('status-anim').textContent = `Animation ${animNum}`;
+
+  // Nächstes Medium vorbereiten
+  nextEl.innerHTML = '';
+  let videoDuration = null;
+  try {
+    const url = await getURL(file);
+    if (file.type === 'image') {
+      const img = document.createElement('img');
+      img.src = url;
+      img.onload = () => { /* loaded */ };
+      img.onerror = () => console.warn('Bild-Fehler:', file.name);
+      nextEl.appendChild(img);
+    } else if (file.type === 'video') {
+      const vid = document.createElement('video');
+      vid.src = url;
+      vid.autoplay = true;
+      vid.muted = !state.settings.sound;
+      vid.playsInline = true;
+      vid.loop = false;
+      vid.onloadedmetadata = () => { videoDuration = vid.duration; };
+      vid.onended = () => { if (!state.paused) next(); };
+      vid.onerror = () => { console.warn('Video-Fehler:', file.name); if (!state.paused) next(); };
+      nextEl.appendChild(vid);
+    }
+  } catch(e) {
+    console.error('Datei nicht ladbar:', file.name, e);
+    if (!state.paused) setTimeout(next, 200);
+    return;
+  }
+
+  // Animations-Klassen anwenden
+  clearAnimClasses(currentEl);
+  clearAnimClasses(nextEl);
+  // Reflow
+  void nextEl.offsetWidth;
+
+  nextEl.classList.add(animClass, 'active');
+  currentEl.classList.add(animClass, 'outgoing');
+
+  state.activeSlide = nextKey;
+
+  // Timer für nächste Slide
+  clearTimeout(state.timer);
+  if (!state.paused) {
+    if (file.type === 'video') {
+      // Video-Ende übernimmt Weiterschaltung (onended). Fallback nach 60s falls Video kaputt.
+      state.timer = setTimeout(next, 60000);
+    } else {
+      state.timer = setTimeout(next, state.settings.duration * 1000);
+    }
+  }
+
+  // Alte Slide-URL freigeben nach Übergang
+  setTimeout(() => {
+    const oldMedia = currentEl.querySelector('img, video');
+    if (oldMedia) {
+      try { URL.revokeObjectURL(oldMedia.src); } catch(e) {}
+    }
+  }, 2000);
+}
+
+function next() { showSlide(state.current + 1); }
+function prev() { showSlide(state.current - 1); }
+
+function togglePause() {
+  state.paused = !state.paused;
+  if (state.paused) {
+    clearTimeout(state.timer);
+    const vid = document.querySelector('.slide.active video');
+    if (vid) vid.pause();
+  } else {
+    const vid = document.querySelector('.slide.active video');
+    if (vid) vid.play();
+    else state.timer = setTimeout(next, state.settings.duration * 1000);
+  }
+}
+
+/* ============================================================
+   UHR
+   ============================================================ */
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('date').textContent =
+    now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+/* ============================================================
+   WETTER
+   ============================================================ */
+const WEATHER_ICONS = {
+  '01d':'☀️','01n':'🌙','02d':'⛅','02n':'☁️','03d':'☁️','03n':'☁️',
+  '04d':'☁️','04n':'☁️','09d':'🌧️','09n':'🌧️','10d':'🌦️','10n':'🌧️',
+  '11d':'⛈️','11n':'⛈️','13d':'❄️','13n':'❄️','50d':'🌫️','50n':'🌫️'
+};
+function icon(code) { return WEATHER_ICONS[code] || '🌡️'; }
+
+async function updateWeather() {
+  if (!state.settings.weather) {
+    document.querySelector('.weather').style.display = 'none';
+    return;
+  }
+  document.querySelector('.weather').style.display = '';
+  try {
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(CONFIG.weatherCity)}&appid=${CONFIG.weatherKey}&units=metric&lang=${CONFIG.weatherLang}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('Wetter-API '+r.status);
+    const d = await r.json();
+    document.getElementById('weather-current').innerHTML =
+      `<span class="icon">${icon(d.weather[0].icon)}</span><span>${Math.round(d.main.temp)}°</span>`;
+    document.getElementById('weather-desc').textContent =
+      `${d.weather[0].description} · gefühlt ${Math.round(d.main.feels_like)}°`;
+
+    // Forecast
+    const fUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(CONFIG.weatherCity)}&appid=${CONFIG.weatherKey}&units=metric&lang=${CONFIG.weatherLang}`;
+    const fr = await fetch(fUrl);
+    if (fr.ok) {
+      const fd = await fr.json();
+      // Eine Vorhersage pro Tag um 12:00
+      const days = {};
+      for (const item of fd.list) {
+        const date = new Date(item.dt * 1000);
+        const key = date.toISOString().slice(0,10);
+        if (!days[key] && date.getHours() >= 11 && date.getHours() <= 14) {
+          days[key] = item;
+        }
+      }
+      const todayKey = new Date().toISOString().slice(0,10);
+      const dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+      const html = Object.entries(days)
+        .filter(([k]) => k !== todayKey)
+        .slice(0, 3)
+        .map(([k, item]) => {
+          const dn = dayNames[new Date(k).getDay()];
+          return `<div class="fc-item">
+            <span class="fc-day">${dn}</span>
+            <span class="fc-icon">${icon(item.weather[0].icon)}</span>
+            <span>${Math.round(item.main.temp)}°</span>
+          </div>`;
+        }).join('');
+      document.getElementById('forecast').innerHTML = html;
+    }
+  } catch(e) {
+    document.getElementById('weather-desc').textContent = 'Wetter offline';
+    console.warn(e);
+  }
+}
+
+/* ============================================================
+   WAKE LOCK + WATCHDOG (gegen Black Screen)
+   ============================================================ */
+let wakeLock = null;
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    }
+  } catch(e) { console.warn('Wake Lock:', e); }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && !wakeLock) requestWakeLock();
+});
+
+let lastHeartbeat = Date.now();
+setInterval(() => { lastHeartbeat = Date.now(); }, 5000);
+setInterval(() => {
+  // Watchdog: wenn länger als 30s nichts passiert ist, reload
+  if (Date.now() - lastHeartbeat > 30000) {
+    console.warn('Watchdog: reload');
+    location.reload();
+  }
+}, 10000);
+
+/* ============================================================
+   PANEL / SETTINGS UI
+   ============================================================ */
+function openPanel(isSetup = false) {
+  document.body.classList.add('show-cursor');
+  document.getElementById('panel-title').textContent = isSetup ? 'Dashboard einrichten' : 'Einstellungen';
+  document.getElementById('cfg-duration').value = state.settings.duration;
+  document.getElementById('cfg-anim-mode').value = state.settings.animMode;
+  document.getElementById('cfg-fixed-anim').value = state.settings.fixedAnim;
+  document.getElementById('cfg-sound').checked = state.settings.sound;
+  document.getElementById('cfg-weather').checked = state.settings.weather;
+  document.getElementById('cfg-clock').checked = state.settings.clock;
+  toggleFixedAnim();
+  document.getElementById('panel').classList.add('visible');
+}
+function closePanel() {
+  document.getElementById('panel').classList.remove('visible');
+  document.body.classList.remove('show-cursor');
+}
+function toggleFixedAnim() {
+  const mode = document.getElementById('cfg-anim-mode').value;
+  document.getElementById('row-fixed-anim').style.display = mode === 'fixed' ? 'flex' : 'none';
+}
+
+function fillAnimDropdown() {
+  const sel = document.getElementById('cfg-fixed-anim');
+  const labels = ['Fade','Ken Burns Zoom-In','Ken Burns Zoom-Out','Slide Links','Slide Rechts','Slide Hoch','Slide Runter','Zoom In','Zoom Out','Rotate CW','Rotate CCW','Flip X','Flip Y','Blur In','Blur Out','Wipe Links','Wipe Rechts','Wipe Hoch','Wipe Runter','Diagonal Wipe','Circle Reveal','Circle Close','Shake','Tilt In','Bounce','Perspective','Saturation Flash','Diagonal Slide','Blinds','Glitch'];
+  sel.innerHTML = labels.map((l, i) => `<option value="${i+1}">${i+1}. ${l}</option>`).join('');
+}
+
+function applySettings() {
+  state.settings.duration = parseInt(document.getElementById('cfg-duration').value, 10) || 10;
+  state.settings.animMode = document.getElementById('cfg-anim-mode').value;
+  state.settings.fixedAnim = parseInt(document.getElementById('cfg-fixed-anim').value, 10) || 1;
+  state.settings.sound = document.getElementById('cfg-sound').checked;
+  state.settings.weather = document.getElementById('cfg-weather').checked;
+  state.settings.clock = document.getElementById('cfg-clock').checked;
+  saveSettings();
+  document.getElementById('status-mode').textContent =
+    state.settings.animMode === 'random' ? 'Random' :
+    state.settings.animMode === 'sequence' ? 'Sequenz' : 'Fixed';
+  document.querySelector('#clock').style.display = state.settings.clock ? '' : 'none';
+  document.querySelector('#date').style.display = state.settings.clock ? '' : 'none';
+  updateWeather();
+}
+
+/* ============================================================
+   TASTATUR
+   ============================================================ */
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('panel').classList.contains('visible')) return;
+  switch(e.key.toLowerCase()) {
+    case 'arrowright': next(); break;
+    case 'arrowleft': prev(); break;
+    case ' ': e.preventDefault(); togglePause(); break;
+    case 's': openPanel(); break;
+    case 'f':
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+      break;
+    case 'escape':
+      if (document.fullscreenElement) document.exitFullscreen();
+      break;
+  }
+});
+
+/* Mausbewegung zeigt kurz Cursor */
+let cursorTimer;
+document.addEventListener('mousemove', () => {
+  document.body.classList.add('show-cursor');
+  clearTimeout(cursorTimer);
+  cursorTimer = setTimeout(() => document.body.classList.remove('show-cursor'), 3000);
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+async function init() {
+  fillAnimDropdown();
+  updateClock();
+  setInterval(updateClock, 30000);
+
+  // Settings UI Events
+  document.getElementById('cfg-anim-mode').addEventListener('change', toggleFixedAnim);
+  document.getElementById('btn-pick-folder').addEventListener('click', pickFolder);
+  document.getElementById('btn-pick-files').addEventListener('click', pickFiles);
+  document.getElementById('btn-close').addEventListener('click', closePanel);
+  document.getElementById('btn-start').addEventListener('click', async () => {
+    applySettings();
+    closePanel();
+    if (state.files.length > 0) {
+      await requestWakeLock();
+      showSlide(0);
+    }
+  });
+
+  // Wetter laden + Refresh
+  updateWeather();
+  setInterval(updateWeather, CONFIG.weatherRefreshMs);
+
+  // Gespeicherten Folder-Handle versuchen wiederherzustellen
+  const handle = await loadHandle();
+  if (handle) {
+    const ok = await verifyPermission(handle);
+    if (ok) {
+      state.folderHandle = handle;
+      try {
+        state.files = await loadFromFolder(handle);
+        updateFileCount();
+        await requestWakeLock();
+        showSlide(0);
+        return; // direkt los, kein Panel
+      } catch(e) { console.warn('Folder reload fehlgeschlagen', e); }
+    }
+  }
+
+  // Kein Ordner / Permission fehlt → Setup-Panel
+  openPanel(true);
+}
+
+init();
+</script>
+</body>
+</html>
