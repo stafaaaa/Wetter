@@ -311,4 +311,421 @@
             <h3>Slideshow</h3>
             <input type="file" id="photo-upload" multiple accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
             <button onclick="document.getElementById('photo-upload').click()" style="width:100%; margin-bottom: 10px;">Fotos Hinzufügen</button>
-            <button onclick="clearPhotos
+            <button onclick="clearPhotos()" style="width:100%; background: #990000;">Alle Fotos Löschen</button>
+            <label style="display:block; margin-top:15px;">Wechsel-Dauer (Sek)</label>
+            <input type="number" id="slide-duration" value="15" style="width:100%;" onchange="saveSlideSettings()">
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. KIOSK HARDENING & WATCHDOG
+        // ==========================================
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('gesturestart', e => e.preventDefault());
+        document.addEventListener('selectstart', e => { if(e.target.tagName !== 'INPUT') e.preventDefault(); });
+
+        // Wake Lock
+        let wakeLock = null;
+        async function requestWakeLock() {
+            try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+        }
+        document.addEventListener('visibilitychange', () => { if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock(); });
+        requestWakeLock();
+
+        // Watchdog: 30s Inactivity -> Reload
+        let inactivityTimer;
+        function resetWatchdog() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => location.reload(), 30000);
+        }
+        ['touchstart', 'mousemove', 'keydown', 'click'].forEach(evt => document.addEventListener(evt, resetWatchdog));
+        resetWatchdog();
+
+        // Fully Kiosk API Check
+        if (typeof fully !== 'undefined') {
+            fully.turnScreenOn();
+            fully.setScreenBrightness(255);
+        }
+
+        // ==========================================
+        // 2. STATE & STORAGE MANAGEMENT
+        // ==========================================
+        const lsGet = (k, d) => localStorage.getItem(k) !== null ? JSON.parse(localStorage.getItem(k)) : d;
+        const lsSet = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+        let layoutState = lsGet('layoutState', {});
+        let hiddenTiles = lsGet('hiddenTiles', []);
+        
+        // ==========================================
+        // 3. UI & THEME LOGIC
+        // ==========================================
+        function toggleSettings() {
+            document.getElementById('settings-panel').classList.toggle('open');
+        }
+
+        function updateCSSVar(name, val) { document.documentElement.style.setProperty(name, val); }
+
+        function applyTheme(theme) {
+            lsSet('theme', theme);
+            const themes = {
+                light: { bg: '#e0e5ec', glass: 'rgba(255,255,255,0.2)', border: 'rgba(255,255,255,0.4)', text: '#ffffff' },
+                dark:  { bg: '#0f0f13', glass: 'rgba(0,0,0,0.5)', border: 'rgba(255,255,255,0.1)', text: '#ffffff' },
+                sunset: { bg: 'linear-gradient(135deg, #ff7e5f, #feb47b)', glass: 'rgba(255,255,255,0.15)', border: 'rgba(255,255,255,0.2)', text: '#ffffff' },
+                ocean: { bg: 'linear-gradient(135deg, #2b5876, #4e4376)', glass: 'rgba(0,0,0,0.3)', border: 'rgba(255,255,255,0.1)', text: '#ffffff' }
+            };
+            const t = themes[theme] || themes.light;
+            updateCSSVar('--bg-color', t.bg);
+            updateCSSVar('--glass-bg', t.glass);
+            updateCSSVar('--glass-border', t.border);
+        }
+
+        function toggleTilt(enable) {
+            lsSet('tilt', enable);
+            document.querySelectorAll('.tile').forEach(el => enable ? el.classList.add('tilt') : el.classList.remove('tilt'));
+        }
+
+        // Initialize Tile Toggles in Settings
+        function initTileToggles() {
+            const container = document.getElementById('tile-toggles');
+            container.innerHTML = '';
+            document.querySelectorAll('.tile').forEach(tile => {
+                const id = tile.getAttribute('data-id');
+                if(id === 'settings') return; // Cannot hide settings
+                const isHidden = hiddenTiles.includes(id);
+                tile.style.display = isHidden ? 'none' : 'block';
+                
+                container.innerHTML += `
+                    <div class="toggle-row">
+                        <span>${id.toUpperCase().replace('_', ' ')}</span>
+                        <label class="switch">
+                            <input type="checkbox" onchange="toggleTile('${id}', this.checked)" ${!isHidden ? 'checked' : ''}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>`;
+            });
+        }
+
+        function toggleTile(id, show) {
+            if(show) {
+                hiddenTiles = hiddenTiles.filter(t => t !== id);
+                document.querySelector(`[data-id="${id}"]`).style.display = 'block';
+            } else {
+                hiddenTiles.push(id);
+                document.querySelector(`[data-id="${id}"]`).style.display = 'none';
+            }
+            lsSet('hiddenTiles', hiddenTiles);
+        }
+
+        // ==========================================
+        // 4. INTERACT.JS (DRAG & RESIZE)
+        // ==========================================
+        interact('.tile').draggable({
+            allowFrom: '.tile-content',
+            ignoreFrom: 'button, input, select, a, .cal-nav-btn, .slideshow-controls, .resize-handle',
+            modifiers: [ interact.modifiers.restrictRect({ restriction: 'parent', endOnly: true }) ],
+            listeners: {
+                move(event) {
+                    const target = event.target;
+                    const id = target.getAttribute('data-id');
+                    let x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                    let y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+                    target.style.transform = `translate(${x}px, ${y}px)`;
+                    target.setAttribute('data-x', x);
+                    target.setAttribute('data-y', y);
+                    
+                    if(!layoutState[id]) layoutState[id] = {};
+                    layoutState[id].x = x; layoutState[id].y = y;
+                    lsSet('layoutState', layoutState);
+                }
+            }
+        }).resizable({
+            edges: { left: '.resize-handle-nw, .resize-handle-sw', right: '.resize-handle-ne, .resize-handle-se', bottom: '.resize-handle-sw, .resize-handle-se', top: '.resize-handle-nw, .resize-handle-ne' },
+            listeners: {
+                move: function (event) {
+                    let { x, y } = event.target.dataset;
+                    x = (parseFloat(x) || 0) + event.deltaRect.left;
+                    y = (parseFloat(y) || 0) + event.deltaRect.top;
+
+                    Object.assign(event.target.style, {
+                        width: `${event.rect.width}px`,
+                        height: `${event.rect.height}px`,
+                        transform: `translate(${x}px, ${y}px)`
+                    });
+
+                    Object.assign(event.target.dataset, { x, y });
+
+                    const id = event.target.getAttribute('data-id');
+                    if(!layoutState[id]) layoutState[id] = {};
+                    layoutState[id].w = event.rect.width;
+                    layoutState[id].h = event.rect.height;
+                    layoutState[id].x = x; layoutState[id].y = y;
+                    lsSet('layoutState', layoutState);
+                }
+            }
+        });
+
+        function applySavedLayout() {
+            document.querySelectorAll('.tile').forEach(tile => {
+                const id = tile.getAttribute('data-id');
+                if(layoutState[id]) {
+                    const s = layoutState[id];
+                    if(s.w) tile.style.width = s.w + 'px';
+                    if(s.h) tile.style.height = s.h + 'px';
+                    tile.style.transform = `translate(${s.x || 0}px, ${s.y || 0}px)`;
+                    tile.setAttribute('data-x', s.x || 0);
+                    tile.setAttribute('data-y', s.y || 0);
+                }
+            });
+        }
+
+        function resetLayout() {
+            localStorage.removeItem('layoutState');
+            location.reload();
+        }
+
+        // ==========================================
+        // 5. WEATHER LOGIC (OpenWeatherMap)
+        // ==========================================
+        async function fetchWeather() {
+            const city = document.getElementById('w-city').value;
+            const key = document.getElementById('w-key').value;
+            if(!city || !key) return;
+
+            try {
+                // Current
+                const resC = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&lang=de&appid=${key}`);
+                const dataC = await resC.json();
+                document.getElementById('w-temp').innerText = Math.round(dataC.main.temp) + '°C';
+                document.getElementById('w-desc').innerText = dataC.weather[0].description;
+                document.getElementById('w-details').innerText = `💨 ${Math.round(dataC.wind.speed * 3.6)} km/h | 💧 ${dataC.main.humidity}%`;
+                document.getElementById('w-icon').innerText = getWeatherIcon(dataC.weather[0].icon);
+
+                // Forecast
+                const resF = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&lang=de&appid=${key}`);
+                const dataF = await resF.json();
+
+                // Hourly (Next 24h)
+                const hourlyHtml = dataF.list.slice(0, 8).map(h => `
+                    <div class="hourly-item">
+                        <span style="font-size:1.1rem">${new Date(h.dt*1000).getHours()}:00</span>
+                        <span style="font-size:2rem">${getWeatherIcon(h.weather[0].icon)}</span>
+                        <span style="font-size:1.2rem; font-weight:bold">${Math.round(h.main.temp)}°</span>
+                    </div>
+                `).join('');
+                document.getElementById('forecast-hourly').innerHTML = hourlyHtml;
+
+                // Daily (Next 5 Days - roughly 12:00)
+                const dailyHtml = dataF.list.filter(item => item.dt_txt.includes('12:00:00')).map(d => `
+                    <div class="forecast-day">
+                        <span style="font-size:1.2rem">${new Date(d.dt*1000).toLocaleDateString('de-DE', {weekday:'short'})}</span>
+                        <span style="font-size:2rem">${getWeatherIcon(d.weather[0].icon)}</span>
+                        <span style="font-size:1.2rem; font-weight:bold">${Math.round(d.main.temp)}°C</span>
+                    </div>
+                `).join('');
+                document.getElementById('forecast-daily').innerHTML = dailyHtml;
+
+            } catch (err) {
+                console.error("Wetter Fehler", err);
+            }
+        }
+
+        function getWeatherIcon(code) {
+            const icons = {'01d':'☀️','01n':'🌙','02d':'⛅','02n':'☁️','03d':'☁️','04d':'☁️','09d':'🌧️','10d':'🌦️','11d':'⛈️','13d':'❄️','50d':'🌫️'};
+            return icons[code.replace('n','d')] || '☀️'; // Simplify night mapping
+        }
+
+        function saveWeatherSettings() {
+            lsSet('w_city', document.getElementById('w-city').value);
+            lsSet('w_key', document.getElementById('w-key').value);
+            fetchWeather();
+        }
+
+        // ==========================================
+        // 6. CALENDAR LOGIC
+        // ==========================================
+        let currentDate = new Date();
+        let events = [];
+
+        async function saveCalSettings() {
+            const url = document.getElementById('ical-url').value;
+            lsSet('ical_url', url);
+            if(url) await fetchICal(url);
+            renderCalendar();
+        }
+
+        async function fetchICal(url) {
+            try {
+                // Use AllOrigins Proxy
+                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+                const data = await res.json();
+                parseICal(data.contents);
+            } catch (err) { console.error("iCal Fetch Error", err); }
+        }
+
+        function parseICal(icsString) {
+            events = [];
+            const lines = icsString.split(/\r\n|\n|\r/);
+            let currentEvent = null;
+            for(let line of lines) {
+                if(line.startsWith('BEGIN:VEVENT')) currentEvent = {};
+                else if(line.startsWith('END:VEVENT')) { events.push(currentEvent); currentEvent = null; }
+                else if(currentEvent) {
+                    if(line.startsWith('DTSTART')) currentEvent.start = parseICalDate(line.split(':')[1]);
+                    if(line.startsWith('SUMMARY')) currentEvent.title = line.substring(8);
+                }
+            }
+        }
+
+        function parseICalDate(str) {
+            if(!str) return null;
+            const y = str.substring(0,4), m = str.substring(4,6), d = str.substring(6,8);
+            return new Date(`${y}-${m}-${d}`);
+        }
+
+        function changeMonth(dir) {
+            currentDate.setMonth(currentDate.getMonth() + dir);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const y = currentDate.getFullYear(), m = currentDate.getMonth();
+            document.getElementById('cal-month').innerText = new Date(y, m).toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+            
+            const firstDay = new Date(y, m, 1).getDay();
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            const grid = document.getElementById('cal-grid');
+            grid.innerHTML = ['Mo','Di','Mi','Do','Fr','Sa','So'].map(d => `<div style="font-weight:bold; padding-bottom:5px;">${d}</div>`).join('');
+
+            let paddingDays = firstDay === 0 ? 6 : firstDay - 1;
+            for(let i = 0; i < paddingDays; i++) grid.innerHTML += `<div></div>`;
+
+            const today = new Date();
+            for(let d = 1; d <= daysInMonth; d++) {
+                const isToday = d === today.getDate() && m === today.getMonth() && y === today.getFullYear();
+                const dayDate = new Date(y, m, d);
+                const hasEvent = events.some(e => e.start && e.start.toDateString() === dayDate.toDateString());
+                
+                grid.innerHTML += `<div class="day ${isToday ? 'today' : ''}">
+                    ${d}
+                    ${hasEvent ? '<div class="event-dot"></div>' : ''}
+                </div>`;
+            }
+        }
+
+        // ==========================================
+        // 7. SLIDESHOW & INDEXEDDB LOGIC
+        // ==========================================
+        let slideImages = [];
+        let currentSlide = 0;
+        let slideInterval;
+        let isPlaying = true;
+
+        const dbReq = indexedDB.open('SlideshowDB', 1);
+        let db;
+        dbReq.onupgradeneeded = e => { db = e.target.result; if(!db.objectStoreNames.contains('photos')) db.createObjectStore('photos'); };
+        dbReq.onsuccess = e => { db = e.target.result; loadPhotosFromDB(); };
+
+        function handlePhotoUpload(e) {
+            const files = e.target.files;
+            for(let f of files) {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    const tx = db.transaction('photos', 'readwrite');
+                    tx.objectStore('photos').put(ev.target.result, Date.now() + Math.random());
+                    tx.oncomplete = () => loadPhotosFromDB();
+                };
+                reader.readAsDataURL(f);
+            }
+        }
+
+        function loadPhotosFromDB() {
+            if(!db) return;
+            const tx = db.transaction('photos', 'readonly');
+            const req = tx.objectStore('photos').getAll();
+            req.onsuccess = e => {
+                slideImages = e.target.result;
+                renderSlides();
+            };
+        }
+
+        function clearPhotos() {
+            if(confirm('Alle Fotos löschen?')) {
+                db.transaction('photos', 'readwrite').objectStore('photos').clear().onsuccess = () => {
+                    slideImages = []; renderSlides();
+                };
+            }
+        }
+
+        function renderSlides() {
+            const container = document.getElementById('slideshow-container');
+            if(slideImages.length === 0) {
+                container.innerHTML = '<div style="color:#fff; text-align:center; padding-top:20%">Keine Fotos (Öffne Einstellungen)</div>';
+                return;
+            }
+            container.innerHTML = slideImages.map((src, i) => `<div class="slide ${i===0?'active':''}" style="background-image:url(${src})"></div>`).join('');
+            currentSlide = 0;
+            startSlideshow();
+        }
+
+        function nextSlide() {
+            if(slideImages.length < 2) return;
+            const slides = document.querySelectorAll('.slide');
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }
+
+        function prevSlide() {
+            if(slideImages.length < 2) return;
+            const slides = document.querySelectorAll('.slide');
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }
+
+        function startSlideshow() {
+            clearInterval(slideInterval);
+            const duration = parseInt(document.getElementById('slide-duration').value || 15) * 1000;
+            if(isPlaying && slideImages.length > 1) slideInterval = setInterval(nextSlide, duration);
+            document.getElementById('playBtn').innerText = isPlaying ? '⏸' : '▶';
+        }
+
+        function togglePlay() { isPlaying = !isPlaying; startSlideshow(); }
+        function saveSlideSettings() { lsSet('slide_dur', document.getElementById('slide-duration').value); startSlideshow(); }
+
+        // ==========================================
+        // 8. INITIALIZATION
+        // ==========================================
+        window.onload = () => {
+            // Load Preferences
+            document.getElementById('theme-select').value = lsGet('theme', 'light');
+            applyTheme(lsGet('theme', 'light'));
+            document.getElementById('slider-radius').value = parseInt(lsGet('--border-radius', '20'));
+            document.getElementById('slider-blur').value = parseInt(lsGet('--blur-amount', '16'));
+            document.getElementById('slider-opacity').value = parseFloat(lsGet('--opacity', '1'));
+            document.getElementById('tilt-toggle').checked = lsGet('tilt', false);
+            toggleTilt(lsGet('tilt', false));
+            
+            document.getElementById('w-city').value = lsGet('w_city', 'Düsseldorf');
+            document.getElementById('w-key').value = lsGet('w_key', '38343f2cf261a2544f16f596f7830f60');
+            document.getElementById('ical-url').value = lsGet('ical_url', '');
+            document.getElementById('slide-duration').value = lsGet('slide_dur', 15);
+
+            // Apply specific CSS vars
+            updateCSSVar('--border-radius', document.getElementById('slider-radius').value + 'px');
+            updateCSSVar('--blur-amount', document.getElementById('slider-blur').value + 'px');
+            updateCSSVar('--opacity', document.getElementById('slider-opacity').value);
+
+            applySavedLayout();
+            initTileToggles();
+            fetchWeather();
+            if(lsGet('ical_url', '')) fetchICal(lsGet('ical_url', ''));
+            renderCalendar();
+            
+            setInterval(fetchWeather, 30 * 60 * 1000); // Update weather 30m
+        };
+    </script>
+</body>
+</html>
