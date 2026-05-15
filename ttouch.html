@@ -1,0 +1,2082 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Glass Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
+<style>
+:root {
+  --bg-image: none;
+  --bg-gradient: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  --tile-bg: rgba(255,255,255,0.3);
+  --tile-opacity: 1;
+  --tile-border-width: 1px;
+  --tile-border-radius: 24px;
+  --tile-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  --text-color: #1e293b;
+  --accent: #3b82f6;
+  --font-family: 'Segoe UI', system-ui, sans-serif;
+  --backdrop: blur(6px);
+  --tile-transform: none;
+  --text-shadow: none;
+  --icon-transform: none;
+  --slide-anim: fade;
+  --slide-duration: 1s;
+  --slide-fit: contain;
+  --tile-transform: none;
+  --text-shadow: none;
+  --icon-transform: none;
+  --effect-strength: 2;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+/* === GLOBALE TOUCH-OPTIMIERUNG === */
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+html, body {
+  overscroll-behavior: none;
+  touch-action: pan-x pan-y;
+}
+/* Text-Selektion nur in Inputs erlauben */
+body { -webkit-user-select: none; user-select: none; }
+input, textarea, [contenteditable] {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--bg-gradient);
+  background-image: var(--bg-image);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: var(--text-color);
+  height: 100vh;
+  overflow: hidden;
+  transition: background-image 0.4s ease-out;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+#dashboard { width: 100%; height: 100vh; position: relative; overflow: auto; }
+
+.tile {
+  position: absolute;
+  touch-action: none;
+  will-change: transform;
+  background: var(--tile-bg);
+  opacity: var(--tile-opacity);
+  backdrop-filter: var(--backdrop);
+  -webkit-backdrop-filter: var(--backdrop);
+  border: var(--tile-border-width) solid rgba(255,255,255,0.35);
+  border-radius: var(--tile-border-radius);
+  box-shadow: var(--tile-shadow);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s ease-out;
+  transform: var(--tile-transform);
+  min-width: 80px;
+  min-height: 80px;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.tile.dragging, .tile.resizing {
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4) !important;
+  z-index: 100;
+}
+
+/* Kachel ohne Rahmen — nur Inhalt sichtbar */
+.tile.frameless {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.tile.frameless .tile-header {
+  display: none !important;
+}
+.tile.frameless .tile-content {
+  padding: 4px !important;
+}
+/* Innere Karten (Forecast-Tage, Stunden) auch transparent */
+.tile.frameless .forecast-day {
+  background: transparent !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+.tile.frameless .forecast-day.active {
+  background: transparent !important;
+  color: inherit !important;
+  font-weight: bold;
+}
+.tile.frameless .hourly-item {
+  background: transparent !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+/* === LESBARKEIT: dunkler Halo um Text + Icons ===
+   Kein Hintergrund — nur Schatten sorgt für Kontrast */
+.tile.frameless#weather *,
+.tile.frameless#forecast *,
+.tile.frameless#hourly *,
+.tile.frameless#calendar * {
+  color: #fff !important;
+  text-shadow:
+    0 0 4px rgba(0,0,0,1),
+    0 0 8px rgba(0,0,0,0.95),
+    0 0 16px rgba(0,0,0,0.85),
+    1px 1px 2px rgba(0,0,0,1),
+    -1px -1px 2px rgba(0,0,0,1) !important;
+}
+/* Kalender: "heute" und Hover bleiben sichtbar trotz Transparenz */
+.tile.frameless#calendar .day.today {
+  background: rgba(99,102,241,0.85) !important;
+  border-radius: 8px !important;
+}
+.tile.frameless#calendar .cal-nav-btn,
+.tile.frameless#calendar .cal-today-btn {
+  background: rgba(0,0,0,0.35) !important;
+  border: 1px solid rgba(255,255,255,0.4) !important;
+}
+
+.tile-header {
+  padding: 8px 14px;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-shadow: var(--text-shadow);
+}
+
+.tile-content {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  container-type: inline-size;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+/* Wenn Tile-Inhalt schmal: Forecast in 1 Spalte */
+@container (max-width: 200px) {
+  .forecast-day {
+    flex-basis: 100%;
+    display: flex;
+    justify-content: space-around;
+  }
+  .hourly-item {
+    flex-basis: 45px;
+  }
+}
+
+@container (max-width: 280px) {
+  .weather-now .temp { font-size: 2.2rem; }
+}
+
+.resize-handle-edge {
+  position: absolute;
+  touch-action: none;
+  z-index: 5;
+}
+.resize-handle-edge.top {
+  top: 0; left: 20px; right: 20px; height: 8px;
+  cursor: ns-resize;
+}
+.resize-handle-edge.bottom {
+  bottom: 0; left: 20px; right: 20px; height: 8px;
+  cursor: ns-resize;
+}
+.resize-handle-edge.left {
+  left: 0; top: 20px; bottom: 20px; width: 8px;
+  cursor: ew-resize;
+}
+.resize-handle-edge.right {
+  right: 0; top: 20px; bottom: 20px; width: 8px;
+  cursor: ew-resize;
+}
+.resize-handle-corner {
+  position: absolute;
+  width: 20px; height: 20px;
+  touch-action: none;
+  z-index: 6;
+}
+.resize-handle-corner.tl { top: 0; left: 0; cursor: nwse-resize; }
+.resize-handle-corner.tr { top: 0; right: 0; cursor: nesw-resize; }
+.resize-handle-corner.bl { bottom: 0; left: 0; cursor: nesw-resize; }
+.resize-handle-corner.br {
+  bottom: 0; right: 0;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 60%, rgba(0,0,0,0.15) 60%);
+  border-radius: 0 0 var(--tile-border-radius) 0;
+  width: 32px; height: 32px;
+}
+
+.icon-tile-content {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%; font-size: 2rem; cursor: pointer;
+  color: var(--text-color);
+  transform: var(--icon-transform);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  text-shadow: var(--text-shadow);
+  transition: transform 0.3s;
+}
+
+.weather-now .temp { 
+  font-size: clamp(1.8rem, 8cqw, 3rem); 
+  font-weight: 700; 
+}
+.forecast-row { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 6px; 
+}
+.forecast-day {
+  flex: 1 1 70px; min-width: 65px;
+  background: rgba(255,255,255,0.25); 
+  border-radius: 16px; padding: 10px 6px;
+  text-align: center; font-size: 0.9rem;
+  min-height: 70px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: space-around;
+  touch-action: manipulation;
+}
+.forecast-day.active { background: var(--accent); color: white; }
+.hourly-scroll { 
+  display: flex; flex-wrap: wrap;
+  gap: 6px; padding-bottom: 4px;
+  align-content: flex-start;
+}
+.hourly-item {
+  flex: 1 1 55px; min-width: 55px; max-width: 85px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 12px; padding: 8px 4px;
+  text-align: center; font-size: 0.8rem;
+  min-height: 64px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: space-around;
+}
+
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 4px;
+}
+.cal-nav-btn {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: var(--text-color);
+  border-radius: 8px;
+  width: 48px; height: 48px;
+  cursor: pointer; font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.cal-nav-btn:hover, .cal-nav-btn:active {
+  background: rgba(255,255,255,0.3);
+}
+.cal-today-btn {
+  background: var(--accent);
+  color: white; border: none;
+  border-radius: 8px;
+  padding: 0 16px; height: 48px;
+  cursor: pointer; font-size: 0.9rem; font-weight: 600;
+  touch-action: manipulation;
+  transition: opacity 0.15s;
+}
+.cal-today-btn:hover, .cal-today-btn:active { opacity: 0.85; }
+#cal-title {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-shadow: var(--text-shadow);
+}
+.calendar-grid { 
+  display: grid; 
+  grid-template-columns: repeat(7, 1fr); 
+  gap: 2px; 
+  text-align: center; 
+  font-size: clamp(0.65rem, 1.5cqw, 0.9rem);
+}
+.day-header { font-weight:600; opacity:0.7; }
+.day { 
+  position: relative; 
+  padding: clamp(6px, 1cqw, 10px) 0; 
+  border-radius: 8px; 
+  cursor: pointer;
+  min-height: clamp(36px, 5cqw, 48px);
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation;
+}
+.day:hover { background: rgba(255,255,255,0.2); }
+.day.today { background: var(--accent); color:white; font-weight:bold; }
+.event-line { position:absolute; bottom:2px; left:10%; width:80%; height:3px; border-radius:2px; }
+.event-details {
+  background:rgba(0,0,0,0.85); color:white; padding:8px;
+  border-radius:8px; font-size:0.8rem; margin-top:8px; display:none;
+  max-height: 150px; overflow-y: auto;
+}
+
+/* SLIDESHOW mit Animationen */
+.slideshow-container {
+  position:relative; width:100%; aspect-ratio:16/9;
+  background:rgba(0,0,0,0.05); border-radius:12px;
+  overflow:hidden; margin-bottom:8px;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+.slide-img {
+  position: absolute;
+  top: 0; left: 0;
+  width:100%; height:100%;
+  object-fit: var(--slide-fit);
+  opacity: 0;
+  will-change: transform, opacity;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transition: opacity var(--slide-duration) ease-out, transform var(--slide-duration) ease-out;
+}
+.slide-img.active { opacity: 1; }
+
+/* Animation: fade */
+.slide-anim-fade .slide-img { transform: none; }
+.slide-anim-fade .slide-img:not(.active) { opacity: 0; }
+
+/* Animation: slide-left */
+.slide-anim-slide-left .slide-img { transform: translateX(100%); opacity: 1; }
+.slide-anim-slide-left .slide-img.active { transform: translateX(0); }
+.slide-anim-slide-left .slide-img.exit { transform: translateX(-100%); }
+
+/* Animation: slide-up */
+.slide-anim-slide-up .slide-img { transform: translateY(100%); opacity: 1; }
+.slide-anim-slide-up .slide-img.active { transform: translateY(0); }
+.slide-anim-slide-up .slide-img.exit { transform: translateY(-100%); }
+
+/* Animation: zoom */
+.slide-anim-zoom .slide-img { transform: scale(0.7); opacity: 0; }
+.slide-anim-zoom .slide-img.active { transform: scale(1); opacity: 1; }
+.slide-anim-zoom .slide-img.exit { transform: scale(1.3); opacity: 0; }
+
+/* Animation: rotate */
+.slide-anim-rotate .slide-img { transform: rotate(-15deg) scale(0.8); opacity: 0; }
+.slide-anim-rotate .slide-img.active { transform: rotate(0) scale(1); opacity: 1; }
+.slide-anim-rotate .slide-img.exit { transform: rotate(15deg) scale(0.8); opacity: 0; }
+
+/* Animation: flip */
+.slide-anim-flip .slide-img { transform: perspective(800px) rotateY(90deg); opacity: 0; }
+.slide-anim-flip .slide-img.active { transform: perspective(800px) rotateY(0); opacity: 1; }
+.slide-anim-flip .slide-img.exit { transform: perspective(800px) rotateY(-90deg); opacity: 0; }
+
+/* Animation: blur */
+.slide-anim-blur .slide-img { filter: blur(20px); opacity: 0; }
+.slide-anim-blur .slide-img.active { filter: blur(0); opacity: 1; }
+.slide-anim-blur .slide-img.exit { filter: blur(20px); opacity: 0; }
+
+/* Animation: ken-burns (langsamer Zoom während angezeigt) */
+.slide-anim-ken-burns .slide-img.active {
+  animation: kenBurns 8s ease-in-out infinite alternate;
+}
+@keyframes kenBurns {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-3%, -3%, 0) scale(1.1); }
+}
+
+/* Animation: split */
+.slide-anim-split .slide-img { clip-path: inset(50% 0 50% 0); opacity: 0; }
+.slide-anim-split .slide-img.active { clip-path: inset(0 0 0 0); opacity: 1; }
+
+/* Animation: circle-reveal */
+.slide-anim-circle-reveal .slide-img { clip-path: circle(0% at 50% 50%); opacity: 0; }
+.slide-anim-circle-reveal .slide-img.active { clip-path: circle(100% at 50% 50%); opacity: 1; }
+
+/* Animation: slide-diagonal */
+.slide-anim-slide-diagonal .slide-img { transform: translate(100%, 100%) rotate(10deg); opacity: 0; }
+.slide-anim-slide-diagonal .slide-img.active { transform: translate(0, 0) rotate(0); opacity: 1; }
+.slide-anim-slide-diagonal .slide-img.exit { transform: translate(-100%, -100%) rotate(-10deg); opacity: 0; }
+
+.slideshow-controls {
+  position:absolute; bottom: 8px; left:50%; transform:translateX(-50%);
+  display:flex; gap: 6px;
+  background:rgba(0,0,0,0.6); padding: 6px 12px; border-radius:30px;
+  z-index: 10;
+}
+.slideshow-controls button {
+  background: transparent; border: none; color: white;
+  font-size: 1.4rem; cursor: pointer;
+  padding: 0;
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  touch-action: manipulation;
+}
+.upload-area { display:flex; gap:8px; align-items:center; margin-top:4px; flex-wrap: wrap; }
+.upload-btn {
+  background: var(--accent); color:white; border:none;
+  border-radius: 12px; padding: 14px 18px;
+  cursor: pointer; font-size: 1rem; font-family: inherit;
+  min-height: 52px; touch-action: manipulation;
+  -webkit-user-select: none; user-select: none;
+}
+input[type="file"] { display:none; }
+
+/* HINTERGRUND-SYNC OVERLAY für Slideshow */
+.bg-slideshow-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  will-change: opacity;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  transition: opacity 0.8s ease-out;
+}
+.bg-slideshow-layer.active { opacity: 1; }
+
+.settings-panel {
+  position: fixed; top:0; right:-420px; width: min(400px, 92vw); height:100vh;
+  background: rgba(20,20,30,0.97); backdrop-filter: blur(20px); color:white;
+  padding: 24px 20px 40px; transition: right 0.3s ease; z-index: 10000;
+  overflow-y: auto; overflow-x: hidden;
+  border-left:1px solid rgba(255,255,255,0.2);
+  -webkit-overflow-scrolling: touch;
+}
+.settings-panel.open { right:0; }
+.settings-panel label {
+  display:block; margin: 18px 0 6px;
+  font-weight: 600; font-size: 1rem;
+}
+.settings-panel select,
+.settings-panel input[type="text"],
+.settings-panel input[type="number"] {
+  width:100%; padding: 14px 12px;
+  border-radius: 10px; border: none;
+  background: rgba(255,255,255,0.15); color: white;
+  margin-bottom: 8px;
+  font-size: 1rem; font-family: inherit;
+  min-height: 52px;
+  touch-action: manipulation;
+}
+.settings-panel input[type="color"] {
+  width: 100%; height: 52px; border: none;
+  border-radius: 10px; padding: 4px 8px;
+  background: rgba(255,255,255,0.15);
+  margin-bottom: 8px; cursor: pointer;
+}
+.settings-panel input[type="range"] {
+  width: 100%; padding: 0; margin-bottom: 8px;
+  -webkit-appearance: none; appearance: none;
+  height: 8px; border-radius: 8px;
+  background: rgba(255,255,255,0.2);
+  touch-action: pan-x;
+}
+.settings-panel input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #6366f1; cursor: pointer;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.settings-panel input[type="range"]::-moz-range-thumb {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #6366f1; cursor: pointer;
+  border: 3px solid #fff;
+}
+.close-settings {
+  position: absolute; top: 14px; right: 14px;
+  background: rgba(255,255,255,0.1); border: none; color: white;
+  width: 52px; height: 52px; border-radius: 50%;
+  font-size: 1.6rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation;
+}
+.range-row {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 8px;
+}
+.range-row input[type="range"] { flex: 1; margin-bottom: 0; }
+.range-row span {
+  font-size: 1rem; min-width: 48px; text-align: right;
+}
+
+.layout-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.layout-btn {
+  padding: 14px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: left;
+  min-height: 56px;
+  transition: background 0.2s, border-color 0.2s;
+  touch-action: manipulation;
+  -webkit-user-select: none; user-select: none;
+}
+.layout-btn:hover, .layout-btn.active {
+  background: rgba(99,102,241,0.3);
+  border-color: rgba(99,102,241,0.6);
+}
+.location-result-item {
+  padding: 14px 12px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 8px; margin-bottom: 6px;
+  cursor: pointer; font-size: 0.95rem;
+  min-height: 52px; display: flex; flex-direction: column; justify-content: center;
+  transition: background 0.15s;
+  touch-action: manipulation;
+}
+.location-result-item:hover, .location-result-item:active {
+  background: rgba(99,102,241,0.3);
+}
+.location-result-item small {
+  display: block;
+  opacity: 0.7;
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+.error-msg {
+  background: rgba(239,68,68,0.2);
+  color: #fecaca;
+  padding: 8px; border-radius: 8px;
+  font-size: 0.85rem; margin-top: 8px;
+}
+/* === KACHEL-TOGGLE === */
+.tile-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(255,255,255,0.07);
+  border-radius: 12px; padding: 14px 16px;
+  min-height: 60px; touch-action: manipulation;
+}
+.tile-toggle-label {
+  font-size: 1rem; display: flex; align-items: center; gap: 10px;
+}
+.tile-toggle-switch {
+  position: relative; width: 60px; height: 34px; flex-shrink: 0;
+}
+.tile-toggle-switch input {
+  opacity: 0; width: 0; height: 0; position: absolute;
+}
+.tile-toggle-switch .slider {
+  position: absolute; inset: 0;
+  background: #444; border-radius: 34px;
+  cursor: pointer; transition: background .25s;
+}
+.tile-toggle-switch .slider::before {
+  content: ''; position: absolute;
+  width: 26px; height: 26px; left: 4px; top: 4px;
+  background: white; border-radius: 50%;
+  transition: transform .25s;
+}
+.tile-toggle-switch input:checked + .slider { background: #6366f1; }
+.tile-toggle-switch input:checked + .slider::before { transform: translateX(26px); }
+</style>
+</head>
+<body>
+
+<!-- Slideshow-Hintergrund mit 2 Layern für sanften Übergang -->
+<div class="bg-slideshow-layer" id="bg-layer-1"></div>
+<div class="bg-slideshow-layer" id="bg-layer-2"></div>
+
+<div id="dashboard"></div>
+
+<div class="settings-panel" id="settings-panel">
+  <button class="close-settings" id="close-settings">&times;</button>
+  <h2>Einstellungen</h2>
+  
+  <h3 style="margin-top: 0; font-size: 1rem; color: #a5b4fc;">⚡ Schnell-Layouts</h3>
+  
+  <label>Querformat (horizontal)</label>
+  <div class="layout-buttons">
+    <button class="layout-btn" data-layout="h1">📅 Kalender groß</button>
+    <button class="layout-btn" data-layout="h2">🌤️ Wetter groß</button>
+    <button class="layout-btn" data-layout="h3">🖼️ Slideshow groß</button>
+    <button class="layout-btn" data-layout="h4">⚖️ Symmetrisch 3×2</button>
+    <button class="layout-btn" data-layout="h5">📋 Info-Cockpit</button>
+  </div>
+  
+  <label>Hochformat (vertikal)</label>
+  <div class="layout-buttons">
+    <button class="layout-btn" data-layout="v1">📅 Kalender oben</button>
+    <button class="layout-btn" data-layout="v2">🌤️ Wetter oben</button>
+    <button class="layout-btn" data-layout="v3">🖼️ Slideshow oben</button>
+    <button class="layout-btn" data-layout="v4">📊 Stack vertikal</button>
+    <button class="layout-btn" data-layout="v5">🎯 Familien-Wand</button>
+  </div>
+  
+  <label>Thema</label>
+  <select id="theme-select">
+    <option value="default">Standard Hell</option>
+    <option value="dark">Dunkel Elegant</option>
+    <option value="neon">Neon Nächte</option>
+    <option value="nordic">Nordic Frost</option>
+    <option value="sunset">Sunset Vibes</option>
+    <option value="forest">Forest Whisper</option>
+    <option value="midnight">Midnight Blue</option>
+    <option value="rose">Rose Gold</option>
+    <option value="ocean">Ocean Breeze</option>
+    <option value="minimal">Minimal Weiß</option>
+  </select>
+  
+  <label>Hintergrund-Typ</label>
+  <select id="bg-mode">
+    <option value="theme">Theme-Farbverlauf</option>
+    <option value="color">Eigene Farbe</option>
+    <option value="url">Eigenes Bild (URL)</option>
+    <option value="upload">Eigenes Bild (Upload)</option>
+    <option value="slideshow">Slideshow-Bilder (synchron)</option>
+  </select>
+  
+  <div id="bg-color-container" style="display:none;">
+    <label>Hintergrundfarbe</label>
+    <input type="color" id="bg-color" value="#e0e7ff">
+  </div>
+  <div id="bg-url-container" style="display:none;">
+    <label>Bild-URL</label>
+    <input type="text" id="bg-url" placeholder="https://...">
+  </div>
+  <div id="bg-upload-container" style="display:none;">
+    <label>Hintergrundbild hochladen</label>
+    <button id="bg-upload-trigger" class="upload-btn" style="width:100%;">Bild auswählen</button>
+    <input type="file" id="bg-upload" accept="image/*">
+  </div>
+  
+  <label>Kachel-Transparenz</label>
+  <div class="range-row">
+    <input type="range" id="tile-opacity" min="0" max="1" step="0.05" value="1">
+    <span id="tile-opacity-value">100%</span>
+  </div>
+  
+  <label>Schriftfarbe</label>
+  <input type="color" id="font-color" value="#1e293b">
+  
+  <label>Schriftart</label>
+  <select id="font-family-select">
+    <option value="'Segoe UI', system-ui, sans-serif">Segoe UI</option>
+    <option value="'Inter', sans-serif">Inter</option>
+    <option value="'Roboto', sans-serif">Roboto</option>
+    <option value="'Playfair Display', serif">Playfair Display</option>
+    <option value="'Courier New', monospace">Courier New</option>
+    <option value="'Georgia', serif">Georgia</option>
+    <option value="'Verdana', sans-serif">Verdana</option>
+    <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+    <option value="'Arial', sans-serif">Arial</option>
+    <option value="'Times New Roman', serif">Times New Roman</option>
+  </select>
+  
+  <label>3D-Effekt</label>
+  <select id="3d-mode">
+    <option value="none">Keiner</option>
+    <option value="perspective">Perspektivisch</option>
+    <option value="shadow3d">Schatten 3D</option>
+    <option value="floating">Schwebend</option>
+    <option value="skew">Gekippt</option>
+    <option value="glow">Glühend 3D</option>
+  </select>
+  
+  <label>3D-Stärke (0-10)</label>
+  <div class="range-row">
+    <input type="range" id="3d-strength" min="0" max="10" value="2" step="0.5">
+    <span id="3d-strength-value">2</span>
+  </div>
+  
+  <label>Kachel Hintergrundfarbe</label>
+  <input type="color" id="tile-bg-color" value="#ffffff">
+  
+  <label>Kachel Rahmenbreite (px)</label>
+  <input type="number" id="border-width" min="0" max="10" value="1">
+  
+  <label>Kachel Rahmenrundung (px)</label>
+  <input type="number" id="border-radius" min="0" max="40" value="24">
+  
+  <h3 style="margin-top: 20px; font-size: 1rem; color: #a5b4fc;">📷 Slideshow</h3>
+  
+  <label>Animation</label>
+  <select id="slide-animation">
+    <option value="fade">Sanftes Überblenden</option>
+    <option value="slide-left">Seitlich schieben</option>
+    <option value="slide-up">Nach oben schieben</option>
+    <option value="zoom">Zoom-Effekt</option>
+    <option value="rotate">Drehen</option>
+    <option value="flip">Flip 3D</option>
+    <option value="blur">Unschärfe</option>
+    <option value="ken-burns">Ken Burns (langsamer Zoom)</option>
+    <option value="split">Vertikales Teilen</option>
+    <option value="circle-reveal">Kreis öffnet sich</option>
+    <option value="slide-diagonal">Diagonal schieben</option>
+  </select>
+  
+  <label>Bilder anzeigen</label>
+  <select id="slide-fit">
+    <option value="contain">Komplett zeigen (mit Rändern)</option>
+    <option value="cover">Zugeschnitten (füllt aus)</option>
+  </select>
+  
+  <label>Wechselzeit (Sekunden)</label>
+  <input type="number" id="interval-input" min="2" max="60" value="10">
+  
+  <label>Animations-Dauer (Sekunden)</label>
+  <input type="number" id="anim-duration" min="0.3" max="3" step="0.1" value="1">
+  
+  <h3 style="margin-top: 20px; font-size: 1rem; color: #a5b4fc;">📍 Standort (Wetter)</h3>
+  
+  <label>Stadt suchen</label>
+  <div style="display:flex; gap:6px;">
+    <input type="text" id="location-search" placeholder="z.B. Düsseldorf" style="flex:1;">
+    <button id="location-search-btn" class="upload-btn" style="white-space:nowrap;">🔍 Suchen</button>
+  </div>
+  <div id="location-results" style="margin-top:6px;"></div>
+  
+  <label>Aktueller Standort</label>
+  <div id="current-location" style="background:rgba(255,255,255,0.1); padding:8px; border-radius:8px; font-size:0.85rem;">
+    Düsseldorf
+  </div>
+  
+  <button id="use-gps" class="upload-btn" style="width:100%; margin-top:8px;">
+    📡 Aktuellen Standort verwenden (GPS)
+  </button>
+  
+  <h3 style="margin-top: 20px; font-size: 1rem; color: #a5b4fc;">👁️ Kacheln ein-/ausblenden</h3>
+  <div id="tile-visibility-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;">
+    <!-- wird per JS befüllt -->
+  </div>
+
+  <h3 style="margin-top: 20px; font-size: 1rem; color: #a5b4fc;">📅 Kalender</h3>
+  
+  <label>Kalender iCal URL</label>
+  <input type="text" id="ical-url" placeholder="https://calendar.google.com/.../basic.ics">
+  <button id="load-ical-settings" class="upload-btn" style="width:100%;">Kalender laden</button>
+  <div id="ical-error" class="error-msg" style="display:none;"></div>
+  
+  <p style="font-size: 0.75rem; opacity: 0.7; margin-top: 8px;">
+    Tipp: Bei CORS-Fehler wird automatisch ein Public-CORS-Proxy verwendet.
+  </p>
+</div>
+
+<script>
+(function() {
+let zCounter = 10;
+function bringToFront(tile) { zCounter += 1; tile.style.zIndex = zCounter; }
+
+const themes = {
+  default: { '--bg-gradient': 'linear-gradient(135deg, #e0e7ff, #c7d2fe)', '--tile-bg': 'rgba(255,255,255,0.3)', '--text-color': '#1e293b', '--accent': '#3b82f6' },
+  dark: { '--bg-gradient': '#1e293b', '--tile-bg': 'rgba(30,41,59,0.6)', '--text-color': '#e2e8f0', '--accent': '#6366f1' },
+  neon: { '--bg-gradient': 'black', '--tile-bg': 'rgba(88,28,135,0.4)', '--text-color': '#a78bfa', '--accent': '#ec4899' },
+  nordic: { '--bg-gradient': 'linear-gradient(135deg, #bae6fd, #e0f2fe)', '--tile-bg': 'rgba(255,255,255,0.6)', '--text-color': '#0f172a', '--accent': '#0284c7' },
+  sunset: { '--bg-gradient': 'linear-gradient(135deg, #fed7aa, #fdba74)', '--tile-bg': 'rgba(255,237,213,0.5)', '--text-color': '#7c2d12', '--accent': '#ea580c' },
+  forest: { '--bg-gradient': 'linear-gradient(135deg, #bbf7d0, #86efac)', '--tile-bg': 'rgba(240,253,244,0.5)', '--text-color': '#14532d', '--accent': '#16a34a' },
+  midnight: { '--bg-gradient': '#0f172a', '--tile-bg': 'rgba(15,23,42,0.7)', '--text-color': '#93c5fd', '--accent': '#3b82f6' },
+  rose: { '--bg-gradient': 'linear-gradient(135deg, #fce7f3, #fbcfe8)', '--tile-bg': 'rgba(255,241,242,0.5)', '--text-color': '#831843', '--accent': '#be123c' },
+  ocean: { '--bg-gradient': 'linear-gradient(135deg, #ccfbf1, #99f6e4)', '--tile-bg': 'rgba(240,255,250,0.5)', '--text-color': '#134e4a', '--accent': '#0f766e' },
+  minimal: { '--bg-gradient': '#ffffff', '--tile-bg': 'rgba(243,244,246,0.8)', '--text-color': '#374151', '--accent': '#6b7280' }
+};
+
+function applyTheme(name) {
+  const theme = themes[name];
+  if (!theme) return;
+  Object.entries(theme).forEach(([prop, val]) => document.documentElement.style.setProperty(prop, val));
+  localStorage.setItem('theme', name);
+}
+
+function apply3DEffect(mode, strength) {
+  const root = document.documentElement;
+  const s = parseFloat(strength) || 0;
+  switch(mode) {
+    case 'perspective':
+      root.style.setProperty('--tile-transform', `perspective(800px) rotateX(${s*1.5}deg) rotateY(${s}deg)`);
+      root.style.setProperty('--text-shadow', `${s*0.5}px ${s*0.5}px 2px rgba(0,0,0,0.2)`);
+      root.style.setProperty('--icon-transform', `rotateY(${s}deg) rotateX(${s*0.5}deg)`);
+      break;
+    case 'shadow3d':
+      root.style.setProperty('--tile-transform', `translateZ(0)`);
+      root.style.setProperty('--tile-shadow', `${s*2}px ${s*2}px ${s*4}px rgba(0,0,0,0.3), ${-s}px ${-s}px ${s*2}px rgba(255,255,255,0.2) inset`);
+      root.style.setProperty('--text-shadow', `${s}px ${s}px 0 rgba(0,0,0,0.3)`);
+      root.style.setProperty('--icon-transform', `scale(1.05)`);
+      break;
+    case 'floating':
+      root.style.setProperty('--tile-transform', `translateY(${-s*1.5}px) scale(${1 + s*0.01})`);
+      root.style.setProperty('--tile-shadow', `0 ${s*4}px ${s*6}px rgba(0,0,0,0.2)`);
+      root.style.setProperty('--text-shadow', `0 ${s}px ${s}px rgba(0,0,0,0.15)`);
+      root.style.setProperty('--icon-transform', `translateY(${-s*0.8}px)`);
+      break;
+    case 'skew':
+      root.style.setProperty('--tile-transform', `skewX(${s*0.8}deg) skewY(${s*0.2}deg)`);
+      root.style.setProperty('--text-shadow', `${s*0.3}px ${s*0.3}px 1px rgba(0,0,0,0.2)`);
+      root.style.setProperty('--icon-transform', `skewX(${-s*0.8}deg)`);
+      break;
+    case 'glow':
+      root.style.setProperty('--tile-transform', `perspective(600px) rotateY(${s*0.5}deg)`);
+      root.style.setProperty('--tile-shadow', `0 0 ${s*5}px rgba(255,255,255,0.4), 0 0 ${s*10}px var(--accent)`);
+      root.style.setProperty('--text-shadow', `0 0 ${s*2}px var(--accent)`);
+      root.style.setProperty('--icon-transform', `scale(1.1) rotateZ(${s}deg)`);
+      break;
+    default:
+      root.style.setProperty('--tile-transform', 'none');
+      root.style.setProperty('--tile-shadow', '0 8px 32px rgba(0,0,0,0.1)');
+      root.style.setProperty('--text-shadow', 'none');
+      root.style.setProperty('--icon-transform', 'none');
+  }
+}
+
+const defaultLayout = [
+  { id: 'spotify', x: 10, y: 10, w: 80, h: 80 },
+  { id: 'amazon', x: 100, y: 10, w: 80, h: 80 },
+  { id: 'youtube', x: 190, y: 10, w: 80, h: 80 },
+  { id: 'settings', x: 280, y: 10, w: 80, h: 80 },
+  { id: 'weather', x: 10, y: 100, w: 280, h: 180 },
+  { id: 'forecast', x: 300, y: 100, w: 320, h: 180 },
+  { id: 'hourly', x: 10, y: 290, w: 610, h: 150 },
+  { id: 'calendar', x: 10, y: 450, w: 380, h: 340 },
+  { id: 'slideshow', x: 400, y: 450, w: 380, h: 340 }
+];
+
+let layout = JSON.parse(localStorage.getItem('dashboardLayout')) || defaultLayout;
+
+function saveLayout() {
+  const tiles = document.querySelectorAll('.tile');
+  layout = Array.from(tiles).map(tile => ({
+    id: tile.id,
+    x: parseFloat(tile.style.left) || 0,
+    y: parseFloat(tile.style.top) || 0,
+    w: parseFloat(tile.style.width) || 80,
+    h: parseFloat(tile.style.height) || 80
+  }));
+  localStorage.setItem('dashboardLayout', JSON.stringify(layout));
+}
+
+
+// === LAYOUT-PRESETS für 11"-Tablet ===
+const LAYOUT_PRESETS = {
+  // === HORIZONTAL (Querformat) ===
+  'h1': { // Kalender groß — links 60%, Rest rechts gestapelt
+    name: 'Kalender groß',
+    items: [
+      { id: 'spotify',  x: 0.62, y: 0.01, w: 0.08, h: 0.10 },
+      { id: 'amazon',   x: 0.71, y: 0.01, w: 0.08, h: 0.10 },
+      { id: 'youtube',  x: 0.80, y: 0.01, w: 0.08, h: 0.10 },
+      { id: 'settings', x: 0.89, y: 0.01, w: 0.08, h: 0.10 },
+      { id: 'calendar', x: 0.01, y: 0.01, w: 0.60, h: 0.98 },
+      { id: 'weather',  x: 0.62, y: 0.13, w: 0.18, h: 0.30 },
+      { id: 'forecast', x: 0.81, y: 0.13, w: 0.18, h: 0.30 },
+      { id: 'hourly',   x: 0.62, y: 0.45, w: 0.37, h: 0.20 },
+      { id: 'slideshow',x: 0.62, y: 0.67, w: 0.37, h: 0.32 },
+    ]
+  },
+  'h2': { // Wetter groß — Wetter+Stündlich oben breit
+    name: 'Wetter groß',
+    items: [
+      { id: 'spotify',  x: 0.78, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'amazon',   x: 0.84, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'youtube',  x: 0.90, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'settings', x: 0.96, y: 0.01, w: 0.04, h: 0.07 },
+      { id: 'weather',  x: 0.01, y: 0.01, w: 0.30, h: 0.45 },
+      { id: 'forecast', x: 0.32, y: 0.01, w: 0.45, h: 0.45 },
+      { id: 'hourly',   x: 0.01, y: 0.47, w: 0.99, h: 0.18 },
+      { id: 'calendar', x: 0.01, y: 0.66, w: 0.49, h: 0.33 },
+      { id: 'slideshow',x: 0.51, y: 0.66, w: 0.48, h: 0.33 },
+    ]
+  },
+  'h3': { // Slideshow groß — Bild dominiert links
+    name: 'Slideshow groß',
+    items: [
+      { id: 'spotify',  x: 0.78, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'amazon',   x: 0.84, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'youtube',  x: 0.90, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'settings', x: 0.96, y: 0.01, w: 0.04, h: 0.07 },
+      { id: 'slideshow',x: 0.01, y: 0.01, w: 0.65, h: 0.75 },
+      { id: 'calendar', x: 0.67, y: 0.10, w: 0.32, h: 0.65 },
+      { id: 'weather',  x: 0.01, y: 0.77, w: 0.32, h: 0.22 },
+      { id: 'forecast', x: 0.34, y: 0.77, w: 0.32, h: 0.22 },
+      { id: 'hourly',   x: 0.67, y: 0.77, w: 0.32, h: 0.22 },
+    ]
+  },
+  'h4': { // Symmetrisch 3×2 Grid
+    name: 'Symmetrisch 3×2',
+    items: [
+      { id: 'spotify',  x: 0.78, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'amazon',   x: 0.84, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'youtube',  x: 0.90, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'settings', x: 0.96, y: 0.01, w: 0.04, h: 0.07 },
+      { id: 'weather',  x: 0.01, y: 0.10, w: 0.32, h: 0.43 },
+      { id: 'forecast', x: 0.34, y: 0.10, w: 0.32, h: 0.43 },
+      { id: 'calendar', x: 0.67, y: 0.10, w: 0.32, h: 0.43 },
+      { id: 'hourly',   x: 0.01, y: 0.55, w: 0.32, h: 0.44 },
+      { id: 'slideshow',x: 0.34, y: 0.55, w: 0.65, h: 0.44 },
+    ]
+  },
+  'h5': { // Info-Cockpit — viel Info, kompakt
+    name: 'Info-Cockpit',
+    items: [
+      { id: 'weather',  x: 0.01, y: 0.01, w: 0.20, h: 0.30 },
+      { id: 'forecast', x: 0.22, y: 0.01, w: 0.40, h: 0.30 },
+      { id: 'spotify',  x: 0.63, y: 0.01, w: 0.07, h: 0.14 },
+      { id: 'amazon',   x: 0.71, y: 0.01, w: 0.07, h: 0.14 },
+      { id: 'youtube',  x: 0.79, y: 0.01, w: 0.07, h: 0.14 },
+      { id: 'settings', x: 0.87, y: 0.01, w: 0.12, h: 0.14 },
+      { id: 'slideshow',x: 0.63, y: 0.16, w: 0.36, h: 0.45 },
+      { id: 'hourly',   x: 0.01, y: 0.32, w: 0.61, h: 0.18 },
+      { id: 'calendar', x: 0.01, y: 0.51, w: 0.61, h: 0.48 },
+      { id: 'forecast', x: 0.63, y: 0.62, w: 0.36, h: 0.37 },
+    ]
+  },
+  
+  // === VERTIKAL (Hochformat) ===
+  'v1': { // Kalender oben
+    name: 'Kalender oben',
+    items: [
+      { id: 'spotify',  x: 0.01, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'amazon',   x: 0.26, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'youtube',  x: 0.51, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'settings', x: 0.76, y: 0.01, w: 0.23, h: 0.06 },
+      { id: 'calendar', x: 0.01, y: 0.08, w: 0.98, h: 0.42 },
+      { id: 'weather',  x: 0.01, y: 0.51, w: 0.49, h: 0.18 },
+      { id: 'forecast', x: 0.51, y: 0.51, w: 0.48, h: 0.18 },
+      { id: 'hourly',   x: 0.01, y: 0.70, w: 0.98, h: 0.13 },
+      { id: 'slideshow',x: 0.01, y: 0.84, w: 0.98, h: 0.15 },
+    ]
+  },
+  'v2': { // Wetter oben
+    name: 'Wetter oben',
+    items: [
+      { id: 'spotify',  x: 0.01, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'amazon',   x: 0.26, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'youtube',  x: 0.51, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'settings', x: 0.76, y: 0.01, w: 0.23, h: 0.06 },
+      { id: 'weather',  x: 0.01, y: 0.08, w: 0.98, h: 0.22 },
+      { id: 'forecast', x: 0.01, y: 0.31, w: 0.98, h: 0.18 },
+      { id: 'hourly',   x: 0.01, y: 0.50, w: 0.98, h: 0.14 },
+      { id: 'calendar', x: 0.01, y: 0.65, w: 0.98, h: 0.20 },
+      { id: 'slideshow',x: 0.01, y: 0.86, w: 0.98, h: 0.13 },
+    ]
+  },
+  'v3': { // Slideshow oben
+    name: 'Slideshow oben',
+    items: [
+      { id: 'spotify',  x: 0.01, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'amazon',   x: 0.26, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'youtube',  x: 0.51, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'settings', x: 0.76, y: 0.01, w: 0.23, h: 0.06 },
+      { id: 'slideshow',x: 0.01, y: 0.08, w: 0.98, h: 0.40 },
+      { id: 'weather',  x: 0.01, y: 0.49, w: 0.49, h: 0.18 },
+      { id: 'forecast', x: 0.51, y: 0.49, w: 0.48, h: 0.18 },
+      { id: 'hourly',   x: 0.01, y: 0.68, w: 0.98, h: 0.13 },
+      { id: 'calendar', x: 0.01, y: 0.82, w: 0.98, h: 0.17 },
+    ]
+  },
+  'v4': { // Stack vertikal — alles untereinander
+    name: 'Stack vertikal',
+    items: [
+      { id: 'spotify',  x: 0.01, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'amazon',   x: 0.26, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'youtube',  x: 0.51, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'settings', x: 0.76, y: 0.01, w: 0.23, h: 0.06 },
+      { id: 'weather',  x: 0.01, y: 0.08, w: 0.98, h: 0.18 },
+      { id: 'forecast', x: 0.01, y: 0.27, w: 0.98, h: 0.16 },
+      { id: 'hourly',   x: 0.01, y: 0.44, w: 0.98, h: 0.13 },
+      { id: 'calendar', x: 0.01, y: 0.58, w: 0.98, h: 0.20 },
+      { id: 'slideshow',x: 0.01, y: 0.79, w: 0.98, h: 0.20 },
+    ]
+  },
+  'v5': { // Familien-Wand — Slideshow groß, Rest kompakt
+    name: 'Familien-Wand',
+    items: [
+      { id: 'spotify',  x: 0.01, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'amazon',   x: 0.26, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'youtube',  x: 0.51, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'settings', x: 0.76, y: 0.01, w: 0.23, h: 0.06 },
+      { id: 'slideshow',x: 0.01, y: 0.08, w: 0.98, h: 0.50 },
+      { id: 'calendar', x: 0.01, y: 0.59, w: 0.98, h: 0.25 },
+      { id: 'weather',  x: 0.01, y: 0.85, w: 0.32, h: 0.14 },
+      { id: 'forecast', x: 0.34, y: 0.85, w: 0.32, h: 0.14 },
+      { id: 'hourly',   x: 0.67, y: 0.85, w: 0.32, h: 0.14 },
+    ]
+  },
+};
+
+function applyLayoutPreset(presetKey) {
+  const preset = LAYOUT_PRESETS[presetKey];
+  if (!preset) return;
+  
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  
+  // Existing IDs sammeln
+  const existingIds = new Set(layout.map(l => l.id));
+  
+  // Für jeden Eintrag im Preset: prüfen ob diese Kachel-ID existiert
+  // Wenn ja: Position übernehmen
+  // Wenn nicht: hinzufügen (z.B. wenn vorher rausgenommen)
+  const newLayout = [];
+  preset.items.forEach(item => {
+    if (existingIds.has(item.id) || ['spotify','amazon','youtube','settings','weather','forecast','hourly','calendar','slideshow'].includes(item.id)) {
+      newLayout.push({
+        id: item.id,
+        x: Math.round(item.x * W),
+        y: Math.round(item.y * H),
+        w: Math.round(item.w * W),
+        h: Math.round(item.h * H),
+      });
+    }
+  });
+  
+  layout = newLayout;
+  localStorage.setItem('dashboardLayout', JSON.stringify(layout));
+  localStorage.setItem('activeLayoutPreset', presetKey);
+  
+  createTiles();
+  loadSlides();
+  updateWeather();
+  renderCalendar();
+  
+  // Active-Status der Buttons
+  document.querySelectorAll('.layout-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.layout === presetKey);
+  });
+}
+
+// Event-Listener für alle Layout-Buttons
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('layout-btn')) {
+    applyLayoutPreset(e.target.dataset.layout);
+  }
+});
+
+// Beim Laden: aktiven Preset markieren
+function markActivePreset() {
+  const active = localStorage.getItem('activeLayoutPreset');
+  if (active) {
+    document.querySelectorAll('.layout-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.layout === active);
+    });
+  }
+}
+
+function getResizeHandlesHTML() {
+  return `
+    <div class="resize-handle-edge top"></div>
+    <div class="resize-handle-edge bottom"></div>
+    <div class="resize-handle-edge left"></div>
+    <div class="resize-handle-edge right"></div>
+    <div class="resize-handle-corner tl"></div>
+    <div class="resize-handle-corner tr"></div>
+    <div class="resize-handle-corner bl"></div>
+    <div class="resize-handle-corner br"></div>
+  `;
+}
+
+function createTiles() {
+  const container = document.getElementById('dashboard');
+  container.innerHTML = '';
+  const hidden = getHiddenTiles();
+  layout.forEach(item => {
+    const tile = document.createElement('div');
+    tile.className = 'tile' + (item.id !== 'slideshow' ? ' frameless' : '');
+    tile.id = item.id;
+    tile.style.left = item.x + 'px';
+    tile.style.top = item.y + 'px';
+    tile.style.width = item.w + 'px';
+    tile.style.height = item.h + 'px';
+    if (hidden.includes(item.id)) tile.style.display = 'none';
+    if (['spotify','amazon','youtube','settings'].includes(item.id)) {
+      tile.innerHTML = `<div class="tile-content icon-tile-content"></div>` + getResizeHandlesHTML();
+    } else {
+      tile.innerHTML = `<div class="tile-header"></div><div class="tile-content"></div>` + getResizeHandlesHTML();
+    }
+    container.appendChild(tile);
+    fillTileContent(item.id, tile);
+  });
+  initInteract();
+}
+
+/* === KACHEL-SICHTBARKEIT === */
+const TILE_LABELS = {
+  spotify:  '🎵 Spotify',
+  amazon:   '🛒 Amazon',
+  youtube:  '▶️ YouTube',
+  settings: '⚙️ Einstellungen',
+  weather:  '🌤️ Wetter aktuell',
+  forecast: '📅 5-Tage-Vorhersage',
+  hourly:   '🕐 Stündlich',
+  calendar: '📆 Kalender',
+  slideshow:'🖼️ Slideshow'
+};
+const ALL_TILES = ['spotify','amazon','youtube','settings','weather','forecast','hourly','calendar','slideshow'];
+
+function getHiddenTiles() {
+  try { return JSON.parse(localStorage.getItem('hiddenTiles') || '[]'); } catch(e) { return []; }
+}
+function saveHiddenTiles(arr) {
+  localStorage.setItem('hiddenTiles', JSON.stringify(arr));
+}
+
+function buildTileVisibilityUI() {
+  const list = document.getElementById('tile-visibility-list');
+  if (!list) return;
+  const hidden = getHiddenTiles();
+  list.innerHTML = ALL_TILES.map(id => `
+    <div class="tile-toggle-row">
+      <span class="tile-toggle-label">${TILE_LABELS[id] || id}</span>
+      <label class="tile-toggle-switch">
+        <input type="checkbox" data-tile-id="${id}" ${hidden.includes(id) ? '' : 'checked'}>
+        <span class="slider"></span>
+      </label>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('input[data-tile-id]').forEach(cb => {
+    cb.addEventListener('change', function() {
+      const id = this.dataset.tileId;
+      let hidden = getHiddenTiles();
+      if (this.checked) {
+        hidden = hidden.filter(h => h !== id);
+      } else {
+        if (!hidden.includes(id)) hidden.push(id);
+      }
+      saveHiddenTiles(hidden);
+      // Sofort anwenden — kein Reload nötig
+      const tile = document.getElementById(id);
+      if (tile) tile.style.display = this.checked ? '' : 'none';
+    });
+  });
+}
+
+function fillTileContent(id, tile) {
+  const content = tile.querySelector('.tile-content');
+  const header = tile.querySelector('.tile-header');
+  switch(id) {
+    case 'spotify':
+      content.innerHTML = '<i class="fab fa-spotify" style="color:#1DB954"></i>';
+      tile.setAttribute('data-app', 'spotify');
+      break;
+    case 'amazon':
+      content.innerHTML = '<i class="fab fa-amazon" style="color:#FF9900"></i>';
+      tile.setAttribute('data-app', 'amazon');
+      break;
+    case 'youtube':
+      content.innerHTML = '<i class="fab fa-youtube" style="color:#FF0000"></i>';
+      tile.setAttribute('data-app', 'youtube');
+      break;
+    case 'settings':
+      content.innerHTML = '<i class="fas fa-cog"></i>';
+      break;
+    case 'weather':
+      header.innerHTML = '<i class="fas fa-cloud-sun"></i> Aktuell';
+      content.innerHTML = `<div class="weather-now"><div class="temp" id="current-temp">--°</div><div class="details" id="current-details"></div></div><div id="current-icon" style="font-size:2rem;"></div>`;
+      break;
+    case 'forecast':
+      header.innerHTML = '<i class="fas fa-calendar-alt"></i> 5 Tage';
+      content.innerHTML = '<div class="forecast-row" id="forecast-container"></div>';
+      break;
+    case 'hourly':
+      header.innerHTML = '<i class="fas fa-clock"></i> Stündlich';
+      content.innerHTML = '<div class="hourly-scroll" id="hourly-container"></div>';
+      break;
+    case 'calendar':
+      header.innerHTML = '<i class="fas fa-calendar"></i> Termine';
+      content.innerHTML = `
+        <div class="calendar-nav">
+          <button id="cal-prev" class="cal-nav-btn"><i class="fas fa-chevron-left"></i></button>
+          <span id="cal-title">Monat</span>
+          <button id="cal-today" class="cal-today-btn">Heute</button>
+          <button id="cal-next" class="cal-nav-btn"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="calendar-grid" id="calendar-grid"></div>
+        <div class="event-details" id="event-details"></div>
+      `;
+      break;
+    case 'slideshow':
+      header.innerHTML = '<i class="fas fa-images"></i> Slideshow';
+      content.innerHTML = `
+        <div class="slideshow-container slide-anim-fade" id="slideshow-container">
+          <div class="slideshow-controls">
+            <button id="prev-slide"><i class="fas fa-chevron-left"></i></button>
+            <button id="play-pause"><i class="fas fa-pause"></i></button>
+            <button id="next-slide"><i class="fas fa-chevron-right"></i></button>
+            <button id="delete-slide"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        <div class="upload-area">
+          <label for="file-upload" class="upload-btn"><i class="fas fa-upload"></i> Hochladen</label>
+          <input type="file" id="file-upload" multiple accept="image/*">
+          <span id="image-count">0 Bilder</span>
+        </div>
+      `;
+      break;
+  }
+}
+
+function initInteract() {
+  interact('.tile').draggable({
+    allowFrom: '.tile-header, .icon-tile-content, .tile-content',
+    ignoreFrom: '.resize-handle, button, input, select, a, .cal-nav-btn, .upload-btn, .day, .slideshow-controls',
+    inertia: false,
+    autoScroll: false,
+    modifiers: [interact.modifiers.restrict({ restriction: 'parent', endOnly: true })],
+    listeners: {
+      start(event) { event.target.classList.add('dragging'); },
+      move(event) {
+        const target = event.target;
+        const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+        const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+        target.style.transform = `translate(${x}px, ${y}px)`;
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+      },
+      end(event) {
+        const target = event.target;
+        target.classList.remove('dragging');
+        const x = parseFloat(target.getAttribute('data-x')) || 0;
+        const y = parseFloat(target.getAttribute('data-y')) || 0;
+        target.style.transform = '';
+        target.style.left = (parseFloat(target.style.left) + x) + 'px';
+        target.style.top = (parseFloat(target.style.top) + y) + 'px';
+        target.setAttribute('data-x', 0);
+        target.setAttribute('data-y', 0);
+        saveLayout();
+      }
+    }
+  }).resizable({
+    edges: { top: true, bottom: true, left: true, right: true },
+    inertia: false,
+    modifiers: [
+      interact.modifiers.restrict({ restriction: 'parent', endOnly: true }),
+      interact.modifiers.restrictSize({ min: { width: 80, height: 80 } })
+    ],
+    listeners: {
+      start(event) { event.target.classList.add('resizing'); },
+      move(event) {
+        const target = event.target;
+        let x = (parseFloat(target.getAttribute('data-x')) || 0);
+        let y = (parseFloat(target.getAttribute('data-y')) || 0);
+        target.style.width = event.rect.width + 'px';
+        target.style.height = event.rect.height + 'px';
+        x += event.deltaRect.left;
+        y += event.deltaRect.top;
+        target.style.transform = `translate(${x}px, ${y}px)`;
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+      },
+      end(event) {
+        event.target.classList.remove('resizing');
+        const target = event.target;
+        const x = parseFloat(target.getAttribute('data-x')) || 0;
+        const y = parseFloat(target.getAttribute('data-y')) || 0;
+        target.style.transform = '';
+        target.style.left = (parseFloat(target.style.left) + x) + 'px';
+        target.style.top = (parseFloat(target.style.top) + y) + 'px';
+        target.setAttribute('data-x', 0);
+        target.setAttribute('data-y', 0);
+        saveLayout();
+      }
+    }
+  });
+}
+
+document.getElementById('dashboard').addEventListener('click', function(e) {
+  const tile = e.target.closest('.tile');
+  if (!tile) return;
+  bringToFront(tile);
+  if (tile.id === 'settings') {
+    document.getElementById('settings-panel').classList.add('open');
+    buildTileVisibilityUI();
+    return;
+  }
+  const app = tile.getAttribute('data-app');
+  if (app) {
+    const fallbacks = { spotify: 'https://open.spotify.com', amazon: 'https://music.amazon.de', youtube: 'https://youtube.com' };
+    window.open(fallbacks[app], '_blank');
+  }
+});
+
+// ---------- WEATHER ----------
+async function fetchWeather(lat, lon) {
+  // Wenn keine Koordinaten übergeben: aus localStorage holen
+  if (lat === undefined || lon === undefined) {
+    const saved = localStorage.getItem('weatherLocation');
+    if (saved) {
+      try {
+        const loc = JSON.parse(saved);
+        lat = loc.lat;
+        lon = loc.lon;
+      } catch(e) {
+        lat = 51.2277; lon = 6.7735; // Fallback Düsseldorf
+      }
+    } else {
+      lat = 51.2277; lon = 6.7735;
+    }
+  }
+  try {
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=weather_code,temperature_2m,relative_humidity_2m,wind_speed_10m&hourly=weather_code,temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5`);
+    return await res.json();
+  } catch(e) { console.error(e); return null; }
+}
+
+// Stadt suchen über Open-Meteo Geocoding API
+async function searchLocation(query) {
+  try {
+    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=de&format=json`);
+    const data = await res.json();
+    return data.results || [];
+  } catch(e) {
+    console.error('Standort-Suche fehlgeschlagen:', e);
+    return [];
+  }
+}
+
+function displayCurrentLocation() {
+  const el = document.getElementById('current-location');
+  if (!el) return;
+  const saved = localStorage.getItem('weatherLocation');
+  if (saved) {
+    try {
+      const loc = JSON.parse(saved);
+      el.innerHTML = `<strong>${loc.name}</strong>${loc.country ? ', ' + loc.country : ''}<br><small style="opacity:0.7;">${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}</small>`;
+    } catch(e) {
+      el.textContent = 'Düsseldorf (Standard)';
+    }
+  } else {
+    el.textContent = 'Düsseldorf (Standard)';
+  }
+}
+
+async function setLocation(lat, lon, name, country) {
+  const loc = { lat, lon, name, country };
+  localStorage.setItem('weatherLocation', JSON.stringify(loc));
+  displayCurrentLocation();
+  // Wetter neu laden
+  const data = await fetchWeather(lat, lon);
+  if (data) {
+    window._weatherCache = data;
+    updateWeather();
+  }
+  // Suchergebnisse leeren
+  const results = document.getElementById('location-results');
+  if (results) results.innerHTML = '';
+  const searchInput = document.getElementById('location-search');
+  if (searchInput) searchInput.value = '';
+}
+
+// Event-Listener für Standort-Suche
+document.addEventListener('click', async function(e) {
+  if (e.target.closest('#location-search-btn')) {
+    const query = document.getElementById('location-search').value.trim();
+    if (!query) return;
+    
+    const results = document.getElementById('location-results');
+    results.innerHTML = '<small style="opacity:0.7;">⏳ Suche läuft...</small>';
+    
+    const locations = await searchLocation(query);
+    
+    if (locations.length === 0) {
+      results.innerHTML = '<small style="opacity:0.7; color:#fca5a5;">❌ Keine Treffer gefunden</small>';
+      return;
+    }
+    
+    results.innerHTML = locations.map(loc => `
+      <div class="location-result-item" data-lat="${loc.latitude}" data-lon="${loc.longitude}" data-name="${loc.name}" data-country="${loc.country || ''}">
+        <strong>${loc.name}</strong>
+        <small>${loc.admin1 ? loc.admin1 + ', ' : ''}${loc.country || ''}</small>
+      </div>
+    `).join('');
+  }
+  
+  // Klick auf Suchergebnis
+  if (e.target.closest('.location-result-item')) {
+    const item = e.target.closest('.location-result-item');
+    setLocation(
+      parseFloat(item.dataset.lat),
+      parseFloat(item.dataset.lon),
+      item.dataset.name,
+      item.dataset.country
+    );
+  }
+  
+  // GPS-Button
+  if (e.target.closest('#use-gps')) {
+    if (!navigator.geolocation) {
+      alert('GPS wird von diesem Browser nicht unterstützt');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        // Reverse-Geocoding für Stadtnamen
+        try {
+          const res = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&language=de&format=json`);
+          const data = await res.json();
+          const place = data.results && data.results[0];
+          setLocation(lat, lon, place ? place.name : 'GPS-Position', place ? place.country : '');
+        } catch(e) {
+          setLocation(lat, lon, 'GPS-Position', '');
+        }
+      },
+      err => {
+        alert('GPS-Standort konnte nicht ermittelt werden: ' + err.message);
+      },
+      { timeout: 10000, maximumAge: 60000 }
+    );
+  }
+});
+
+// Enter-Taste in Suchfeld
+document.addEventListener('keydown', function(e) {
+  if (e.target.id === 'location-search' && e.key === 'Enter') {
+    document.getElementById('location-search-btn').click();
+  }
+});
+
+function weatherEmoji(code) {
+  // WMO Wetter-Code Standard (Open-Meteo)
+  if(code === 0) return '☀️';           // Klar
+  if(code === 1) return '🌤️';           // Überwiegend klar (Sonne mit wenig Wolken)
+  if(code === 2) return '⛅';            // Teilweise bewölkt
+  if(code === 3) return '☁️';           // Bedeckt
+  if(code === 45 || code === 48) return '🌫️'; // Nebel
+  if(code >= 51 && code <= 57) return '🌦️';   // Niesel
+  if(code >= 61 && code <= 67) return '🌧️';   // Regen
+  if(code >= 71 && code <= 77) return '🌨️';   // Schnee
+  if(code >= 80 && code <= 82) return '🌧️';   // Regenschauer
+  if(code >= 85 && code <= 86) return '🌨️';   // Schneeschauer
+  if(code >= 95) return '⛈️';                  // Gewitter
+  return '🌥️';
+}
+
+function weatherDesc(code) {
+  if(code === 0) return 'Sonnig';
+  if(code === 1) return 'Überwiegend sonnig';
+  if(code === 2) return 'Teilweise bewölkt';
+  if(code === 3) return 'Bedeckt';
+  if(code === 45 || code === 48) return 'Nebel';
+  if(code >= 51 && code <= 57) return 'Nieselregen';
+  if(code >= 61 && code <= 67) return 'Regen';
+  if(code >= 71 && code <= 77) return 'Schnee';
+  if(code >= 80 && code <= 82) return 'Regenschauer';
+  if(code >= 85 && code <= 86) return 'Schneeschauer';
+  if(code >= 95) return 'Gewitter';
+  return 'Bewölkt';
+}
+
+async function updateWeather() {
+  const data = window._weatherCache || await fetchWeather();
+  if(!data) return;
+  window._weatherCache = data;
+  
+  const tempEl = document.getElementById('current-temp');
+  if(tempEl) tempEl.textContent = Math.round(data.current.temperature_2m) + '°';
+  
+  const detailsEl = document.getElementById('current-details');
+  if(detailsEl) detailsEl.innerHTML = `${weatherDesc(data.current.weather_code)}<br>💧 ${data.current.relative_humidity_2m}% · 💨 ${Math.round(data.current.wind_speed_10m)} km/h`;
+  
+  const iconEl = document.getElementById('current-icon');
+  if(iconEl) iconEl.textContent = weatherEmoji(data.current.weather_code);
+  
+  const fc = document.getElementById('forecast-container');
+  if(fc) {
+    fc.innerHTML = '';
+    data.daily.time.forEach((day,i) => {
+      const d = new Date(day);
+      const div = document.createElement('div');
+      div.className = 'forecast-day' + (i===0?' active':'');
+      div.innerHTML = `<div>${d.toLocaleDateString('de-DE',{weekday:'short'})}</div><div>${weatherEmoji(data.daily.weather_code[i])}</div><div>${Math.round(data.daily.temperature_2m_max[i])}°/${Math.round(data.daily.temperature_2m_min[i])}°</div>`;
+      fc.appendChild(div);
+    });
+  }
+  
+  const hc = document.getElementById('hourly-container');
+  if(hc) {
+    hc.innerHTML = '';
+    data.hourly.time.slice(0,24).forEach((t,i) => {
+      const time = new Date(t);
+      const div = document.createElement('div');
+      div.className = 'hourly-item';
+      div.innerHTML = `<div>${time.getHours()}:00</div><div>${weatherEmoji(data.hourly.weather_code[i])}</div><div>${Math.round(data.hourly.temperature_2m[i])}°</div>`;
+      hc.appendChild(div);
+    });
+  }
+}
+
+// ---------- CALENDAR mit CORS-Fallback ----------
+let calendarEvents = [];
+function assignEventColor(index) {
+  const palette = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63','#00bcd4','#ff5722'];
+  return palette[index % palette.length];
+}
+
+// Aktueller Anzeigemonat (kann von "heute" abweichen wenn User navigiert)
+let calendarViewDate = new Date();
+
+function renderCalendar() {
+  const grid = document.getElementById('calendar-grid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => {
+    const div = document.createElement('div');
+    div.className = 'day-header';
+    div.textContent = d;
+    grid.appendChild(div);
+  });
+  
+  const today = new Date();
+  const year = calendarViewDate.getFullYear();
+  const month = calendarViewDate.getMonth();
+  
+  // Monat-Titel aktualisieren
+  const monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  const titleEl = document.getElementById('cal-title');
+  if (titleEl) titleEl.textContent = `${monthNames[month]} ${year}`;
+  
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const offset = (firstDay + 6) % 7;
+  for(let i=0; i<offset; i++) grid.appendChild(document.createElement('div'));
+  
+  for(let d=1; d<=daysInMonth; d++) {
+    const dayDiv = document.createElement('div');
+    dayDiv.className = 'day';
+    dayDiv.textContent = d;
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const eventsOnDay = calendarEvents.filter(e => e.start.startsWith(dateStr));
+    if(eventsOnDay.length > 0) {
+      eventsOnDay.slice(0, 3).forEach((ev, idx) => {
+        const line = document.createElement('div');
+        line.className = 'event-line';
+        line.style.backgroundColor = ev.color || assignEventColor(idx);
+        line.style.bottom = (2 + idx * 5) + 'px';
+        dayDiv.appendChild(line);
+      });
+      dayDiv.addEventListener('click', () => {
+        const details = document.getElementById('event-details');
+        if(details) {
+          details.style.display = 'block';
+          details.innerHTML = eventsOnDay.map(e => `<strong style="color:${e.color}">${e.summary}</strong><br><small>${e.start}</small>`).join('<hr style="margin:4px 0;opacity:0.3;">');
+        }
+      });
+    }
+    // "Heute"-Highlight nur wenn aktueller Monat angezeigt wird
+    if(d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+      dayDiv.classList.add('today');
+    }
+    grid.appendChild(dayDiv);
+  }
+}
+
+// Event-Listener für Kalender-Navigation (per Event-Delegation)
+document.addEventListener('click', function(e) {
+  if (e.target.closest('#cal-prev')) {
+    calendarViewDate.setMonth(calendarViewDate.getMonth() - 1);
+    renderCalendar();
+    const details = document.getElementById('event-details');
+    if (details) details.style.display = 'none';
+  } else if (e.target.closest('#cal-next')) {
+    calendarViewDate.setMonth(calendarViewDate.getMonth() + 1);
+    renderCalendar();
+    const details = document.getElementById('event-details');
+    if (details) details.style.display = 'none';
+  } else if (e.target.closest('#cal-today')) {
+    calendarViewDate = new Date();
+    renderCalendar();
+    const details = document.getElementById('event-details');
+    if (details) details.style.display = 'none';
+  }
+});
+
+// CORS-Proxies (mehrere als Fallback)
+const CORS_PROXIES = [
+  'https://corsproxy.io/?',
+  'https://api.allorigins.win/raw?url=',
+  'https://api.codetabs.com/v1/proxy?quest='
+];
+
+async function fetchICSWithFallback(url) {
+  // 1. Direkt versuchen
+  try {
+    const res = await fetch(url);
+    if (res.ok) return await res.text();
+  } catch(e) {
+    console.log('Direct fetch failed (CORS), trying proxies...');
+  }
+  
+  // 2. Proxies probieren
+  for (const proxy of CORS_PROXIES) {
+    try {
+      const proxyUrl = proxy + encodeURIComponent(url);
+      const res = await fetch(proxyUrl);
+      if (res.ok) {
+        const text = await res.text();
+        if (text.includes('BEGIN:VCALENDAR')) return text;
+      }
+    } catch(e) {
+      console.log('Proxy failed:', proxy);
+    }
+  }
+  
+  throw new Error('Alle Lade-Versuche fehlgeschlagen. Prüfe URL und Internetverbindung.');
+}
+
+async function loadCalendar(url) {
+  if(!url) return;
+  const errorBox = document.getElementById('ical-error');
+  if (errorBox) { errorBox.style.display = 'none'; errorBox.textContent = ''; }
+  
+  // webcal:// → https://
+  url = url.replace(/^webcal:\/\//i, 'https://');
+  
+  try {
+    const data = await fetchICSWithFallback(url);
+    const jcal = ICAL.parse(data);
+    const comp = new ICAL.Component(jcal);
+    const vevents = comp.getAllSubcomponents('vevent');
+    calendarEvents = vevents.map((vevent, i) => {
+      const ev = new ICAL.Event(vevent);
+      const start = ev.startDate.toJSDate();
+      const end = ev.endDate.toJSDate();
+      return {
+        summary: ev.summary || '(Ohne Titel)',
+        start: start.toISOString().substring(0,10),
+        end: end.toISOString().substring(0,10),
+        color: assignEventColor(i)
+      };
+    });
+    renderCalendar();
+    console.log('✅ Kalender geladen:', calendarEvents.length, 'Termine');
+  } catch(err) {
+    console.error('❌ Kalender Ladefehler:', err);
+    if (errorBox) {
+      errorBox.style.display = 'block';
+      errorBox.textContent = '❌ ' + err.message;
+    }
+  }
+}
+
+// ---------- SLIDESHOW ----------
+let slides = [];
+let currentSlide = 0;
+let slideInterval = 10;
+let slideAnimDuration = 1;
+let slideAnimType = 'fade';
+let slideshowTimer;
+let slideshowPaused = false;
+
+function saveSlides() {
+  try {
+    localStorage.setItem('slideshowImages', JSON.stringify(slides));
+    localStorage.setItem('slideshowIndex', currentSlide);
+  } catch(e) { console.warn('localStorage voll, kann Slides nicht speichern'); }
+}
+
+function loadSlides() {
+  try {
+    const saved = localStorage.getItem('slideshowImages');
+    if (saved) {
+      slides = JSON.parse(saved);
+      currentSlide = parseInt(localStorage.getItem('slideshowIndex')) || 0;
+      if (currentSlide >= slides.length) currentSlide = 0;
+      updateSlideDisplay();
+      const cnt = document.getElementById('image-count');
+      if (cnt) cnt.textContent = slides.length + ' Bilder';
+    }
+  } catch(e) {}
+}
+
+function updateSlideDisplay() {
+  const container = document.getElementById('slideshow-container');
+  if(!container) return;
+  
+  // Animation-Klasse setzen
+  container.className = 'slideshow-container slide-anim-' + slideAnimType;
+  
+  // Dauer setzen
+  document.documentElement.style.setProperty('--slide-duration', slideAnimDuration + 's');
+  
+  // Alle existing img entfernen außer controls
+  const existingImgs = container.querySelectorAll('.slide-img');
+  existingImgs.forEach(img => {
+    if (!img.classList.contains('exit')) {
+      img.classList.add('exit');
+      img.classList.remove('active');
+      setTimeout(() => img.remove(), slideAnimDuration * 1000 + 100);
+    }
+  });
+  
+  // Neues Bild einfügen
+  if (slides.length > 0 && slides[currentSlide]) {
+    const newImg = document.createElement('img');
+    newImg.className = 'slide-img';
+    newImg.src = slides[currentSlide];
+    container.insertBefore(newImg, container.firstChild);
+    // Force reflow für CSS-Animation
+    void newImg.offsetWidth;
+    newImg.classList.add('active');
+  }
+  
+  // Hintergrund syncen wenn slideshow als bg
+  if (localStorage.getItem('bgMode') === 'slideshow') {
+    syncSlideshowBackground();
+  }
+}
+
+function syncSlideshowBackground() {
+  if (slides.length === 0 || !slides[currentSlide]) return;
+  
+  const layer1 = document.getElementById('bg-layer-1');
+  const layer2 = document.getElementById('bg-layer-2');
+  
+  // Welcher Layer ist gerade aktiv? Den anderen nutzen
+  const activeLayer = layer1.classList.contains('active') ? layer1 : (layer2.classList.contains('active') ? layer2 : layer1);
+  const inactiveLayer = activeLayer === layer1 ? layer2 : layer1;
+  
+  // Inaktiven Layer mit neuem Bild laden
+  inactiveLayer.style.backgroundImage = `url(${slides[currentSlide]})`;
+  
+  // Sanft überblenden
+  setTimeout(() => {
+    inactiveLayer.classList.add('active');
+    activeLayer.classList.remove('active');
+  }, 50);
+}
+
+function nextSlide() {
+  if(slides.length === 0) return;
+  currentSlide = (currentSlide + 1) % slides.length;
+  updateSlideDisplay();
+  saveSlides();
+}
+
+function prevSlide() {
+  if(slides.length === 0) return;
+  currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+  updateSlideDisplay();
+  saveSlides();
+}
+
+function startSlideshow() {
+  clearInterval(slideshowTimer);
+  if(slides.length === 0 || slideshowPaused) return;
+  slideshowTimer = setInterval(() => {
+    nextSlide();
+  }, slideInterval * 1000);
+}
+
+document.addEventListener('change', function(e) {
+  if(e.target.id === 'file-upload') {
+    Array.from(e.target.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        slides.push(ev.target.result);
+        if(slides.length === 1) currentSlide = 0;
+        updateSlideDisplay();
+        const cnt = document.getElementById('image-count');
+        if (cnt) cnt.textContent = slides.length + ' Bilder';
+        saveSlides();
+        startSlideshow();
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  }
+});
+
+document.addEventListener('click', function(e) {
+  if(e.target.closest('#next-slide')) {
+    nextSlide();
+    startSlideshow();
+  } else if(e.target.closest('#prev-slide')) {
+    prevSlide();
+    startSlideshow();
+  } else if(e.target.closest('#play-pause')) {
+    slideshowPaused = !slideshowPaused;
+    const btn = e.target.closest('#play-pause');
+    btn.innerHTML = slideshowPaused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+    if (slideshowPaused) clearInterval(slideshowTimer);
+    else startSlideshow();
+  } else if(e.target.closest('#delete-slide')) {
+    if(!slides.length) return;
+    slides.splice(currentSlide, 1);
+    if(currentSlide >= slides.length) currentSlide = Math.max(0, slides.length-1);
+    updateSlideDisplay();
+    const cnt = document.getElementById('image-count');
+    if (cnt) cnt.textContent = slides.length + ' Bilder';
+    saveSlides();
+    startSlideshow();
+  }
+});
+
+// ---------- SETTINGS ----------
+function applyBackground() {
+  const mode = localStorage.getItem('bgMode') || 'theme';
+  const root = document.documentElement;
+  const layer1 = document.getElementById('bg-layer-1');
+  const layer2 = document.getElementById('bg-layer-2');
+  
+  // Beide Layer ausblenden bei Nicht-Slideshow-Mode
+  if (mode !== 'slideshow') {
+    layer1.classList.remove('active');
+    layer2.classList.remove('active');
+  }
+  
+  document.body.style.background = '';
+  
+  switch(mode) {
+    case 'theme':
+      root.style.setProperty('--bg-image', 'none');
+      break;
+    case 'color':
+      root.style.setProperty('--bg-image', 'none');
+      document.body.style.background = localStorage.getItem('bgColor') || '#e0e7ff';
+      break;
+    case 'url':
+      root.style.setProperty('--bg-image', `url(${localStorage.getItem('bgUrl') || ''})`);
+      break;
+    case 'upload':
+      root.style.setProperty('--bg-image', `url(${localStorage.getItem('bgUpload') || ''})`);
+      break;
+    case 'slideshow':
+      root.style.setProperty('--bg-image', 'none');
+      syncSlideshowBackground();
+      break;
+  }
+}
+
+function updateBgModeUI(mode) {
+  document.getElementById('bg-color-container').style.display = mode === 'color' ? 'block' : 'none';
+  document.getElementById('bg-url-container').style.display = mode === 'url' ? 'block' : 'none';
+  document.getElementById('bg-upload-container').style.display = mode === 'upload' ? 'block' : 'none';
+}
+
+function loadSettings() {
+  applyTheme(localStorage.getItem('theme') || 'default');
+  document.getElementById('theme-select').value = localStorage.getItem('theme') || 'default';
+  
+  const bgMode = localStorage.getItem('bgMode') || 'theme';
+  document.getElementById('bg-mode').value = bgMode;
+  updateBgModeUI(bgMode);
+  
+  const bgColor = localStorage.getItem('bgColor') || '#e0e7ff';
+  document.getElementById('bg-color').value = bgColor;
+  
+  const bgUrl = localStorage.getItem('bgUrl') || '';
+  document.getElementById('bg-url').value = bgUrl;
+  
+  applyBackground();
+  
+  // Tile-Opacity
+  const tileOpacity = parseFloat(localStorage.getItem('tileOpacity') || '1');
+  document.getElementById('tile-opacity').value = tileOpacity;
+  document.getElementById('tile-opacity-value').textContent = Math.round(tileOpacity * 100) + '%';
+  document.documentElement.style.setProperty('--tile-opacity', tileOpacity);
+  
+  document.getElementById('font-color').value = localStorage.getItem('fontColor') || '#1e293b';
+  document.documentElement.style.setProperty('--text-color', localStorage.getItem('fontColor') || '#1e293b');
+  
+  document.getElementById('font-family-select').value = localStorage.getItem('fontFamily') || "'Segoe UI', system-ui, sans-serif";
+  document.documentElement.style.setProperty('--font-family', localStorage.getItem('fontFamily') || "'Segoe UI', system-ui, sans-serif");
+  
+  document.getElementById('tile-bg-color').value = localStorage.getItem('tileBg') || '#ffffff';
+  document.documentElement.style.setProperty('--tile-bg', (localStorage.getItem('tileBg') || '#ffffff') + '80');
+  
+  document.getElementById('border-width').value = localStorage.getItem('borderWidth') || 1;
+  document.documentElement.style.setProperty('--tile-border-width', (localStorage.getItem('borderWidth') || 1) + 'px');
+  
+  document.getElementById('border-radius').value = localStorage.getItem('borderRadius') || 24;
+  document.documentElement.style.setProperty('--tile-border-radius', (localStorage.getItem('borderRadius') || 24) + 'px');
+  
+  // 3D-Effekt
+  const d3dMode = localStorage.getItem('3dMode') || 'none';
+  document.getElementById('3d-mode').value = d3dMode;
+  const d3dStrength = parseFloat(localStorage.getItem('3dStrength') || 2);
+  document.getElementById('3d-strength').value = d3dStrength;
+  document.getElementById('3d-strength-value').textContent = d3dStrength;
+  apply3DEffect(d3dMode, d3dStrength);
+  
+  // Slideshow
+  slideAnimType = localStorage.getItem('slideAnimation') || 'fade';
+  document.getElementById('slide-animation').value = slideAnimType;
+  
+  const slideFit = localStorage.getItem('slideFit') || 'contain';
+  document.getElementById('slide-fit').value = slideFit;
+  document.documentElement.style.setProperty('--slide-fit', slideFit);
+  
+  slideInterval = parseInt(localStorage.getItem('slideInterval') || 10);
+  document.getElementById('interval-input').value = slideInterval;
+  
+  slideAnimDuration = parseFloat(localStorage.getItem('slideAnimDuration') || 1);
+  document.getElementById('anim-duration').value = slideAnimDuration;
+  document.documentElement.style.setProperty('--slide-duration', slideAnimDuration + 's');
+  
+  startSlideshow();
+  
+  // Kalender-URL
+  const savedIcalUrl = localStorage.getItem('icalUrl');
+  if (savedIcalUrl) {
+    document.getElementById('ical-url').value = savedIcalUrl;
+    loadCalendar(savedIcalUrl);
+  }
+}
+
+// Settings-Event-Listener
+document.getElementById('close-settings').addEventListener('click', () => document.getElementById('settings-panel').classList.remove('open'));
+document.getElementById('theme-select').addEventListener('change', e => applyTheme(e.target.value));
+
+document.getElementById('bg-mode').addEventListener('change', function(e) {
+  const mode = e.target.value;
+  localStorage.setItem('bgMode', mode);
+  updateBgModeUI(mode);
+  applyBackground();
+});
+
+document.getElementById('bg-color').addEventListener('input', function(e) {
+  localStorage.setItem('bgColor', e.target.value);
+  if (localStorage.getItem('bgMode') === 'color') applyBackground();
+});
+
+document.getElementById('bg-url').addEventListener('input', function(e) {
+  localStorage.setItem('bgUrl', e.target.value);
+  if (localStorage.getItem('bgMode') === 'url') applyBackground();
+});
+
+document.getElementById('bg-upload').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    localStorage.setItem('bgUpload', ev.target.result);
+    if (localStorage.getItem('bgMode') === 'upload') applyBackground();
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('bg-upload-trigger').addEventListener('click', () => document.getElementById('bg-upload').click());
+
+document.getElementById('tile-opacity').addEventListener('input', e => {
+  const val = parseFloat(e.target.value);
+  document.documentElement.style.setProperty('--tile-opacity', val);
+  document.getElementById('tile-opacity-value').textContent = Math.round(val * 100) + '%';
+  localStorage.setItem('tileOpacity', val);
+});
+
+document.getElementById('font-color').addEventListener('input', e => {
+  document.documentElement.style.setProperty('--text-color', e.target.value);
+  localStorage.setItem('fontColor', e.target.value);
+});
+
+document.getElementById('font-family-select').addEventListener('change', e => {
+  document.documentElement.style.setProperty('--font-family', e.target.value);
+  localStorage.setItem('fontFamily', e.target.value);
+});
+
+document.getElementById('tile-bg-color').addEventListener('input', e => {
+  document.documentElement.style.setProperty('--tile-bg', e.target.value + '80');
+  localStorage.setItem('tileBg', e.target.value);
+});
+
+document.getElementById('border-width').addEventListener('input', e => {
+  document.documentElement.style.setProperty('--tile-border-width', e.target.value + 'px');
+  localStorage.setItem('borderWidth', e.target.value);
+});
+
+document.getElementById('border-radius').addEventListener('input', e => {
+  document.documentElement.style.setProperty('--tile-border-radius', e.target.value + 'px');
+  localStorage.setItem('borderRadius', e.target.value);
+});
+
+document.getElementById('3d-mode').addEventListener('change', function(e) {
+  localStorage.setItem('3dMode', e.target.value);
+  apply3DEffect(e.target.value, document.getElementById('3d-strength').value);
+});
+
+document.getElementById('3d-strength').addEventListener('input', function(e) {
+  localStorage.setItem('3dStrength', e.target.value);
+  document.getElementById('3d-strength-value').textContent = e.target.value;
+  apply3DEffect(document.getElementById('3d-mode').value, e.target.value);
+});
+
+document.getElementById('slide-fit').addEventListener('change', e => {
+  document.documentElement.style.setProperty('--slide-fit', e.target.value);
+  localStorage.setItem('slideFit', e.target.value);
+});
+
+document.getElementById('slide-animation').addEventListener('change', e => {
+  slideAnimType = e.target.value;
+  localStorage.setItem('slideAnimation', slideAnimType);
+  updateSlideDisplay();
+});
+
+document.getElementById('interval-input').addEventListener('change', e => {
+  slideInterval = parseInt(e.target.value) || 10;
+  localStorage.setItem('slideInterval', slideInterval);
+  startSlideshow();
+});
+
+document.getElementById('anim-duration').addEventListener('change', e => {
+  slideAnimDuration = parseFloat(e.target.value) || 1;
+  localStorage.setItem('slideAnimDuration', slideAnimDuration);
+  document.documentElement.style.setProperty('--slide-duration', slideAnimDuration + 's');
+});
+
+document.getElementById('load-ical-settings').addEventListener('click', function() {
+  const url = document.getElementById('ical-url').value.trim();
+  if (url) {
+    localStorage.setItem('icalUrl', url);
+    loadCalendar(url);
+  }
+});
+
+// ---------- INIT ----------
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('gesturestart', e => e.preventDefault());
+createTiles();
+setTimeout(markActivePreset, 100);
+setTimeout(buildTileVisibilityUI, 50);
+loadSlides();
+loadSettings();
+updateWeather();
+renderCalendar();
+
+// Wetter alle 15 Minuten aktualisieren
+setInterval(updateWeather, 15 * 60 * 1000);
+
+// Standort-Anzeige initialisieren
+setTimeout(displayCurrentLocation, 100);
+
+})();
+</script>
+</body>
+</html>
