@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Touch Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <style>
+        :root {
+            /* Theme Variabeln - Default Light/Glass */
+            --bg-color: #000;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --accent-color: #6366f1;
+            --text-color: #ffffff;
+            --blur-amount: 16px;
+            --border-radius: 20px;
+            --opacity: 1;
+        }
+
+        /* === KIOSK & TOUCH OPTIMIZATION === */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+        }
+        html, body {
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            overscroll-behavior: none;
+        }
+        input, select, textarea {
+            user-select: auto;
+            -webkit-user-select: auto;
+        }
+
+        /* === HALO TEXT & FRAMELESS === */
+        .text-halo {
+            color: #fff;
+            text-shadow: 0 0 4px rgba(0,0,0,1), 0 0 8px rgba(0,0,0,.95), 0 0 16px rgba(0,0,0,.85), 1px 1px 2px rgba(0,0,0,1), -1px -1px 2px rgba(0,0,0,1);
+        }
+        .frameless {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        /* === TILES & LAYOUT === */
+        #dashboard {
+            position: relative;
+            width: 100%; height: 100%;
+        }
+        .tile {
+            position: absolute;
+            opacity: var(--opacity);
+            transition: transform 0.1s;
+            border-radius: var(--border-radius);
+            touch-action: none; /* Let interact.js handle it */
+        }
+        .tile-glass {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .tile-content {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* 3D Tilt */
+        .tilt:hover { transform: perspective(1000px) rotateX(2deg) rotateY(2deg); }
+
+        /* === UI ELEMENTS MIN 48px === */
+        button, select, input[type="text"], input[type="number"] {
+            min-height: 52px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            padding: 0 16px;
+            font-size: 1.1rem;
+            outline: none;
+        }
+        button:active { transform: scale(0.95); }
+        input[type="range"] {
+            width: 100%; min-height: 52px;
+            accent-color: var(--accent-color);
+        }
+        /* Range Slider Thumb Fix */
+        input[type=range]::-webkit-slider-thumb {
+            height: 36px; width: 36px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            border: 3px solid #fff;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        /* === SETTINGS PANEL === */
+        #settings-panel {
+            position: fixed;
+            top: 0; right: -100%;
+            width: min(400px, 92vw);
+            height: 100%;
+            background: rgba(15, 15, 20, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            border-left: 1px solid var(--glass-border);
+        }
+        #settings-panel.open { right: 0; }
+        .close-btn {
+            width: 52px; height: 52px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: none; color: white;
+            font-size: 24px;
+            position: absolute; right: 20px; top: 20px;
+        }
+        .setting-group { margin-bottom: 30px; }
+        .setting-group h3 { margin: 0 0 15px 0; font-size: 1.2rem; border-bottom: 1px solid #333; padding-bottom: 5px;}
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        
+        /* Toggle Switch 60x34 */
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-color); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* === SLIDESHOW === */
+        #slideshow-container { position: absolute; inset: 0; z-index: -1; }
+        .slide {
+            position: absolute; inset: 0;
+            background-size: cover; background-position: center;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+        }
+        .slide.active { opacity: 1; animation: kenburns 20s linear infinite alternate; }
+        @keyframes kenburns { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+        .slideshow-controls {
+            position: absolute; bottom: 20px; right: 20px;
+            display: flex; gap: 10px; z-index: 10;
+        }
+        .slideshow-controls button {
+            width: 48px; height: 48px; min-height: 48px; padding: 0;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; background: rgba(0,0,0,0.5);
+        }
+
+        /* === SPECIFIC TILES === */
+        .app-icon { font-size: 4rem; text-align: center; display: flex; align-items: center; justify-content: center; height: 100%; cursor: pointer;}
+        
+        /* Weather */
+        .weather-current { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .temp { font-size: 5rem; font-weight: bold; line-height: 1; }
+        .weather-desc { font-size: 1.5rem; text-transform: capitalize; }
+        
+        /* Forecast Daily */
+        .forecast-grid { display: flex; flex-direction: column; justify-content: space-around; height: 100%; gap: 5px; }
+        .forecast-day { display: flex; justify-content: space-between; align-items: center; min-height: 70px; border-bottom: 1px solid rgba(255,255,255,0.2); padding: 0 10px;}
+        
+        /* Forecast Hourly */
+        .hourly-grid { display: flex; overflow-x: auto; touch-action: pan-x; height: 100%; align-items: center; gap: 20px; padding: 0 10px; }
+        .hourly-item { display: flex; flex-direction: column; align-items: center; min-width: 64px; }
+
+        /* Calendar */
+        .cal-header { display: flex; justify-content: space-between; align-items: center; padding: 10px; }
+        .cal-nav-btn { width: 48px; height: 48px; background: rgba(0,0,0,0.35); border: 1px solid #fff; min-height: 48px; border-radius: 12px;}
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; flex-grow: 1; text-align: center; }
+        .day { display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; min-height: 40px; }
+        .day.today { background: rgba(99,102,241,0.85); border-radius: 8px; }
+        .event-dot { width: 6px; height: 6px; background: var(--accent-color); border-radius: 50%; margin-top: 2px; }
+
+        /* Resize Handles for interact.js */
+        .resize-handle {
+            position: absolute;
+            width: 20px; height: 20px;
+            background: transparent;
+            z-index: 10;
+        }
+        .resize-handle-nw { top: 0; left: 0; cursor: nw-resize; }
+        .resize-handle-ne { top: 0; right: 0; cursor: ne-resize; }
+        .resize-handle-sw { bottom: 0; left: 0; cursor: sw-resize; }
+        .resize-handle-se { bottom: 0; right: 0; cursor: se-resize; }
+
+    </style>
+</head>
+<body>
+
+    <div id="dashboard">
+        <div id="tile-settings" class="tile frameless text-halo" style="width: 80px; height: 80px; top: 20px; left: 20px;" data-id="settings">
+            <div class="tile-content app-icon" onclick="toggleSettings()">⚙️</div>
+        </div>
+
+        <div id="tile-slideshow" class="tile tile-glass" style="width: 800px; height: 500px; top: 100px; left: 100px; z-index: 0;" data-id="slideshow">
+            <div class="tile-content" id="slideshow-wrapper">
+                <div id="slideshow-container"></div>
+                <div class="slideshow-controls text-halo">
+                    <button onclick="prevSlide()">⏮</button>
+                    <button onclick="togglePlay()" id="playBtn">⏸</button>
+                    <button onclick="nextSlide()">⏭</button>
+                </div>
+            </div>
+            <div class="resize-handle resize-handle-nw"></div><div class="resize-handle resize-handle-ne"></div><div class="resize-handle resize-handle-sw"></div><div class="resize-handle resize-handle-se"></div>
+        </div>
+
+        <div id="tile-weather-cur" class="tile frameless text-halo" style="width: 300px; height: 300px; top: 100px; left: 950px;" data-id="weather_cur">
+            <div class="tile-content weather-current">
+                <div id="w-icon" style="font-size: 5rem;">☁️</div>
+                <div id="w-temp" class="temp">--°C</div>
+                <div id="w-desc" class="weather-desc">Laden...</div>
+                <div id="w-details" style="margin-top: 10px; font-size: 1.2rem;">💨 -- km/h | 💧 --%</div>
+            </div>
+            <div class="resize-handle resize-handle-nw"></div><div class="resize-handle resize-handle-ne"></div><div class="resize-handle resize-handle-sw"></div><div class="resize-handle resize-handle-se"></div>
+        </div>
+
+        <div id="tile-weather-daily" class="tile frameless text-halo" style="width: 350px; height: 400px; top: 450px; left: 950px;" data-id="weather_daily">
+            <div class="tile-content forecast-grid" id="forecast-daily"></div>
+            <div class="resize-handle resize-handle-nw"></div><div class="resize-handle resize-handle-ne"></div><div class="resize-handle resize-handle-sw"></div><div class="resize-handle resize-handle-se"></div>
+        </div>
+
+        <div id="tile-weather-hourly" class="tile frameless text-halo" style="width: 800px; height: 150px; top: 650px; left: 100px;" data-id="weather_hourly">
+            <div class="tile-content hourly-grid" id="forecast-hourly"></div>
+            <div class="resize-handle resize-handle-nw"></div><div class="resize-handle resize-handle-ne"></div><div class="resize-handle resize-handle-sw"></div><div class="resize-handle resize-handle-se"></div>
+        </div>
+
+        <div id="tile-calendar" class="tile frameless text-halo" style="width: 400px; height: 400px; top: 100px; left: 1350px;" data-id="calendar">
+            <div class="tile-content">
+                <div class="cal-header">
+                    <button class="cal-nav-btn text-halo" onclick="changeMonth(-1)">◀</button>
+                    <h2 id="cal-month" style="margin:0;">Monat</h2>
+                    <button class="cal-nav-btn text-halo" onclick="changeMonth(1)">▶</button>
+                </div>
+                <div class="cal-grid" id="cal-grid"></div>
+            </div>
+            <div class="resize-handle resize-handle-nw"></div><div class="resize-handle resize-handle-ne"></div><div class="resize-handle resize-handle-sw"></div><div class="resize-handle resize-handle-se"></div>
+        </div>
+
+        <div id="tile-spotify" class="tile frameless text-halo" style="width: 120px; height: 120px; top: 850px; left: 100px;" data-id="spotify">
+            <div class="tile-content app-icon" onclick="window.location.href='intent://#Intent;package=com.spotify.music;scheme=spotify;end;'">🎵</div>
+        </div>
+        <div id="tile-youtube" class="tile frameless text-halo" style="width: 120px; height: 120px; top: 850px; left: 250px;" data-id="youtube">
+            <div class="tile-content app-icon" onclick="window.location.href='intent://#Intent;package=com.google.android.youtube;scheme=youtube;end;'">▶️</div>
+        </div>
+    </div>
+
+    <div id="settings-panel">
+        <button class="close-btn" onclick="toggleSettings()">✖</button>
+        <h2 style="margin-top:0;">Einstellungen</h2>
+
+        <div class="setting-group">
+            <h3>Theme & Design</h3>
+            <select id="theme-select" onchange="applyTheme(this.value)" style="width:100%; margin-bottom: 15px;">
+                <option value="light">Light Glass</option>
+                <option value="dark">Dark Glass</option>
+                <option value="sunset">Sunset</option>
+                <option value="ocean">Ocean</option>
+            </select>
+            <label>Border Radius</label>
+            <input type="range" id="slider-radius" min="0" max="50" value="20" oninput="updateCSSVar('--border-radius', this.value + 'px')">
+            <label>Blur Effekt</label>
+            <input type="range" id="slider-blur" min="0" max="30" value="16" oninput="updateCSSVar('--blur-amount', this.value + 'px')">
+            <label>Transparenz (Opacity)</label>
+            <input type="range" id="slider-opacity" min="0.3" max="1" step="0.1" value="1" oninput="updateCSSVar('--opacity', this.value)">
+            <div class="toggle-row" style="margin-top:15px;">
+                <span>3D Tilt Effekt</span>
+                <label class="switch"><input type="checkbox" id="tilt-toggle" onchange="toggleTilt(this.checked)"><span class="slider"></span></label>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <h3>Layout & Kacheln</h3>
+            <button onclick="resetLayout()" style="width:100%; margin-bottom: 15px;">Layout Zurücksetzen</button>
+            <div id="tile-toggles"></div>
+        </div>
+
+        <div class="setting-group">
+            <h3>Wetter (OpenWeatherMap)</h3>
+            <input type="text" id="w-city" placeholder="Stadt (z.B. Düsseldorf)" value="Düsseldorf" style="width:100%; margin-bottom: 10px;">
+            <input type="text" id="w-key" placeholder="API Key" value="38343f2cf261a2544f16f596f7830f60" style="width:100%; margin-bottom: 10px;">
+            <button onclick="saveWeatherSettings()" style="width:100%;">Speichern & Aktualisieren</button>
+        </div>
+
+        <div class="setting-group">
+            <h3>Kalender (iCal)</h3>
+            <input type="text" id="ical-url" placeholder="iCal URL (optional)" style="width:100%; margin-bottom: 10px;">
+            <button onclick="saveCalSettings()" style="width:100%;">Laden</button>
+        </div>
+
+        <div class="setting-group">
+            <h3>Slideshow</h3>
+            <input type="file" id="photo-upload" multiple accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
+            <button onclick="document.getElementById('photo-upload').click()" style="width:100%; margin-bottom: 10px;">Fotos Hinzufügen</button>
+            <button onclick="clearPhotos
