@@ -8,7 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     <style>
         :root {
-            /* Theme Variabeln - Default Light/Glass */
             --bg-color: #000;
             --glass-bg: rgba(255, 255, 255, 0.1);
             --glass-border: rgba(255, 255, 255, 0.2);
@@ -19,13 +18,12 @@
             --opacity: 1;
         }
 
-        /* === KIOSK & TOUCH OPTIMIZATION === */
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
-            touch-action: manipulation;
         }
+        
         html, body {
             margin: 0; padding: 0;
             width: 100vw; height: 100vh;
@@ -37,16 +35,19 @@
             -webkit-user-select: none;
             overscroll-behavior: none;
         }
-        input, select, textarea {
-            user-select: auto;
-            -webkit-user-select: auto;
+
+        /* Error Logger - Sichtbar auf dem TV bei Fehlern */
+        #error-log {
+            display: none; position: fixed; top: 0; left: 0; width: 100%;
+            background: rgba(255, 0, 0, 0.9); color: white; z-index: 9999;
+            padding: 15px; font-weight: bold; font-family: monospace;
         }
 
-        /* === HALO TEXT & FRAMELESS === */
         .text-halo {
             color: #fff;
             text-shadow: 0 0 4px rgba(0,0,0,1), 0 0 8px rgba(0,0,0,.95), 0 0 16px rgba(0,0,0,.85), 1px 1px 2px rgba(0,0,0,1), -1px -1px 2px rgba(0,0,0,1);
         }
+        
         .frameless {
             background: transparent !important;
             border: none !important;
@@ -55,18 +56,16 @@
             -webkit-backdrop-filter: none !important;
         }
 
-        /* === TILES & LAYOUT === */
-        #dashboard {
-            position: relative;
-            width: 100%; height: 100%;
-        }
+        #dashboard { position: relative; width: 100%; height: 100%; }
+        
         .tile {
             position: absolute;
             opacity: var(--opacity);
             transition: transform 0.1s;
             border-radius: var(--border-radius);
-            touch-action: none; /* Let interact.js handle it */
+            touch-action: none; /* Wichtig für interact.js auf Android */
         }
+        
         .tile-glass {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
@@ -74,72 +73,41 @@
             -webkit-backdrop-filter: blur(var(--blur-amount));
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
+        
         .tile-content {
-            width: 100%; height: 100%;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            position: relative;
+            width: 100%; height: 100%; overflow: hidden;
+            display: flex; flex-direction: column; position: relative;
         }
 
-        /* 3D Tilt */
         .tilt:hover { transform: perspective(1000px) rotateX(2deg) rotateY(2deg); }
 
-        /* === UI ELEMENTS MIN 48px === */
         button, select, input[type="text"], input[type="number"] {
-            min-height: 52px;
-            border-radius: 12px;
-            border: 1px solid var(--glass-border);
-            background: rgba(0,0,0,0.5);
-            color: #fff;
-            padding: 0 16px;
-            font-size: 1.1rem;
-            outline: none;
+            min-height: 52px; border-radius: 12px; border: 1px solid var(--glass-border);
+            background: rgba(0,0,0,0.5); color: #fff; padding: 0 16px; font-size: 1.1rem; outline: none;
         }
         button:active { transform: scale(0.95); }
-        input[type="range"] {
-            width: 100%; min-height: 52px;
-            accent-color: var(--accent-color);
-        }
-        /* Range Slider Thumb Fix */
+        input[type="range"] { width: 100%; min-height: 52px; accent-color: var(--accent-color); }
         input[type=range]::-webkit-slider-thumb {
-            height: 36px; width: 36px;
-            border-radius: 50%;
-            background: var(--accent-color);
-            border: 3px solid #fff;
-            -webkit-appearance: none;
-            appearance: none;
+            height: 36px; width: 36px; border-radius: 50%; background: var(--accent-color);
+            border: 3px solid #fff; -webkit-appearance: none; appearance: none;
         }
 
-        /* === SETTINGS PANEL === */
         #settings-panel {
-            position: fixed;
-            top: 0; right: -100%;
-            width: min(400px, 92vw);
-            height: 100%;
-            background: rgba(15, 15, 20, 0.95);
-            backdrop-filter: blur(20px);
-            z-index: 1000;
-            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 20px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            position: fixed; top: 0; right: -100%; width: min(400px, 92vw); height: 100%;
+            background: rgba(15, 15, 20, 0.95); backdrop-filter: blur(20px);
+            z-index: 1000; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch;
             border-left: 1px solid var(--glass-border);
         }
         #settings-panel.open { right: 0; }
         .close-btn {
-            width: 52px; height: 52px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            border: none; color: white;
-            font-size: 24px;
-            position: absolute; right: 20px; top: 20px;
+            width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,0.1);
+            border: none; color: white; font-size: 24px; position: absolute; right: 20px; top: 20px;
         }
         .setting-group { margin-bottom: 30px; }
         .setting-group h3 { margin: 0 0 15px 0; font-size: 1.2rem; border-bottom: 1px solid #333; padding-bottom: 5px;}
         .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         
-        /* Toggle Switch 60x34 */
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
@@ -147,19 +115,16 @@
         input:checked + .slider { background-color: var(--accent-color); }
         input:checked + .slider:before { transform: translateX(26px); }
 
-        /* === SLIDESHOW === */
         #slideshow-container { position: absolute; inset: 0; z-index: -1; }
         .slide {
-            position: absolute; inset: 0;
-            background-size: cover; background-position: center;
-            opacity: 0;
-            transition: opacity 2s ease-in-out;
+            position: absolute; inset: 0; background-size: cover; background-position: center;
+            opacity: 0; transition: opacity 2s ease-in-out;
         }
         .slide.active { opacity: 1; animation: kenburns 20s linear infinite alternate; }
         @keyframes kenburns { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+        
         .slideshow-controls {
-            position: absolute; bottom: 20px; right: 20px;
-            display: flex; gap: 10px; z-index: 10;
+            position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; z-index: 10;
         }
         .slideshow-controls button {
             width: 48px; height: 48px; min-height: 48px; padding: 0;
@@ -167,23 +132,18 @@
             border-radius: 50%; background: rgba(0,0,0,0.5);
         }
 
-        /* === SPECIFIC TILES === */
         .app-icon { font-size: 4rem; text-align: center; display: flex; align-items: center; justify-content: center; height: 100%; cursor: pointer;}
         
-        /* Weather */
         .weather-current { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
         .temp { font-size: 5rem; font-weight: bold; line-height: 1; }
         .weather-desc { font-size: 1.5rem; text-transform: capitalize; }
         
-        /* Forecast Daily */
         .forecast-grid { display: flex; flex-direction: column; justify-content: space-around; height: 100%; gap: 5px; }
         .forecast-day { display: flex; justify-content: space-between; align-items: center; min-height: 70px; border-bottom: 1px solid rgba(255,255,255,0.2); padding: 0 10px;}
         
-        /* Forecast Hourly */
         .hourly-grid { display: flex; overflow-x: auto; touch-action: pan-x; height: 100%; align-items: center; gap: 20px; padding: 0 10px; }
         .hourly-item { display: flex; flex-direction: column; align-items: center; min-width: 64px; }
 
-        /* Calendar */
         .cal-header { display: flex; justify-content: space-between; align-items: center; padding: 10px; }
         .cal-nav-btn { width: 48px; height: 48px; background: rgba(0,0,0,0.35); border: 1px solid #fff; min-height: 48px; border-radius: 12px;}
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; flex-grow: 1; text-align: center; }
@@ -191,34 +151,29 @@
         .day.today { background: rgba(99,102,241,0.85); border-radius: 8px; }
         .event-dot { width: 6px; height: 6px; background: var(--accent-color); border-radius: 50%; margin-top: 2px; }
 
-        /* Resize Handles for interact.js */
-        .resize-handle {
-            position: absolute;
-            width: 20px; height: 20px;
-            background: transparent;
-            z-index: 10;
-        }
+        .resize-handle { position: absolute; width: 30px; height: 30px; background: transparent; z-index: 10; touch-action: none; }
         .resize-handle-nw { top: 0; left: 0; cursor: nw-resize; }
         .resize-handle-ne { top: 0; right: 0; cursor: ne-resize; }
         .resize-handle-sw { bottom: 0; left: 0; cursor: sw-resize; }
         .resize-handle-se { bottom: 0; right: 0; cursor: se-resize; }
-
     </style>
 </head>
 <body>
 
+    <div id="error-log"></div>
+
     <div id="dashboard">
         <div id="tile-settings" class="tile frameless text-halo" style="width: 80px; height: 80px; top: 20px; left: 20px;" data-id="settings">
-            <div class="tile-content app-icon" onclick="toggleSettings()">⚙️</div>
+            <div class="tile-content app-icon" id="btn-open-settings">⚙️</div>
         </div>
 
         <div id="tile-slideshow" class="tile tile-glass" style="width: 800px; height: 500px; top: 100px; left: 100px; z-index: 0;" data-id="slideshow">
             <div class="tile-content" id="slideshow-wrapper">
                 <div id="slideshow-container"></div>
                 <div class="slideshow-controls text-halo">
-                    <button onclick="prevSlide()">⏮</button>
-                    <button onclick="togglePlay()" id="playBtn">⏸</button>
-                    <button onclick="nextSlide()">⏭</button>
+                    <button id="btn-prev-slide">⏮</button>
+                    <button id="btn-play-slide">⏸</button>
+                    <button id="btn-next-slide">⏭</button>
                 </div>
             </div>
             <div class="resize-handle resize-handle-nw"></div><div class="resize-handle resize-handle-ne"></div><div class="resize-handle resize-handle-sw"></div><div class="resize-handle resize-handle-se"></div>
@@ -247,9 +202,9 @@
         <div id="tile-calendar" class="tile frameless text-halo" style="width: 400px; height: 400px; top: 100px; left: 1350px;" data-id="calendar">
             <div class="tile-content">
                 <div class="cal-header">
-                    <button class="cal-nav-btn text-halo" onclick="changeMonth(-1)">◀</button>
+                    <button class="cal-nav-btn text-halo" id="btn-cal-prev">◀</button>
                     <h2 id="cal-month" style="margin:0;">Monat</h2>
-                    <button class="cal-nav-btn text-halo" onclick="changeMonth(1)">▶</button>
+                    <button class="cal-nav-btn text-halo" id="btn-cal-next">▶</button>
                 </div>
                 <div class="cal-grid" id="cal-grid"></div>
             </div>
@@ -257,475 +212,361 @@
         </div>
 
         <div id="tile-spotify" class="tile frameless text-halo" style="width: 120px; height: 120px; top: 850px; left: 100px;" data-id="spotify">
-            <div class="tile-content app-icon" onclick="window.location.href='intent://#Intent;package=com.spotify.music;scheme=spotify;end;'">🎵</div>
+            <div class="tile-content app-icon" id="btn-spotify">🎵</div>
         </div>
         <div id="tile-youtube" class="tile frameless text-halo" style="width: 120px; height: 120px; top: 850px; left: 250px;" data-id="youtube">
-            <div class="tile-content app-icon" onclick="window.location.href='intent://#Intent;package=com.google.android.youtube;scheme=youtube;end;'">▶️</div>
+            <div class="tile-content app-icon" id="btn-youtube">▶️</div>
         </div>
     </div>
 
     <div id="settings-panel">
-        <button class="close-btn" onclick="toggleSettings()">✖</button>
+        <button class="close-btn" id="btn-close-settings">✖</button>
         <h2 style="margin-top:0;">Einstellungen</h2>
 
         <div class="setting-group">
             <h3>Theme & Design</h3>
-            <select id="theme-select" onchange="applyTheme(this.value)" style="width:100%; margin-bottom: 15px;">
+            <select id="theme-select" style="width:100%; margin-bottom: 15px;">
                 <option value="light">Light Glass</option>
                 <option value="dark">Dark Glass</option>
                 <option value="sunset">Sunset</option>
                 <option value="ocean">Ocean</option>
             </select>
             <label>Border Radius</label>
-            <input type="range" id="slider-radius" min="0" max="50" value="20" oninput="updateCSSVar('--border-radius', this.value + 'px')">
+            <input type="range" id="slider-radius" min="0" max="50" value="20">
             <label>Blur Effekt</label>
-            <input type="range" id="slider-blur" min="0" max="30" value="16" oninput="updateCSSVar('--blur-amount', this.value + 'px')">
+            <input type="range" id="slider-blur" min="0" max="30" value="16">
             <label>Transparenz (Opacity)</label>
-            <input type="range" id="slider-opacity" min="0.3" max="1" step="0.1" value="1" oninput="updateCSSVar('--opacity', this.value)">
+            <input type="range" id="slider-opacity" min="0.3" max="1" step="0.1" value="1">
             <div class="toggle-row" style="margin-top:15px;">
                 <span>3D Tilt Effekt</span>
-                <label class="switch"><input type="checkbox" id="tilt-toggle" onchange="toggleTilt(this.checked)"><span class="slider"></span></label>
+                <label class="switch"><input type="checkbox" id="tilt-toggle"><span class="slider"></span></label>
             </div>
         </div>
 
         <div class="setting-group">
             <h3>Layout & Kacheln</h3>
-            <button onclick="resetLayout()" style="width:100%; margin-bottom: 15px;">Layout Zurücksetzen</button>
+            <button id="btn-reset-layout" style="width:100%; margin-bottom: 15px;">Layout Zurücksetzen</button>
             <div id="tile-toggles"></div>
         </div>
 
         <div class="setting-group">
-            <h3>Wetter (OpenWeatherMap)</h3>
+            <h3>Wetter</h3>
             <input type="text" id="w-city" placeholder="Stadt (z.B. Düsseldorf)" value="Düsseldorf" style="width:100%; margin-bottom: 10px;">
             <input type="text" id="w-key" placeholder="API Key" value="38343f2cf261a2544f16f596f7830f60" style="width:100%; margin-bottom: 10px;">
-            <button onclick="saveWeatherSettings()" style="width:100%;">Speichern & Aktualisieren</button>
+            <button id="btn-save-weather" style="width:100%;">Speichern & Aktualisieren</button>
         </div>
 
         <div class="setting-group">
             <h3>Kalender (iCal)</h3>
-            <input type="text" id="ical-url" placeholder="iCal URL (optional)" style="width:100%; margin-bottom: 10px;">
-            <button onclick="saveCalSettings()" style="width:100%;">Laden</button>
+            <input type="text" id="ical-url" placeholder="iCal URL" style="width:100%; margin-bottom: 10px;">
+            <button id="btn-save-cal" style="width:100%;">Laden</button>
         </div>
 
         <div class="setting-group">
             <h3>Slideshow</h3>
-            <input type="file" id="photo-upload" multiple accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
-            <button onclick="document.getElementById('photo-upload').click()" style="width:100%; margin-bottom: 10px;">Fotos Hinzufügen</button>
-            <button onclick="clearPhotos()" style="width:100%; background: #990000;">Alle Fotos Löschen</button>
-            <label style="display:block; margin-top:15px;">Wechsel-Dauer (Sek)</label>
-            <input type="number" id="slide-duration" value="15" style="width:100%;" onchange="saveSlideSettings()">
+            <input type="file" id="photo-upload" multiple accept="image/*" style="display:none;">
+            <button id="btn-upload-trigger" style="width:100%; margin-bottom: 10px;">Fotos Auswählen</button>
+            <button id="btn-clear-photos" style="width:100%; background: #990000; margin-bottom: 10px;">Session-Fotos löschen</button>
+            <label style="display:block;">Wechsel-Dauer (Sek)</label>
+            <input type="number" id="slide-duration" value="15" style="width:100%;">
         </div>
     </div>
 
     <script>
-        // ==========================================
-        // 1. KIOSK HARDENING & WATCHDOG
-        // ==========================================
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('gesturestart', e => e.preventDefault());
-        document.addEventListener('selectstart', e => { if(e.target.tagName !== 'INPUT') e.preventDefault(); });
+        // GLOBALER ERROR LOGGER FÜR TV KIOSK BROWSER
+        window.onerror = function(message, source, lineno, colno, error) {
+            const errBox = document.getElementById('error-log');
+            errBox.style.display = 'block';
+            errBox.innerHTML += `[Fehler] ${message} (Zeile: ${lineno})<br>`;
+            setTimeout(() => { errBox.style.display = 'none'; }, 10000);
+            return true;
+        };
 
-        // Wake Lock
-        let wakeLock = null;
-        async function requestWakeLock() {
-            try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
-        }
-        document.addEventListener('visibilitychange', () => { if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock(); });
-        requestWakeLock();
-
-        // Watchdog: 30s Inactivity -> Reload
-        let inactivityTimer;
-        function resetWatchdog() {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(() => location.reload(), 30000);
-        }
-        ['touchstart', 'mousemove', 'keydown', 'click'].forEach(evt => document.addEventListener(evt, resetWatchdog));
-        resetWatchdog();
-
-        // Fully Kiosk API Check
-        if (typeof fully !== 'undefined') {
-            fully.turnScreenOn();
-            fully.setScreenBrightness(255);
-        }
-
-        // ==========================================
-        // 2. STATE & STORAGE MANAGEMENT
-        // ==========================================
-        const lsGet = (k, d) => localStorage.getItem(k) !== null ? JSON.parse(localStorage.getItem(k)) : d;
-        const lsSet = (k, v) => localStorage.setItem(k, JSON.stringify(v));
-
-        let layoutState = lsGet('layoutState', {});
-        let hiddenTiles = lsGet('hiddenTiles', []);
-        
-        // ==========================================
-        // 3. UI & THEME LOGIC
-        // ==========================================
-        function toggleSettings() {
-            document.getElementById('settings-panel').classList.toggle('open');
-        }
-
-        function updateCSSVar(name, val) { document.documentElement.style.setProperty(name, val); }
-
-        function applyTheme(theme) {
-            lsSet('theme', theme);
-            const themes = {
-                light: { bg: '#e0e5ec', glass: 'rgba(255,255,255,0.2)', border: 'rgba(255,255,255,0.4)', text: '#ffffff' },
-                dark:  { bg: '#0f0f13', glass: 'rgba(0,0,0,0.5)', border: 'rgba(255,255,255,0.1)', text: '#ffffff' },
-                sunset: { bg: 'linear-gradient(135deg, #ff7e5f, #feb47b)', glass: 'rgba(255,255,255,0.15)', border: 'rgba(255,255,255,0.2)', text: '#ffffff' },
-                ocean: { bg: 'linear-gradient(135deg, #2b5876, #4e4376)', glass: 'rgba(0,0,0,0.3)', border: 'rgba(255,255,255,0.1)', text: '#ffffff' }
-            };
-            const t = themes[theme] || themes.light;
-            updateCSSVar('--bg-color', t.bg);
-            updateCSSVar('--glass-bg', t.glass);
-            updateCSSVar('--glass-border', t.border);
-        }
-
-        function toggleTilt(enable) {
-            lsSet('tilt', enable);
-            document.querySelectorAll('.tile').forEach(el => enable ? el.classList.add('tilt') : el.classList.remove('tilt'));
-        }
-
-        // Initialize Tile Toggles in Settings
-        function initTileToggles() {
-            const container = document.getElementById('tile-toggles');
-            container.innerHTML = '';
-            document.querySelectorAll('.tile').forEach(tile => {
-                const id = tile.getAttribute('data-id');
-                if(id === 'settings') return; // Cannot hide settings
-                const isHidden = hiddenTiles.includes(id);
-                tile.style.display = isHidden ? 'none' : 'block';
-                
-                container.innerHTML += `
-                    <div class="toggle-row">
-                        <span>${id.toUpperCase().replace('_', ' ')}</span>
-                        <label class="switch">
-                            <input type="checkbox" onchange="toggleTile('${id}', this.checked)" ${!isHidden ? 'checked' : ''}>
-                            <span class="slider"></span>
-                        </label>
-                    </div>`;
-            });
-        }
-
-        function toggleTile(id, show) {
-            if(show) {
-                hiddenTiles = hiddenTiles.filter(t => t !== id);
-                document.querySelector(`[data-id="${id}"]`).style.display = 'block';
-            } else {
-                hiddenTiles.push(id);
-                document.querySelector(`[data-id="${id}"]`).style.display = 'none';
-            }
-            lsSet('hiddenTiles', hiddenTiles);
-        }
-
-        // ==========================================
-        // 4. INTERACT.JS (DRAG & RESIZE)
-        // ==========================================
-        interact('.tile').draggable({
-            allowFrom: '.tile-content',
-            ignoreFrom: 'button, input, select, a, .cal-nav-btn, .slideshow-controls, .resize-handle',
-            modifiers: [ interact.modifiers.restrictRect({ restriction: 'parent', endOnly: true }) ],
-            listeners: {
-                move(event) {
-                    const target = event.target;
-                    const id = target.getAttribute('data-id');
-                    let x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-                    let y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-
-                    target.style.transform = `translate(${x}px, ${y}px)`;
-                    target.setAttribute('data-x', x);
-                    target.setAttribute('data-y', y);
-                    
-                    if(!layoutState[id]) layoutState[id] = {};
-                    layoutState[id].x = x; layoutState[id].y = y;
-                    lsSet('layoutState', layoutState);
-                }
-            }
-        }).resizable({
-            edges: { left: '.resize-handle-nw, .resize-handle-sw', right: '.resize-handle-ne, .resize-handle-se', bottom: '.resize-handle-sw, .resize-handle-se', top: '.resize-handle-nw, .resize-handle-ne' },
-            listeners: {
-                move: function (event) {
-                    let { x, y } = event.target.dataset;
-                    x = (parseFloat(x) || 0) + event.deltaRect.left;
-                    y = (parseFloat(y) || 0) + event.deltaRect.top;
-
-                    Object.assign(event.target.style, {
-                        width: `${event.rect.width}px`,
-                        height: `${event.rect.height}px`,
-                        transform: `translate(${x}px, ${y}px)`
-                    });
-
-                    Object.assign(event.target.dataset, { x, y });
-
-                    const id = event.target.getAttribute('data-id');
-                    if(!layoutState[id]) layoutState[id] = {};
-                    layoutState[id].w = event.rect.width;
-                    layoutState[id].h = event.rect.height;
-                    layoutState[id].x = x; layoutState[id].y = y;
-                    lsSet('layoutState', layoutState);
-                }
-            }
-        });
-
-        function applySavedLayout() {
-            document.querySelectorAll('.tile').forEach(tile => {
-                const id = tile.getAttribute('data-id');
-                if(layoutState[id]) {
-                    const s = layoutState[id];
-                    if(s.w) tile.style.width = s.w + 'px';
-                    if(s.h) tile.style.height = s.h + 'px';
-                    tile.style.transform = `translate(${s.x || 0}px, ${s.y || 0}px)`;
-                    tile.setAttribute('data-x', s.x || 0);
-                    tile.setAttribute('data-y', s.y || 0);
-                }
-            });
-        }
-
-        function resetLayout() {
-            localStorage.removeItem('layoutState');
-            location.reload();
-        }
-
-        // ==========================================
-        // 5. WEATHER LOGIC (OpenWeatherMap)
-        // ==========================================
-        async function fetchWeather() {
-            const city = document.getElementById('w-city').value;
-            const key = document.getElementById('w-key').value;
-            if(!city || !key) return;
-
-            try {
-                // Current
-                const resC = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&lang=de&appid=${key}`);
-                const dataC = await resC.json();
-                document.getElementById('w-temp').innerText = Math.round(dataC.main.temp) + '°C';
-                document.getElementById('w-desc').innerText = dataC.weather[0].description;
-                document.getElementById('w-details').innerText = `💨 ${Math.round(dataC.wind.speed * 3.6)} km/h | 💧 ${dataC.main.humidity}%`;
-                document.getElementById('w-icon').innerText = getWeatherIcon(dataC.weather[0].icon);
-
-                // Forecast
-                const resF = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&lang=de&appid=${key}`);
-                const dataF = await resF.json();
-
-                // Hourly (Next 24h)
-                const hourlyHtml = dataF.list.slice(0, 8).map(h => `
-                    <div class="hourly-item">
-                        <span style="font-size:1.1rem">${new Date(h.dt*1000).getHours()}:00</span>
-                        <span style="font-size:2rem">${getWeatherIcon(h.weather[0].icon)}</span>
-                        <span style="font-size:1.2rem; font-weight:bold">${Math.round(h.main.temp)}°</span>
-                    </div>
-                `).join('');
-                document.getElementById('forecast-hourly').innerHTML = hourlyHtml;
-
-                // Daily (Next 5 Days - roughly 12:00)
-                const dailyHtml = dataF.list.filter(item => item.dt_txt.includes('12:00:00')).map(d => `
-                    <div class="forecast-day">
-                        <span style="font-size:1.2rem">${new Date(d.dt*1000).toLocaleDateString('de-DE', {weekday:'short'})}</span>
-                        <span style="font-size:2rem">${getWeatherIcon(d.weather[0].icon)}</span>
-                        <span style="font-size:1.2rem; font-weight:bold">${Math.round(d.main.temp)}°C</span>
-                    </div>
-                `).join('');
-                document.getElementById('forecast-daily').innerHTML = dailyHtml;
-
-            } catch (err) {
-                console.error("Wetter Fehler", err);
-            }
-        }
-
-        function getWeatherIcon(code) {
-            const icons = {'01d':'☀️','01n':'🌙','02d':'⛅','02n':'☁️','03d':'☁️','04d':'☁️','09d':'🌧️','10d':'🌦️','11d':'⛈️','13d':'❄️','50d':'🌫️'};
-            return icons[code.replace('n','d')] || '☀️'; // Simplify night mapping
-        }
-
-        function saveWeatherSettings() {
-            lsSet('w_city', document.getElementById('w-city').value);
-            lsSet('w_key', document.getElementById('w-key').value);
-            fetchWeather();
-        }
-
-        // ==========================================
-        // 6. CALENDAR LOGIC
-        // ==========================================
-        let currentDate = new Date();
-        let events = [];
-
-        async function saveCalSettings() {
-            const url = document.getElementById('ical-url').value;
-            lsSet('ical_url', url);
-            if(url) await fetchICal(url);
-            renderCalendar();
-        }
-
-        async function fetchICal(url) {
-            try {
-                // Use AllOrigins Proxy
-                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-                const data = await res.json();
-                parseICal(data.contents);
-            } catch (err) { console.error("iCal Fetch Error", err); }
-        }
-
-        function parseICal(icsString) {
-            events = [];
-            const lines = icsString.split(/\r\n|\n|\r/);
-            let currentEvent = null;
-            for(let line of lines) {
-                if(line.startsWith('BEGIN:VEVENT')) currentEvent = {};
-                else if(line.startsWith('END:VEVENT')) { events.push(currentEvent); currentEvent = null; }
-                else if(currentEvent) {
-                    if(line.startsWith('DTSTART')) currentEvent.start = parseICalDate(line.split(':')[1]);
-                    if(line.startsWith('SUMMARY')) currentEvent.title = line.substring(8);
-                }
-            }
-        }
-
-        function parseICalDate(str) {
-            if(!str) return null;
-            const y = str.substring(0,4), m = str.substring(4,6), d = str.substring(6,8);
-            return new Date(`${y}-${m}-${d}`);
-        }
-
-        function changeMonth(dir) {
-            currentDate.setMonth(currentDate.getMonth() + dir);
-            renderCalendar();
-        }
-
-        function renderCalendar() {
-            const y = currentDate.getFullYear(), m = currentDate.getMonth();
-            document.getElementById('cal-month').innerText = new Date(y, m).toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+        // DOM Elemente laden
+        document.addEventListener('DOMContentLoaded', () => {
             
-            const firstDay = new Date(y, m, 1).getDay();
-            const daysInMonth = new Date(y, m + 1, 0).getDate();
-            const grid = document.getElementById('cal-grid');
-            grid.innerHTML = ['Mo','Di','Mi','Do','Fr','Sa','So'].map(d => `<div style="font-weight:bold; padding-bottom:5px;">${d}</div>`).join('');
+            // --- HÄRTUNG ---
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('gesturestart', e => e.preventDefault());
+            document.addEventListener('selectstart', e => { if(e.target.tagName !== 'INPUT') e.preventDefault(); });
 
-            let paddingDays = firstDay === 0 ? 6 : firstDay - 1;
-            for(let i = 0; i < paddingDays; i++) grid.innerHTML += `<div></div>`;
+            let wakeLock = null;
+            async function requestWakeLock() {
+                try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
+            }
+            document.addEventListener('visibilitychange', () => { if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock(); });
+            requestWakeLock();
 
-            const today = new Date();
-            for(let d = 1; d <= daysInMonth; d++) {
-                const isToday = d === today.getDate() && m === today.getMonth() && y === today.getFullYear();
-                const dayDate = new Date(y, m, d);
-                const hasEvent = events.some(e => e.start && e.start.toDateString() === dayDate.toDateString());
+            let inactivityTimer;
+            function resetWatchdog() {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = setTimeout(() => location.reload(), 60000); // Erhöht auf 60s
+            }
+            ['touchstart', 'mousemove', 'keydown', 'click'].forEach(evt => document.addEventListener(evt, resetWatchdog));
+            resetWatchdog();
+
+            // --- STORAGE ---
+            const lsGet = (k, d) => localStorage.getItem(k) !== null ? JSON.parse(localStorage.getItem(k)) : d;
+            const lsSet = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+            let layoutState = lsGet('layoutState', {});
+            let hiddenTiles = lsGet('hiddenTiles', []);
+
+            // --- THEME & UI ---
+            function updateCSSVar(name, val) { document.documentElement.style.setProperty(name, val); }
+            function applyTheme(theme) {
+                lsSet('theme', theme);
+                const themes = {
+                    light: { bg: '#e0e5ec', glass: 'rgba(255,255,255,0.2)', border: 'rgba(255,255,255,0.4)', text: '#ffffff' },
+                    dark:  { bg: '#0f0f13', glass: 'rgba(0,0,0,0.5)', border: 'rgba(255,255,255,0.1)', text: '#ffffff' },
+                    sunset: { bg: 'linear-gradient(135deg, #ff7e5f, #feb47b)', glass: 'rgba(255,255,255,0.15)', border: 'rgba(255,255,255,0.2)', text: '#ffffff' },
+                    ocean: { bg: 'linear-gradient(135deg, #2b5876, #4e4376)', glass: 'rgba(0,0,0,0.3)', border: 'rgba(255,255,255,0.1)', text: '#ffffff' }
+                };
+                const t = themes[theme] || themes.light;
+                updateCSSVar('--bg-color', t.bg);
+                updateCSSVar('--glass-bg', t.glass);
+                updateCSSVar('--glass-border', t.border);
+            }
+
+            document.getElementById('btn-open-settings').addEventListener('click', () => document.getElementById('settings-panel').classList.add('open'));
+            document.getElementById('btn-close-settings').addEventListener('click', () => document.getElementById('settings-panel').classList.remove('open'));
+            
+            document.getElementById('theme-select').addEventListener('change', (e) => applyTheme(e.target.value));
+            
+            ['radius', 'blur', 'opacity'].forEach(type => {
+                document.getElementById(`slider-${type}`).addEventListener('input', (e) => {
+                    let val = e.target.value;
+                    if(type === 'opacity') updateCSSVar('--opacity', val);
+                    else updateCSSVar(`--${type === 'radius' ? 'border-radius' : 'blur-amount'}`, val + 'px');
+                    lsSet(`--${type}`, val);
+                });
+            });
+
+            document.getElementById('tilt-toggle').addEventListener('change', (e) => {
+                let enable = e.target.checked;
+                lsSet('tilt', enable);
+                document.querySelectorAll('.tile').forEach(el => enable ? el.classList.add('tilt') : el.classList.remove('tilt'));
+            });
+
+            // Toggles
+            function initTileToggles() {
+                const container = document.getElementById('tile-toggles');
+                container.innerHTML = '';
+                document.querySelectorAll('.tile').forEach(tile => {
+                    const id = tile.getAttribute('data-id');
+                    if(id === 'settings') return;
+                    const isHidden = hiddenTiles.includes(id);
+                    tile.style.display = isHidden ? 'none' : 'block';
+                    container.innerHTML += `
+                        <div class="toggle-row">
+                            <span>${id.toUpperCase().replace('_', ' ')}</span>
+                            <label class="switch">
+                                <input type="checkbox" data-tile="${id}" class="tile-switch" ${!isHidden ? 'checked' : ''}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>`;
+                });
                 
-                grid.innerHTML += `<div class="day ${isToday ? 'today' : ''}">
-                    ${d}
-                    ${hasEvent ? '<div class="event-dot"></div>' : ''}
-                </div>`;
+                document.querySelectorAll('.tile-switch').forEach(sw => {
+                    sw.addEventListener('change', (e) => {
+                        const id = e.target.getAttribute('data-tile');
+                        if(e.target.checked) {
+                            hiddenTiles = hiddenTiles.filter(t => t !== id);
+                            document.querySelector(`[data-id="${id}"]`).style.display = 'block';
+                        } else {
+                            hiddenTiles.push(id);
+                            document.querySelector(`[data-id="${id}"]`).style.display = 'none';
+                        }
+                        lsSet('hiddenTiles', hiddenTiles);
+                    });
+                });
             }
-        }
 
-        // ==========================================
-        // 7. SLIDESHOW & INDEXEDDB LOGIC
-        // ==========================================
-        let slideImages = [];
-        let currentSlide = 0;
-        let slideInterval;
-        let isPlaying = true;
+            document.getElementById('btn-reset-layout').addEventListener('click', () => { localStorage.removeItem('layoutState'); location.reload(); });
 
-        const dbReq = indexedDB.open('SlideshowDB', 1);
-        let db;
-        dbReq.onupgradeneeded = e => { db = e.target.result; if(!db.objectStoreNames.contains('photos')) db.createObjectStore('photos'); };
-        dbReq.onsuccess = e => { db = e.target.result; loadPhotosFromDB(); };
+            // Apps
+            document.getElementById('btn-spotify').addEventListener('click', () => window.location.href='intent://#Intent;package=com.spotify.music;scheme=spotify;end;');
+            document.getElementById('btn-youtube').addEventListener('click', () => window.location.href='intent://#Intent;package=com.google.android.youtube;scheme=youtube;end;');
 
-        function handlePhotoUpload(e) {
-            const files = e.target.files;
-            for(let f of files) {
-                const reader = new FileReader();
-                reader.onload = ev => {
-                    const tx = db.transaction('photos', 'readwrite');
-                    tx.objectStore('photos').put(ev.target.result, Date.now() + Math.random());
-                    tx.oncomplete = () => loadPhotosFromDB();
-                };
-                reader.readAsDataURL(f);
+            // --- INTERACT.JS ---
+            interact('.tile').draggable({
+                allowFrom: '.tile-content',
+                ignoreFrom: 'button, input, select, a, .cal-nav-btn, .slideshow-controls, .resize-handle',
+                modifiers: [ interact.modifiers.restrictRect({ restriction: 'parent', endOnly: true }) ],
+                listeners: {
+                    move(event) {
+                        const target = event.target;
+                        const id = target.getAttribute('data-id');
+                        let x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                        let y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+                        target.style.transform = `translate(${x}px, ${y}px)`;
+                        target.setAttribute('data-x', x); target.setAttribute('data-y', y);
+                        if(!layoutState[id]) layoutState[id] = {};
+                        layoutState[id].x = x; layoutState[id].y = y; lsSet('layoutState', layoutState);
+                    }
+                }
+            }).resizable({
+                edges: { left: '.resize-handle-nw, .resize-handle-sw', right: '.resize-handle-ne, .resize-handle-se', bottom: '.resize-handle-sw, .resize-handle-se', top: '.resize-handle-nw, .resize-handle-ne' },
+                listeners: {
+                    move: function (event) {
+                        let { x, y } = event.target.dataset;
+                        x = (parseFloat(x) || 0) + event.deltaRect.left;
+                        y = (parseFloat(y) || 0) + event.deltaRect.top;
+                        Object.assign(event.target.style, { width: `${event.rect.width}px`, height: `${event.rect.height}px`, transform: `translate(${x}px, ${y}px)` });
+                        Object.assign(event.target.dataset, { x, y });
+                        const id = event.target.getAttribute('data-id');
+                        if(!layoutState[id]) layoutState[id] = {};
+                        layoutState[id].w = event.rect.width; layoutState[id].h = event.rect.height;
+                        layoutState[id].x = x; layoutState[id].y = y; lsSet('layoutState', layoutState);
+                    }
+                }
+            });
+
+            function applySavedLayout() {
+                document.querySelectorAll('.tile').forEach(tile => {
+                    const id = tile.getAttribute('data-id');
+                    if(layoutState[id]) {
+                        const s = layoutState[id];
+                        if(s.w) tile.style.width = s.w + 'px';
+                        if(s.h) tile.style.height = s.h + 'px';
+                        tile.style.transform = `translate(${s.x || 0}px, ${s.y || 0}px)`;
+                        tile.setAttribute('data-x', s.x || 0); tile.setAttribute('data-y', s.y || 0);
+                    }
+                });
             }
-        }
 
-        function loadPhotosFromDB() {
-            if(!db) return;
-            const tx = db.transaction('photos', 'readonly');
-            const req = tx.objectStore('photos').getAll();
-            req.onsuccess = e => {
-                slideImages = e.target.result;
+            // --- WEATHER ---
+            function getWeatherIcon(code) {
+                const icons = {'01d':'☀️','01n':'🌙','02d':'⛅','02n':'☁️','03d':'☁️','04d':'☁️','09d':'🌧️','10d':'🌦️','11d':'⛈️','13d':'❄️','50d':'🌫️'};
+                return icons[code.replace('n','d')] || '☀️'; 
+            }
+
+            async function fetchWeather() {
+                const city = document.getElementById('w-city').value;
+                const key = document.getElementById('w-key').value;
+                if(!city || !key) return;
+                try {
+                    const resC = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&lang=de&appid=${key}`);
+                    if(!resC.ok) throw new Error("Wetter-Key oder Stadt falsch");
+                    const dataC = await resC.json();
+                    document.getElementById('w-temp').innerText = Math.round(dataC.main.temp) + '°C';
+                    document.getElementById('w-desc').innerText = dataC.weather[0].description;
+                    document.getElementById('w-details').innerText = `💨 ${Math.round(dataC.wind.speed * 3.6)} km/h | 💧 ${dataC.main.humidity}%`;
+                    document.getElementById('w-icon').innerText = getWeatherIcon(dataC.weather[0].icon);
+
+                    const resF = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&lang=de&appid=${key}`);
+                    const dataF = await resF.json();
+
+                    document.getElementById('forecast-hourly').innerHTML = dataF.list.slice(0, 8).map(h => `
+                        <div class="hourly-item">
+                            <span style="font-size:1.1rem">${new Date(h.dt*1000).getHours()}:00</span>
+                            <span style="font-size:2rem">${getWeatherIcon(h.weather[0].icon)}</span>
+                            <span style="font-size:1.2rem; font-weight:bold">${Math.round(h.main.temp)}°</span>
+                        </div>
+                    `).join('');
+
+                    document.getElementById('forecast-daily').innerHTML = dataF.list.filter(item => item.dt_txt.includes('12:00:00')).map(d => `
+                        <div class="forecast-day">
+                            <span style="font-size:1.2rem">${new Date(d.dt*1000).toLocaleDateString('de-DE', {weekday:'short'})}</span>
+                            <span style="font-size:2rem">${getWeatherIcon(d.weather[0].icon)}</span>
+                            <span style="font-size:1.2rem; font-weight:bold">${Math.round(d.main.temp)}°C</span>
+                        </div>
+                    `).join('');
+                } catch (err) { console.error(err); document.getElementById('w-desc').innerText = "API Fehler"; }
+            }
+            document.getElementById('btn-save-weather').addEventListener('click', () => { lsSet('w_city', document.getElementById('w-city').value); lsSet('w_key', document.getElementById('w-key').value); fetchWeather(); });
+
+            // --- CALENDAR ---
+            let currentDate = new Date();
+            let events = [];
+            
+            function renderCalendar() {
+                const y = currentDate.getFullYear(), m = currentDate.getMonth();
+                document.getElementById('cal-month').innerText = new Date(y, m).toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+                const firstDay = new Date(y, m, 1).getDay();
+                const daysInMonth = new Date(y, m + 1, 0).getDate();
+                const grid = document.getElementById('cal-grid');
+                grid.innerHTML = ['Mo','Di','Mi','Do','Fr','Sa','So'].map(d => `<div style="font-weight:bold; padding-bottom:5px;">${d}</div>`).join('');
+                let paddingDays = firstDay === 0 ? 6 : firstDay - 1;
+                for(let i = 0; i < paddingDays; i++) grid.innerHTML += `<div></div>`;
+                const today = new Date();
+                for(let d = 1; d <= daysInMonth; d++) {
+                    const isToday = d === today.getDate() && m === today.getMonth() && y === today.getFullYear();
+                    grid.innerHTML += `<div class="day ${isToday ? 'today' : ''}">${d}</div>`;
+                }
+            }
+            document.getElementById('btn-cal-prev').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
+            document.getElementById('btn-cal-next').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
+            
+            // --- SLIDESHOW (Speicher-Safe Modus) ---
+            let slideImages = [];
+            let currentSlide = 0;
+            let slideInterval;
+            let isPlaying = true;
+
+            document.getElementById('btn-upload-trigger').addEventListener('click', () => document.getElementById('photo-upload').click());
+            document.getElementById('photo-upload').addEventListener('change', (e) => {
+                // Nutze Objekt-URLs anstatt Base64-Strings in IndexedDB, um RAM Abstürze zu verhindern
+                Array.from(e.target.files).forEach(file => {
+                    slideImages.push(URL.createObjectURL(file));
+                });
                 renderSlides();
-            };
-        }
+            });
 
-        function clearPhotos() {
-            if(confirm('Alle Fotos löschen?')) {
-                db.transaction('photos', 'readwrite').objectStore('photos').clear().onsuccess = () => {
-                    slideImages = []; renderSlides();
-                };
+            document.getElementById('btn-clear-photos').addEventListener('click', () => { slideImages = []; renderSlides(); });
+
+            function renderSlides() {
+                const container = document.getElementById('slideshow-container');
+                if(slideImages.length === 0) {
+                    container.innerHTML = '<div style="color:#fff; text-align:center; padding-top:20%">Keine Fotos geladen.<br>Nutze die Einstellungen.</div>';
+                    return;
+                }
+                container.innerHTML = slideImages.map((src, i) => `<div class="slide ${i===0?'active':''}" style="background-image:url(${src})"></div>`).join('');
+                currentSlide = 0; startSlideshow();
             }
-        }
 
-        function renderSlides() {
-            const container = document.getElementById('slideshow-container');
-            if(slideImages.length === 0) {
-                container.innerHTML = '<div style="color:#fff; text-align:center; padding-top:20%">Keine Fotos (Öffne Einstellungen)</div>';
-                return;
+            function changeSlide(dir) {
+                if(slideImages.length < 2) return;
+                const slides = document.querySelectorAll('.slide');
+                slides[currentSlide].classList.remove('active');
+                currentSlide = (currentSlide + dir + slides.length) % slides.length;
+                slides[currentSlide].classList.add('active');
             }
-            container.innerHTML = slideImages.map((src, i) => `<div class="slide ${i===0?'active':''}" style="background-image:url(${src})"></div>`).join('');
-            currentSlide = 0;
-            startSlideshow();
-        }
 
-        function nextSlide() {
-            if(slideImages.length < 2) return;
-            const slides = document.querySelectorAll('.slide');
-            slides[currentSlide].classList.remove('active');
-            currentSlide = (currentSlide + 1) % slides.length;
-            slides[currentSlide].classList.add('active');
-        }
+            function startSlideshow() {
+                clearInterval(slideInterval);
+                const duration = parseInt(document.getElementById('slide-duration').value || 15) * 1000;
+                if(isPlaying && slideImages.length > 1) slideInterval = setInterval(() => changeSlide(1), duration);
+                document.getElementById('btn-play-slide').innerText = isPlaying ? '⏸' : '▶';
+            }
 
-        function prevSlide() {
-            if(slideImages.length < 2) return;
-            const slides = document.querySelectorAll('.slide');
-            slides[currentSlide].classList.remove('active');
-            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-            slides[currentSlide].classList.add('active');
-        }
+            document.getElementById('btn-prev-slide').addEventListener('click', () => changeSlide(-1));
+            document.getElementById('btn-next-slide').addEventListener('click', () => changeSlide(1));
+            document.getElementById('btn-play-slide').addEventListener('click', () => { isPlaying = !isPlaying; startSlideshow(); });
+            document.getElementById('slide-duration').addEventListener('change', (e) => { lsSet('slide_dur', e.target.value); startSlideshow(); });
 
-        function startSlideshow() {
-            clearInterval(slideInterval);
-            const duration = parseInt(document.getElementById('slide-duration').value || 15) * 1000;
-            if(isPlaying && slideImages.length > 1) slideInterval = setInterval(nextSlide, duration);
-            document.getElementById('playBtn').innerText = isPlaying ? '⏸' : '▶';
-        }
-
-        function togglePlay() { isPlaying = !isPlaying; startSlideshow(); }
-        function saveSlideSettings() { lsSet('slide_dur', document.getElementById('slide-duration').value); startSlideshow(); }
-
-        // ==========================================
-        // 8. INITIALIZATION
-        // ==========================================
-        window.onload = () => {
-            // Load Preferences
+            // --- INIT ---
             document.getElementById('theme-select').value = lsGet('theme', 'light');
             applyTheme(lsGet('theme', 'light'));
-            document.getElementById('slider-radius').value = parseInt(lsGet('--border-radius', '20'));
-            document.getElementById('slider-blur').value = parseInt(lsGet('--blur-amount', '16'));
+            document.getElementById('slider-radius').value = parseInt(lsGet('--radius', '20'));
+            document.getElementById('slider-blur').value = parseInt(lsGet('--blur', '16'));
             document.getElementById('slider-opacity').value = parseFloat(lsGet('--opacity', '1'));
             document.getElementById('tilt-toggle').checked = lsGet('tilt', false);
-            toggleTilt(lsGet('tilt', false));
+            if(lsGet('tilt', false)) document.querySelectorAll('.tile').forEach(el => el.classList.add('tilt'));
             
             document.getElementById('w-city').value = lsGet('w_city', 'Düsseldorf');
             document.getElementById('w-key').value = lsGet('w_key', '38343f2cf261a2544f16f596f7830f60');
-            document.getElementById('ical-url').value = lsGet('ical_url', '');
             document.getElementById('slide-duration').value = lsGet('slide_dur', 15);
 
-            // Apply specific CSS vars
             updateCSSVar('--border-radius', document.getElementById('slider-radius').value + 'px');
             updateCSSVar('--blur-amount', document.getElementById('slider-blur').value + 'px');
             updateCSSVar('--opacity', document.getElementById('slider-opacity').value);
 
             applySavedLayout();
             initTileToggles();
-            fetchWeather();
-            if(lsGet('ical_url', '')) fetchICal(lsGet('ical_url', ''));
             renderCalendar();
-            
-            setInterval(fetchWeather, 30 * 60 * 1000); // Update weather 30m
-        };
+            fetchWeather();
+            setInterval(fetchWeather, 30 * 60 * 1000);
+        });
     </script>
 </body>
 </html>
