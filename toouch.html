@@ -367,6 +367,30 @@ body {
 video.slide-img { object-fit: var(--slide-fit); background: #000; }
 .slide-img.active { opacity: 1; }
 
+/* Hinweis wenn ein Video-Format nicht abspielbar ist */
+.slide-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #000;
+  color: #fff;
+  text-align: center;
+  padding: 24px;
+  z-index: 5;
+}
+.slide-error .se-icon { font-size: 3rem; opacity: 0.85; }
+.slide-error .se-title { font-size: 1.1rem; font-weight: 600; }
+.slide-error .se-file {
+  font-size: 0.95rem; opacity: 0.8;
+  word-break: break-all;
+  max-width: 90%;
+}
+.slide-error .se-hint { font-size: 0.85rem; opacity: 0.55; margin-top: 4px; }
+
 /* Animation: fade */
 .slide-anim-fade .slide-img { transform: none; }
 .slide-anim-fade .slide-img:not(.active) { opacity: 0; }
@@ -997,7 +1021,8 @@ const defaultLayout = [
   { id: 'amazon', x: 100, y: 10, w: 80, h: 80 },
   { id: 'youtube', x: 190, y: 10, w: 80, h: 80 },
   { id: 'calendar-icon', x: 280, y: 10, w: 80, h: 80 },
-  { id: 'settings', x: 370, y: 10, w: 80, h: 80 },
+  { id: 'video-icon', x: 370, y: 10, w: 80, h: 80 },
+  { id: 'settings', x: 460, y: 10, w: 80, h: 80 },
   { id: 'weather', x: 10, y: 100, w: 280, h: 180 },
   { id: 'forecast', x: 300, y: 100, w: 320, h: 180 },
   { id: 'hourly', x: 10, y: 290, w: 610, h: 150 },
@@ -1014,6 +1039,18 @@ if (!layout.some(l => l.id === 'calendar-icon')) {
     id: 'calendar-icon',
     x: settingsTile ? Math.max(0, settingsTile.x - 90) : 280,
     y: settingsTile ? settingsTile.y : 10,
+    w: 80, h: 80
+  });
+  localStorage.setItem('dashboardLayout', JSON.stringify(layout));
+}
+
+// Migration: video-icon nachträglich hinzufügen falls im gespeicherten Layout nicht vorhanden
+if (!layout.some(l => l.id === 'video-icon')) {
+  const calIcon = layout.find(l => l.id === 'calendar-icon');
+  layout.push({
+    id: 'video-icon',
+    x: calIcon ? calIcon.x + 90 : 370,
+    y: calIcon ? calIcon.y : 10,
     w: 80, h: 80
   });
   localStorage.setItem('dashboardLayout', JSON.stringify(layout));
@@ -1217,6 +1254,17 @@ function applyLayoutPreset(presetKey) {
       w: 80, h: 80
     });
   }
+  // video-icon erhalten falls im Preset nicht definiert
+  if (!newLayout.some(l => l.id === 'video-icon')) {
+    const old = layout.find(l => l.id === 'video-icon');
+    const ci = newLayout.find(l => l.id === 'calendar-icon');
+    newLayout.push(old || {
+      id: 'video-icon',
+      x: ci ? ci.x + 90 : 370,
+      y: ci ? ci.y : 10,
+      w: 80, h: 80
+    });
+  }
   
   layout = newLayout;
   localStorage.setItem('dashboardLayout', JSON.stringify(layout));
@@ -1276,7 +1324,7 @@ function createTiles() {
     tile.style.width = item.w + 'px';
     tile.style.height = item.h + 'px';
     if (hidden.includes(item.id)) tile.style.display = 'none';
-    if (['spotify','amazon','youtube','settings','calendar-icon'].includes(item.id)) {
+    if (['spotify','amazon','youtube','settings','calendar-icon','video-icon'].includes(item.id)) {
       tile.innerHTML = `<div class="tile-content icon-tile-content"></div>` + getResizeHandlesHTML();
     } else {
       tile.innerHTML = `<div class="tile-header"></div><div class="tile-content"></div>` + getResizeHandlesHTML();
@@ -1293,6 +1341,7 @@ const TILE_LABELS = {
   amazon:   '🛒 Amazon',
   youtube:  '▶️ YouTube',
   'calendar-icon': '📅 Kalender-Icon (Vollbild)',
+  'video-icon': '🎬 Video-Player (extern)',
   settings: '⚙️ Einstellungen',
   weather:  '🌤️ Wetter aktuell',
   forecast: '📅 5-Tage-Vorhersage',
@@ -1300,7 +1349,7 @@ const TILE_LABELS = {
   calendar: '📆 Kalender-Kachel',
   slideshow:'🖼️ Slideshow'
 };
-const ALL_TILES = ['spotify','amazon','youtube','calendar-icon','settings','weather','forecast','hourly','calendar','slideshow'];
+const ALL_TILES = ['spotify','amazon','youtube','calendar-icon','video-icon','settings','weather','forecast','hourly','calendar','slideshow'];
 
 function getHiddenTiles() {
   try { return JSON.parse(localStorage.getItem('hiddenTiles') || '[]'); } catch(e) { return []; }
@@ -1362,6 +1411,9 @@ function fillTileContent(id, tile) {
     case 'calendar-icon':
       content.innerHTML = '<i class="fas fa-calendar-days" style="color:#4f9eff"></i>';
       break;
+    case 'video-icon':
+      content.innerHTML = '<i class="fas fa-film" style="color:#ff8a3d"></i>';
+      break;
     case 'weather':
       header.innerHTML = '<i class="fas fa-cloud-sun"></i> Aktuell';
       content.innerHTML = `<div class="weather-now"><div class="temp" id="current-temp">--°</div><div class="details" id="current-details"></div></div><div id="current-icon" style="font-size:2rem;"></div>`;
@@ -1401,10 +1453,10 @@ function fillTileContent(id, tile) {
         </div>
         <div class="upload-area">
           <label for="file-upload" class="upload-btn"><i class="fas fa-upload"></i> Dateien</label>
-          <input type="file" id="file-upload" multiple accept="image/*">
+          <input type="file" id="file-upload" multiple accept="image/*,video/*">
           <label for="folder-upload" class="upload-btn"><i class="fas fa-folder-open"></i> Ordner</label>
           <input type="file" id="folder-upload" webkitdirectory directory multiple>
-          <span id="image-count">0 Bilder</span>
+          <span id="image-count">0 Medien</span>
         </div>
       `;
       break;
@@ -1489,6 +1541,10 @@ document.getElementById('dashboard').addEventListener('click', function(e) {
   }
   if (tile.id === 'calendar-icon') {
     openCalendarFullscreen();
+    return;
+  }
+  if (tile.id === 'video-icon') {
+    openVideoPlayer();
     return;
   }
   const app = tile.getAttribute('data-app');
@@ -1817,6 +1873,52 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeCalendarFullscreen();
 });
 
+// === VIDEO-PLAYER (externe App via Android-Intent) ===
+// Ordner auf dem Geräte-Speicher mit den Videos
+const VIDEO_FOLDER = '/sdcard/Movies/Dashboard/';
+
+function openVideoPlayer() {
+  // 1. Bevorzugt: Fully Kiosk eigene API (startApplication / startIntent)
+  if (typeof fully !== 'undefined') {
+    try {
+      // Generischer VIEW-Intent auf den Ordner — Android fragt "Womit öffnen?"
+      // und merkt sich die Wahl. Funktioniert mit VLC, MX Player, System-Player.
+      if (typeof fully.startIntent === 'function') {
+        fully.startIntent(
+          'android.intent.action.VIEW',
+          'file://' + VIDEO_FOLDER,
+          'resource/folder',
+          ''
+        );
+        return;
+      }
+      // Fallback: VLC direkt per Package starten falls vorhanden
+      if (typeof fully.startApplication === 'function') {
+        fully.startApplication('org.videolan.vlc');
+        return;
+      }
+    } catch(e) { console.warn('Fully Intent fehlgeschlagen', e); }
+  }
+
+  // 2. Ohne Fully API: generischer Android Intent-Link
+  //    (braucht "Enable Android Intent URLs" in Fully Kiosk)
+  try {
+    const intentUrl =
+      'intent://' + VIDEO_FOLDER +
+      '#Intent;scheme=file;action=android.intent.action.VIEW;type=video/*;end';
+    window.location.href = intentUrl;
+    return;
+  } catch(e) { console.warn('Intent-URL fehlgeschlagen', e); }
+
+  // 3. Letzter Fallback: Datei-Link direkt öffnen
+  try {
+    window.location.href = 'file://' + VIDEO_FOLDER;
+  } catch(e) {
+    alert('Video-Player konnte nicht gestartet werden.\nBitte Videos nach ' + VIDEO_FOLDER + ' kopieren und in Fully Kiosk "Android Intent URLs" aktivieren.');
+  }
+}
+
+
 // CORS-Proxies (mehrere als Fallback)
 const CORS_PROXIES = [
   'https://corsproxy.io/?',
@@ -1953,6 +2055,23 @@ function loadSlides() {
 function slideData(s) { return (typeof s === 'string') ? s : s.d; }
 function slideIsVideo(s) { return (typeof s === 'object' && s && s.t === 'video'); }
 
+// Zeigt einen klaren Hinweis statt schwarzem Bild wenn ein Video nicht abspielbar ist
+function showFormatError(container, filename) {
+  if (!container) return;
+  // Doppelte Meldung vermeiden
+  if (container.querySelector('.slide-error')) return;
+  const box = document.createElement('div');
+  box.className = 'slide-error';
+  const fname = filename || 'Unbekannte Datei';
+  box.innerHTML =
+    '<div class="se-icon">⚠️</div>' +
+    '<div class="se-title">Video-Format nicht abspielbar</div>' +
+    '<div class="se-file">' + fname.replace(/[<>&]/g,'') + '</div>' +
+    '<div class="se-hint">Bitte zu MP4 (H.264) umwandeln — z.B. mit VLC oder HandBrake</div>';
+  container.insertBefore(box, container.firstChild);
+  setTimeout(() => box.remove(), 4400);
+}
+
 function updateSlideDisplay() {
   const container = document.getElementById('slideshow-container');
   if(!container) return;
@@ -1979,6 +2098,8 @@ function updateSlideDisplay() {
       setTimeout(() => img.remove(), slideAnimDuration * 1000 + 100);
     }
   });
+  // Alten Format-Fehler-Hinweis sofort entfernen
+  container.querySelectorAll('.slide-error').forEach(b => b.remove());
   
   // Neues Bild/Video einfügen
   if (slides.length > 0 && slides[currentSlide]) {
@@ -1993,10 +2114,23 @@ function updateSlideDisplay() {
       el.playsInline = true;
       el.loop = false;
       el.controls = false;
-      // Video steuert Weiterschaltung selbst: am Ende → nächstes
       el.onended = () => { if (!slideshowPaused) nextSlide(); };
-      el.onerror = () => { if (!slideshowPaused) nextSlide(); };
-      // Während Video läuft: Auto-Timer aussetzen
+      // Format nicht abspielbar → klarer Hinweis mit Dateiname, dann weiter
+      el.onerror = () => {
+        showFormatError(container, s.n);
+        clearTimeout(slideshowTimer);
+        if (!slideshowPaused) slideshowTimer = setTimeout(nextSlide, 4500);
+      };
+      // Manche Container melden keinen 'error' sondern bleiben hängen:
+      // Wenn nach 6s keine Wiedergabe läuft → als nicht abspielbar behandeln
+      el.addEventListener('loadeddata', () => { el._ok = true; });
+      setTimeout(() => {
+        if (!el._ok && el.parentNode && !el.classList.contains('exit')) {
+          showFormatError(container, s.n);
+          clearTimeout(slideshowTimer);
+          if (!slideshowPaused) slideshowTimer = setTimeout(nextSlide, 4500);
+        }
+      }, 6000);
       clearInterval(slideshowTimer);
       el.play().catch(()=>{});
     } else {
@@ -2062,15 +2196,19 @@ function startSlideshow() {
 
 document.addEventListener('change', function(e) {
   if(e.target.id === 'file-upload' || e.target.id === 'folder-upload') {
-    const isImg = f => f.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(f.name);
-    const isVid = f => f.type.startsWith('video/') || /\.(mp4|webm|mov|m4v|ogv)$/i.test(f.name);
-    // HEIC explizit ausschließen
+    // Bilder — alle browser-darstellbaren Formate
+    const isImg = f => f.type.startsWith('image/') ||
+      /\.(jpe?g|png|webp|gif|bmp|avif|apng|ico|svg|jfif|pjpeg|pjp)$/i.test(f.name);
+    // Videos — maximal viele Container. Browser spielt ab was die Plattform kann,
+    // der Rest wird beim Abspielen sauber mit Hinweis übersprungen.
+    const isVid = f => f.type.startsWith('video/') ||
+      /\.(mp4|m4v|webm|mov|ogv|ogg|3gp|3g2|mkv|avi|wmv|flv|mpg|mpeg|m2v|mts|m2ts|ts|vob|divx|asf|f4v|qt)$/i.test(f.name);
+    // HEIC kann der Browser nicht — explizit ausschließen
     const isHeic = f => /\.(heic|heif)$/i.test(f.name);
 
     const mediaFiles = Array.from(e.target.files).filter(f =>
       !isHeic(f) && (isImg(f) || isVid(f))
     );
-    // Stabile Reihenfolge nach Dateiname (wichtig bei Ordner-Auswahl)
     mediaFiles.sort((a, b) => a.name.localeCompare(b.name, 'de', { numeric: true }));
 
     if (mediaFiles.length === 0) { e.target.value = ''; return; }
@@ -2080,7 +2218,7 @@ document.addEventListener('change', function(e) {
       const reader = new FileReader();
       const asVideo = isVid(file);
       reader.onload = ev => {
-        slides.push({ t: asVideo ? 'video' : 'image', d: ev.target.result });
+        slides.push({ t: asVideo ? 'video' : 'image', d: ev.target.result, n: file.name });
         if(slides.length === 1) currentSlide = 0;
         loaded++;
         const cnt = document.getElementById('image-count');
