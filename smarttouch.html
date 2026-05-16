@@ -3,1239 +3,2442 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="format-detection" content="telephone=no">
-<title>Smart Dashboard</title>
+<title>Glass Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
 <style>
-  /* === KIOSK HÄRTUNG === */
-  * {
-    margin: 0; padding: 0; box-sizing: border-box;
-    -webkit-user-select: none; user-select: none;
-    -webkit-touch-callout: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  html, body {
-    width: 100vw; height: 100vh;
-    background: #000; color: #fff;
-    font-family: 'Segoe UI', system-ui, Arial, sans-serif;
-    overflow: hidden;
-    cursor: none !important;
-    overscroll-behavior: none;
-    touch-action: none;
-  }
-  img, video { -webkit-user-drag: none; pointer-events: none; }
+:root {
+  --bg-image: none;
+  --bg-gradient: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  --tile-bg: rgba(255,255,255,0.3);
+  --tile-opacity: 1;
+  --tile-border-width: 1px;
+  --tile-border-radius: 24px;
+  --tile-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  --text-color: #1e293b;
+  --accent: #3b82f6;
+  --font-family: 'Segoe UI', system-ui, sans-serif;
+  --backdrop: blur(6px);
+  --tile-transform: none;
+  --text-shadow: none;
+  --icon-transform: none;
+  --slide-anim: fade;
+  --slide-duration: 1s;
+  --slide-fit: contain;
+  --tile-transform: none;
+  --text-shadow: none;
+  --icon-transform: none;
+  --effect-strength: 2;
+}
 
-  /* === SLIDESHOW === */
-  .stage { position: absolute; inset: 0; overflow: hidden; background: #000; }
-  .slide {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0; will-change: transform, opacity, filter, clip-path;
-  }
-  .slide.active { opacity: 1; z-index: 1; }
-  .slide.outgoing { z-index: 0; }
-  .slide img, .slide video {
-    width: 100%; height: 100%; object-fit: cover; display: block;
-  }
+* { margin:0; padding:0; box-sizing:border-box; }
 
-  .overlay {
-    position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,.6) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 70%, rgba(0,0,0,.6) 100%);
-    z-index: 2; pointer-events: none;
-  }
+/* === GLOBALE TOUCH-OPTIMIERUNG === */
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+html, body {
+  overscroll-behavior: none;
+  touch-action: pan-x pan-y;
+}
+/* Text-Selektion nur in Inputs erlauben */
+body { -webkit-user-select: none; user-select: none; }
+input, textarea, [contenteditable] {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
 
-  /* === HUD (für 1,5m Abstand & 2.5K) === */
-  .hud {
-    position: absolute; inset: 0;
-    padding: 50px 60px;
-    z-index: 3;
-    display: flex; flex-direction: column; justify-content: space-between;
-    pointer-events: none;
-  }
-  .top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; }
-  .bottom-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 40px; }
+body {
+  font-family: var(--font-family);
+  background: var(--bg-gradient);
+  background-image: var(--bg-image);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: var(--text-color);
+  height: 100vh;
+  overflow: hidden;
+  transition: background-image 0.4s ease-out;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
 
-  #clock {
-    font-size: 180px;
-    font-weight: 200; line-height: .9;
-    text-shadow: 0 6px 30px rgba(0,0,0,.7);
-    letter-spacing: -3px;
-  }
-  #date {
-    font-size: 36px;
-    font-weight: 300; opacity: .95;
-    margin-top: 12px; text-shadow: 0 3px 16px rgba(0,0,0,.8);
-  }
+* {
+  -webkit-tap-highlight-color: transparent;
+}
 
-  .weather { text-align: right; text-shadow: 0 3px 16px rgba(0,0,0,.8); }
-  .weather-current {
-    font-size: 76px; font-weight: 300;
-    display: flex; align-items: center; justify-content: flex-end; gap: 18px;
-  }
-  .weather-current .icon { font-size: 1em; }
-  .weather-desc { font-size: 24px; opacity: .9; margin-top: 6px; }
-  .forecast { margin-top: 28px; display: flex; gap: 36px; justify-content: flex-end; }
-  .fc-item { display: flex; flex-direction: column; align-items: center; font-size: 22px; opacity: .9; }
-  .fc-item .fc-icon { font-size: 2em; margin: 4px 0; }
-  .fc-item .fc-day { font-weight: 500; }
+#dashboard { width: 100%; height: 100vh; position: relative; overflow: auto; }
 
-  .status { font-size: 18px; opacity: .55; text-shadow: 0 2px 8px rgba(0,0,0,.9); }
-  .status span { margin-right: 22px; }
+.tile {
+  position: absolute;
+  touch-action: none;
+  will-change: transform;
+  background: var(--tile-bg);
+  opacity: var(--tile-opacity);
+  backdrop-filter: var(--backdrop);
+  -webkit-backdrop-filter: var(--backdrop);
+  border: var(--tile-border-width) solid rgba(255,255,255,0.35);
+  border-radius: var(--tile-border-radius);
+  box-shadow: var(--tile-shadow);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s ease-out;
+  transform: var(--tile-transform);
+  min-width: 80px;
+  min-height: 80px;
+  z-index: 1;
+  overflow: hidden;
+}
 
-  /* === TOUCH ZONES (unsichtbar, mit Ripple-Feedback) === */
-  .touch-zones {
-    position: absolute; inset: 0; z-index: 4;
+.tile.dragging, .tile.resizing {
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4) !important;
+  z-index: 100;
+}
+
+/* Kachel ohne Rahmen — nur Inhalt sichtbar */
+.tile.frameless {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.tile.frameless .tile-header {
+  display: none !important;
+}
+.tile.frameless .tile-content {
+  padding: 4px !important;
+}
+/* Innere Karten (Forecast-Tage, Stunden) auch transparent */
+.tile.frameless .forecast-day {
+  background: transparent !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+.tile.frameless .forecast-day.active {
+  background: transparent !important;
+  color: inherit !important;
+  font-weight: bold;
+}
+.tile.frameless .hourly-item {
+  background: transparent !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+/* === LESBARKEIT: dunkler Halo um Text + Icons ===
+   Kein Hintergrund — nur Schatten sorgt für Kontrast */
+.tile.frameless#weather *,
+.tile.frameless#forecast *,
+.tile.frameless#hourly *,
+.tile.frameless#calendar * {
+  color: #fff !important;
+  text-shadow:
+    0 0 4px rgba(0,0,0,1),
+    0 0 8px rgba(0,0,0,0.95),
+    0 0 16px rgba(0,0,0,0.85),
+    1px 1px 2px rgba(0,0,0,1),
+    -1px -1px 2px rgba(0,0,0,1) !important;
+}
+/* Kalender: "heute" und Hover bleiben sichtbar trotz Transparenz */
+.tile.frameless#calendar .day.today {
+  background: rgba(99,102,241,0.85) !important;
+  border-radius: 8px !important;
+}
+.tile.frameless#calendar .cal-nav-btn,
+.tile.frameless#calendar .cal-today-btn {
+  background: rgba(0,0,0,0.35) !important;
+  border: 1px solid rgba(255,255,255,0.4) !important;
+}
+
+.tile-header {
+  padding: 8px 14px;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-shadow: var(--text-shadow);
+}
+
+.tile-content {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  container-type: inline-size;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+/* Wenn Tile-Inhalt schmal: Forecast in 1 Spalte */
+@container (max-width: 200px) {
+  .forecast-day {
+    flex-basis: 100%;
     display: flex;
+    justify-content: space-around;
   }
-  .tz { flex: 1; position: relative; overflow: hidden; }
-  .tz-left { flex: 0 0 30%; }
-  .tz-mid { flex: 1; }
-  .tz-right { flex: 0 0 30%; }
-
-  /* Ripple */
-  .ripple {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255,255,255,.35);
-    transform: translate(-50%,-50%) scale(0);
-    pointer-events: none;
-    animation: ripple-anim .55s ease-out forwards;
+  .hourly-item {
+    flex-basis: 45px;
   }
-  @keyframes ripple-anim {
-    to { transform: translate(-50%,-50%) scale(8); opacity: 0; }
-  }
+}
 
-  /* Edge-Hints (Pfeile bei Tap-Zonen, dezent eingeblendet) */
-  .edge-hint {
-    position: absolute; top: 50%;
-    transform: translateY(-50%);
-    width: 80px; height: 80px;
-    border-radius: 50%;
-    background: rgba(0,0,0,.4);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 50px; line-height: 1;
-    opacity: 0;
-    transition: opacity .25s;
-    pointer-events: none;
-  }
-  .edge-hint.left { left: 30px; }
-  .edge-hint.right { right: 30px; }
-  .edge-hint.show { opacity: .85; }
+@container (max-width: 280px) {
+  .weather-now .temp { font-size: 2.2rem; }
+}
 
-  /* Pause-Overlay (zentral, bei Mid-Tap) */
-  .play-state {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%,-50%) scale(.5);
-    width: 180px; height: 180px;
-    border-radius: 50%;
-    background: rgba(0,0,0,.55);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 90px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .25s, transform .25s;
-    z-index: 5;
-  }
-  .play-state.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+.resize-handle-edge {
+  position: absolute;
+  touch-action: none;
+  z-index: 5;
+}
+.resize-handle-edge.top {
+  top: 0; left: 20px; right: 20px; height: 8px;
+  cursor: ns-resize;
+}
+.resize-handle-edge.bottom {
+  bottom: 0; left: 20px; right: 20px; height: 8px;
+  cursor: ns-resize;
+}
+.resize-handle-edge.left {
+  left: 0; top: 20px; bottom: 20px; width: 8px;
+  cursor: ew-resize;
+}
+.resize-handle-edge.right {
+  right: 0; top: 20px; bottom: 20px; width: 8px;
+  cursor: ew-resize;
+}
+.resize-handle-corner {
+  position: absolute;
+  width: 20px; height: 20px;
+  touch-action: none;
+  z-index: 6;
+}
+.resize-handle-corner.tl { top: 0; left: 0; cursor: nwse-resize; }
+.resize-handle-corner.tr { top: 0; right: 0; cursor: nesw-resize; }
+.resize-handle-corner.bl { bottom: 0; left: 0; cursor: nesw-resize; }
+.resize-handle-corner.br {
+  bottom: 0; right: 0;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 60%, rgba(0,0,0,0.15) 60%);
+  border-radius: 0 0 var(--tile-border-radius) 0;
+  width: 32px; height: 32px;
+}
 
-  /* === FIRST-RUN TOUCH-HINTS === */
-  .gesture-hints {
-    position: absolute; inset: 0;
-    z-index: 8;
-    background: rgba(0,0,0,.7);
-    display: flex; align-items: center; justify-content: center;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity .6s;
-  }
-  .gesture-hints.show { opacity: 1; pointer-events: auto; }
-  .gh-card {
-    background: rgba(15,15,15,.95);
-    border: 1px solid #333;
-    border-radius: 24px;
-    padding: 50px 60px;
-    max-width: 900px;
-    text-align: center;
-  }
-  .gh-card h2 { font-size: 42px; font-weight: 300; margin-bottom: 30px; }
-  .gh-grid {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px;
-    margin-bottom: 30px;
-  }
-  .gh-item {
-    display: flex; align-items: center; gap: 22px;
-    text-align: left;
-    background: rgba(255,255,255,.04);
-    padding: 22px 26px; border-radius: 16px;
-  }
-  .gh-icon { font-size: 48px; }
-  .gh-text { font-size: 22px; line-height: 1.3; opacity: .9; }
-  .gh-text b { font-weight: 600; opacity: 1; }
-  .gh-card .btn-big {
-    font-size: 26px; padding: 22px 52px;
-    margin-top: 12px;
-  }
+.icon-tile-content {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%; font-size: 2rem; cursor: pointer;
+  color: var(--text-color);
+  transform: var(--icon-transform);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  text-shadow: var(--text-shadow);
+  transition: transform 0.3s;
+}
 
-  /* === PANEL (Touch-optimiert) === */
-  .panel {
-    position: absolute; inset: 0;
-    background: rgba(0,0,0,.92);
-    backdrop-filter: blur(16px);
-    z-index: 10;
-    display: none;
-    align-items: center; justify-content: center;
-  }
-  .panel.visible { display: flex; }
-  .panel-inner {
-    background: #111; border: 1px solid #333; border-radius: 24px;
-    padding: 50px 60px;
-    width: min(900px, 90vw);
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 30px 100px rgba(0,0,0,.8);
-  }
-  .panel h2 { font-size: 36px; font-weight: 400; margin-bottom: 32px; }
-  .panel .row {
-    margin: 22px 0;
-    display: flex; align-items: center; justify-content: space-between; gap: 24px;
-    flex-wrap: wrap;
-  }
-  .panel label { font-size: 22px; opacity: .9; min-width: 240px; }
-  .panel .row > div, .panel .row > input, .panel .row > select { flex: 1; min-width: 220px; }
+.weather-now .temp { 
+  font-size: clamp(1.8rem, 8cqw, 3rem); 
+  font-weight: 700; 
+}
+.forecast-row { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 6px; 
+}
+.forecast-day {
+  flex: 1 1 70px; min-width: 65px;
+  background: rgba(255,255,255,0.25); 
+  border-radius: 16px; padding: 10px 6px;
+  text-align: center; font-size: 0.9rem;
+  min-height: 70px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: space-around;
+  touch-action: manipulation;
+}
+.forecast-day.active { background: var(--accent); color: white; }
+.hourly-scroll { 
+  display: flex; flex-wrap: wrap;
+  gap: 6px; padding-bottom: 4px;
+  align-content: flex-start;
+}
+.hourly-item {
+  flex: 1 1 55px; min-width: 55px; max-width: 85px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 12px; padding: 8px 4px;
+  text-align: center; font-size: 0.8rem;
+  min-height: 64px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: space-around;
+}
 
-  /* Große Touch-Buttons */
-  .btn {
-    background: #2a72e6; color: #fff; border: none;
-    padding: 22px 36px; border-radius: 14px;
-    font-size: 22px; font-weight: 500;
-    cursor: pointer; transition: background .2s, transform .1s;
-    font-family: inherit;
-    min-height: 70px;
-    touch-action: manipulation;
-  }
-  .btn:active { transform: scale(.96); }
-  .btn:hover { background: #1f5fcc; }
-  .btn.secondary { background: #2a2a2a; }
-  .btn.secondary:hover { background: #3a3a3a; }
-  .btn.danger { background: #d33; }
-  .btn-row { display: flex; gap: 14px; margin-top: 32px; flex-wrap: wrap; }
-  .btn-big { font-size: 24px; padding: 24px 40px; min-height: 80px; }
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 4px;
+}
+.cal-nav-btn {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: var(--text-color);
+  border-radius: 8px;
+  width: 48px; height: 48px;
+  cursor: pointer; font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.cal-nav-btn:hover, .cal-nav-btn:active {
+  background: rgba(255,255,255,0.3);
+}
+.cal-today-btn {
+  background: var(--accent);
+  color: white; border: none;
+  border-radius: 8px;
+  padding: 0 16px; height: 48px;
+  cursor: pointer; font-size: 0.9rem; font-weight: 600;
+  touch-action: manipulation;
+  transition: opacity 0.15s;
+}
+.cal-today-btn:hover, .cal-today-btn:active { opacity: 0.85; }
+#cal-title {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-shadow: var(--text-shadow);
+}
+.calendar-grid { 
+  display: grid; 
+  grid-template-columns: repeat(7, 1fr); 
+  gap: 2px; 
+  text-align: center; 
+  font-size: clamp(0.65rem, 1.5cqw, 0.9rem);
+}
+.day-header { font-weight:600; opacity:0.7; }
+.day { 
+  position: relative; 
+  padding: clamp(6px, 1cqw, 10px) 0; 
+  border-radius: 8px; 
+  cursor: pointer;
+  min-height: clamp(36px, 5cqw, 48px);
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation;
+}
+.day:hover { background: rgba(255,255,255,0.2); }
+.day.today { background: var(--accent); color:white; font-weight:bold; }
+.event-line { position:absolute; bottom:2px; left:10%; width:80%; height:3px; border-radius:2px; }
+.event-details {
+  background:rgba(0,0,0,0.85); color:white; padding:8px;
+  border-radius:8px; font-size:0.8rem; margin-top:8px; display:none;
+  max-height: 150px; overflow-y: auto;
+}
 
-  /* Touch-Slider statt Number-Input */
-  .slider-group { display: flex; align-items: center; gap: 18px; flex: 1; }
-  .slider-group input[type=range] {
-    flex: 1;
-    -webkit-appearance: none; appearance: none;
-    height: 14px; border-radius: 8px;
-    background: #2a2a2a; outline: none;
-    touch-action: manipulation;
-  }
-  .slider-group input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 44px; height: 44px; border-radius: 50%;
-    background: #2a72e6; cursor: pointer;
-    border: 4px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.6);
-  }
-  .slider-group .slider-val {
-    font-size: 22px; font-weight: 500; min-width: 90px; text-align: right;
-  }
+/* SLIDESHOW mit Animationen */
+.slideshow-container {
+  position:relative; width:100%; aspect-ratio:16/9;
+  background:rgba(0,0,0,0.05); border-radius:12px;
+  overflow:hidden; margin-bottom:8px;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+.slide-img {
+  position: absolute;
+  top: 0; left: 0;
+  width:100%; height:100%;
+  object-fit: var(--slide-fit);
+  opacity: 0;
+  will-change: transform, opacity;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transition: opacity var(--slide-duration) ease-out, transform var(--slide-duration) ease-out;
+}
+video.slide-img { object-fit: var(--slide-fit); background: #000; }
+.slide-img.active { opacity: 1; }
 
-  /* Große Dropdowns */
-  select.touch {
-    background: #1c1c1c; color: #fff; border: 1px solid #333;
-    border-radius: 12px; padding: 18px 22px;
-    font-size: 22px; font-family: inherit;
-    min-height: 70px;
-    touch-action: manipulation;
-  }
+/* Hinweis wenn ein Video-Format nicht abspielbar ist */
+.slide-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #000;
+  color: #fff;
+  text-align: center;
+  padding: 24px;
+  z-index: 5;
+}
+.slide-error .se-icon { font-size: 3rem; opacity: 0.85; }
+.slide-error .se-title { font-size: 1.1rem; font-weight: 600; }
+.slide-error .se-file {
+  font-size: 0.95rem; opacity: 0.8;
+  word-break: break-all;
+  max-width: 90%;
+}
+.slide-error .se-hint { font-size: 0.85rem; opacity: 0.55; margin-top: 4px; }
 
-  /* Touch-Toggle (statt Checkbox) */
-  .toggle {
-    width: 80px; height: 44px;
-    background: #333; border-radius: 22px;
-    position: relative; cursor: pointer;
-    transition: background .25s;
-    flex: 0 0 80px !important; min-width: 80px !important;
-  }
-  .toggle::after {
-    content: '';
-    position: absolute; top: 4px; left: 4px;
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: #fff;
-    transition: left .25s;
-  }
-  .toggle.on { background: #2a72e6; }
-  .toggle.on::after { left: 40px; }
+/* Animation: fade */
+.slide-anim-fade .slide-img { transform: none; }
+.slide-anim-fade .slide-img:not(.active) { opacity: 0; }
 
-  .info {
-    font-size: 18px; opacity: .55;
-    margin-top: 24px; line-height: 1.5;
-  }
-  .file-count {
-    font-size: 20px; opacity: .8;
-    margin-top: 12px; margin-bottom: 12px;
-  }
+/* Animation: slide-left */
+.slide-anim-slide-left .slide-img { transform: translateX(100%); opacity: 1; }
+.slide-anim-slide-left .slide-img.active { transform: translateX(0); }
+.slide-anim-slide-left .slide-img.exit { transform: translateX(-100%); }
 
-  /* Long-Press Indikator */
-  .longpress-ring {
-    position: absolute;
-    width: 120px; height: 120px;
-    border-radius: 50%;
-    border: 6px solid rgba(255,255,255,.9);
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 0;
-    pointer-events: none;
-    z-index: 6;
-    animation: longpress-grow 1.5s ease-out forwards;
-  }
-  @keyframes longpress-grow {
-    0% { transform: translate(-50%,-50%) scale(0); opacity: 0; border-width: 3px; }
-    20% { opacity: .9; }
-    100% { transform: translate(-50%,-50%) scale(1); opacity: .9; border-width: 8px; }
-  }
+/* Animation: slide-up */
+.slide-anim-slide-up .slide-img { transform: translateY(100%); opacity: 1; }
+.slide-anim-slide-up .slide-img.active { transform: translateY(0); }
+.slide-anim-slide-up .slide-img.exit { transform: translateY(-100%); }
 
-  /* === 30 ANIMATIONEN === */
-  @keyframes anim01-in  { from { opacity:0 } to { opacity:1 } }
-  @keyframes anim01-out { from { opacity:1 } to { opacity:0 } }
-  .anim-01.active   { animation: anim01-in 1.2s ease forwards; }
-  .anim-01.outgoing { animation: anim01-out 1.2s ease forwards; }
+/* Animation: zoom */
+.slide-anim-zoom .slide-img { transform: scale(0.7); opacity: 0; }
+.slide-anim-zoom .slide-img.active { transform: scale(1); opacity: 1; }
+.slide-anim-zoom .slide-img.exit { transform: scale(1.3); opacity: 0; }
 
-  @keyframes anim02-in { from { opacity:0; transform: scale(1) } 10% { opacity:1 } to { opacity:1; transform: scale(1.18) } }
-  .anim-02.active   { animation: anim02-in 8s ease-out forwards; }
-  .anim-02.outgoing { animation: anim01-out 1.2s ease forwards; }
+/* Animation: rotate */
+.slide-anim-rotate .slide-img { transform: rotate(-15deg) scale(0.8); opacity: 0; }
+.slide-anim-rotate .slide-img.active { transform: rotate(0) scale(1); opacity: 1; }
+.slide-anim-rotate .slide-img.exit { transform: rotate(15deg) scale(0.8); opacity: 0; }
 
-  @keyframes anim03-in { from { opacity:0; transform: scale(1.18) } 10% { opacity:1 } to { opacity:1; transform: scale(1) } }
-  .anim-03.active   { animation: anim03-in 8s ease-out forwards; }
-  .anim-03.outgoing { animation: anim01-out 1.2s ease forwards; }
+/* Animation: flip */
+.slide-anim-flip .slide-img { transform: perspective(800px) rotateY(90deg); opacity: 0; }
+.slide-anim-flip .slide-img.active { transform: perspective(800px) rotateY(0); opacity: 1; }
+.slide-anim-flip .slide-img.exit { transform: perspective(800px) rotateY(-90deg); opacity: 0; }
 
-  @keyframes anim04-in  { from { transform: translateX(100%); opacity:1 } to { transform: translateX(0); opacity:1 } }
-  @keyframes anim04-out { from { transform: translateX(0); opacity:1 } to { transform: translateX(-100%); opacity:1 } }
-  .anim-04.active   { animation: anim04-in 1.1s cubic-bezier(.7,0,.3,1) forwards; }
-  .anim-04.outgoing { animation: anim04-out 1.1s cubic-bezier(.7,0,.3,1) forwards; }
+/* Animation: blur */
+.slide-anim-blur .slide-img { filter: blur(20px); opacity: 0; }
+.slide-anim-blur .slide-img.active { filter: blur(0); opacity: 1; }
+.slide-anim-blur .slide-img.exit { filter: blur(20px); opacity: 0; }
 
-  @keyframes anim05-in  { from { transform: translateX(-100%); opacity:1 } to { transform: translateX(0); opacity:1 } }
-  @keyframes anim05-out { from { transform: translateX(0); opacity:1 } to { transform: translateX(100%); opacity:1 } }
-  .anim-05.active   { animation: anim05-in 1.1s cubic-bezier(.7,0,.3,1) forwards; }
-  .anim-05.outgoing { animation: anim05-out 1.1s cubic-bezier(.7,0,.3,1) forwards; }
+/* Animation: ken-burns (langsamer Zoom während angezeigt) */
+.slide-anim-ken-burns .slide-img.active {
+  animation: kenBurns 8s ease-in-out infinite alternate;
+}
+@keyframes kenBurns {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-3%, -3%, 0) scale(1.1); }
+}
 
-  @keyframes anim06-in  { from { transform: translateY(100%) } to { transform: translateY(0) } }
-  @keyframes anim06-out { from { transform: translateY(0) } to { transform: translateY(-100%) } }
-  .anim-06.active   { animation: anim06-in 1.1s cubic-bezier(.7,0,.3,1) forwards; opacity:1 }
-  .anim-06.outgoing { animation: anim06-out 1.1s cubic-bezier(.7,0,.3,1) forwards; opacity:1 }
+/* Animation: split */
+.slide-anim-split .slide-img { clip-path: inset(50% 0 50% 0); opacity: 0; }
+.slide-anim-split .slide-img.active { clip-path: inset(0 0 0 0); opacity: 1; }
 
-  @keyframes anim07-in  { from { transform: translateY(-100%) } to { transform: translateY(0) } }
-  @keyframes anim07-out { from { transform: translateY(0) } to { transform: translateY(100%) } }
-  .anim-07.active   { animation: anim07-in 1.1s cubic-bezier(.7,0,.3,1) forwards; opacity:1 }
-  .anim-07.outgoing { animation: anim07-out 1.1s cubic-bezier(.7,0,.3,1) forwards; opacity:1 }
+/* Animation: circle-reveal */
+.slide-anim-circle-reveal .slide-img { clip-path: circle(0% at 50% 50%); opacity: 0; }
+.slide-anim-circle-reveal .slide-img.active { clip-path: circle(100% at 50% 50%); opacity: 1; }
 
-  @keyframes anim08-in { from { opacity:0; transform: scale(.4) } to { opacity:1; transform: scale(1) } }
-  .anim-08.active   { animation: anim08-in 1s cubic-bezier(.3,.7,.4,1) forwards; }
-  .anim-08.outgoing { animation: anim01-out 1s ease forwards; }
+/* Animation: slide-diagonal */
+.slide-anim-slide-diagonal .slide-img { transform: translate(100%, 100%) rotate(10deg); opacity: 0; }
+.slide-anim-slide-diagonal .slide-img.active { transform: translate(0, 0) rotate(0); opacity: 1; }
+.slide-anim-slide-diagonal .slide-img.exit { transform: translate(-100%, -100%) rotate(-10deg); opacity: 0; }
 
-  @keyframes anim09-in { from { opacity:0; transform: scale(2.2) } to { opacity:1; transform: scale(1) } }
-  .anim-09.active   { animation: anim09-in 1.1s cubic-bezier(.3,.7,.4,1) forwards; }
-  .anim-09.outgoing { animation: anim01-out 1.1s ease forwards; }
+.slideshow-controls {
+  position:absolute; bottom: 8px; left:50%; transform:translateX(-50%);
+  display:flex; gap: 6px;
+  background:rgba(0,0,0,0.6); padding: 6px 12px; border-radius:30px;
+  z-index: 10;
+}
+.slideshow-controls button {
+  background: transparent; border: none; color: white;
+  font-size: 1.4rem; cursor: pointer;
+  padding: 0;
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  touch-action: manipulation;
+}
+.upload-area { display:flex; gap:8px; align-items:center; margin-top:4px; flex-wrap: wrap; }
+.upload-btn {
+  background: var(--accent); color:white; border:none;
+  border-radius: 12px; padding: 14px 18px;
+  cursor: pointer; font-size: 1rem; font-family: inherit;
+  min-height: 52px; touch-action: manipulation;
+  -webkit-user-select: none; user-select: none;
+}
+input[type="file"] { display:none; }
 
-  @keyframes anim10-in { from { opacity:0; transform: rotate(-180deg) scale(.5) } to { opacity:1; transform: rotate(0) scale(1) } }
-  .anim-10.active   { animation: anim10-in 1.3s cubic-bezier(.4,.2,.2,1) forwards; }
-  .anim-10.outgoing { animation: anim01-out 1.3s ease forwards; }
+/* HINTERGRUND-SYNC OVERLAY für Slideshow */
+.bg-slideshow-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  will-change: opacity;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  transition: opacity 0.8s ease-out;
+}
+.bg-slideshow-layer.active { opacity: 1; }
 
-  @keyframes anim11-in { from { opacity:0; transform: rotate(180deg) scale(.5) } to { opacity:1; transform: rotate(0) scale(1) } }
-  .anim-11.active   { animation: anim11-in 1.3s cubic-bezier(.4,.2,.2,1) forwards; }
-  .anim-11.outgoing { animation: anim01-out 1.3s ease forwards; }
+.settings-panel {
+  position: fixed; top:0; right:-420px; width: min(400px, 92vw); height:100vh;
+  background: rgba(20,20,30,0.97); backdrop-filter: blur(20px); color:white;
+  padding: 24px 20px 40px; transition: right 0.3s ease; z-index: 10000;
+  overflow-y: auto; overflow-x: hidden;
+  border-left:1px solid rgba(255,255,255,0.2);
+  -webkit-overflow-scrolling: touch;
+}
+.settings-panel.open { right:0; }
+.settings-panel label {
+  display:block; margin: 18px 0 6px;
+  font-weight: 600; font-size: 1rem;
+}
+.settings-panel select,
+.settings-panel input[type="text"],
+.settings-panel input[type="number"] {
+  width:100%; padding: 14px 12px;
+  border-radius: 10px; border: none;
+  background: rgba(255,255,255,0.15); color: white;
+  margin-bottom: 8px;
+  font-size: 1rem; font-family: inherit;
+  min-height: 52px;
+  touch-action: manipulation;
+}
+.settings-panel input[type="color"] {
+  width: 100%; height: 52px; border: none;
+  border-radius: 10px; padding: 4px 8px;
+  background: rgba(255,255,255,0.15);
+  margin-bottom: 8px; cursor: pointer;
+}
+.settings-panel input[type="range"] {
+  width: 100%; padding: 0; margin-bottom: 8px;
+  -webkit-appearance: none; appearance: none;
+  height: 8px; border-radius: 8px;
+  background: rgba(255,255,255,0.2);
+  touch-action: pan-x;
+}
+.settings-panel input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #6366f1; cursor: pointer;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.settings-panel input[type="range"]::-moz-range-thumb {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #6366f1; cursor: pointer;
+  border: 3px solid #fff;
+}
+.close-settings {
+  position: absolute; top: 14px; right: 14px;
+  background: rgba(255,255,255,0.1); border: none; color: white;
+  width: 52px; height: 52px; border-radius: 50%;
+  font-size: 1.6rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation;
+}
+.range-row {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 8px;
+}
+.range-row input[type="range"] { flex: 1; margin-bottom: 0; }
+.range-row span {
+  font-size: 1rem; min-width: 48px; text-align: right;
+}
 
-  @keyframes anim12-in { from { opacity:0; transform: perspective(1200px) rotateX(90deg) } to { opacity:1; transform: perspective(1200px) rotateX(0) } }
-  .anim-12.active   { animation: anim12-in 1.2s cubic-bezier(.4,0,.2,1) forwards; }
-  .anim-12.outgoing { animation: anim01-out 1.2s ease forwards; }
+.layout-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.layout-btn {
+  padding: 14px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: left;
+  min-height: 56px;
+  transition: background 0.2s, border-color 0.2s;
+  touch-action: manipulation;
+  -webkit-user-select: none; user-select: none;
+}
+.layout-btn:hover, .layout-btn.active {
+  background: rgba(99,102,241,0.3);
+  border-color: rgba(99,102,241,0.6);
+}
+.location-result-item {
+  padding: 14px 12px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 8px; margin-bottom: 6px;
+  cursor: pointer; font-size: 0.95rem;
+  min-height: 52px; display: flex; flex-direction: column; justify-content: center;
+  transition: background 0.15s;
+  touch-action: manipulation;
+}
+.location-result-item:hover, .location-result-item:active {
+  background: rgba(99,102,241,0.3);
+}
+.location-result-item small {
+  display: block;
+  opacity: 0.7;
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+.error-msg {
+  background: rgba(239,68,68,0.2);
+  color: #fecaca;
+  padding: 8px; border-radius: 8px;
+  font-size: 0.85rem; margin-top: 8px;
+}
+/* === VOLLBILD-KALENDER === */
+.cal-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(10,12,20,0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: none;
+  flex-direction: column;
+  padding: 24px 28px 32px;
+}
+.cal-fullscreen.open { display: flex; }
+.cal-fullscreen-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  flex-shrink: 0;
+}
+.cal-fullscreen-bar h2 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #fff;
+  display: flex; align-items: center; gap: 12px;
+}
+.cal-fs-close {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.cal-fs-close:hover, .cal-fs-close:active {
+  background: rgba(255,255,255,0.25);
+}
+.cal-fullscreen-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  color: #fff;
+}
+.cal-fullscreen-body .calendar-nav {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 16px;
+}
+.cal-fullscreen-body #cal-fs-title {
+  font-size: 1.5rem; font-weight: 600;
+  flex: 1; text-align: center;
+}
+.cal-fullscreen-body .cal-nav-btn {
+  width: 56px; height: 56px;
+  font-size: 1.3rem;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff; border-radius: 10px;
+  cursor: pointer; touch-action: manipulation;
+  display: flex; align-items: center; justify-content: center;
+}
+.cal-fullscreen-body .cal-today-btn {
+  height: 56px; padding: 0 22px;
+  font-size: 1.1rem; font-weight: 600;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 10px;
+  cursor: pointer; touch-action: manipulation;
+}
+.cal-fullscreen-body .calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  align-content: start;
+}
+.cal-fullscreen-body .calendar-grid .cal-weekday {
+  font-size: 1.05rem; font-weight: 600;
+  text-align: center; opacity: 0.7;
+  padding: 8px 0;
+}
+.cal-fullscreen-body .calendar-grid .day {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  font-size: 1.3rem;
+  padding: 14px 0;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  min-height: 64px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.cal-fullscreen-body .calendar-grid .day:hover {
+  background: rgba(255,255,255,0.15);
+}
+.cal-fullscreen-body .calendar-grid .day.today {
+  background: var(--accent);
+  color: #fff;
+  font-weight: bold;
+}
+.cal-fullscreen-body .event-details {
+  margin-top: 16px;
+  font-size: 1.1rem;
+  max-height: 22vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex-shrink: 0;
+}
 
-  @keyframes anim13-in { from { opacity:0; transform: perspective(1200px) rotateY(90deg) } to { opacity:1; transform: perspective(1200px) rotateY(0) } }
-  .anim-13.active   { animation: anim13-in 1.2s cubic-bezier(.4,0,.2,1) forwards; }
-  .anim-13.outgoing { animation: anim01-out 1.2s ease forwards; }
-
-  @keyframes anim14-in { from { opacity:0; filter: blur(40px) } to { opacity:1; filter: blur(0) } }
-  .anim-14.active   { animation: anim14-in 1.4s ease forwards; }
-  .anim-14.outgoing { animation: anim01-out 1.4s ease forwards; }
-
-  @keyframes anim15-out { from { opacity:1; filter: blur(0) } to { opacity:0; filter: blur(40px) } }
-  .anim-15.active   { animation: anim01-in 1.4s ease forwards; }
-  .anim-15.outgoing { animation: anim15-out 1.4s ease forwards; }
-
-  @keyframes anim16-in { from { clip-path: inset(0 0 0 100%); opacity:1 } to { clip-path: inset(0 0 0 0); opacity:1 } }
-  .anim-16.active   { animation: anim16-in 1.2s cubic-bezier(.6,0,.4,1) forwards; }
-  .anim-16.outgoing { animation: anim01-out 1.2s ease forwards; }
-
-  @keyframes anim17-in { from { clip-path: inset(0 100% 0 0); opacity:1 } to { clip-path: inset(0 0 0 0); opacity:1 } }
-  .anim-17.active   { animation: anim17-in 1.2s cubic-bezier(.6,0,.4,1) forwards; }
-  .anim-17.outgoing { animation: anim01-out 1.2s ease forwards; }
-
-  @keyframes anim18-in { from { clip-path: inset(100% 0 0 0); opacity:1 } to { clip-path: inset(0 0 0 0); opacity:1 } }
-  .anim-18.active   { animation: anim18-in 1.2s cubic-bezier(.6,0,.4,1) forwards; }
-  .anim-18.outgoing { animation: anim01-out 1.2s ease forwards; }
-
-  @keyframes anim19-in { from { clip-path: inset(0 0 100% 0); opacity:1 } to { clip-path: inset(0 0 0 0); opacity:1 } }
-  .anim-19.active   { animation: anim19-in 1.2s cubic-bezier(.6,0,.4,1) forwards; }
-  .anim-19.outgoing { animation: anim01-out 1.2s ease forwards; }
-
-  @keyframes anim20-in { from { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); opacity:1 } to { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); opacity:1 } }
-  .anim-20.active   { animation: anim20-in 1.3s cubic-bezier(.6,0,.4,1) forwards; }
-  .anim-20.outgoing { animation: anim01-out 1.3s ease forwards; }
-
-  @keyframes anim21-in { from { clip-path: circle(0% at 50% 50%); opacity:1 } to { clip-path: circle(75% at 50% 50%); opacity:1 } }
-  .anim-21.active   { animation: anim21-in 1.4s ease-out forwards; }
-  .anim-21.outgoing { animation: anim01-out 1.4s ease forwards; }
-
-  @keyframes anim22-out { from { clip-path: circle(75% at 50% 50%); opacity:1 } to { clip-path: circle(0% at 50% 50%); opacity:1 } }
-  .anim-22.active   { animation: anim01-in 1.2s ease forwards; }
-  .anim-22.outgoing { animation: anim22-out 1.2s ease forwards; }
-
-  @keyframes anim23-in {
-    0% { opacity:0; transform: translateX(-30px) }
-    20% { opacity:1; transform: translateX(25px) }
-    40% { transform: translateX(-18px) }
-    60% { transform: translateX(12px) }
-    80% { transform: translateX(-6px) }
-    100% { transform: translateX(0) }
-  }
-  .anim-23.active   { animation: anim23-in 1s ease forwards; }
-  .anim-23.outgoing { animation: anim01-out 1s ease forwards; }
-
-  @keyframes anim24-in { from { opacity:0; transform: perspective(1000px) rotateY(-35deg) translateX(-200px) } to { opacity:1; transform: perspective(1000px) rotateY(0) translateX(0) } }
-  .anim-24.active   { animation: anim24-in 1.2s cubic-bezier(.3,.7,.4,1) forwards; }
-  .anim-24.outgoing { animation: anim01-out 1.2s ease forwards; }
-
-  @keyframes anim25-in {
-    0% { opacity:0; transform: scale(.3) }
-    50% { opacity:1; transform: scale(1.08) }
-    70% { transform: scale(.96) }
-    100% { transform: scale(1) }
-  }
-  .anim-25.active   { animation: anim25-in 1.2s ease forwards; }
-  .anim-25.outgoing { animation: anim01-out 1.2s ease forwards; }
-
-  @keyframes anim26-in { from { opacity:0; transform: perspective(800px) rotateX(-65deg) translateY(40%) } to { opacity:1; transform: perspective(800px) rotateX(0) translateY(0) } }
-  .anim-26.active   { animation: anim26-in 1.3s cubic-bezier(.3,.7,.4,1) forwards; }
-  .anim-26.outgoing { animation: anim01-out 1.3s ease forwards; }
-
-  @keyframes anim27-in { 0% { opacity:0; filter: saturate(0) brightness(2) } 50% { opacity:1; filter: saturate(3) brightness(1.4) } 100% { opacity:1; filter: saturate(1) brightness(1) } }
-  .anim-27.active   { animation: anim27-in 1.4s ease forwards; }
-  .anim-27.outgoing { animation: anim01-out 1.4s ease forwards; }
-
-  @keyframes anim28-in { from { opacity:0; transform: translate(60%, 60%) scale(.7) } to { opacity:1; transform: translate(0,0) scale(1) } }
-  .anim-28.active   { animation: anim28-in 1.2s cubic-bezier(.3,.7,.4,1) forwards; }
-  .anim-28.outgoing { animation: anim01-out 1.2s ease forwards; }
-
-  .anim-29.active   { animation: anim21-in 1.3s ease forwards; }
-  .anim-29.outgoing { animation: anim01-out 1.3s ease forwards; }
-
-  @keyframes anim30-in {
-    0% { opacity:0; transform: translate(0,0); filter: hue-rotate(0deg) }
-    20% { opacity:1; transform: translate(-15px, 6px); filter: hue-rotate(90deg) saturate(2) }
-    40% { transform: translate(12px, -8px); filter: hue-rotate(-60deg) saturate(1.5) }
-    60% { transform: translate(-6px, 4px); filter: hue-rotate(30deg) }
-    80% { transform: translate(3px, -2px); filter: hue-rotate(0deg) }
-    100% { opacity:1; transform: translate(0,0); filter: none }
-  }
-  .anim-30.active   { animation: anim30-in 1s steps(8) forwards; }
-  .anim-30.outgoing { animation: anim01-out 1s ease forwards; }
+/* === KACHEL-TOGGLE === */
+.tile-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(255,255,255,0.07);
+  border-radius: 12px; padding: 14px 16px;
+  min-height: 60px; touch-action: manipulation;
+}
+.tile-toggle-label {
+  font-size: 1rem; display: flex; align-items: center; gap: 10px;
+}
+.tile-toggle-switch {
+  position: relative; width: 60px; height: 34px; flex-shrink: 0;
+}
+.tile-toggle-switch input {
+  opacity: 0; width: 0; height: 0; position: absolute;
+}
+.tile-toggle-switch .slider {
+  position: absolute; inset: 0;
+  background: #444; border-radius: 34px;
+  cursor: pointer; transition: background .25s;
+}
+.tile-toggle-switch .slider::before {
+  content: ''; position: absolute;
+  width: 26px; height: 26px; left: 4px; top: 4px;
+  background: white; border-radius: 50%;
+  transition: transform .25s;
+}
+.tile-toggle-switch input:checked + .slider { background: #6366f1; }
+.tile-toggle-switch input:checked + .slider::before { transform: translateX(26px); }
 </style>
 </head>
 <body>
 
-<div class="stage" id="stage">
-  <div class="slide" id="slide-a"></div>
-  <div class="slide" id="slide-b"></div>
-</div>
+<!-- Slideshow-Hintergrund mit 2 Layern für sanften Übergang -->
+<div class="bg-slideshow-layer" id="bg-layer-1"></div>
+<div class="bg-slideshow-layer" id="bg-layer-2"></div>
 
-<div class="overlay"></div>
+<div id="dashboard"></div>
 
-<div class="hud">
-  <div class="top-row">
-    <div>
-      <div id="clock">--:--</div>
-      <div id="date">—</div>
-    </div>
-    <div class="weather">
-      <div id="weather-current" class="weather-current"><span class="icon">⏳</span><span id="weather-temp">--°</span></div>
-      <div id="weather-desc" class="weather-desc">lade Wetter…</div>
-      <div id="forecast" class="forecast"></div>
-    </div>
+<!-- VOLLBILD-KALENDER -->
+<div class="cal-fullscreen" id="cal-fullscreen">
+  <div class="cal-fullscreen-bar">
+    <h2><i class="fas fa-calendar-days"></i> Kalender</h2>
+    <button class="cal-fs-close" id="cal-fs-close" title="Verkleinern">
+      <i class="fas fa-compress"></i>
+    </button>
   </div>
-
-  <div class="bottom-row">
-    <div id="status" class="status">
-      <span id="status-files">0 Dateien</span>
-      <span id="status-anim">—</span>
-      <span id="status-mode">Random</span>
+  <div class="cal-fullscreen-body">
+    <div class="calendar-nav">
+      <button id="cal-fs-prev" class="cal-nav-btn"><i class="fas fa-chevron-left"></i></button>
+      <span id="cal-fs-title">Monat</span>
+      <button id="cal-fs-today" class="cal-today-btn">Heute</button>
+      <button id="cal-fs-next" class="cal-nav-btn"><i class="fas fa-chevron-right"></i></button>
     </div>
-    <div></div>
+    <div class="calendar-grid" id="cal-fs-grid"></div>
+    <div class="event-details" id="cal-fs-events"></div>
   </div>
 </div>
 
-<!-- Touch Zones (links / mitte / rechts) -->
-<div class="touch-zones">
-  <div class="tz tz-left"  id="tz-left"></div>
-  <div class="tz tz-mid"   id="tz-mid"></div>
-  <div class="tz tz-right" id="tz-right"></div>
-</div>
-
-<!-- Edge Hints -->
-<div class="edge-hint left"  id="hint-left">‹</div>
-<div class="edge-hint right" id="hint-right">›</div>
-<div class="play-state" id="play-state">▶</div>
-
-<!-- First-Run Gesture Hints -->
-<div class="gesture-hints" id="gesture-hints">
-  <div class="gh-card">
-    <h2>Touch-Steuerung</h2>
-    <div class="gh-grid">
-      <div class="gh-item"><div class="gh-icon">👈</div><div class="gh-text"><b>Tap links</b><br>vorheriges Bild</div></div>
-      <div class="gh-item"><div class="gh-icon">👉</div><div class="gh-text"><b>Tap rechts</b><br>nächstes Bild</div></div>
-      <div class="gh-item"><div class="gh-icon">⏸</div><div class="gh-text"><b>Tap Mitte</b><br>Pause / Play</div></div>
-      <div class="gh-item"><div class="gh-icon">👆👆</div><div class="gh-text"><b>Doppel-Tap</b><br>Vollbild</div></div>
-      <div class="gh-item"><div class="gh-icon">👈👉</div><div class="gh-text"><b>Wischen</b><br>schneller wechseln</div></div>
-      <div class="gh-item"><div class="gh-icon">⏱️</div><div class="gh-text"><b>Lang drücken (1,5s)</b><br>Einstellungen öffnen</div></div>
-    </div>
-    <button class="btn btn-big" id="btn-hints-ok">Verstanden</button>
+<div class="settings-panel" id="settings-panel">
+  <button class="close-settings" id="close-settings">&times;</button>
+  <h2>Einstellungen</h2>
+  
+  <h3 style="margin-top: 0; font-size: 1rem; color: #a5b4fc;">⚡ Schnell-Layouts</h3>
+  
+  <label>Querformat (horizontal)</label>
+  <div class="layout-buttons">
+    <button class="layout-btn" data-layout="h1">📅 Kalender groß</button>
+    <button class="layout-btn" data-layout="h2">🌤️ Wetter groß</button>
+    <button class="layout-btn" data-layout="h3">🖼️ Slideshow groß</button>
+    <button class="layout-btn" data-layout="h4">⚖️ Symmetrisch 3×2</button>
+    <button class="layout-btn" data-layout="h5">📋 Info-Cockpit</button>
   </div>
-</div>
-
-<!-- Settings Panel -->
-<div class="panel" id="panel">
-  <div class="panel-inner">
-    <h2 id="panel-title">Einstellungen</h2>
-
-    <div class="row">
-      <label>Medien-Quelle</label>
-      <div style="display:flex; gap:10px; flex-wrap:wrap">
-        <button class="btn" id="btn-pick-folder">📁 Ordner wählen</button>
-        <button class="btn secondary" id="btn-pick-files">Dateien wählen</button>
-      </div>
-    </div>
-    <div class="file-count" id="file-count">Noch kein Ordner ausgewählt</div>
-
-    <div class="row">
-      <label>Slide-Dauer</label>
-      <div class="slider-group">
-        <input type="range" id="cfg-duration" min="3" max="60" value="10">
-        <span class="slider-val" id="cfg-duration-val">10 s</span>
-      </div>
-    </div>
-
-    <div class="row">
-      <label>Animations-Modus</label>
-      <select class="touch" id="cfg-anim-mode">
-        <option value="random">Zufällig (alle 30)</option>
-        <option value="sequence">Reihenfolge (1 → 30)</option>
-        <option value="fixed">Eine bestimmte…</option>
-      </select>
-    </div>
-
-    <div class="row" id="row-fixed-anim" style="display:none">
-      <label>Animation</label>
-      <select class="touch" id="cfg-fixed-anim"></select>
-    </div>
-
-    <div class="row">
-      <label>Video-Ton aktivieren</label>
-      <div class="toggle" id="tg-sound"></div>
-    </div>
-    <div class="row">
-      <label>Wetter anzeigen</label>
-      <div class="toggle on" id="tg-weather"></div>
-    </div>
-    <div class="row">
-      <label>Uhr/Datum anzeigen</label>
-      <div class="toggle on" id="tg-clock"></div>
-    </div>
-    <div class="row">
-      <label>Auto-Helligkeit (Tag/Nacht)</label>
-      <div class="toggle on" id="tg-autobrightness"></div>
-    </div>
-
-    <div class="row">
-      <label>Helligkeit (manuell)</label>
-      <div class="slider-group">
-        <input type="range" id="cfg-brightness" min="10" max="255" value="200">
-        <span class="slider-val" id="cfg-brightness-val">200</span>
-      </div>
-    </div>
-
-    <div class="btn-row">
-      <button class="btn btn-big" id="btn-start">Übernehmen</button>
-      <button class="btn secondary btn-big" id="btn-close">Schließen</button>
-      <button class="btn danger btn-big" id="btn-reload">Neu laden</button>
-    </div>
-
-    <div class="info">
-      Unterstützt: JPG, PNG, WEBP, GIF, MP4, WEBM, MOV. HEIC wird übersprungen.<br>
-      Lang drücken (1,5s) öffnet diese Einstellungen jederzeit.
-    </div>
+  
+  <label>Hochformat (vertikal)</label>
+  <div class="layout-buttons">
+    <button class="layout-btn" data-layout="v1">📅 Kalender oben</button>
+    <button class="layout-btn" data-layout="v2">🌤️ Wetter oben</button>
+    <button class="layout-btn" data-layout="v3">🖼️ Slideshow oben</button>
+    <button class="layout-btn" data-layout="v4">📊 Stack vertikal</button>
+    <button class="layout-btn" data-layout="v5">🎯 Familien-Wand</button>
   </div>
+  
+  <label>Thema</label>
+  <select id="theme-select">
+    <option value="default">Standard Hell</option>
+    <option value="dark">Dunkel Elegant</option>
+    <option value="neon">Neon Nächte</option>
+    <option value="nordic">Nordic Frost</option>
+    <option value="sunset">Sunset Vibes</option>
+    <option value="forest">Forest Whisper</option>
+    <option value="midnight">Midnight Blue</option>
+    <option value="rose">Rose Gold</option>
+    <option value="ocean">Ocean Breeze</option>
+    <option value="minimal">Minimal Weiß</option>
+  </select>
+  
+  <label>Hintergrund-Typ</label>
+  <select id="bg-mode">
+    <option value="theme">Theme-Farbverlauf</option>
+    <option value="color">Eigene Farbe</option>
+    <option value="url">Eigenes Bild (URL)</option>
+    <option value="upload">Eigenes Bild (Upload)</option>
+    <option value="slideshow">Slideshow-Bilder (synchron)</option>
+  </select>
+  
+  <div id="bg-color-container" style="display:none;">
+    <label>Hintergrundfarbe</label>
+    <input type="color" id="bg-color" value="#e0e7ff">
+  </div>
+  <div id="bg-url-container" style="display:none;">
+    <label>Bild-URL</label>
+    <input type="text" id="bg-url" placeholder="https://...">
+  </div>
+  <div id="bg-upload-container" style="display:none;">
+    <label>Hintergrundbild hochladen</label>
+    <button id="bg-upload-trigger" class="upload-btn" style="width:100%;">Bild auswählen</button>
+    <input type="file" id="bg-upload" accept="image/*">
+  </div>
+  
+  <label>Kachel-Transparenz</label>
+  <div class="range-row">
+    <input type="range" id="tile-opacity" min="0" max="1" step="0.05" value="1">
+    <span id="tile-opacity-value">100%</span>
+  </div>
+  
+  <label>Schriftfarbe</label>
+  <input type="color" id="font-color" value="#1e293b">
+  
+  <label>Schriftart</label>
+  <select id="font-family-select">
+    <option value="'Segoe UI', system-ui, sans-serif">Segoe UI</option>
+    <option value="'Inter', sans-serif">Inter</option>
+    <option value="'Roboto', sans-serif">Roboto</option>
+    <option value="'Playfair Display', serif">Playfair Display</option>
+    <option value="'Courier New', monospace">Courier New</option>
+    <option value="'Georgia', serif">Georgia</option>
+    <option value="'Verdana', sans-serif">Verdana</option>
+    <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+    <option value="'Arial', sans-serif">Arial</option>
+    <option value="'Times New Roman', serif">Times New Roman</option>
+  </select>
+  
+  <label>3D-Effekt</label>
+  <select id="3d-mode">
+    <option value="none">Keiner</option>
+    <option value="perspective">Perspektivisch</option>
+    <option value="shadow3d">Schatten 3D</option>
+    <option value="floating">Schwebend</option>
+    <option value="skew">Gekippt</option>
+    <option value="glow">Glühend 3D</option>
+  </select>
+  
+  <label>3D-Stärke (0-10)</label>
+  <div class="range-row">
+    <input type="range" id="3d-strength" min="0" max="10" value="2" step="0.5">
+    <span id="3d-strength-value">2</span>
+  </div>
+  
+  <label>Kachel Hintergrundfarbe</label>
+  <input type="color" id="tile-bg-color" value="#ffffff">
+  
+  <label>Kachel Rahmenbreite (px)</label>
+  <input type="number" id="border-width" min="0" max="10" value="1">
+  
+  <label>Kachel Rahmenrundung (px)</label>
+  <input type="number" id="border-radius" min="0" max="40" value="24">
+  
+  <h3 style="margin-top: 20px; font-size: 1rem; color: #a5b4fc;">📷 Slideshow</h3>
+  
+  <label>Animation</label>
+  <select id="slide-animation">
+    <option value="fade">Sanftes Überblenden</option>
+    <option value="slide-left">Seitlich schieben</option>
+    <option value="slide-up">Nach oben schieben</option>
+    <option value="zoom">Zoom-Effekt</option>
+    <option value="rotate">Drehen</option>
+    <option value="flip">Flip 3D</option>
+    <option value="blur">Unschärfe</option>
+    <option value="ken-burns">Ken Burns (langsamer Zoom)</option>
+    <option value="split">Vertikales Teilen</option>
+    <option value="circle-reveal">Kreis öffnet sich</option>
+    <option value="slide-diagonal">Diagonal schieben</option>
+  </select>
+  
+  <label>Bilder anzeigen</label>
+  <select id="slide-fit">
+    <option value="contain">Komplett zeigen (mit Rändern)</option>
+    <option value="cover">Zugeschnitten (füllt aus)</option>
+  </select>
+  
+  <label>Wechselzeit (Sekunden)</label>
+  <input type="number" id="interval-input" min="2" max="60" value="10">
+  
+  <label>Animations-Dauer (Sekunden)</label>
+  <input type="number" id="anim-duration" min="0.3" max="3" step="0.1" value="1">
+  
+  <h3 style="margin-top: 20px; font-size: 1rem; color: #a5b4fc;">📍 Standort (Wetter)</h3>
+  
+  <label>Stadt suchen</label>
+  <div style="display:flex; gap:6px;">
+    <input type="text" id="location-search" placeholder="z.B. Düsseldorf" style="flex:1;">
+    <button id="location-search-btn" class="upload-btn" style="white-space:nowrap;">🔍 Suchen</button>
+  </div>
+  <div id="location-results" style="margin-top:6px;"></div>
+  
+  <label>Aktueller Standort</label>
+  <div id="current-location" style="background:rgba(255,255,255,0.1); padding:8px; border-radius:8px; font-size:0.85rem;">
+    Düsseldorf
+  </div>
+  
+  <button id="use-gps" class="upload-btn" style="width:100%; margin-top:8px;">
+    📡 Aktuellen Standort verwenden (GPS)
+  </button>
+  
+  <h3 style="margin-top: 20px; font-size: 1rem; color: #a5b4fc;">👁️ Kacheln ein-/ausblenden</h3>
+  <div id="tile-visibility-list" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;">
+    <!-- wird per JS befüllt -->
+  </div>
+
+  <h3 style="margin-top: 20px; font-size: 1rem; color: #a5b4fc;">📅 Kalender</h3>
+  
+  <label>Kalender iCal URL</label>
+  <input type="text" id="ical-url" placeholder="https://calendar.google.com/.../basic.ics">
+  <button id="load-ical-settings" class="upload-btn" style="width:100%;">Kalender laden</button>
+  <div id="ical-error" class="error-msg" style="display:none;"></div>
+  
+  <p style="font-size: 0.75rem; opacity: 0.7; margin-top: 8px;">
+    Tipp: Bei CORS-Fehler wird automatisch ein Public-CORS-Proxy verwendet.
+  </p>
 </div>
 
 <script>
-'use strict';
+(function() {
+let zCounter = 10;
+function bringToFront(tile) { zCounter += 1; tile.style.zIndex = zCounter; }
 
-/* ============================================================
-   KONFIGURATION
-   ============================================================ */
-const CONFIG = {
-  weatherKey: '769c5861cd255a3982bafb1680abf194',
-  weatherCity: 'Duesseldorf,de',
-  weatherLang: 'de',
-  weatherRefreshMs: 15 * 60 * 1000,
-  longPressMs: 1500,
-  doubleTapMs: 350,
-  swipeThreshold: 60
+const themes = {
+  default: { '--bg-gradient': 'linear-gradient(135deg, #e0e7ff, #c7d2fe)', '--tile-bg': 'rgba(255,255,255,0.3)', '--text-color': '#1e293b', '--accent': '#3b82f6' },
+  dark: { '--bg-gradient': '#1e293b', '--tile-bg': 'rgba(30,41,59,0.6)', '--text-color': '#e2e8f0', '--accent': '#6366f1' },
+  neon: { '--bg-gradient': 'black', '--tile-bg': 'rgba(88,28,135,0.4)', '--text-color': '#a78bfa', '--accent': '#ec4899' },
+  nordic: { '--bg-gradient': 'linear-gradient(135deg, #bae6fd, #e0f2fe)', '--tile-bg': 'rgba(255,255,255,0.6)', '--text-color': '#0f172a', '--accent': '#0284c7' },
+  sunset: { '--bg-gradient': 'linear-gradient(135deg, #fed7aa, #fdba74)', '--tile-bg': 'rgba(255,237,213,0.5)', '--text-color': '#7c2d12', '--accent': '#ea580c' },
+  forest: { '--bg-gradient': 'linear-gradient(135deg, #bbf7d0, #86efac)', '--tile-bg': 'rgba(240,253,244,0.5)', '--text-color': '#14532d', '--accent': '#16a34a' },
+  midnight: { '--bg-gradient': '#0f172a', '--tile-bg': 'rgba(15,23,42,0.7)', '--text-color': '#93c5fd', '--accent': '#3b82f6' },
+  rose: { '--bg-gradient': 'linear-gradient(135deg, #fce7f3, #fbcfe8)', '--tile-bg': 'rgba(255,241,242,0.5)', '--text-color': '#831843', '--accent': '#be123c' },
+  ocean: { '--bg-gradient': 'linear-gradient(135deg, #ccfbf1, #99f6e4)', '--tile-bg': 'rgba(240,255,250,0.5)', '--text-color': '#134e4a', '--accent': '#0f766e' },
+  minimal: { '--bg-gradient': '#ffffff', '--tile-bg': 'rgba(243,244,246,0.8)', '--text-color': '#374151', '--accent': '#6b7280' }
 };
 
-const IMG_EXT = ['jpg','jpeg','png','webp','gif','bmp','avif'];
-const VID_EXT = ['mp4','webm','mov','m4v','ogv'];
-const HEIC_EXT = ['heic','heif'];
-
-/* ============================================================
-   STATE
-   ============================================================ */
-const state = {
-  files: [],
-  current: 0,
-  activeSlide: 'a',
-  paused: false,
-  timer: null,
-  animIndex: 0,
-  settings: loadSettings(),
-  folderHandle: null
-};
-
-function loadSettings() {
-  try {
-    const raw = localStorage.getItem('smartDash.settings');
-    if (raw) return { ...defaults(), ...JSON.parse(raw) };
-  } catch(e) {}
-  return defaults();
-}
-function defaults() {
-  return {
-    duration: 10,
-    animMode: 'random',
-    fixedAnim: 1,
-    sound: false,
-    weather: true,
-    clock: true,
-    autoBrightness: true,
-    brightness: 200,
-    hintsShown: false
-  };
-}
-function saveSettings() {
-  localStorage.setItem('smartDash.settings', JSON.stringify(state.settings));
+function applyTheme(name) {
+  const theme = themes[name];
+  if (!theme) return;
+  Object.entries(theme).forEach(([prop, val]) => document.documentElement.style.setProperty(prop, val));
+  localStorage.setItem('theme', name);
 }
 
-/* ============================================================
-   FULLY KIOSK INTEGRATION
-   ============================================================ */
-const hasFully = typeof fully !== 'undefined';
-
-function setBrightness(val) {
-  if (!hasFully) return;
-  try { fully.setScreenBrightness(Math.max(10, Math.min(255, val))); } catch(e) {}
-}
-function fullyKeepScreenOn() {
-  if (!hasFully) return;
-  try { fully.turnScreenOn(); } catch(e) {}
-}
-function applyAutoBrightness() {
-  if (!state.settings.autoBrightness) {
-    setBrightness(state.settings.brightness);
-    return;
-  }
-  const h = new Date().getHours();
-  // Tag (8-19) hell, Abend (20-22) mittel, Nacht (23-7) dunkel
-  let b;
-  if (h >= 8 && h < 20) b = 230;
-  else if (h >= 20 && h < 23) b = 130;
-  else b = 50;
-  setBrightness(b);
-}
-
-/* ============================================================
-   INDEXEDDB
-   ============================================================ */
-const DB_NAME = 'smartDash';
-const STORE = 'handles';
-function openDB() {
-  return new Promise((res, rej) => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = () => req.result.createObjectStore(STORE);
-    req.onsuccess = () => res(req.result);
-    req.onerror = () => rej(req.error);
-  });
-}
-async function saveHandle(handle) {
-  const db = await openDB();
-  return new Promise((res, rej) => {
-    const tx = db.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).put(handle, 'folder');
-    tx.oncomplete = () => res();
-    tx.onerror = () => rej(tx.error);
-  });
-}
-async function loadHandle() {
-  try {
-    const db = await openDB();
-    return await new Promise((res, rej) => {
-      const tx = db.transaction(STORE, 'readonly');
-      const req = tx.objectStore(STORE).get('folder');
-      req.onsuccess = () => res(req.result || null);
-      req.onerror = () => rej(req.error);
-    });
-  } catch(e) { return null; }
-}
-
-/* ============================================================
-   FILES
-   ============================================================ */
-function getKind(name) {
-  const ext = name.split('.').pop().toLowerCase();
-  if (IMG_EXT.includes(ext)) return 'image';
-  if (VID_EXT.includes(ext)) return 'video';
-  if (HEIC_EXT.includes(ext)) return 'heic';
-  return null;
-}
-
-async function loadFromFolder(handle) {
-  const files = [];
-  let heicCount = 0;
-  for await (const entry of handle.values()) {
-    if (entry.kind !== 'file') continue;
-    const kind = getKind(entry.name);
-    if (!kind) continue;
-    if (kind === 'heic') { heicCount++; continue; }
-    files.push({ name: entry.name, type: kind, source: 'handle', handle: entry });
-  }
-  files.sort((a,b) => a.name.localeCompare(b.name, 'de'));
-  if (heicCount > 0) console.warn(`${heicCount} HEIC-Dateien übersprungen.`);
-  return files;
-}
-
-async function loadFromFileList(fileList) {
-  const files = [];
-  for (const f of fileList) {
-    const kind = getKind(f.name);
-    if (!kind || kind === 'heic') continue;
-    files.push({ name: f.name, type: kind, source: 'blob', blob: f });
-  }
-  files.sort((a,b) => a.name.localeCompare(b.name, 'de'));
-  return files;
-}
-
-async function getURL(fileEntry) {
-  if (fileEntry.source === 'blob') return URL.createObjectURL(fileEntry.blob);
-  const file = await fileEntry.handle.getFile();
-  return URL.createObjectURL(file);
-}
-
-async function verifyPermission(handle, write = false) {
-  const opts = { mode: write ? 'readwrite' : 'read' };
-  if ((await handle.queryPermission(opts)) === 'granted') return true;
-  if ((await handle.requestPermission(opts)) === 'granted') return true;
-  return false;
-}
-
-async function pickFolder() {
-  if (!window.showDirectoryPicker) {
-    alert('Ordner-Auswahl nicht unterstützt. Nutze „Dateien wählen".');
-    return;
-  }
-  try {
-    const handle = await window.showDirectoryPicker({ mode: 'read' });
-    await saveHandle(handle);
-    state.folderHandle = handle;
-    const files = await loadFromFolder(handle);
-    state.files = files;
-    updateFileCount();
-  } catch(e) {
-    if (e.name !== 'AbortError') console.error(e);
-  }
-}
-
-async function pickFiles() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.multiple = true;
-  input.accept = IMG_EXT.concat(VID_EXT).map(e => '.'+e).join(',');
-  input.onchange = async () => {
-    const files = await loadFromFileList(input.files);
-    state.files = files;
-    state.folderHandle = null;
-    updateFileCount();
-  };
-  input.click();
-}
-
-function updateFileCount() {
-  const fc = document.getElementById('file-count');
-  const imgs = state.files.filter(f => f.type === 'image').length;
-  const vids = state.files.filter(f => f.type === 'video').length;
-  fc.textContent = `${state.files.length} Dateien geladen (${imgs} Bilder, ${vids} Videos)`;
-  document.getElementById('status-files').textContent = `${state.files.length} Dateien`;
-}
-
-/* ============================================================
-   SLIDESHOW
-   ============================================================ */
-function getNextAnimIndex() {
-  switch(state.settings.animMode) {
-    case 'sequence':
-      state.animIndex = (state.animIndex % 30) + 1;
-      return state.animIndex;
-    case 'fixed':
-      return state.settings.fixedAnim;
-    case 'random':
+function apply3DEffect(mode, strength) {
+  const root = document.documentElement;
+  const s = parseFloat(strength) || 0;
+  switch(mode) {
+    case 'perspective':
+      root.style.setProperty('--tile-transform', `perspective(800px) rotateX(${s*1.5}deg) rotateY(${s}deg)`);
+      root.style.setProperty('--text-shadow', `${s*0.5}px ${s*0.5}px 2px rgba(0,0,0,0.2)`);
+      root.style.setProperty('--icon-transform', `rotateY(${s}deg) rotateX(${s*0.5}deg)`);
+      break;
+    case 'shadow3d':
+      root.style.setProperty('--tile-transform', `translateZ(0)`);
+      root.style.setProperty('--tile-shadow', `${s*2}px ${s*2}px ${s*4}px rgba(0,0,0,0.3), ${-s}px ${-s}px ${s*2}px rgba(255,255,255,0.2) inset`);
+      root.style.setProperty('--text-shadow', `${s}px ${s}px 0 rgba(0,0,0,0.3)`);
+      root.style.setProperty('--icon-transform', `scale(1.05)`);
+      break;
+    case 'floating':
+      root.style.setProperty('--tile-transform', `translateY(${-s*1.5}px) scale(${1 + s*0.01})`);
+      root.style.setProperty('--tile-shadow', `0 ${s*4}px ${s*6}px rgba(0,0,0,0.2)`);
+      root.style.setProperty('--text-shadow', `0 ${s}px ${s}px rgba(0,0,0,0.15)`);
+      root.style.setProperty('--icon-transform', `translateY(${-s*0.8}px)`);
+      break;
+    case 'skew':
+      root.style.setProperty('--tile-transform', `skewX(${s*0.8}deg) skewY(${s*0.2}deg)`);
+      root.style.setProperty('--text-shadow', `${s*0.3}px ${s*0.3}px 1px rgba(0,0,0,0.2)`);
+      root.style.setProperty('--icon-transform', `skewX(${-s*0.8}deg)`);
+      break;
+    case 'glow':
+      root.style.setProperty('--tile-transform', `perspective(600px) rotateY(${s*0.5}deg)`);
+      root.style.setProperty('--tile-shadow', `0 0 ${s*5}px rgba(255,255,255,0.4), 0 0 ${s*10}px var(--accent)`);
+      root.style.setProperty('--text-shadow', `0 0 ${s*2}px var(--accent)`);
+      root.style.setProperty('--icon-transform', `scale(1.1) rotateZ(${s}deg)`);
+      break;
     default:
-      return Math.floor(Math.random() * 30) + 1;
+      root.style.setProperty('--tile-transform', 'none');
+      root.style.setProperty('--tile-shadow', '0 8px 32px rgba(0,0,0,0.1)');
+      root.style.setProperty('--text-shadow', 'none');
+      root.style.setProperty('--icon-transform', 'none');
   }
 }
 
-function clearAnimClasses(el) {
-  for (let i = 1; i <= 30; i++) el.classList.remove('anim-' + String(i).padStart(2,'0'));
-  el.classList.remove('active', 'outgoing');
+const defaultLayout = [
+  { id: 'spotify', x: 10, y: 10, w: 80, h: 80 },
+  { id: 'amazon', x: 100, y: 10, w: 80, h: 80 },
+  { id: 'youtube', x: 190, y: 10, w: 80, h: 80 },
+  { id: 'calendar-icon', x: 280, y: 10, w: 80, h: 80 },
+  { id: 'settings', x: 370, y: 10, w: 80, h: 80 },
+  { id: 'weather', x: 10, y: 100, w: 280, h: 180 },
+  { id: 'forecast', x: 300, y: 100, w: 320, h: 180 },
+  { id: 'hourly', x: 10, y: 290, w: 610, h: 150 },
+  { id: 'calendar', x: 10, y: 450, w: 380, h: 340 },
+  { id: 'slideshow', x: 400, y: 450, w: 380, h: 340 }
+];
+
+let layout = JSON.parse(localStorage.getItem('dashboardLayout')) || defaultLayout;
+
+// Migration: calendar-icon nachträglich hinzufügen falls im gespeicherten Layout nicht vorhanden
+if (!layout.some(l => l.id === 'calendar-icon')) {
+  const settingsTile = layout.find(l => l.id === 'settings');
+  layout.push({
+    id: 'calendar-icon',
+    x: settingsTile ? Math.max(0, settingsTile.x - 90) : 280,
+    y: settingsTile ? settingsTile.y : 10,
+    w: 80, h: 80
+  });
+  localStorage.setItem('dashboardLayout', JSON.stringify(layout));
 }
 
-async function showSlide(idx) {
-  if (state.files.length === 0) return;
-  if (idx < 0) idx = state.files.length - 1;
-  if (idx >= state.files.length) idx = 0;
-  state.current = idx;
-  const file = state.files[idx];
+function saveLayout() {
+  const tiles = document.querySelectorAll('.tile');
+  layout = Array.from(tiles).map(tile => ({
+    id: tile.id,
+    x: parseFloat(tile.style.left) || 0,
+    y: parseFloat(tile.style.top) || 0,
+    w: parseFloat(tile.style.width) || 80,
+    h: parseFloat(tile.style.height) || 80
+  }));
+  localStorage.setItem('dashboardLayout', JSON.stringify(layout));
+}
 
-  const currentEl = document.getElementById('slide-' + state.activeSlide);
-  const nextKey = state.activeSlide === 'a' ? 'b' : 'a';
-  const nextEl = document.getElementById('slide-' + nextKey);
 
-  const animNum = getNextAnimIndex();
-  const animClass = 'anim-' + String(animNum).padStart(2,'0');
-  document.getElementById('status-anim').textContent = `Anim ${animNum}`;
+// === LAYOUT-PRESETS für 11"-Tablet ===
+const LAYOUT_PRESETS = {
+  // === HORIZONTAL (Querformat) ===
+  'h1': { // Kalender groß — links 60%, Rest rechts gestapelt
+    name: 'Kalender groß',
+    items: [
+      { id: 'spotify',  x: 0.62, y: 0.01, w: 0.08, h: 0.10 },
+      { id: 'amazon',   x: 0.71, y: 0.01, w: 0.08, h: 0.10 },
+      { id: 'youtube',  x: 0.80, y: 0.01, w: 0.08, h: 0.10 },
+      { id: 'settings', x: 0.89, y: 0.01, w: 0.08, h: 0.10 },
+      { id: 'calendar', x: 0.01, y: 0.01, w: 0.60, h: 0.98 },
+      { id: 'weather',  x: 0.62, y: 0.13, w: 0.18, h: 0.30 },
+      { id: 'forecast', x: 0.81, y: 0.13, w: 0.18, h: 0.30 },
+      { id: 'hourly',   x: 0.62, y: 0.45, w: 0.37, h: 0.20 },
+      { id: 'slideshow',x: 0.62, y: 0.67, w: 0.37, h: 0.32 },
+    ]
+  },
+  'h2': { // Wetter groß — Wetter+Stündlich oben breit
+    name: 'Wetter groß',
+    items: [
+      { id: 'spotify',  x: 0.78, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'amazon',   x: 0.84, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'youtube',  x: 0.90, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'settings', x: 0.96, y: 0.01, w: 0.04, h: 0.07 },
+      { id: 'weather',  x: 0.01, y: 0.01, w: 0.30, h: 0.45 },
+      { id: 'forecast', x: 0.32, y: 0.01, w: 0.45, h: 0.45 },
+      { id: 'hourly',   x: 0.01, y: 0.47, w: 0.99, h: 0.18 },
+      { id: 'calendar', x: 0.01, y: 0.66, w: 0.49, h: 0.33 },
+      { id: 'slideshow',x: 0.51, y: 0.66, w: 0.48, h: 0.33 },
+    ]
+  },
+  'h3': { // Slideshow groß — Bild dominiert links
+    name: 'Slideshow groß',
+    items: [
+      { id: 'spotify',  x: 0.78, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'amazon',   x: 0.84, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'youtube',  x: 0.90, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'settings', x: 0.96, y: 0.01, w: 0.04, h: 0.07 },
+      { id: 'slideshow',x: 0.01, y: 0.01, w: 0.65, h: 0.75 },
+      { id: 'calendar', x: 0.67, y: 0.10, w: 0.32, h: 0.65 },
+      { id: 'weather',  x: 0.01, y: 0.77, w: 0.32, h: 0.22 },
+      { id: 'forecast', x: 0.34, y: 0.77, w: 0.32, h: 0.22 },
+      { id: 'hourly',   x: 0.67, y: 0.77, w: 0.32, h: 0.22 },
+    ]
+  },
+  'h4': { // Symmetrisch 3×2 Grid
+    name: 'Symmetrisch 3×2',
+    items: [
+      { id: 'spotify',  x: 0.78, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'amazon',   x: 0.84, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'youtube',  x: 0.90, y: 0.01, w: 0.05, h: 0.07 },
+      { id: 'settings', x: 0.96, y: 0.01, w: 0.04, h: 0.07 },
+      { id: 'weather',  x: 0.01, y: 0.10, w: 0.32, h: 0.43 },
+      { id: 'forecast', x: 0.34, y: 0.10, w: 0.32, h: 0.43 },
+      { id: 'calendar', x: 0.67, y: 0.10, w: 0.32, h: 0.43 },
+      { id: 'hourly',   x: 0.01, y: 0.55, w: 0.32, h: 0.44 },
+      { id: 'slideshow',x: 0.34, y: 0.55, w: 0.65, h: 0.44 },
+    ]
+  },
+  'h5': { // Info-Cockpit — viel Info, kompakt
+    name: 'Info-Cockpit',
+    items: [
+      { id: 'weather',  x: 0.01, y: 0.01, w: 0.20, h: 0.30 },
+      { id: 'forecast', x: 0.22, y: 0.01, w: 0.40, h: 0.30 },
+      { id: 'spotify',  x: 0.63, y: 0.01, w: 0.07, h: 0.14 },
+      { id: 'amazon',   x: 0.71, y: 0.01, w: 0.07, h: 0.14 },
+      { id: 'youtube',  x: 0.79, y: 0.01, w: 0.07, h: 0.14 },
+      { id: 'settings', x: 0.87, y: 0.01, w: 0.12, h: 0.14 },
+      { id: 'slideshow',x: 0.63, y: 0.16, w: 0.36, h: 0.45 },
+      { id: 'hourly',   x: 0.01, y: 0.32, w: 0.61, h: 0.18 },
+      { id: 'calendar', x: 0.01, y: 0.51, w: 0.61, h: 0.48 },
+      { id: 'forecast', x: 0.63, y: 0.62, w: 0.36, h: 0.37 },
+    ]
+  },
+  
+  // === VERTIKAL (Hochformat) ===
+  'v1': { // Kalender oben
+    name: 'Kalender oben',
+    items: [
+      { id: 'spotify',  x: 0.01, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'amazon',   x: 0.26, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'youtube',  x: 0.51, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'settings', x: 0.76, y: 0.01, w: 0.23, h: 0.06 },
+      { id: 'calendar', x: 0.01, y: 0.08, w: 0.98, h: 0.42 },
+      { id: 'weather',  x: 0.01, y: 0.51, w: 0.49, h: 0.18 },
+      { id: 'forecast', x: 0.51, y: 0.51, w: 0.48, h: 0.18 },
+      { id: 'hourly',   x: 0.01, y: 0.70, w: 0.98, h: 0.13 },
+      { id: 'slideshow',x: 0.01, y: 0.84, w: 0.98, h: 0.15 },
+    ]
+  },
+  'v2': { // Wetter oben
+    name: 'Wetter oben',
+    items: [
+      { id: 'spotify',  x: 0.01, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'amazon',   x: 0.26, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'youtube',  x: 0.51, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'settings', x: 0.76, y: 0.01, w: 0.23, h: 0.06 },
+      { id: 'weather',  x: 0.01, y: 0.08, w: 0.98, h: 0.22 },
+      { id: 'forecast', x: 0.01, y: 0.31, w: 0.98, h: 0.18 },
+      { id: 'hourly',   x: 0.01, y: 0.50, w: 0.98, h: 0.14 },
+      { id: 'calendar', x: 0.01, y: 0.65, w: 0.98, h: 0.20 },
+      { id: 'slideshow',x: 0.01, y: 0.86, w: 0.98, h: 0.13 },
+    ]
+  },
+  'v3': { // Slideshow oben
+    name: 'Slideshow oben',
+    items: [
+      { id: 'spotify',  x: 0.01, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'amazon',   x: 0.26, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'youtube',  x: 0.51, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'settings', x: 0.76, y: 0.01, w: 0.23, h: 0.06 },
+      { id: 'slideshow',x: 0.01, y: 0.08, w: 0.98, h: 0.40 },
+      { id: 'weather',  x: 0.01, y: 0.49, w: 0.49, h: 0.18 },
+      { id: 'forecast', x: 0.51, y: 0.49, w: 0.48, h: 0.18 },
+      { id: 'hourly',   x: 0.01, y: 0.68, w: 0.98, h: 0.13 },
+      { id: 'calendar', x: 0.01, y: 0.82, w: 0.98, h: 0.17 },
+    ]
+  },
+  'v4': { // Stack vertikal — alles untereinander
+    name: 'Stack vertikal',
+    items: [
+      { id: 'spotify',  x: 0.01, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'amazon',   x: 0.26, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'youtube',  x: 0.51, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'settings', x: 0.76, y: 0.01, w: 0.23, h: 0.06 },
+      { id: 'weather',  x: 0.01, y: 0.08, w: 0.98, h: 0.18 },
+      { id: 'forecast', x: 0.01, y: 0.27, w: 0.98, h: 0.16 },
+      { id: 'hourly',   x: 0.01, y: 0.44, w: 0.98, h: 0.13 },
+      { id: 'calendar', x: 0.01, y: 0.58, w: 0.98, h: 0.20 },
+      { id: 'slideshow',x: 0.01, y: 0.79, w: 0.98, h: 0.20 },
+    ]
+  },
+  'v5': { // Familien-Wand — Slideshow groß, Rest kompakt
+    name: 'Familien-Wand',
+    items: [
+      { id: 'spotify',  x: 0.01, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'amazon',   x: 0.26, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'youtube',  x: 0.51, y: 0.01, w: 0.22, h: 0.06 },
+      { id: 'settings', x: 0.76, y: 0.01, w: 0.23, h: 0.06 },
+      { id: 'slideshow',x: 0.01, y: 0.08, w: 0.98, h: 0.50 },
+      { id: 'calendar', x: 0.01, y: 0.59, w: 0.98, h: 0.25 },
+      { id: 'weather',  x: 0.01, y: 0.85, w: 0.32, h: 0.14 },
+      { id: 'forecast', x: 0.34, y: 0.85, w: 0.32, h: 0.14 },
+      { id: 'hourly',   x: 0.67, y: 0.85, w: 0.32, h: 0.14 },
+    ]
+  },
+};
 
-  nextEl.innerHTML = '';
+function applyLayoutPreset(presetKey) {
+  const preset = LAYOUT_PRESETS[presetKey];
+  if (!preset) return;
+  
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  
+  // Existing IDs sammeln
+  const existingIds = new Set(layout.map(l => l.id));
+  
+  // Für jeden Eintrag im Preset: prüfen ob diese Kachel-ID existiert
+  // Wenn ja: Position übernehmen
+  // Wenn nicht: hinzufügen (z.B. wenn vorher rausgenommen)
+  const newLayout = [];
+  preset.items.forEach(item => {
+    if (existingIds.has(item.id) || ['spotify','amazon','youtube','settings','weather','forecast','hourly','calendar','slideshow'].includes(item.id)) {
+      newLayout.push({
+        id: item.id,
+        x: Math.round(item.x * W),
+        y: Math.round(item.y * H),
+        w: Math.round(item.w * W),
+        h: Math.round(item.h * H),
+      });
+    }
+  });
+
+  // calendar-icon erhalten falls im Preset nicht definiert
+  if (!newLayout.some(l => l.id === 'calendar-icon')) {
+    const old = layout.find(l => l.id === 'calendar-icon');
+    const set = newLayout.find(l => l.id === 'settings');
+    newLayout.push(old || {
+      id: 'calendar-icon',
+      x: set ? Math.max(0, set.x - 90) : 280,
+      y: set ? set.y : 10,
+      w: 80, h: 80
+    });
+  }
+  
+  layout = newLayout;
+  localStorage.setItem('dashboardLayout', JSON.stringify(layout));
+  localStorage.setItem('activeLayoutPreset', presetKey);
+  
+  createTiles();
+  loadSlides();
+  updateWeather();
+  renderCalendar();
+  
+  // Active-Status der Buttons
+  document.querySelectorAll('.layout-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.layout === presetKey);
+  });
+}
+
+// Event-Listener für alle Layout-Buttons
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('layout-btn')) {
+    applyLayoutPreset(e.target.dataset.layout);
+  }
+});
+
+// Beim Laden: aktiven Preset markieren
+function markActivePreset() {
+  const active = localStorage.getItem('activeLayoutPreset');
+  if (active) {
+    document.querySelectorAll('.layout-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.layout === active);
+    });
+  }
+}
+
+function getResizeHandlesHTML() {
+  return `
+    <div class="resize-handle-edge top"></div>
+    <div class="resize-handle-edge bottom"></div>
+    <div class="resize-handle-edge left"></div>
+    <div class="resize-handle-edge right"></div>
+    <div class="resize-handle-corner tl"></div>
+    <div class="resize-handle-corner tr"></div>
+    <div class="resize-handle-corner bl"></div>
+    <div class="resize-handle-corner br"></div>
+  `;
+}
+
+function createTiles() {
+  const container = document.getElementById('dashboard');
+  container.innerHTML = '';
+  const hidden = getHiddenTiles();
+  layout.forEach(item => {
+    const tile = document.createElement('div');
+    tile.className = 'tile' + (item.id !== 'slideshow' ? ' frameless' : '');
+    tile.id = item.id;
+    tile.style.left = item.x + 'px';
+    tile.style.top = item.y + 'px';
+    tile.style.width = item.w + 'px';
+    tile.style.height = item.h + 'px';
+    if (hidden.includes(item.id)) tile.style.display = 'none';
+    if (['spotify','amazon','youtube','settings','calendar-icon'].includes(item.id)) {
+      tile.innerHTML = `<div class="tile-content icon-tile-content"></div>` + getResizeHandlesHTML();
+    } else {
+      tile.innerHTML = `<div class="tile-header"></div><div class="tile-content"></div>` + getResizeHandlesHTML();
+    }
+    container.appendChild(tile);
+    fillTileContent(item.id, tile);
+  });
+  initInteract();
+}
+
+/* === KACHEL-SICHTBARKEIT === */
+const TILE_LABELS = {
+  spotify:  '🎵 Spotify',
+  amazon:   '🛒 Amazon',
+  youtube:  '▶️ YouTube',
+  'calendar-icon': '📅 Kalender-Icon (Vollbild)',
+  settings: '⚙️ Einstellungen',
+  weather:  '🌤️ Wetter aktuell',
+  forecast: '📅 5-Tage-Vorhersage',
+  hourly:   '🕐 Stündlich',
+  calendar: '📆 Kalender-Kachel',
+  slideshow:'🖼️ Slideshow'
+};
+const ALL_TILES = ['spotify','amazon','youtube','calendar-icon','settings','weather','forecast','hourly','calendar','slideshow'];
+
+function getHiddenTiles() {
+  try { return JSON.parse(localStorage.getItem('hiddenTiles') || '[]'); } catch(e) { return []; }
+}
+function saveHiddenTiles(arr) {
+  localStorage.setItem('hiddenTiles', JSON.stringify(arr));
+}
+
+function buildTileVisibilityUI() {
+  const list = document.getElementById('tile-visibility-list');
+  if (!list) return;
+  const hidden = getHiddenTiles();
+  list.innerHTML = ALL_TILES.map(id => `
+    <div class="tile-toggle-row">
+      <span class="tile-toggle-label">${TILE_LABELS[id] || id}</span>
+      <label class="tile-toggle-switch">
+        <input type="checkbox" data-tile-id="${id}" ${hidden.includes(id) ? '' : 'checked'}>
+        <span class="slider"></span>
+      </label>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('input[data-tile-id]').forEach(cb => {
+    cb.addEventListener('change', function() {
+      const id = this.dataset.tileId;
+      let hidden = getHiddenTiles();
+      if (this.checked) {
+        hidden = hidden.filter(h => h !== id);
+      } else {
+        if (!hidden.includes(id)) hidden.push(id);
+      }
+      saveHiddenTiles(hidden);
+      // Sofort anwenden — kein Reload nötig
+      const tile = document.getElementById(id);
+      if (tile) tile.style.display = this.checked ? '' : 'none';
+    });
+  });
+}
+
+function fillTileContent(id, tile) {
+  const content = tile.querySelector('.tile-content');
+  const header = tile.querySelector('.tile-header');
+  switch(id) {
+    case 'spotify':
+      content.innerHTML = '<i class="fab fa-spotify" style="color:#1DB954"></i>';
+      tile.setAttribute('data-app', 'spotify');
+      break;
+    case 'amazon':
+      content.innerHTML = '<i class="fab fa-amazon" style="color:#FF9900"></i>';
+      tile.setAttribute('data-app', 'amazon');
+      break;
+    case 'youtube':
+      content.innerHTML = '<i class="fab fa-youtube" style="color:#FF0000"></i>';
+      tile.setAttribute('data-app', 'youtube');
+      break;
+    case 'settings':
+      content.innerHTML = '<i class="fas fa-cog"></i>';
+      break;
+    case 'calendar-icon':
+      content.innerHTML = '<i class="fas fa-calendar-days" style="color:#4f9eff"></i>';
+      break;
+    case 'weather':
+      header.innerHTML = '<i class="fas fa-cloud-sun"></i> Aktuell';
+      content.innerHTML = `<div class="weather-now"><div class="temp" id="current-temp">--°</div><div class="details" id="current-details"></div></div><div id="current-icon" style="font-size:2rem;"></div>`;
+      break;
+    case 'forecast':
+      header.innerHTML = '<i class="fas fa-calendar-alt"></i> 5 Tage';
+      content.innerHTML = '<div class="forecast-row" id="forecast-container"></div>';
+      break;
+    case 'hourly':
+      header.innerHTML = '<i class="fas fa-clock"></i> Stündlich';
+      content.innerHTML = '<div class="hourly-scroll" id="hourly-container"></div>';
+      break;
+    case 'calendar':
+      header.innerHTML = '<i class="fas fa-calendar"></i> Termine';
+      content.innerHTML = `
+        <div class="calendar-nav">
+          <button id="cal-prev" class="cal-nav-btn"><i class="fas fa-chevron-left"></i></button>
+          <span id="cal-title">Monat</span>
+          <button id="cal-today" class="cal-today-btn">Heute</button>
+          <button id="cal-next" class="cal-nav-btn"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="calendar-grid" id="calendar-grid"></div>
+        <div class="event-details" id="event-details"></div>
+      `;
+      break;
+    case 'slideshow':
+      header.innerHTML = '<i class="fas fa-images"></i> Slideshow';
+      content.innerHTML = `
+        <div class="slideshow-container slide-anim-fade" id="slideshow-container">
+          <div class="slideshow-controls">
+            <button id="prev-slide"><i class="fas fa-chevron-left"></i></button>
+            <button id="play-pause"><i class="fas fa-pause"></i></button>
+            <button id="next-slide"><i class="fas fa-chevron-right"></i></button>
+            <button id="sound-toggle" title="Video-Ton"><i class="fas fa-volume-xmark"></i></button>
+            <button id="delete-slide"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        <div class="upload-area">
+          <label for="file-upload" class="upload-btn"><i class="fas fa-upload"></i> Dateien</label>
+          <input type="file" id="file-upload" multiple accept="image/*,video/*">
+          <label for="folder-upload" class="upload-btn"><i class="fas fa-folder-open"></i> Ordner</label>
+          <input type="file" id="folder-upload" webkitdirectory directory multiple>
+          <span id="image-count">0 Medien</span>
+        </div>
+      `;
+      break;
+  }
+}
+
+function initInteract() {
+  interact('.tile').draggable({
+    allowFrom: '.tile-header, .icon-tile-content, .tile-content',
+    ignoreFrom: '.resize-handle, button, input, select, a, .cal-nav-btn, .upload-btn, .day, .slideshow-controls',
+    inertia: false,
+    autoScroll: false,
+    modifiers: [interact.modifiers.restrict({ restriction: 'parent', endOnly: true })],
+    listeners: {
+      start(event) { event.target.classList.add('dragging'); },
+      move(event) {
+        const target = event.target;
+        const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+        const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+        target.style.transform = `translate(${x}px, ${y}px)`;
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+      },
+      end(event) {
+        const target = event.target;
+        target.classList.remove('dragging');
+        const x = parseFloat(target.getAttribute('data-x')) || 0;
+        const y = parseFloat(target.getAttribute('data-y')) || 0;
+        target.style.transform = '';
+        target.style.left = (parseFloat(target.style.left) + x) + 'px';
+        target.style.top = (parseFloat(target.style.top) + y) + 'px';
+        target.setAttribute('data-x', 0);
+        target.setAttribute('data-y', 0);
+        saveLayout();
+      }
+    }
+  }).resizable({
+    edges: { top: true, bottom: true, left: true, right: true },
+    inertia: false,
+    modifiers: [
+      interact.modifiers.restrict({ restriction: 'parent', endOnly: true }),
+      interact.modifiers.restrictSize({ min: { width: 80, height: 80 } })
+    ],
+    listeners: {
+      start(event) { event.target.classList.add('resizing'); },
+      move(event) {
+        const target = event.target;
+        let x = (parseFloat(target.getAttribute('data-x')) || 0);
+        let y = (parseFloat(target.getAttribute('data-y')) || 0);
+        target.style.width = event.rect.width + 'px';
+        target.style.height = event.rect.height + 'px';
+        x += event.deltaRect.left;
+        y += event.deltaRect.top;
+        target.style.transform = `translate(${x}px, ${y}px)`;
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+      },
+      end(event) {
+        event.target.classList.remove('resizing');
+        const target = event.target;
+        const x = parseFloat(target.getAttribute('data-x')) || 0;
+        const y = parseFloat(target.getAttribute('data-y')) || 0;
+        target.style.transform = '';
+        target.style.left = (parseFloat(target.style.left) + x) + 'px';
+        target.style.top = (parseFloat(target.style.top) + y) + 'px';
+        target.setAttribute('data-x', 0);
+        target.setAttribute('data-y', 0);
+        saveLayout();
+      }
+    }
+  });
+}
+
+document.getElementById('dashboard').addEventListener('click', function(e) {
+  const tile = e.target.closest('.tile');
+  if (!tile) return;
+  bringToFront(tile);
+  if (tile.id === 'settings') {
+    document.getElementById('settings-panel').classList.add('open');
+    buildTileVisibilityUI();
+    return;
+  }
+  if (tile.id === 'calendar-icon') {
+    openCalendarFullscreen();
+    return;
+  }
+  const app = tile.getAttribute('data-app');
+  if (app) {
+    const fallbacks = { spotify: 'https://open.spotify.com', amazon: 'https://music.amazon.de', youtube: 'https://youtube.com' };
+    window.open(fallbacks[app], '_blank');
+  }
+});
+
+// ---------- WEATHER ----------
+async function fetchWeather(lat, lon) {
+  // Wenn keine Koordinaten übergeben: aus localStorage holen
+  if (lat === undefined || lon === undefined) {
+    const saved = localStorage.getItem('weatherLocation');
+    if (saved) {
+      try {
+        const loc = JSON.parse(saved);
+        lat = loc.lat;
+        lon = loc.lon;
+      } catch(e) {
+        lat = 51.2277; lon = 6.7735; // Fallback Düsseldorf
+      }
+    } else {
+      lat = 51.2277; lon = 6.7735;
+    }
+  }
   try {
-    const url = await getURL(file);
-    if (file.type === 'image') {
-      const img = document.createElement('img');
-      img.src = url;
-      img.onerror = () => console.warn('Bild-Fehler:', file.name);
-      nextEl.appendChild(img);
-    } else if (file.type === 'video') {
-      const vid = document.createElement('video');
-      vid.src = url;
-      vid.autoplay = true;
-      vid.muted = !state.settings.sound;
-      vid.playsInline = true;
-      vid.loop = false;
-      vid.onended = () => { if (!state.paused) next(); };
-      vid.onerror = () => { console.warn('Video-Fehler:', file.name); if (!state.paused) next(); };
-      nextEl.appendChild(vid);
-    }
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=weather_code,temperature_2m,relative_humidity_2m,wind_speed_10m&hourly=weather_code,temperature_2m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5`);
+    return await res.json();
+  } catch(e) { console.error(e); return null; }
+}
+
+// Stadt suchen über Open-Meteo Geocoding API
+async function searchLocation(query) {
+  try {
+    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=de&format=json`);
+    const data = await res.json();
+    return data.results || [];
   } catch(e) {
-    console.error('Datei nicht ladbar:', file.name, e);
-    if (!state.paused) setTimeout(next, 200);
-    return;
-  }
-
-  clearAnimClasses(currentEl);
-  clearAnimClasses(nextEl);
-  void nextEl.offsetWidth;
-
-  nextEl.classList.add(animClass, 'active');
-  currentEl.classList.add(animClass, 'outgoing');
-
-  state.activeSlide = nextKey;
-
-  clearTimeout(state.timer);
-  if (!state.paused) {
-    if (file.type === 'video') state.timer = setTimeout(next, 60000);
-    else state.timer = setTimeout(next, state.settings.duration * 1000);
-  }
-
-  setTimeout(() => {
-    const oldMedia = currentEl.querySelector('img, video');
-    if (oldMedia) { try { URL.revokeObjectURL(oldMedia.src); } catch(e) {} }
-  }, 2000);
-}
-
-function next() { showSlide(state.current + 1); }
-function prev() { showSlide(state.current - 1); }
-
-function togglePause() {
-  state.paused = !state.paused;
-  const ps = document.getElementById('play-state');
-  ps.textContent = state.paused ? '⏸' : '▶';
-  ps.classList.add('show');
-  setTimeout(() => ps.classList.remove('show'), 900);
-
-  if (state.paused) {
-    clearTimeout(state.timer);
-    const vid = document.querySelector('.slide.active video');
-    if (vid) vid.pause();
-  } else {
-    const vid = document.querySelector('.slide.active video');
-    if (vid) vid.play();
-    else state.timer = setTimeout(next, state.settings.duration * 1000);
+    console.error('Standort-Suche fehlgeschlagen:', e);
+    return [];
   }
 }
 
-/* ============================================================
-   TOUCH HANDLING
-   ============================================================ */
-let touchStart = null;
-let longPressTimer = null;
-let longPressEl = null;
-let lastTapTime = 0;
-let lastTapX = 0;
-let lastTapY = 0;
-
-function showRipple(zone, x, y) {
-  const r = zone.getBoundingClientRect();
-  const ripple = document.createElement('div');
-  ripple.className = 'ripple';
-  ripple.style.left = (x - r.left) + 'px';
-  ripple.style.top = (y - r.top) + 'px';
-  ripple.style.width = '60px';
-  ripple.style.height = '60px';
-  zone.appendChild(ripple);
-  setTimeout(() => ripple.remove(), 600);
-}
-
-function showEdgeHint(side) {
-  const el = document.getElementById('hint-' + side);
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 500);
-}
-
-function showLongPressRing(x, y) {
-  const ring = document.createElement('div');
-  ring.className = 'longpress-ring';
-  ring.style.left = x + 'px';
-  ring.style.top = y + 'px';
-  document.body.appendChild(ring);
-  longPressEl = ring;
-}
-function clearLongPressRing() {
-  if (longPressEl) { longPressEl.remove(); longPressEl = null; }
-}
-
-function handleTap(zone, x, y) {
-  const now = Date.now();
-  const dx = Math.abs(x - lastTapX);
-  const dy = Math.abs(y - lastTapY);
-
-  // Doppel-Tap = Fullscreen
-  if (now - lastTapTime < CONFIG.doubleTapMs && dx < 80 && dy < 80) {
-    toggleFullscreen();
-    lastTapTime = 0;
-    return;
-  }
-  lastTapTime = now;
-  lastTapX = x; lastTapY = y;
-
-  // Verzögert ausführen, damit Doppel-Tap erkennbar bleibt
-  setTimeout(() => {
-    if (Date.now() - lastTapTime < CONFIG.doubleTapMs - 30) return;
-    if (zone === 'left')  { prev(); showEdgeHint('left'); }
-    if (zone === 'right') { next(); showEdgeHint('right'); }
-    if (zone === 'mid')   togglePause();
-  }, CONFIG.doubleTapMs);
-}
-
-function attachTouch(el, zoneName) {
-  el.addEventListener('touchstart', (e) => {
-    if (e.touches.length > 1) return;
-    const t = e.touches[0];
-    touchStart = { x: t.clientX, y: t.clientY, t: Date.now(), zone: zoneName };
-    showRipple(el, t.clientX, t.clientY);
-    showLongPressRing(t.clientX, t.clientY);
-    longPressTimer = setTimeout(() => {
-      touchStart = null;
-      clearLongPressRing();
-      openPanel();
-    }, CONFIG.longPressMs);
-  }, { passive: true });
-
-  el.addEventListener('touchmove', (e) => {
-    if (!touchStart) return;
-    const t = e.touches[0];
-    const dx = t.clientX - touchStart.x;
-    const dy = t.clientY - touchStart.y;
-    if (Math.abs(dx) > 12 || Math.abs(dy) > 12) {
-      clearTimeout(longPressTimer);
-      clearLongPressRing();
+function displayCurrentLocation() {
+  const el = document.getElementById('current-location');
+  if (!el) return;
+  const saved = localStorage.getItem('weatherLocation');
+  if (saved) {
+    try {
+      const loc = JSON.parse(saved);
+      el.innerHTML = `<strong>${loc.name}</strong>${loc.country ? ', ' + loc.country : ''}<br><small style="opacity:0.7;">${loc.lat.toFixed(4)}, ${loc.lon.toFixed(4)}</small>`;
+    } catch(e) {
+      el.textContent = 'Düsseldorf (Standard)';
     }
-  }, { passive: true });
+  } else {
+    el.textContent = 'Düsseldorf (Standard)';
+  }
+}
 
-  el.addEventListener('touchend', (e) => {
-    clearTimeout(longPressTimer);
-    clearLongPressRing();
-    if (!touchStart) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - touchStart.x;
-    const dy = t.clientY - touchStart.y;
-    const adx = Math.abs(dx), ady = Math.abs(dy);
-    const dt = Date.now() - touchStart.t;
+async function setLocation(lat, lon, name, country) {
+  const loc = { lat, lon, name, country };
+  localStorage.setItem('weatherLocation', JSON.stringify(loc));
+  displayCurrentLocation();
+  // Wetter neu laden
+  const data = await fetchWeather(lat, lon);
+  if (data) {
+    window._weatherCache = data;
+    updateWeather();
+  }
+  // Suchergebnisse leeren
+  const results = document.getElementById('location-results');
+  if (results) results.innerHTML = '';
+  const searchInput = document.getElementById('location-search');
+  if (searchInput) searchInput.value = '';
+}
 
-    // Swipe
-    if (adx > CONFIG.swipeThreshold && adx > ady) {
-      if (dx < 0) { next(); showEdgeHint('right'); }
-      else { prev(); showEdgeHint('left'); }
-      touchStart = null;
+// Event-Listener für Standort-Suche
+document.addEventListener('click', async function(e) {
+  if (e.target.closest('#location-search-btn')) {
+    const query = document.getElementById('location-search').value.trim();
+    if (!query) return;
+    
+    const results = document.getElementById('location-results');
+    results.innerHTML = '<small style="opacity:0.7;">⏳ Suche läuft...</small>';
+    
+    const locations = await searchLocation(query);
+    
+    if (locations.length === 0) {
+      results.innerHTML = '<small style="opacity:0.7; color:#fca5a5;">❌ Keine Treffer gefunden</small>';
       return;
     }
-    // Tap (kurz, kleine Bewegung)
-    if (dt < CONFIG.longPressMs && adx < 25 && ady < 25) {
-      handleTap(touchStart.zone, t.clientX, t.clientY);
+    
+    results.innerHTML = locations.map(loc => `
+      <div class="location-result-item" data-lat="${loc.latitude}" data-lon="${loc.longitude}" data-name="${loc.name}" data-country="${loc.country || ''}">
+        <strong>${loc.name}</strong>
+        <small>${loc.admin1 ? loc.admin1 + ', ' : ''}${loc.country || ''}</small>
+      </div>
+    `).join('');
+  }
+  
+  // Klick auf Suchergebnis
+  if (e.target.closest('.location-result-item')) {
+    const item = e.target.closest('.location-result-item');
+    setLocation(
+      parseFloat(item.dataset.lat),
+      parseFloat(item.dataset.lon),
+      item.dataset.name,
+      item.dataset.country
+    );
+  }
+  
+  // GPS-Button
+  if (e.target.closest('#use-gps')) {
+    if (!navigator.geolocation) {
+      alert('GPS wird von diesem Browser nicht unterstützt');
+      return;
     }
-    touchStart = null;
-  }, { passive: true });
+    navigator.geolocation.getCurrentPosition(
+      async pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        // Reverse-Geocoding für Stadtnamen
+        try {
+          const res = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&language=de&format=json`);
+          const data = await res.json();
+          const place = data.results && data.results[0];
+          setLocation(lat, lon, place ? place.name : 'GPS-Position', place ? place.country : '');
+        } catch(e) {
+          setLocation(lat, lon, 'GPS-Position', '');
+        }
+      },
+      err => {
+        alert('GPS-Standort konnte nicht ermittelt werden: ' + err.message);
+      },
+      { timeout: 10000, maximumAge: 60000 }
+    );
+  }
+});
 
-  el.addEventListener('touchcancel', () => {
-    clearTimeout(longPressTimer);
-    clearLongPressRing();
-    touchStart = null;
-  });
+// Enter-Taste in Suchfeld
+document.addEventListener('keydown', function(e) {
+  if (e.target.id === 'location-search' && e.key === 'Enter') {
+    document.getElementById('location-search-btn').click();
+  }
+});
+
+function weatherEmoji(code) {
+  // WMO Wetter-Code Standard (Open-Meteo)
+  if(code === 0) return '☀️';           // Klar
+  if(code === 1) return '🌤️';           // Überwiegend klar (Sonne mit wenig Wolken)
+  if(code === 2) return '⛅';            // Teilweise bewölkt
+  if(code === 3) return '☁️';           // Bedeckt
+  if(code === 45 || code === 48) return '🌫️'; // Nebel
+  if(code >= 51 && code <= 57) return '🌦️';   // Niesel
+  if(code >= 61 && code <= 67) return '🌧️';   // Regen
+  if(code >= 71 && code <= 77) return '🌨️';   // Schnee
+  if(code >= 80 && code <= 82) return '🌧️';   // Regenschauer
+  if(code >= 85 && code <= 86) return '🌨️';   // Schneeschauer
+  if(code >= 95) return '⛈️';                  // Gewitter
+  return '🌥️';
 }
 
-attachTouch(document.getElementById('tz-left'), 'left');
-attachTouch(document.getElementById('tz-mid'), 'mid');
-attachTouch(document.getElementById('tz-right'), 'right');
-
-/* Fullscreen */
-function toggleFullscreen() {
-  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
-  else document.exitFullscreen?.();
+function weatherDesc(code) {
+  if(code === 0) return 'Sonnig';
+  if(code === 1) return 'Überwiegend sonnig';
+  if(code === 2) return 'Teilweise bewölkt';
+  if(code === 3) return 'Bedeckt';
+  if(code === 45 || code === 48) return 'Nebel';
+  if(code >= 51 && code <= 57) return 'Nieselregen';
+  if(code >= 61 && code <= 67) return 'Regen';
+  if(code >= 71 && code <= 77) return 'Schnee';
+  if(code >= 80 && code <= 82) return 'Regenschauer';
+  if(code >= 85 && code <= 86) return 'Schneeschauer';
+  if(code >= 95) return 'Gewitter';
+  return 'Bewölkt';
 }
-
-/* === Kiosk-Härtung: Kontextmenü, Scroll, Zoom verhindern === */
-document.addEventListener('contextmenu', e => e.preventDefault());
-document.addEventListener('selectstart', e => e.preventDefault());
-document.addEventListener('dragstart', e => e.preventDefault());
-document.addEventListener('gesturestart', e => e.preventDefault());
-document.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
-
-/* ============================================================
-   UHR & WETTER
-   ============================================================ */
-function updateClock() {
-  const now = new Date();
-  document.getElementById('clock').textContent =
-    now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-  document.getElementById('date').textContent =
-    now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-}
-
-const WEATHER_ICONS = {
-  '01d':'☀️','01n':'🌙','02d':'⛅','02n':'☁️','03d':'☁️','03n':'☁️',
-  '04d':'☁️','04n':'☁️','09d':'🌧️','09n':'🌧️','10d':'🌦️','10n':'🌧️',
-  '11d':'⛈️','11n':'⛈️','13d':'❄️','13n':'❄️','50d':'🌫️','50n':'🌫️'
-};
-function icon(code) { return WEATHER_ICONS[code] || '🌡️'; }
 
 async function updateWeather() {
-  if (!state.settings.weather) {
-    document.querySelector('.weather').style.display = 'none';
-    return;
-  }
-  document.querySelector('.weather').style.display = '';
+  let data;
   try {
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(CONFIG.weatherCity)}&appid=${CONFIG.weatherKey}&units=metric&lang=${CONFIG.weatherLang}`;
-    const r = await fetch(url);
-    if (!r.ok) throw new Error('Wetter ' + r.status);
-    const d = await r.json();
-    document.getElementById('weather-current').innerHTML =
-      `<span class="icon">${icon(d.weather[0].icon)}</span><span>${Math.round(d.main.temp)}°</span>`;
-    document.getElementById('weather-desc').textContent =
-      `${d.weather[0].description} · gefühlt ${Math.round(d.main.feels_like)}°`;
+    data = window._weatherCache || await fetchWeather();
+  } catch(e) { return; }
+  // Robust gegen leere / fehlerhafte API-Antworten (Netzausfall, Rate-Limit)
+  if(!data || !data.current) return;
+  window._weatherCache = data;
+  
+  const tempEl = document.getElementById('current-temp');
+  if(tempEl) tempEl.textContent = Math.round(data.current.temperature_2m) + '°';
+  
+  const detailsEl = document.getElementById('current-details');
+  if(detailsEl) detailsEl.innerHTML = `${weatherDesc(data.current.weather_code)}<br>💧 ${data.current.relative_humidity_2m}% · 💨 ${Math.round(data.current.wind_speed_10m)} km/h`;
+  
+  const iconEl = document.getElementById('current-icon');
+  if(iconEl) iconEl.textContent = weatherEmoji(data.current.weather_code);
+  
+  const fc = document.getElementById('forecast-container');
+  if(fc && data.daily && data.daily.time) {
+    fc.innerHTML = '';
+    data.daily.time.forEach((day,i) => {
+      const d = new Date(day);
+      const div = document.createElement('div');
+      div.className = 'forecast-day' + (i===0?' active':'');
+      div.innerHTML = `<div>${d.toLocaleDateString('de-DE',{weekday:'short'})}</div><div>${weatherEmoji(data.daily.weather_code[i])}</div><div>${Math.round(data.daily.temperature_2m_max[i])}°/${Math.round(data.daily.temperature_2m_min[i])}°</div>`;
+      fc.appendChild(div);
+    });
+  }
+  
+  const hc = document.getElementById('hourly-container');
+  if(hc && data.hourly && data.hourly.time) {
+    hc.innerHTML = '';
+    data.hourly.time.slice(0,24).forEach((t,i) => {
+      const time = new Date(t);
+      const div = document.createElement('div');
+      div.className = 'hourly-item';
+      div.innerHTML = `<div>${time.getHours()}:00</div><div>${weatherEmoji(data.hourly.weather_code[i])}</div><div>${Math.round(data.hourly.temperature_2m[i])}°</div>`;
+      hc.appendChild(div);
+    });
+  }
+}
 
-    const fUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(CONFIG.weatherCity)}&appid=${CONFIG.weatherKey}&units=metric&lang=${CONFIG.weatherLang}`;
-    const fr = await fetch(fUrl);
-    if (fr.ok) {
-      const fd = await fr.json();
-      const days = {};
-      for (const item of fd.list) {
-        const date = new Date(item.dt * 1000);
-        const key = date.toISOString().slice(0,10);
-        if (!days[key] && date.getHours() >= 11 && date.getHours() <= 14) days[key] = item;
-      }
-      const todayKey = new Date().toISOString().slice(0,10);
-      const dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
-      const html = Object.entries(days)
-        .filter(([k]) => k !== todayKey).slice(0,3)
-        .map(([k, item]) => {
-          const dn = dayNames[new Date(k).getDay()];
-          return `<div class="fc-item"><span class="fc-day">${dn}</span><span class="fc-icon">${icon(item.weather[0].icon)}</span><span>${Math.round(item.main.temp)}°</span></div>`;
-        }).join('');
-      document.getElementById('forecast').innerHTML = html;
+// ---------- CALENDAR mit CORS-Fallback ----------
+let calendarEvents = [];
+function assignEventColor(index) {
+  const palette = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63','#00bcd4','#ff5722'];
+  return palette[index % palette.length];
+}
+
+// Aktueller Anzeigemonat (kann von "heute" abweichen wenn User navigiert)
+let calendarViewDate = new Date();
+
+function renderCalendar() {
+  renderCalendarInto('calendar-grid', 'cal-title', 'event-details');
+  if (document.getElementById('cal-fullscreen').classList.contains('open')) {
+    renderCalendarInto('cal-fs-grid', 'cal-fs-title', 'cal-fs-events');
+  }
+}
+
+function renderCalendarInto(gridId, titleId, detailsId) {
+  const grid = document.getElementById(gridId);
+  if(!grid) return;
+  grid.innerHTML = '';
+  ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(d => {
+    const div = document.createElement('div');
+    div.className = 'day-header cal-weekday';
+    div.textContent = d;
+    grid.appendChild(div);
+  });
+  
+  const today = new Date();
+  const year = calendarViewDate.getFullYear();
+  const month = calendarViewDate.getMonth();
+  
+  const monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  const titleEl = document.getElementById(titleId);
+  if (titleEl) titleEl.textContent = `${monthNames[month]} ${year}`;
+  
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const offset = (firstDay + 6) % 7;
+  for(let i=0; i<offset; i++) grid.appendChild(document.createElement('div'));
+  
+  for(let d=1; d<=daysInMonth; d++) {
+    const dayDiv = document.createElement('div');
+    dayDiv.className = 'day';
+    dayDiv.textContent = d;
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const eventsOnDay = calendarEvents.filter(e => e.start.startsWith(dateStr));
+    if(eventsOnDay.length > 0) {
+      eventsOnDay.slice(0, 3).forEach((ev, idx) => {
+        const line = document.createElement('div');
+        line.className = 'event-line';
+        line.style.backgroundColor = ev.color || assignEventColor(idx);
+        line.style.bottom = (2 + idx * 5) + 'px';
+        dayDiv.appendChild(line);
+      });
+      dayDiv.addEventListener('click', () => {
+        const details = document.getElementById(detailsId);
+        if(details) {
+          details.style.display = 'block';
+          details.innerHTML = eventsOnDay.map(e => `<strong style="color:${e.color}">${e.summary}</strong><br><small>${e.start}</small>`).join('<hr style="margin:4px 0;opacity:0.3;">');
+        }
+      });
     }
+    if(d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+      dayDiv.classList.add('today');
+    }
+    grid.appendChild(dayDiv);
+  }
+}
+
+// Event-Listener für Kalender-Navigation (per Event-Delegation)
+document.addEventListener('click', function(e) {
+  if (e.target.closest('#cal-prev') || e.target.closest('#cal-fs-prev')) {
+    calendarViewDate.setMonth(calendarViewDate.getMonth() - 1);
+    renderCalendar();
+    ['event-details','cal-fs-events'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+  } else if (e.target.closest('#cal-next') || e.target.closest('#cal-fs-next')) {
+    calendarViewDate.setMonth(calendarViewDate.getMonth() + 1);
+    renderCalendar();
+    ['event-details','cal-fs-events'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+  } else if (e.target.closest('#cal-today') || e.target.closest('#cal-fs-today')) {
+    calendarViewDate = new Date();
+    renderCalendar();
+    ['event-details','cal-fs-events'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+  }
+});
+
+// Vollbild-Kalender öffnen / schließen
+function openCalendarFullscreen() {
+  const fs = document.getElementById('cal-fullscreen');
+  fs.classList.add('open');
+  renderCalendar();
+}
+function closeCalendarFullscreen() {
+  document.getElementById('cal-fullscreen').classList.remove('open');
+}
+document.getElementById('cal-fs-close').addEventListener('click', closeCalendarFullscreen);
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeCalendarFullscreen();
+});
+
+// CORS-Proxies (mehrere als Fallback)
+const CORS_PROXIES = [
+  'https://corsproxy.io/?',
+  'https://api.allorigins.win/raw?url=',
+  'https://api.codetabs.com/v1/proxy?quest='
+];
+
+async function fetchICSWithFallback(url) {
+  // 1. Direkt versuchen
+  try {
+    const res = await fetch(url);
+    if (res.ok) return await res.text();
   } catch(e) {
-    document.getElementById('weather-desc').textContent = 'Wetter offline';
-    console.warn(e);
+    console.log('Direct fetch failed (CORS), trying proxies...');
   }
+  
+  // 2. Proxies probieren
+  for (const proxy of CORS_PROXIES) {
+    try {
+      const proxyUrl = proxy + encodeURIComponent(url);
+      const res = await fetch(proxyUrl);
+      if (res.ok) {
+        const text = await res.text();
+        if (text.includes('BEGIN:VCALENDAR')) return text;
+      }
+    } catch(e) {
+      console.log('Proxy failed:', proxy);
+    }
+  }
+  
+  throw new Error('Alle Lade-Versuche fehlgeschlagen. Prüfe URL und Internetverbindung.');
 }
 
-/* ============================================================
-   WAKE LOCK + WATCHDOG
-   ============================================================ */
-let wakeLock = null;
-async function requestWakeLock() {
+async function loadCalendar(url) {
+  if(!url) return;
+  const errorBox = document.getElementById('ical-error');
+  if (errorBox) { errorBox.style.display = 'none'; errorBox.textContent = ''; }
+  
+  // webcal:// → https://
+  url = url.replace(/^webcal:\/\//i, 'https://');
+  
   try {
-    if ('wakeLock' in navigator) {
-      wakeLock = await navigator.wakeLock.request('screen');
-      wakeLock.addEventListener('release', () => { wakeLock = null; });
-    }
-  } catch(e) { console.warn('Wake Lock:', e); }
-  fullyKeepScreenOn();
-}
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && !wakeLock) requestWakeLock();
-});
-
-let lastHeartbeat = Date.now();
-setInterval(() => { lastHeartbeat = Date.now(); }, 5000);
-setInterval(() => {
-  if (Date.now() - lastHeartbeat > 30000) { console.warn('Watchdog reload'); location.reload(); }
-}, 10000);
-
-/* ============================================================
-   PANEL / SETTINGS
-   ============================================================ */
-function bindToggle(id, key) {
-  const el = document.getElementById(id);
-  el.classList.toggle('on', !!state.settings[key]);
-  el.addEventListener('click', () => {
-    state.settings[key] = !state.settings[key];
-    el.classList.toggle('on', state.settings[key]);
-  });
-}
-
-function openPanel() {
-  document.getElementById('cfg-duration').value = state.settings.duration;
-  document.getElementById('cfg-duration-val').textContent = state.settings.duration + ' s';
-  document.getElementById('cfg-anim-mode').value = state.settings.animMode;
-  document.getElementById('cfg-fixed-anim').value = state.settings.fixedAnim;
-  document.getElementById('cfg-brightness').value = state.settings.brightness;
-  document.getElementById('cfg-brightness-val').textContent = state.settings.brightness;
-  document.getElementById('tg-sound').classList.toggle('on', state.settings.sound);
-  document.getElementById('tg-weather').classList.toggle('on', state.settings.weather);
-  document.getElementById('tg-clock').classList.toggle('on', state.settings.clock);
-  document.getElementById('tg-autobrightness').classList.toggle('on', state.settings.autoBrightness);
-  toggleFixedAnim();
-  document.getElementById('panel').classList.add('visible');
-}
-function closePanel() { document.getElementById('panel').classList.remove('visible'); }
-function toggleFixedAnim() {
-  const mode = document.getElementById('cfg-anim-mode').value;
-  document.getElementById('row-fixed-anim').style.display = mode === 'fixed' ? 'flex' : 'none';
-}
-
-function fillAnimDropdown() {
-  const sel = document.getElementById('cfg-fixed-anim');
-  const labels = ['Fade','Ken Burns Zoom-In','Ken Burns Zoom-Out','Slide Links','Slide Rechts','Slide Hoch','Slide Runter','Zoom In','Zoom Out','Rotate CW','Rotate CCW','Flip X','Flip Y','Blur In','Blur Out','Wipe Links','Wipe Rechts','Wipe Hoch','Wipe Runter','Diagonal Wipe','Circle Reveal','Circle Close','Shake','Tilt In','Bounce','Perspective','Saturation Flash','Diagonal Slide','Blinds','Glitch'];
-  sel.innerHTML = labels.map((l, i) => `<option value="${i+1}">${i+1}. ${l}</option>`).join('');
-}
-
-function applySettings() {
-  state.settings.duration = parseInt(document.getElementById('cfg-duration').value, 10) || 10;
-  state.settings.animMode = document.getElementById('cfg-anim-mode').value;
-  state.settings.fixedAnim = parseInt(document.getElementById('cfg-fixed-anim').value, 10) || 1;
-  state.settings.brightness = parseInt(document.getElementById('cfg-brightness').value, 10) || 200;
-  saveSettings();
-  document.getElementById('status-mode').textContent =
-    state.settings.animMode === 'random' ? 'Random' :
-    state.settings.animMode === 'sequence' ? 'Sequenz' : 'Fixed';
-  document.querySelector('#clock').style.display = state.settings.clock ? '' : 'none';
-  document.querySelector('#date').style.display = state.settings.clock ? '' : 'none';
-  updateWeather();
-  applyAutoBrightness();
-}
-
-/* Slider live update */
-document.getElementById('cfg-duration').addEventListener('input', (e) => {
-  document.getElementById('cfg-duration-val').textContent = e.target.value + ' s';
-});
-document.getElementById('cfg-brightness').addEventListener('input', (e) => {
-  document.getElementById('cfg-brightness-val').textContent = e.target.value;
-  state.settings.autoBrightness = false;
-  document.getElementById('tg-autobrightness').classList.remove('on');
-  setBrightness(parseInt(e.target.value, 10));
-});
-
-/* ============================================================
-   INIT
-   ============================================================ */
-async function init() {
-  fillAnimDropdown();
-  updateClock();
-  setInterval(updateClock, 30000);
-
-  bindToggle('tg-sound', 'sound');
-  bindToggle('tg-weather', 'weather');
-  bindToggle('tg-clock', 'clock');
-  bindToggle('tg-autobrightness', 'autoBrightness');
-
-  document.getElementById('cfg-anim-mode').addEventListener('change', toggleFixedAnim);
-  document.getElementById('btn-pick-folder').addEventListener('click', pickFolder);
-  document.getElementById('btn-pick-files').addEventListener('click', pickFiles);
-  document.getElementById('btn-close').addEventListener('click', () => { applySettings(); closePanel(); });
-  document.getElementById('btn-reload').addEventListener('click', () => location.reload());
-  document.getElementById('btn-start').addEventListener('click', async () => {
-    applySettings();
-    closePanel();
-    if (state.files.length > 0) {
-      await requestWakeLock();
-      if (!state.settings.hintsShown) showGestureHints();
-      else showSlide(0);
-    } else {
-      // Kein Material → Panel offen lassen war eh
-    }
-  });
-  document.getElementById('btn-hints-ok').addEventListener('click', () => {
-    state.settings.hintsShown = true;
-    saveSettings();
-    document.getElementById('gesture-hints').classList.remove('show');
-    if (state.files.length > 0) showSlide(0);
-  });
-
-  updateWeather();
-  setInterval(updateWeather, CONFIG.weatherRefreshMs);
-
-  // Auto-Helligkeit alle 15 Min prüfen
-  applyAutoBrightness();
-  setInterval(applyAutoBrightness, 15 * 60 * 1000);
-
-  // Gespeicherten Ordner wiederherstellen
-  const handle = await loadHandle();
-  if (handle) {
-    const ok = await verifyPermission(handle);
-    if (ok) {
-      state.folderHandle = handle;
-      try {
-        state.files = await loadFromFolder(handle);
-        updateFileCount();
-        await requestWakeLock();
-        if (!state.settings.hintsShown) showGestureHints();
-        else showSlide(0);
-        return;
-      } catch(e) { console.warn('Folder reload', e); }
+    const data = await fetchICSWithFallback(url);
+    const jcal = ICAL.parse(data);
+    const comp = new ICAL.Component(jcal);
+    const vevents = comp.getAllSubcomponents('vevent');
+    calendarEvents = vevents.map((vevent, i) => {
+      const ev = new ICAL.Event(vevent);
+      const start = ev.startDate.toJSDate();
+      const end = ev.endDate.toJSDate();
+      return {
+        summary: ev.summary || '(Ohne Titel)',
+        start: start.toISOString().substring(0,10),
+        end: end.toISOString().substring(0,10),
+        color: assignEventColor(i)
+      };
+    });
+    renderCalendar();
+    console.log('✅ Kalender geladen:', calendarEvents.length, 'Termine');
+  } catch(err) {
+    console.error('❌ Kalender Ladefehler:', err);
+    if (errorBox) {
+      errorBox.style.display = 'block';
+      errorBox.textContent = '❌ ' + err.message;
     }
   }
-
-  openPanel();
 }
 
-function showGestureHints() {
-  const g = document.getElementById('gesture-hints');
-  g.classList.add('show');
+// ---------- SLIDESHOW ----------
+let slides = [];
+let currentSlide = 0;
+let slideInterval = 10;
+let slideAnimDuration = 1;
+let slideAnimType = 'fade';
+let slideshowTimer;
+let slideshowPaused = false;
+let slideSound = (localStorage.getItem('slideSound') === '1');
+
+// === Slides-Speicherung: IndexedDB (localStorage ist zu klein für ganze Ordner) ===
+function _slideDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('dashboardSlides', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('store');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
 }
 
-init();
+function saveSlides() {
+  // Index weiter klein in localStorage
+  try { localStorage.setItem('slideshowIndex', currentSlide); } catch(e) {}
+  _slideDB().then(db => {
+    const tx = db.transaction('store', 'readwrite');
+    tx.objectStore('store').put(slides, 'images');
+  }).catch(e => console.warn('Slides speichern fehlgeschlagen', e));
+}
+
+function loadSlides() {
+  _slideDB().then(db => {
+    const tx = db.transaction('store', 'readonly');
+    const req = tx.objectStore('store').get('images');
+    req.onsuccess = () => {
+      if (Array.isArray(req.result) && req.result.length) {
+        slides = req.result;
+        currentSlide = parseInt(localStorage.getItem('slideshowIndex')) || 0;
+        if (currentSlide >= slides.length) currentSlide = 0;
+        updateSlideDisplay();
+        const cnt = document.getElementById('image-count');
+        if (cnt) cnt.textContent = slides.length + ' Medien';
+        const sb = document.getElementById('sound-toggle');
+        if (sb) sb.innerHTML = slideSound ? '<i class="fas fa-volume-high"></i>' : '<i class="fas fa-volume-xmark"></i>';
+        startSlideshow();
+      } else {
+        // Fallback: alte Bilder aus localStorage migrieren (einmalig)
+        try {
+          const old = localStorage.getItem('slideshowImages');
+          if (old) {
+            slides = JSON.parse(old);
+            currentSlide = parseInt(localStorage.getItem('slideshowIndex')) || 0;
+            updateSlideDisplay();
+            const cnt = document.getElementById('image-count');
+            if (cnt) cnt.textContent = slides.length + ' Medien';
+            saveSlides();
+            localStorage.removeItem('slideshowImages');
+            startSlideshow();
+          }
+        } catch(e) {}
+      }
+    };
+  }).catch(e => console.warn('Slides laden fehlgeschlagen', e));
+}
+
+// Slide kann String (alt = Bild) oder {t,d} Objekt (neu) sein
+function slideData(s) { return (typeof s === 'string') ? s : s.d; }
+function slideIsVideo(s) { return (typeof s === 'object' && s && s.t === 'video'); }
+
+// Zeigt einen klaren Hinweis statt schwarzem Bild wenn ein Video nicht abspielbar ist
+function showFormatError(container, filename) {
+  if (!container) return;
+  // Doppelte Meldung vermeiden
+  if (container.querySelector('.slide-error')) return;
+  const box = document.createElement('div');
+  box.className = 'slide-error';
+  const fname = filename || 'Unbekannte Datei';
+  box.innerHTML =
+    '<div class="se-icon">⚠️</div>' +
+    '<div class="se-title">Video-Format nicht abspielbar</div>' +
+    '<div class="se-file">' + fname.replace(/[<>&]/g,'') + '</div>' +
+    '<div class="se-hint">Bitte zu MP4 (H.264) umwandeln — z.B. mit VLC oder HandBrake</div>';
+  container.insertBefore(box, container.firstChild);
+  setTimeout(() => box.remove(), 4400);
+}
+
+function updateSlideDisplay() {
+  const container = document.getElementById('slideshow-container');
+  if(!container) return;
+  
+  // Animation-Klasse setzen
+  container.className = 'slideshow-container slide-anim-' + slideAnimType;
+  
+  // Dauer setzen
+  document.documentElement.style.setProperty('--slide-duration', slideAnimDuration + 's');
+  
+  // Alle existierenden Slides entfernen (Bilder + Videos)
+  const existingImgs = container.querySelectorAll('.slide-img');
+  existingImgs.forEach(img => {
+    if (!img.classList.contains('exit')) {
+      // Altes Video sofort stoppen: kein Doppel-Ton, kein ungewolltes onended
+      if (img.tagName === 'VIDEO') {
+        img.onended = null;
+        img.onerror = null;
+        try { img.pause(); } catch(e) {}
+        img.muted = true;
+      }
+      img.classList.add('exit');
+      img.classList.remove('active');
+      setTimeout(() => img.remove(), slideAnimDuration * 1000 + 100);
+    }
+  });
+  // Alten Format-Fehler-Hinweis sofort entfernen
+  container.querySelectorAll('.slide-error').forEach(b => b.remove());
+  
+  // Neues Bild/Video einfügen
+  if (slides.length > 0 && slides[currentSlide]) {
+    const s = slides[currentSlide];
+    let el;
+    if (slideIsVideo(s)) {
+      el = document.createElement('video');
+      el.className = 'slide-img';
+      el.src = slideData(s);
+      el.autoplay = true;
+      el.muted = !slideSound;
+      el.playsInline = true;
+      el.loop = false;
+      el.controls = false;
+      el.onended = () => { if (!slideshowPaused) nextSlide(); };
+      // Format nicht abspielbar → klarer Hinweis mit Dateiname, dann weiter
+      el.onerror = () => {
+        showFormatError(container, s.n);
+        clearTimeout(slideshowTimer);
+        if (!slideshowPaused) slideshowTimer = setTimeout(nextSlide, 4500);
+      };
+      // Manche Container melden keinen 'error' sondern bleiben hängen:
+      // Wenn nach 6s keine Wiedergabe läuft → als nicht abspielbar behandeln
+      el.addEventListener('loadeddata', () => { el._ok = true; });
+      setTimeout(() => {
+        if (!el._ok && el.parentNode && !el.classList.contains('exit')) {
+          showFormatError(container, s.n);
+          clearTimeout(slideshowTimer);
+          if (!slideshowPaused) slideshowTimer = setTimeout(nextSlide, 4500);
+        }
+      }, 6000);
+      clearInterval(slideshowTimer);
+      el.play().catch(()=>{});
+    } else {
+      el = document.createElement('img');
+      el.className = 'slide-img';
+      el.src = slideData(s);
+    }
+    container.insertBefore(el, container.firstChild);
+    void el.offsetWidth;
+    el.classList.add('active');
+  }
+  
+  // Hintergrund syncen wenn slideshow als bg
+  if (localStorage.getItem('bgMode') === 'slideshow') {
+    syncSlideshowBackground();
+  }
+}
+
+function syncSlideshowBackground() {
+  if (slides.length === 0 || !slides[currentSlide]) return;
+  // Video kann nicht als CSS-Hintergrund dienen — überspringen
+  if (slideIsVideo(slides[currentSlide])) return;
+  
+  const layer1 = document.getElementById('bg-layer-1');
+  const layer2 = document.getElementById('bg-layer-2');
+  
+  const activeLayer = layer1.classList.contains('active') ? layer1 : (layer2.classList.contains('active') ? layer2 : layer1);
+  const inactiveLayer = activeLayer === layer1 ? layer2 : layer1;
+  
+  inactiveLayer.style.backgroundImage = `url(${slideData(slides[currentSlide])})`;
+  
+  setTimeout(() => {
+    inactiveLayer.classList.add('active');
+    activeLayer.classList.remove('active');
+  }, 50);
+}
+
+function nextSlide() {
+  if(slides.length === 0) return;
+  currentSlide = (currentSlide + 1) % slides.length;
+  updateSlideDisplay();
+  saveSlides();
+  startSlideshow();
+}
+
+function prevSlide() {
+  if(slides.length === 0) return;
+  currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+  updateSlideDisplay();
+  saveSlides();
+  startSlideshow();
+}
+
+function startSlideshow() {
+  clearInterval(slideshowTimer);
+  if(slides.length === 0 || slideshowPaused) return;
+  // Bei Video: kein Timer — das Video schaltet per onended selbst weiter
+  if (slideIsVideo(slides[currentSlide])) return;
+  slideshowTimer = setInterval(() => {
+    nextSlide();
+  }, slideInterval * 1000);
+}
+
+document.addEventListener('change', function(e) {
+  if(e.target.id === 'file-upload' || e.target.id === 'folder-upload') {
+    // Bilder — alle browser-darstellbaren Formate
+    const isImg = f => f.type.startsWith('image/') ||
+      /\.(jpe?g|png|webp|gif|bmp|avif|apng|ico|svg|jfif|pjpeg|pjp)$/i.test(f.name);
+    // Videos — maximal viele Container. Browser spielt ab was die Plattform kann,
+    // der Rest wird beim Abspielen sauber mit Hinweis übersprungen.
+    const isVid = f => f.type.startsWith('video/') ||
+      /\.(mp4|m4v|webm|mov|ogv|ogg|3gp|3g2|mkv|avi|wmv|flv|mpg|mpeg|m2v|mts|m2ts|ts|vob|divx|asf|f4v|qt)$/i.test(f.name);
+    // HEIC kann der Browser nicht — explizit ausschließen
+    const isHeic = f => /\.(heic|heif)$/i.test(f.name);
+
+    const mediaFiles = Array.from(e.target.files).filter(f =>
+      !isHeic(f) && (isImg(f) || isVid(f))
+    );
+    mediaFiles.sort((a, b) => a.name.localeCompare(b.name, 'de', { numeric: true }));
+
+    if (mediaFiles.length === 0) { e.target.value = ''; return; }
+
+    let loaded = 0;
+    mediaFiles.forEach(file => {
+      const reader = new FileReader();
+      const asVideo = isVid(file);
+      reader.onload = ev => {
+        slides.push({ t: asVideo ? 'video' : 'image', d: ev.target.result, n: file.name });
+        if(slides.length === 1) currentSlide = 0;
+        loaded++;
+        const cnt = document.getElementById('image-count');
+        if (cnt) cnt.textContent = slides.length + ' Medien';
+        if (loaded === mediaFiles.length) {
+          updateSlideDisplay();
+          saveSlides();
+          startSlideshow();
+        }
+      };
+      reader.onerror = () => {
+        loaded++;
+        if (loaded === mediaFiles.length) {
+          updateSlideDisplay(); saveSlides(); startSlideshow();
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  }
+});
+
+document.addEventListener('click', function(e) {
+  if(e.target.closest('#next-slide')) {
+    nextSlide();
+  } else if(e.target.closest('#prev-slide')) {
+    prevSlide();
+  } else if(e.target.closest('#play-pause')) {
+    slideshowPaused = !slideshowPaused;
+    const btn = e.target.closest('#play-pause');
+    btn.innerHTML = slideshowPaused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+    const vid = document.querySelector('.slide-img.active');
+    if (slideshowPaused) {
+      clearInterval(slideshowTimer);
+      if (vid && vid.tagName === 'VIDEO') vid.pause();
+    } else {
+      if (vid && vid.tagName === 'VIDEO') vid.play().catch(()=>{});
+      else startSlideshow();
+    }
+  } else if(e.target.closest('#sound-toggle')) {
+    slideSound = !slideSound;
+    localStorage.setItem('slideSound', slideSound ? '1' : '0');
+    const btn = e.target.closest('#sound-toggle');
+    btn.innerHTML = slideSound
+      ? '<i class="fas fa-volume-high"></i>'
+      : '<i class="fas fa-volume-xmark"></i>';
+    const vid = document.querySelector('.slide-img.active');
+    if (vid && vid.tagName === 'VIDEO') vid.muted = !slideSound;
+  } else if(e.target.closest('#delete-slide')) {
+    if(!slides.length) return;
+    slides.splice(currentSlide, 1);
+    if(currentSlide >= slides.length) currentSlide = Math.max(0, slides.length-1);
+    updateSlideDisplay();
+    const cnt = document.getElementById('image-count');
+    if (cnt) cnt.textContent = slides.length + ' Medien';
+    saveSlides();
+    startSlideshow();
+  }
+});
+
+// ---------- SETTINGS ----------
+function applyBackground() {
+  const mode = localStorage.getItem('bgMode') || 'theme';
+  const root = document.documentElement;
+  const layer1 = document.getElementById('bg-layer-1');
+  const layer2 = document.getElementById('bg-layer-2');
+  
+  // Beide Layer ausblenden bei Nicht-Slideshow-Mode
+  if (mode !== 'slideshow') {
+    layer1.classList.remove('active');
+    layer2.classList.remove('active');
+  }
+  
+  document.body.style.background = '';
+  
+  switch(mode) {
+    case 'theme':
+      root.style.setProperty('--bg-image', 'none');
+      break;
+    case 'color':
+      root.style.setProperty('--bg-image', 'none');
+      document.body.style.background = localStorage.getItem('bgColor') || '#e0e7ff';
+      break;
+    case 'url':
+      root.style.setProperty('--bg-image', `url(${localStorage.getItem('bgUrl') || ''})`);
+      break;
+    case 'upload':
+      root.style.setProperty('--bg-image', `url(${localStorage.getItem('bgUpload') || ''})`);
+      break;
+    case 'slideshow':
+      root.style.setProperty('--bg-image', 'none');
+      syncSlideshowBackground();
+      break;
+  }
+}
+
+function updateBgModeUI(mode) {
+  document.getElementById('bg-color-container').style.display = mode === 'color' ? 'block' : 'none';
+  document.getElementById('bg-url-container').style.display = mode === 'url' ? 'block' : 'none';
+  document.getElementById('bg-upload-container').style.display = mode === 'upload' ? 'block' : 'none';
+}
+
+function loadSettings() {
+  applyTheme(localStorage.getItem('theme') || 'default');
+  document.getElementById('theme-select').value = localStorage.getItem('theme') || 'default';
+  
+  const bgMode = localStorage.getItem('bgMode') || 'theme';
+  document.getElementById('bg-mode').value = bgMode;
+  updateBgModeUI(bgMode);
+  
+  const bgColor = localStorage.getItem('bgColor') || '#e0e7ff';
+  document.getElementById('bg-color').value = bgColor;
+  
+  const bgUrl = localStorage.getItem('bgUrl') || '';
+  document.getElementById('bg-url').value = bgUrl;
+  
+  applyBackground();
+  
+  // Tile-Opacity
+  const tileOpacity = parseFloat(localStorage.getItem('tileOpacity') || '1');
+  document.getElementById('tile-opacity').value = tileOpacity;
+  document.getElementById('tile-opacity-value').textContent = Math.round(tileOpacity * 100) + '%';
+  document.documentElement.style.setProperty('--tile-opacity', tileOpacity);
+  
+  document.getElementById('font-color').value = localStorage.getItem('fontColor') || '#1e293b';
+  document.documentElement.style.setProperty('--text-color', localStorage.getItem('fontColor') || '#1e293b');
+  
+  document.getElementById('font-family-select').value = localStorage.getItem('fontFamily') || "'Segoe UI', system-ui, sans-serif";
+  document.documentElement.style.setProperty('--font-family', localStorage.getItem('fontFamily') || "'Segoe UI', system-ui, sans-serif");
+  
+  document.getElementById('tile-bg-color').value = localStorage.getItem('tileBg') || '#ffffff';
+  document.documentElement.style.setProperty('--tile-bg', (localStorage.getItem('tileBg') || '#ffffff') + '80');
+  
+  document.getElementById('border-width').value = localStorage.getItem('borderWidth') || 1;
+  document.documentElement.style.setProperty('--tile-border-width', (localStorage.getItem('borderWidth') || 1) + 'px');
+  
+  document.getElementById('border-radius').value = localStorage.getItem('borderRadius') || 24;
+  document.documentElement.style.setProperty('--tile-border-radius', (localStorage.getItem('borderRadius') || 24) + 'px');
+  
+  // 3D-Effekt
+  const d3dMode = localStorage.getItem('3dMode') || 'none';
+  document.getElementById('3d-mode').value = d3dMode;
+  const d3dStrength = parseFloat(localStorage.getItem('3dStrength') || 2);
+  document.getElementById('3d-strength').value = d3dStrength;
+  document.getElementById('3d-strength-value').textContent = d3dStrength;
+  apply3DEffect(d3dMode, d3dStrength);
+  
+  // Slideshow
+  slideAnimType = localStorage.getItem('slideAnimation') || 'fade';
+  document.getElementById('slide-animation').value = slideAnimType;
+  
+  const slideFit = localStorage.getItem('slideFit') || 'contain';
+  document.getElementById('slide-fit').value = slideFit;
+  document.documentElement.style.setProperty('--slide-fit', slideFit);
+  
+  slideInterval = parseInt(localStorage.getItem('slideInterval') || 10);
+  document.getElementById('interval-input').value = slideInterval;
+  
+  slideAnimDuration = parseFloat(localStorage.getItem('slideAnimDuration') || 1);
+  document.getElementById('anim-duration').value = slideAnimDuration;
+  document.documentElement.style.setProperty('--slide-duration', slideAnimDuration + 's');
+  
+  startSlideshow();
+  
+  // Kalender-URL
+  const savedIcalUrl = localStorage.getItem('icalUrl');
+  if (savedIcalUrl) {
+    document.getElementById('ical-url').value = savedIcalUrl;
+    loadCalendar(savedIcalUrl);
+  }
+}
+
+// Settings-Event-Listener
+document.getElementById('close-settings').addEventListener('click', () => document.getElementById('settings-panel').classList.remove('open'));
+document.getElementById('theme-select').addEventListener('change', e => applyTheme(e.target.value));
+
+document.getElementById('bg-mode').addEventListener('change', function(e) {
+  const mode = e.target.value;
+  localStorage.setItem('bgMode', mode);
+  updateBgModeUI(mode);
+  applyBackground();
+});
+
+document.getElementById('bg-color').addEventListener('input', function(e) {
+  localStorage.setItem('bgColor', e.target.value);
+  if (localStorage.getItem('bgMode') === 'color') applyBackground();
+});
+
+document.getElementById('bg-url').addEventListener('input', function(e) {
+  localStorage.setItem('bgUrl', e.target.value);
+  if (localStorage.getItem('bgMode') === 'url') applyBackground();
+});
+
+document.getElementById('bg-upload').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    localStorage.setItem('bgUpload', ev.target.result);
+    if (localStorage.getItem('bgMode') === 'upload') applyBackground();
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('bg-upload-trigger').addEventListener('click', () => document.getElementById('bg-upload').click());
+
+document.getElementById('tile-opacity').addEventListener('input', e => {
+  const val = parseFloat(e.target.value);
+  document.documentElement.style.setProperty('--tile-opacity', val);
+  document.getElementById('tile-opacity-value').textContent = Math.round(val * 100) + '%';
+  localStorage.setItem('tileOpacity', val);
+});
+
+document.getElementById('font-color').addEventListener('input', e => {
+  document.documentElement.style.setProperty('--text-color', e.target.value);
+  localStorage.setItem('fontColor', e.target.value);
+});
+
+document.getElementById('font-family-select').addEventListener('change', e => {
+  document.documentElement.style.setProperty('--font-family', e.target.value);
+  localStorage.setItem('fontFamily', e.target.value);
+});
+
+document.getElementById('tile-bg-color').addEventListener('input', e => {
+  document.documentElement.style.setProperty('--tile-bg', e.target.value + '80');
+  localStorage.setItem('tileBg', e.target.value);
+});
+
+document.getElementById('border-width').addEventListener('input', e => {
+  document.documentElement.style.setProperty('--tile-border-width', e.target.value + 'px');
+  localStorage.setItem('borderWidth', e.target.value);
+});
+
+document.getElementById('border-radius').addEventListener('input', e => {
+  document.documentElement.style.setProperty('--tile-border-radius', e.target.value + 'px');
+  localStorage.setItem('borderRadius', e.target.value);
+});
+
+document.getElementById('3d-mode').addEventListener('change', function(e) {
+  localStorage.setItem('3dMode', e.target.value);
+  apply3DEffect(e.target.value, document.getElementById('3d-strength').value);
+});
+
+document.getElementById('3d-strength').addEventListener('input', function(e) {
+  localStorage.setItem('3dStrength', e.target.value);
+  document.getElementById('3d-strength-value').textContent = e.target.value;
+  apply3DEffect(document.getElementById('3d-mode').value, e.target.value);
+});
+
+document.getElementById('slide-fit').addEventListener('change', e => {
+  document.documentElement.style.setProperty('--slide-fit', e.target.value);
+  localStorage.setItem('slideFit', e.target.value);
+});
+
+document.getElementById('slide-animation').addEventListener('change', e => {
+  slideAnimType = e.target.value;
+  localStorage.setItem('slideAnimation', slideAnimType);
+  updateSlideDisplay();
+});
+
+document.getElementById('interval-input').addEventListener('change', e => {
+  slideInterval = parseInt(e.target.value) || 10;
+  localStorage.setItem('slideInterval', slideInterval);
+  startSlideshow();
+});
+
+document.getElementById('anim-duration').addEventListener('change', e => {
+  slideAnimDuration = parseFloat(e.target.value) || 1;
+  localStorage.setItem('slideAnimDuration', slideAnimDuration);
+  document.documentElement.style.setProperty('--slide-duration', slideAnimDuration + 's');
+});
+
+document.getElementById('load-ical-settings').addEventListener('click', function() {
+  const url = document.getElementById('ical-url').value.trim();
+  if (url) {
+    localStorage.setItem('icalUrl', url);
+    loadCalendar(url);
+  }
+});
+
+// ---------- INIT ----------
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('gesturestart', e => e.preventDefault());
+createTiles();
+setTimeout(markActivePreset, 100);
+setTimeout(buildTileVisibilityUI, 50);
+loadSlides();
+loadSettings();
+updateWeather();
+renderCalendar();
+
+// Wetter alle 15 Minuten aktualisieren
+setInterval(updateWeather, 15 * 60 * 1000);
+
+// Standort-Anzeige initialisieren
+setTimeout(displayCurrentLocation, 100);
+
+})();
 </script>
 </body>
 </html>
