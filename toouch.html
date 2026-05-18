@@ -526,10 +526,9 @@ input[type="file"] { display:none; }
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  transform-origin: center center;
   opacity: 0;
-  will-change: opacity;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
+  will-change: transform, opacity;
   transition: opacity 0.8s ease-out;
 }
 .bg-slideshow-layer.active { opacity: 1; }
@@ -2219,6 +2218,22 @@ function updateSlideDisplay() {
   }
 }
 
+function applyKbToBgLayer(layer) {
+  if (!slideKbMode || slideKbMode === 'off') {
+    layer.style.animation = '';
+    return;
+  }
+  const dur = slideInterval + 's';
+  let name;
+  if (slideKbMode === 'random') {
+    const opts = ['kbR1','kbR2','kbR3','kbR4','kbR5','kbR6'];
+    name = opts[Math.floor(Math.random() * opts.length)];
+  } else if (slideKbMode === 'in')  name = 'kbZoomIn';
+  else if (slideKbMode === 'out')   name = 'kbZoomOut';
+  else if (slideKbMode === 'pan')   name = 'kbPan';
+  layer.style.animation = `${name} ${dur} ease-in-out forwards`;
+}
+
 function syncSlideshowBackground() {
   if (slides.length === 0 || !slides[currentSlide]) return;
   // Video kann nicht als CSS-Hintergrund dienen — überspringen
@@ -2230,9 +2245,15 @@ function syncSlideshowBackground() {
   const activeLayer = layer1.classList.contains('active') ? layer1 : (layer2.classList.contains('active') ? layer2 : layer1);
   const inactiveLayer = activeLayer === layer1 ? layer2 : layer1;
   
+  // Alten Layer: Animation stoppen
+  activeLayer.style.animation = 'none';
+
+  // Neuen Layer: Bild setzen + Ken Burns starten, dann einblenden
   inactiveLayer.style.backgroundImage = `url(${slideData(slides[currentSlide])})`;
+  inactiveLayer.style.animation = 'none'; // reset falls vorherige Animation noch laeuft
   
   setTimeout(() => {
+    applyKbToBgLayer(inactiveLayer);  // Ken Burns starten
     inactiveLayer.classList.add('active');
     activeLayer.classList.remove('active');
   }, 50);
