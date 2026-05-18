@@ -523,15 +523,22 @@ input[type="file"] { display:none; }
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  transform-origin: center center;
+  overflow: hidden;
   opacity: 0;
-  will-change: transform, opacity;
+  will-change: opacity;
   transition: opacity 0.8s ease-out;
 }
 .bg-slideshow-layer.active { opacity: 1; }
+/* inneres Medium traegt Bild + Ken-Burns (gleiche Struktur wie Kachel) */
+.bg-media {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transform-origin: center center;
+  will-change: transform;
+  display: block;
+}
 
 .settings-panel {
   position: fixed; top:0; right:-420px; width: min(400px, 92vw); height:100vh;
@@ -2218,11 +2225,8 @@ function updateSlideDisplay() {
   }
 }
 
-function applyKbToBgLayer(layer) {
-  if (!slideKbMode || slideKbMode === 'off') {
-    layer.style.animation = '';
-    return;
-  }
+function applyKbToBgLayer(imgEl) {
+  if (!slideKbMode || slideKbMode === 'off') return;
   const dur = slideInterval + 's';
   let name;
   if (slideKbMode === 'random') {
@@ -2231,29 +2235,40 @@ function applyKbToBgLayer(layer) {
   } else if (slideKbMode === 'in')  name = 'kbZoomIn';
   else if (slideKbMode === 'out')   name = 'kbZoomOut';
   else if (slideKbMode === 'pan')   name = 'kbPan';
-  layer.style.animation = `${name} ${dur} ease-in-out forwards`;
+  // Kurzes Reset damit Animation neu startet (auch wenn gleicher Name)
+  imgEl.style.animation = 'none';
+  void imgEl.offsetWidth;  // reflow erzwingen
+  imgEl.style.animation = `${name} ${dur} ease-in-out forwards`;
 }
 
 function syncSlideshowBackground() {
   if (slides.length === 0 || !slides[currentSlide]) return;
-  // Video kann nicht als CSS-Hintergrund dienen — überspringen
   if (slideIsVideo(slides[currentSlide])) return;
   
   const layer1 = document.getElementById('bg-layer-1');
   const layer2 = document.getElementById('bg-layer-2');
   
-  const activeLayer = layer1.classList.contains('active') ? layer1 : (layer2.classList.contains('active') ? layer2 : layer1);
+  const activeLayer   = layer1.classList.contains('active') ? layer1
+                      : (layer2.classList.contains('active') ? layer2 : layer1);
   const inactiveLayer = activeLayer === layer1 ? layer2 : layer1;
   
-  // Alten Layer: Animation stoppen
-  activeLayer.style.animation = 'none';
+  // Alten aktiven Layer: Ken-Burns stoppen
+  const oldImg = activeLayer.querySelector('.bg-media');
+  if (oldImg) oldImg.style.animation = 'none';
 
-  // Neuen Layer: Bild setzen + Ken Burns starten, dann einblenden
-  inactiveLayer.style.backgroundImage = `url(${slideData(slides[currentSlide])})`;
-  inactiveLayer.style.animation = 'none'; // reset falls vorherige Animation noch laeuft
-  
+  // Neuen Layer: Bild als <img> reinlegen (oder vorhandenes updaten)
+  let newImg = inactiveLayer.querySelector('.bg-media');
+  if (!newImg) {
+    newImg = document.createElement('img');
+    newImg.className = 'bg-media';
+    inactiveLayer.appendChild(newImg);
+  }
+  newImg.style.animation = 'none';  // vorherige Animation stoppen
+  newImg.src = slideData(slides[currentSlide]);
+
+  // Einblenden + Ken Burns starten
   setTimeout(() => {
-    applyKbToBgLayer(inactiveLayer);  // Ken Burns starten
+    applyKbToBgLayer(newImg);
     inactiveLayer.classList.add('active');
     activeLayer.classList.remove('active');
   }, 50);
