@@ -357,15 +357,22 @@ body {
   position: absolute;
   top: 0; left: 0;
   width:100%; height:100%;
-  object-fit: var(--slide-fit);
   opacity: 0;
   will-change: transform, opacity;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   transition: opacity var(--slide-duration) ease-out, transform var(--slide-duration) ease-out;
 }
-video.slide-img { object-fit: var(--slide-fit); background: #000; }
 .slide-img.active { opacity: 1; }
+/* Inneres Medium: traegt object-fit + (optional) Ken-Burns-Bewegung */
+.slide-media {
+  width:100%; height:100%;
+  object-fit: var(--slide-fit);
+  display:block;
+  transform-origin: center center;
+  will-change: transform;
+}
+video.slide-media { background: #000; }
 
 /* Hinweis wenn ein Video-Format nicht abspielbar ist */
 .slide-error {
@@ -433,6 +440,44 @@ video.slide-img { object-fit: var(--slide-fit); background: #000; }
   from { transform: translate3d(0, 0, 0) scale(1); }
   to { transform: translate3d(-3%, -3%, 0) scale(1.1); }
 }
+
+/* === Ken-Burns-Effekt: zusaetzlich, laeuft am inneren Medium,
+   unabhaengig vom gewaehlten Uebergang === */
+.kb-in  .slide-img.active .slide-media,
+.kb-out .slide-img.active .slide-media,
+.kb-pan .slide-img.active .slide-media,
+.kb-random .slide-img.active .slide-media {
+  animation-duration: var(--kb-duration, 12s);
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+}
+.kb-in  .slide-img.active .slide-media { animation-name: kbZoomIn; }
+.kb-out .slide-img.active .slide-media { animation-name: kbZoomOut; }
+.kb-pan .slide-img.active .slide-media { animation-name: kbPan; }
+@keyframes kbZoomIn  { from { transform: scale(1.02); }   to { transform: scale(1.20); } }
+@keyframes kbZoomOut { from { transform: scale(1.20); }   to { transform: scale(1.02); } }
+/* Schwenk mit ausreichend Zoom-Reserve, damit nie Raender entstehen */
+@keyframes kbPan {
+  from { transform: scale(1.14) translate(-3%, -2%); }
+  to   { transform: scale(1.14) translate(3%, 2%); }
+}
+/* Zufallsrichtung: Klasse wird pro Bild per JS gesetzt
+   (Mindest-Zoom 1.10, Verschiebung max. 3% -> immer vollflaechig) */
+.kb-random.kb-dir-1 .slide-img.active .slide-media { animation-name: kbR1; }
+.kb-random.kb-dir-2 .slide-img.active .slide-media { animation-name: kbR2; }
+.kb-random.kb-dir-3 .slide-img.active .slide-media { animation-name: kbR3; }
+.kb-random.kb-dir-4 .slide-img.active .slide-media { animation-name: kbR4; }
+.kb-random.kb-dir-5 .slide-img.active .slide-media { animation-name: kbR5; }
+.kb-random.kb-dir-6 .slide-img.active .slide-media { animation-name: kbR6; }
+@keyframes kbR1 { from{transform:scale(1.10) translate(0,0);}     to{transform:scale(1.20) translate(-3%,-2%);} }
+@keyframes kbR2 { from{transform:scale(1.20) translate(3%,2%);}   to{transform:scale(1.10) translate(0,0);} }
+@keyframes kbR3 { from{transform:scale(1.14) translate(3%,0);}    to{transform:scale(1.18) translate(-3%,0);} }
+@keyframes kbR4 { from{transform:scale(1.18) translate(0,-3%);}   to{transform:scale(1.12) translate(0,3%);} }
+@keyframes kbR5 { from{transform:scale(1.12) translate(-3%,3%);}  to{transform:scale(1.20) translate(3%,-3%);} }
+@keyframes kbR6 { from{transform:scale(1.20) translate(-3%,-3%);} to{transform:scale(1.12) translate(3%,3%);} }
+/* Bewegung pausiert mit der Slideshow */
+.slideshow-paused .slide-img.active .slide-media { animation-play-state: paused; }
 
 /* Animation: split */
 .slide-anim-split .slide-img { clip-path: inset(50% 0 50% 0); opacity: 0; }
@@ -908,6 +953,15 @@ input[type="file"] { display:none; }
   <select id="slide-fit">
     <option value="contain">Komplett zeigen (mit Rändern)</option>
     <option value="cover">Zugeschnitten (füllt aus)</option>
+  </select>
+
+  <label>Ken-Burns-Effekt (sanfter Schwenk/Zoom)</label>
+  <select id="slide-kenburns">
+    <option value="off">Aus</option>
+    <option value="random">Zufällige Richtung (empfohlen)</option>
+    <option value="in">Immer langsam reinzoomen</option>
+    <option value="out">Immer langsam rauszoomen</option>
+    <option value="pan">Nur sanfter Schwenk</option>
   </select>
   
   <label>Wechselzeit (Sekunden)</label>
@@ -1993,6 +2047,7 @@ let currentSlide = 0;
 let slideInterval = 10;
 let slideAnimDuration = 1;
 let slideAnimType = 'fade';
+let slideKbMode = 'off';
 let slideshowTimer;
 let slideshowPaused = false;
 let slideSound = (localStorage.getItem('slideSound') === '1');
@@ -2076,71 +2131,86 @@ function updateSlideDisplay() {
   const container = document.getElementById('slideshow-container');
   if(!container) return;
   
-  // Animation-Klasse setzen
-  container.className = 'slideshow-container slide-anim-' + slideAnimType;
-  
-  // Dauer setzen
+  // Animation-Klasse + Ken-Burns-Klasse setzen
+  let cls = 'slideshow-container slide-anim-' + slideAnimType;
+  if (slideKbMode && slideKbMode !== 'off') {
+    if (slideKbMode === 'random') {
+      const dir = Math.floor(Math.random() * 6) + 1;
+      cls += ' kb-random kb-dir-' + dir;
+    } else {
+      cls += ' kb-' + slideKbMode;
+    }
+  }
+  if (slideshowPaused) cls += ' slideshow-paused';
+  container.className = cls;
+
+  // Dauer setzen: Uebergang + Ken-Burns-Dauer (= Anzeigezeit des Bildes)
   document.documentElement.style.setProperty('--slide-duration', slideAnimDuration + 's');
-  
+  container.style.setProperty('--kb-duration', slideInterval + 's');
+
   // Alle existierenden Slides entfernen (Bilder + Videos)
   const existingImgs = container.querySelectorAll('.slide-img');
-  existingImgs.forEach(img => {
-    if (!img.classList.contains('exit')) {
+  existingImgs.forEach(wrap => {
+    if (!wrap.classList.contains('exit')) {
       // Altes Video sofort stoppen: kein Doppel-Ton, kein ungewolltes onended
-      if (img.tagName === 'VIDEO') {
-        img.onended = null;
-        img.onerror = null;
-        try { img.pause(); } catch(e) {}
-        img.muted = true;
+      const v = wrap.tagName === 'VIDEO' ? wrap : wrap.querySelector('video');
+      if (v) {
+        v.onended = null;
+        v.onerror = null;
+        try { v.pause(); } catch(e) {}
+        v.muted = true;
       }
-      img.classList.add('exit');
-      img.classList.remove('active');
-      setTimeout(() => img.remove(), slideAnimDuration * 1000 + 100);
+      wrap.classList.add('exit');
+      wrap.classList.remove('active');
+      setTimeout(() => wrap.remove(), slideAnimDuration * 1000 + 100);
     }
   });
   // Alten Format-Fehler-Hinweis sofort entfernen
   container.querySelectorAll('.slide-error').forEach(b => b.remove());
   
-  // Neues Bild/Video einfügen
+  // Neues Bild/Video einfügen (Wrapper macht Übergang, inneres Medium macht Ken Burns)
   if (slides.length > 0 && slides[currentSlide]) {
     const s = slides[currentSlide];
-    let el;
+    const wrap = document.createElement('div');
+    wrap.className = 'slide-img';
+    let media;
     if (slideIsVideo(s)) {
-      el = document.createElement('video');
-      el.className = 'slide-img';
-      el.src = slideData(s);
-      el.autoplay = true;
-      el.muted = !slideSound;
-      el.playsInline = true;
-      el.loop = false;
-      el.controls = false;
-      el.onended = () => { if (!slideshowPaused) nextSlide(); };
+      media = document.createElement('video');
+      media.className = 'slide-media';
+      media.src = slideData(s);
+      media.autoplay = true;
+      media.muted = !slideSound;
+      media.playsInline = true;
+      media.loop = false;
+      media.controls = false;
+      media.onended = () => { if (!slideshowPaused) nextSlide(); };
       // Format nicht abspielbar → klarer Hinweis mit Dateiname, dann weiter
-      el.onerror = () => {
+      media.onerror = () => {
         showFormatError(container, s.n);
         clearTimeout(slideshowTimer);
         if (!slideshowPaused) slideshowTimer = setTimeout(nextSlide, 4500);
       };
       // Manche Container melden keinen 'error' sondern bleiben hängen:
       // Wenn nach 6s keine Wiedergabe läuft → als nicht abspielbar behandeln
-      el.addEventListener('loadeddata', () => { el._ok = true; });
+      media.addEventListener('loadeddata', () => { media._ok = true; });
       setTimeout(() => {
-        if (!el._ok && el.parentNode && !el.classList.contains('exit')) {
+        if (!media._ok && wrap.parentNode && !wrap.classList.contains('exit')) {
           showFormatError(container, s.n);
           clearTimeout(slideshowTimer);
           if (!slideshowPaused) slideshowTimer = setTimeout(nextSlide, 4500);
         }
       }, 6000);
       clearInterval(slideshowTimer);
-      el.play().catch(()=>{});
+      media.play().catch(()=>{});
     } else {
-      el = document.createElement('img');
-      el.className = 'slide-img';
-      el.src = slideData(s);
+      media = document.createElement('img');
+      media.className = 'slide-media';
+      media.src = slideData(s);
     }
-    container.insertBefore(el, container.firstChild);
-    void el.offsetWidth;
-    el.classList.add('active');
+    wrap.appendChild(media);
+    container.insertBefore(wrap, container.firstChild);
+    void wrap.offsetWidth;
+    wrap.classList.add('active');
   }
   
   // Hintergrund syncen wenn slideshow als bg
@@ -2250,12 +2320,15 @@ document.addEventListener('click', function(e) {
     slideshowPaused = !slideshowPaused;
     const btn = e.target.closest('#play-pause');
     btn.innerHTML = slideshowPaused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
-    const vid = document.querySelector('.slide-img.active');
+    const cont = document.getElementById('slideshow-container');
+    if (cont) cont.classList.toggle('slideshow-paused', slideshowPaused);
+    const activeWrap = document.querySelector('.slide-img.active');
+    const vid = activeWrap ? (activeWrap.tagName === 'VIDEO' ? activeWrap : activeWrap.querySelector('video')) : null;
     if (slideshowPaused) {
       clearInterval(slideshowTimer);
-      if (vid && vid.tagName === 'VIDEO') vid.pause();
+      if (vid) vid.pause();
     } else {
-      if (vid && vid.tagName === 'VIDEO') vid.play().catch(()=>{});
+      if (vid) vid.play().catch(()=>{});
       else startSlideshow();
     }
   } else if(e.target.closest('#sound-toggle')) {
@@ -2265,8 +2338,9 @@ document.addEventListener('click', function(e) {
     btn.innerHTML = slideSound
       ? '<i class="fas fa-volume-high"></i>'
       : '<i class="fas fa-volume-xmark"></i>';
-    const vid = document.querySelector('.slide-img.active');
-    if (vid && vid.tagName === 'VIDEO') vid.muted = !slideSound;
+    const activeWrap = document.querySelector('.slide-img.active');
+    const vid = activeWrap ? (activeWrap.tagName === 'VIDEO' ? activeWrap : activeWrap.querySelector('video')) : null;
+    if (vid) vid.muted = !slideSound;
   } else if(e.target.closest('#delete-slide')) {
     if(!slides.length) return;
     slides.splice(currentSlide, 1);
@@ -2373,7 +2447,11 @@ function loadSettings() {
   const slideFit = localStorage.getItem('slideFit') || 'contain';
   document.getElementById('slide-fit').value = slideFit;
   document.documentElement.style.setProperty('--slide-fit', slideFit);
-  
+
+  slideKbMode = localStorage.getItem('slideKbMode') || 'off';
+  const kbSel = document.getElementById('slide-kenburns');
+  if (kbSel) kbSel.value = slideKbMode;
+
   slideInterval = parseInt(localStorage.getItem('slideInterval') || 10);
   document.getElementById('interval-input').value = slideInterval;
   
@@ -2383,8 +2461,20 @@ function loadSettings() {
   
   startSlideshow();
   
-  // Kalender-URL
-  const savedIcalUrl = localStorage.getItem('icalUrl');
+  // Kalender-URL: einmalig per #ical=... aus der Start-URL einlesen,
+  // dann dauerhaft lokal speichern (Token NICHT im GitHub-Quelltext).
+  let savedIcalUrl = localStorage.getItem('icalUrl');
+  try {
+    const m = (window.location.hash || '').match(/[#&]ical=([^&]+)/);
+    if (m && m[1]) {
+      savedIcalUrl = decodeURIComponent(m[1]);
+      localStorage.setItem('icalUrl', savedIcalUrl);
+      try {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      } catch (e) { window.location.hash = ''; }
+      console.log('✅ iCal-URL aus Start-URL übernommen und lokal gespeichert');
+    }
+  } catch (e) { console.warn('iCal-Hash nicht lesbar:', e); }
   if (savedIcalUrl) {
     document.getElementById('ical-url').value = savedIcalUrl;
     loadCalendar(savedIcalUrl);
@@ -2476,6 +2566,12 @@ document.getElementById('slide-fit').addEventListener('change', e => {
 document.getElementById('slide-animation').addEventListener('change', e => {
   slideAnimType = e.target.value;
   localStorage.setItem('slideAnimation', slideAnimType);
+  updateSlideDisplay();
+});
+
+document.getElementById('slide-kenburns').addEventListener('change', e => {
+  slideKbMode = e.target.value;
+  localStorage.setItem('slideKbMode', slideKbMode);
   updateSlideDisplay();
 });
 
