@@ -12,6 +12,7 @@
             color: white;
             font-family: Arial, sans-serif;
             text-align: center;
+            overflow: hidden; /* Verhindert unerwünschtes Scrollen der ganzen Seite */
         }
         canvas {
             background-color: #87CEEB; /* Himmelblau */
@@ -20,6 +21,9 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             display: block;
             margin: 0 auto;
+            touch-action: none; /* WICHTIG: Verhindert, dass der Browser beim Wischen scrollt */
+            max-width: 100%;
+            height: auto;
         }
         p {
             font-size: 16px;
@@ -30,7 +34,7 @@
 <body>
 
     <h1>Morstar Frau</h1>
-    <p>Steuerung: Pfeiltasten Links/Rechts ⬅️ ➡️ | Sammle leckeres Essen, meide giftige Pilze! 🍄</p>
+    <p>Steuerung: Wischen/Tippen oder ⬅️ ➡️ | Sammle Essen, meide giftige Pilze! 🍄</p>
     
     <canvas id="gameCanvas" width="400" height="600"></canvas>
 
@@ -57,9 +61,9 @@
         // Essens-Objekte
         const items = [];
         const goodFoods = ['🍎', '🍌', '🍕', '🍔', '🌮', '🍩'];
-        const badFoods = ['🍄', '🤢']; // Giftige Pilze / Schlechtes Essen
+        const badFoods = ['🍄', '🤢'];
 
-        // Tastatursteuerung
+        // Tastatursteuerung (für PC)
         document.addEventListener("keydown", (e) => {
             if (e.key === "ArrowLeft") player.dx = -player.speed;
             if (e.key === "ArrowRight") player.dx = player.speed;
@@ -70,10 +74,47 @@
             if (e.key === "ArrowLeft" || e.key === "ArrowRight") player.dx = 0;
         });
 
+        // Touch-Steuerung (für Tablets/Smartphones)
+        canvas.addEventListener("touchstart", (e) => {
+            e.preventDefault(); // Verhindert Scrollen/Zoomen
+            if (gameOver) {
+                resetGame();
+                return;
+            }
+            // Tippen auf linke/rechte Hälfte
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const canvasX = (touch.clientX - rect.left) * (canvas.width / rect.width);
+            
+            if (canvasX < canvas.width / 2) {
+                player.dx = -player.speed;
+            } else {
+                player.dx = player.speed;
+            }
+        }, { passive: false });
+
+        canvas.addEventListener("touchmove", (e) => {
+            e.preventDefault();
+            if (gameOver) return;
+            
+            // Bewegung durch Wischen (Mitziehen der Figur)
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const scaleX = canvas.width / rect.width;
+            
+            player.x = (touch.clientX - rect.left) * scaleX - (player.width / 2);
+            player.dx = 0; // Setzt die dx-Bewegung zurück, da die Position direkt gesetzt wird
+        }, { passive: false });
+
+        canvas.addEventListener("touchend", (e) => {
+            e.preventDefault();
+            player.dx = 0; // Stoppt die Bewegung, wenn der Finger gehoben wird
+        }, { passive: false });
+
         // Funktion: Essen spawnen
         function spawnItem() {
-            if (Math.random() < 0.03) { // Spawn-Wahrscheinlichkeit
-                const isBad = Math.random() < 0.25; // 25% Chance auf giftiges Essen
+            if (Math.random() < 0.03) {
+                const isBad = Math.random() < 0.25;
                 const typeList = isBad ? badFoods : goodFoods;
                 const type = typeList[Math.floor(Math.random() * typeList.length)];
                 
@@ -88,11 +129,10 @@
             }
         }
 
-        // Spieler bewegen
+        // Spieler bewegen und im Bild halten
         function movePlayer() {
             player.x += player.dx;
             
-            // Kollision mit den Wänden verhindern
             if (player.x < 0) player.x = 0;
             if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
         }
@@ -106,18 +146,18 @@
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Benutzeroberfläche zeichnen
+            // UI
             ctx.fillStyle = "black";
             ctx.font = "20px Arial";
             ctx.fillText(`Punkte: ${score}`, 15, 30);
             ctx.fillText(`Leben: ${'❤️'.repeat(lives)}`, canvas.width - 120, 30);
 
-            // Spieler zeichnen
+            // Spieler
             movePlayer();
             ctx.font = "50px Arial";
             ctx.fillText(player.emoji, player.x, player.y + 40);
 
-            // Essen spawnen und bewegen
+            // Essen spawnen
             spawnItem();
             
             for (let i = 0; i < items.length; i++) {
@@ -127,7 +167,7 @@
                 ctx.font = "40px Arial";
                 ctx.fillText(item.emoji, item.x, item.y + 30);
 
-                // Kollisionserkennung
+                // Kollision
                 if (
                     item.x < player.x + player.width - 10 &&
                     item.x + item.size - 10 > player.x &&
@@ -145,7 +185,6 @@
                     continue;
                 }
 
-                // Entfernen, wenn aus dem Bildschirm gefallen
                 if (item.y > canvas.height) {
                     items.splice(i, 1);
                     i--;
@@ -155,7 +194,7 @@
             requestAnimationFrame(update);
         }
 
-        // Game Over Bildschirm
+        // Game Over Screen
         function drawGameOver() {
             ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -167,23 +206,23 @@
             
             ctx.font = "20px Arial";
             ctx.fillText(`Dein Score: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
-            ctx.fillText("Drücke ENTER für Neustart", canvas.width / 2, canvas.height / 2 + 60);
-            ctx.textAlign = "left"; // Reset für das restliche Spiel
+            ctx.fillText("Tippe für Neustart", canvas.width / 2, canvas.height / 2 + 60);
+            ctx.textAlign = "left";
         }
 
-        // Spiel zurücksetzen
+        // Reset
         function resetGame() {
             score = 0;
             lives = 3;
-            items.length = 0; // Array leeren
+            items.length = 0;
             player.x = 180;
+            player.dx = 0;
             gameOver = false;
             update();
         }
 
-        // Spiel starten
+        // Start
         update();
-
     </script>
 </body>
 </html>
